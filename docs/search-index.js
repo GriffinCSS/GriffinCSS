@@ -215,6 +215,7 @@ headings: [
 [17,2,"Шаги процесса (scss/_steps.scss)","shagi-processa-scss-steps-scss"],
 [17,2,"Пустое состояние (scss/_empty.scss)","pustoe-sostoyanie-scss-empty-scss"],
 [17,2,"Рантайм компонентов (dist/griffincss-ui.js)","rantaym-komponentov-dist-griffincss-ui-js"],
+[17,2,"События рантайма","sobytiya-rantayma"],
 [18,2,"Colors (scss/_colors.scss)","colors-scss-colors-scss"],
 [18,2,"Темы: тёмная и для слабовидящих (scss/_theme.scss ядра)","temy-temnaya-i-dlya-slabovidyaschih-scss-theme-scss-yadra"],
 [18,2,"Стратегии оформления (scss/_styles.scss ядра)","strategii-oformleniya-scss-styles-scss-yadra"],

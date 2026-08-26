@@ -446,3 +446,46 @@ test('щелчок по вкладке-ссылке переключает па�
   // Фокус щелчком не переносится: он и так уже там, где щёлкнули.
   assert.equal(tabs[2].focusCalls, 0, 'щелчок дополнительно двигает фокус');
 });
+
+// --- Этап 18: события компонентов --------------------------------------------
+
+test('переключение вкладки шлёт griffincss:tabchange с индексом', () => {
+  const { doc, ui } = setupDom();
+  const { tabs } = tabsMarkup(doc);
+
+  ui.tabs();
+
+  const events = [];
+
+  doc.addEventListener('griffincss:tabchange', (e) => events.push(e.detail.index));
+
+  doc.fire('pointerdown', { target: tabs[1], clientX: 10, clientY: 10 });
+  doc.fire('click', { target: tabs[1], clientX: 10, clientY: 10, preventDefault: () => {} });
+
+  assert.deepEqual(events, [1], 'одно событие с индексом новой вкладки');
+});
+
+test('инициализация вкладок griffincss:tabchange не шлёт', () => {
+  const { doc, ui } = setupDom();
+
+  tabsMarkup(doc);
+
+  const events = [];
+
+  doc.addEventListener('griffincss:tabchange', () => events.push(1));
+
+  ui.tabs();
+
+  assert.equal(events.length, 0, 'выбор при инициализации — не действие пользователя');
+});
+
+test('показ тоста шлёт griffincss:toast со статусом', () => {
+  const { doc, ui } = setupDom();
+  const events = [];
+
+  doc.addEventListener('griffincss:toast', (e) => events.push(e.detail.status));
+
+  ui.toast('Готово', { status: 'success', title: 'Ок', timeout: 0 });
+
+  assert.deepEqual(events, ['success']);
+});

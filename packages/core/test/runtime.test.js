@@ -273,3 +273,36 @@ test('init() пересобирает CSS, если брейкпоинты до�
   assert.match(css, /900px/, 'значение из CSS-токена подхвачено');
   assert.ok(!css.includes('768px'), 'старое правило не осталось в таблице');
 });
+
+// Этап 18: машинерия наблюдения — фабрика в ядре, рантаймы-надстройки
+// берут её через _scanner вместо собственных копий.
+test('ядро отдаёт _scanner, поток фабрики фильтрует и флашит по порции', () => {
+  const { griffin } = setupDom(el('body'));
+
+  assert.equal(typeof griffin._scanner, 'function');
+
+  const calls = [];
+  const scanner = griffin._scanner({
+    delay: 0,
+    hasWork: () => true,
+    handleAdded: (nodes) => { calls.push(nodes.length); return true; },
+    flush: () => calls.push('flush'),
+    refresh: () => {},
+  });
+
+  scanner.observeParsing();
+  MockMutationObserver.instances.at(-1).fireAdded([el('div'), el('div')]);
+
+  assert.deepEqual(calls, [2, 'flush'], 'порция целиком, флаш один на порцию');
+
+  scanner.stop();
+  assert.ok(MockMutationObserver.instances.at(-1).disconnected, 'stop() отключает поток');
+});
+
+test('observe без MutationObserver — тихий no-op', () => {
+  const { griffin } = setupDom(el('body'));
+
+  delete global.MutationObserver;
+
+  assert.doesNotThrow(() => griffin.observe());
+});

@@ -214,6 +214,24 @@ test('серия вставок даёт одну перерисовку', async
   assert.equal(root.children.filter((c) => c.children[0].className.includes('gr-r-')).length, 5);
 });
 
+// Этап 18: наблюдение утилит идёт через фабрику ядра (_scanner);
+// защита от двойной подписки на корень обязана пережить переезд.
+test('повторный observe того же корня второго наблюдателя не заводит', () => {
+  const root = el('div');
+
+  setupDom(el('body', {}, [root]));
+
+  const utils = loadUtilsRuntime();
+
+  observerFrom(() => utils.observe(root));
+
+  const before = MockMutationObserver.instances.length;
+
+  utils.observe(root);
+
+  assert.equal(MockMutationObserver.instances.length, before, 'корень уже под наблюдением');
+});
+
 test('stop снимает наблюдение', async () => {
   const root = el('div');
   const { doc } = setupDom(el('body', {}, [root]));

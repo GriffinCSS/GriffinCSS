@@ -236,10 +236,22 @@ class MockDocument {
   }
 
   // Тестовый хук: разносит событие сперва по перехватывающим слушателям,
-  // затем по всплывающим — так же, как это делает браузер.
+  // затем по всплывающим — так же, как это делает браузер. Тип события
+  // проставляется в сам объект: настоящий Event несёт его всегда,
+  // а диспетчер рантайма маршрутизирует именно по нему.
   fire(type, event) {
+    if (event && event.type === undefined) event.type = type;
+
     for (const fn of (this.listeners.get(this.key(type, true)) || []).slice()) fn(event);
     for (const fn of (this.listeners.get(this.key(type, false)) || []).slice()) fn(event);
+  }
+
+  // Приёмник событий компонентов: рантайм шлёт CustomEvent с узла, а при
+  // недоступном dispatchEvent узла — с документа. Мок-элементы своего
+  // dispatchEvent не имеют, поэтому сюда приходят оба пути.
+  dispatchEvent(event) {
+    this.fire(event.type, event);
+    return true;
   }
 
   count(type, capture) {
@@ -263,6 +275,15 @@ function setupDom() {
   const doc = new MockDocument();
 
   global.document = doc;
+
+  // Заглушка CustomEvent — ровно то, что читает слушатель: тип и detail.
+  global.CustomEvent = class {
+    constructor(type, init = {}) {
+      this.type = type;
+      this.detail = init.detail;
+      this.bubbles = !!init.bubbles;
+    }
+  };
 
   const ui = loadRuntime();
   ui.start();

@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.16.0
+ * Griffincss — Runtime Grid Parser v0.17.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.16.0';
+  var VERSION = '0.17.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -97,8 +97,6 @@
   var areaCSS = '';
   var buffers = {};         // слой → {keys, css}: вывод чужих рантаймов
   var touched = [];         // что рантайм навесил на элементы — для destroy()
-  var observers = [];       // {root, observer, timer}
-  var parseObserver = null; // наблюдатель парсинга: живёт до DOMContentLoaded
   var breakpointsRead = false;
 
   function fail(message) {
@@ -120,13 +118,9 @@
 
   // Значения брейкпоинтов одной строкой — для сверки «до/после».
   function breakpointFingerprint() {
-    var parts = [];
-
-    for (var i = 0; i < BP_NAMES.length; i++) {
-      parts.push(BP_NAMES[i] + ':' + BREAKPOINTS[BP_NAMES[i]]);
-    }
-
-    return parts.join(',');
+    return BP_NAMES.map(function (bp) {
+      return bp + ':' + BREAKPOINTS[bp];
+    }).join(',');
   }
 
   function bpValue(bp) {
@@ -439,6 +433,97 @@
     generatedAreas[name] = true;
   }
 
+  // === Сканер ===
+
+  // Обобщённая машинерия наблюдения за DOM: потоковый наблюдатель парсинга
+  // и наблюдатели живых поддеревьев с дебаунсом. Ядро пользуется ею само,
+  // рантаймы-надстройки получают фабрику через _scanner — вместо
+  // собственных копий тех же ста строк.
+  //
+  // spec: { delay, hasWork(mutations), handleAdded(nodes) → dirty,
+  //         flush(), refresh(root) }
+  //
+  // Без MutationObserver оба наблюдателя молча бездействуют: рантайм
+  // в таком окружении работает разовыми проходами.
+  function createScanner(spec) {
+    var observers = [];       // {root, observer, timer}
+    var parseObserver = null; // наблюдатель парсинга: живёт до DOMContentLoaded
+
+    // Наблюдение за конкретным корнем: пересчёт с дебаунсом и только
+    // по этому корню, а не по всему документу.
+    function observe(root) {
+      if (typeof MutationObserver === 'undefined') return;
+
+      root = root || document.body;
+
+      for (var i = 0; i < observers.length; i++) {
+        if (observers[i].root === root) return;
+      }
+
+      var entry = { root: root, observer: null, timer: null };
+
+      entry.observer = new MutationObserver(function (mutations) {
+        if (!spec.hasWork(mutations)) return;
+
+        if (entry.timer) clearTimeout(entry.timer);
+
+        entry.timer = setTimeout(function () {
+          entry.timer = null;
+          spec.refresh(entry.root);
+        }, spec.delay);
+      });
+
+      entry.observer.observe(root, { childList: true, subtree: true });
+      observers.push(entry);
+    }
+
+    // Наблюдение за парсингом документа: узлы обрабатываются по мере
+    // появления, а не разом на DOMContentLoaded. Дебаунса здесь нет
+    // намеренно — он и есть та задержка, которой мы избегаем.
+    function observeParsing() {
+      if (parseObserver || typeof MutationObserver === 'undefined') return;
+
+      parseObserver = new MutationObserver(function (mutations) {
+        var dirty = false;
+
+        for (var i = 0; i < mutations.length; i++) {
+          if (spec.handleAdded(mutations[i].addedNodes)) dirty = true;
+        }
+
+        // Флаш один на порцию, а не на элемент: таблица переписывается
+        // целиком.
+        if (dirty) spec.flush();
+      });
+
+      parseObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
+
+    function stopParseObserver() {
+      if (!parseObserver) return;
+
+      parseObserver.disconnect();
+      parseObserver = null;
+    }
+
+    function stop() {
+      stopParseObserver();
+
+      for (var i = 0; i < observers.length; i++) {
+        if (observers[i].timer) clearTimeout(observers[i].timer);
+        observers[i].observer.disconnect();
+      }
+
+      observers = [];
+    }
+
+    return {
+      observe: observe,
+      observeParsing: observeParsing,
+      stopParseObserver: stopParseObserver,
+      stop: stop
+    };
+  }
+
   // === Обработка DOM ===
 
   // Запись о том, что рантайм навесил на элемент — чтобы destroy() всё снял.
@@ -748,11 +833,7 @@
 
         if (!node || node.nodeType !== 1) continue;
 
-        if (node.hasAttribute) {
-          for (var b = 0; b < BP_ORDER.length; b++) {
-            if (node.hasAttribute(BP_ATTRS[BP_ORDER[b]])) return true;
-          }
-        }
+        if (hasLayoutAttr(node)) return true;
 
         if (node.querySelectorAll && node.querySelectorAll(LAYOUT_SELECTOR).length > 0) return true;
       }
@@ -761,75 +842,31 @@
     return false;
   }
 
-  // Наблюдение за конкретным корнем: перерисовка с дебаунсом и
-  // только по этому корню, а не по всему документу.
-  function observe(root) {
-    root = root || document.body;
+  // Собственный экземпляр сканера ядра: раскладки обрабатываются той же
+  // машинерией, которую _scanner отдаёт рантаймам-надстройкам.
+  var scanner = createScanner({
+    delay: REFRESH_DELAY,
+    hasWork: hasLayoutAdditions,
+    handleAdded: handleAdded,
+    flush: flushCSS,
+    refresh: refresh
+  });
 
-    for (var i = 0; i < observers.length; i++) {
-      if (observers[i].root === root) return;
-    }
-
-    var entry = { root: root, observer: null, timer: null };
-
-    entry.observer = new MutationObserver(function (mutations) {
-      if (!hasLayoutAdditions(mutations)) return;
-
-      if (entry.timer) clearTimeout(entry.timer);
-
-      entry.timer = setTimeout(function () {
-        entry.timer = null;
-        refresh(entry.root);
-      }, REFRESH_DELAY);
-    });
-
-    entry.observer.observe(root, { childList: true, subtree: true });
-    observers.push(entry);
-  }
-
-  // Наблюдение за парсингом документа: узлы разбираются по мере
-  // появления, поэтому контейнеры открываются сверху вниз, а не разом
-  // на DOMContentLoaded. Дебаунса здесь нет намеренно — он и есть та
-  // задержка, которой мы избегаем.
+  // Потоковая раскладка: контейнеры открываются сверху вниз по мере
+  // разбора документа, а не разом на DOMContentLoaded. Предварительная
+  // работа — брейкпоинты и FOUC-защита — нужна до первого узла.
   function observeParsing() {
-    if (parseObserver || typeof MutationObserver === 'undefined') return;
+    if (typeof MutationObserver === 'undefined') return;
 
     readBreakpoints();
     flushCSS();
-
-    parseObserver = new MutationObserver(function (mutations) {
-      var dirty = false;
-
-      for (var i = 0; i < mutations.length; i++) {
-        if (handleAdded(mutations[i].addedNodes)) dirty = true;
-      }
-
-      // Флаш один на порцию, а не на элемент: flushCSS переписывает
-      // таблицу целиком.
-      if (dirty) flushCSS();
-    });
-
-    parseObserver.observe(document.documentElement, { childList: true, subtree: true });
-  }
-
-  function stopParseObserver() {
-    if (!parseObserver) return;
-
-    parseObserver.disconnect();
-    parseObserver = null;
+    scanner.observeParsing();
   }
 
   function destroy() {
     var i;
 
-    stopParseObserver();
-
-    for (i = 0; i < observers.length; i++) {
-      if (observers[i].timer) clearTimeout(observers[i].timer);
-      observers[i].observer.disconnect();
-    }
-
-    observers = [];
+    scanner.stop();
 
     for (i = 0; i < touched.length; i++) {
       var record = touched[i];
@@ -883,7 +920,7 @@
       if (streaming) observeParsing();
 
       document.addEventListener('DOMContentLoaded', function () {
-        stopParseObserver();
+        scanner.stopParseObserver();
         init();
       });
     } else {
@@ -894,16 +931,18 @@
   return {
     init: init,
     refresh: refresh,
-    observe: observe,
+    observe: scanner.observe,
     destroy: destroy,
     parseLayout: parseLayout,
     version: VERSION,
     _autoStart: autoStart,
 
     // Для рантаймов-надстроек: ядро остаётся единственным владельцем
-    // <style id="griffincss-dynamic">, а они кладут правила в свой слой.
+    // <style id="griffincss-dynamic">, а они кладут правила в свой слой
+    // и берут машинерию наблюдения из той же фабрики, что и само ядро.
     _emit: emit,
     _hash: hashKey,
-    _flush: flushCSS
+    _flush: flushCSS,
+    _scanner: createScanner
   };
 });

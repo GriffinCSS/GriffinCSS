@@ -424,6 +424,16 @@
 
 <p>Клавиатура вкладок включается только при <code>data-gr-tabs</code>. Без атрибута и без скрипта та же разметка остаётся списком ссылок-якорей и секциями подряд — страница читается сверху вниз и печатается целиком.</p>
 
+<h2>События рантайма</h2>
+
+<p>Рантайм сообщает о действиях пользователя событиями <code>CustomEvent</code> — по образцу <code>griffincss:themechange</code> у рантайма темы. События всплывают, слушать их можно на документе.</p>
+
+<table>
+  <tr><th>Событие</th><th>Когда</th><th><code>detail</code></th></tr>
+  <tr><td><code>griffincss:tabchange</code></td><td>Пользователь переключил вкладку щелчком или с клавиатуры; расстановка ролей при инициализации события не шлёт</td><td><code>index</code>, <code>tab</code>, <code>panel</code></td></tr>
+  <tr><td><code>griffincss:toast</code></td><td>Тост показан вызовом <code>Griffincss.ui.toast()</code></td><td><code>node</code>, <code>status</code> (<code>null</code> без статуса), <code>position</code></td></tr>
+</table>
+
 <hr>
 
 </main>

@@ -1,5 +1,5 @@
 /*!
- * Griffincss Utils — Runtime v0.16.0
+ * Griffincss Utils — Runtime v0.17.0
  * Достраивает то, чего статический CSS выразить не может.
  * Пишется руками и не компилируется — правится этот файл.
  */
@@ -23,7 +23,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.16.0';
+  var VERSION = '0.17.0';
 
   // Таблица правил выводится из SCSS-карт скриптом scripts/sync-rule-table.mjs.
   // Правьте карты в SCSS, а не этот блок: npm run sync -- --fix перепишет его.
@@ -84,8 +84,7 @@
   // Пауза перед пересчётом после мутаций DOM — как в ядре.
   var REFRESH_DELAY = 16;
 
-  var observers = [];       // {root, observer, timer}
-  var parseObserver = null; // наблюдатель парсинга: живёт до DOMContentLoaded
+  var scanner = null;       // экземпляр фабрики ядра, заводится лениво
   var warned = {};          // текст предупреждения → уже сказано
 
   // Одно и то же предупреждение говорится один раз: проход повторяется
@@ -108,6 +107,27 @@
     warn('каскад скруглений требует griffincss.js — подключите ядро');
 
     return null;
+  }
+
+  // Машинерия наблюдения берётся у ядра той же фабрикой, которой
+  // пользуется оно само: своей копии тех же ста строк у утилит нет.
+  // Экземпляр заводится лениво — по той же причине, что и core().
+  function scannerOf() {
+    if (scanner) return scanner;
+
+    var G = core();
+
+    if (!G || typeof G._scanner !== 'function') return null;
+
+    scanner = G._scanner({
+      delay: REFRESH_DELAY,
+      hasWork: hasWork,
+      handleAdded: handleAdded,
+      flush: G._flush,
+      refresh: sweep
+    });
+
+    return scanner;
   }
 
   // Объявленное значение переменной: инлайн сильнее класса. Оба чтения —
@@ -481,78 +501,32 @@
   }
 
   // Наблюдение за парсингом документа: контейнеры получают радиус по мере
-  // появления, а не разом на DOMContentLoaded. Дебаунса здесь нет
-  // намеренно — он и есть та задержка, которой мы избегаем.
+  // появления, а не разом на DOMContentLoaded. Без ядра наблюдение не
+  // заводится вовсе: обрабатывать поток всё равно нечем, а финальный
+  // sweep() на DOMContentLoaded достроит всё, когда ядро появится.
   function observeParsing() {
-    if (parseObserver || typeof MutationObserver === 'undefined') return;
+    var s = scannerOf();
 
-    parseObserver = new MutationObserver(function (mutations) {
-      var dirty = false;
-      var i;
-
-      for (i = 0; i < mutations.length; i++) {
-        if (handleAdded(mutations[i].addedNodes)) dirty = true;
-      }
-
-      // Флаш один на порцию, а не на элемент: таблица переписывается целиком.
-      if (dirty) core()._flush();
-    });
-
-    parseObserver.observe(document.documentElement, { childList: true, subtree: true });
+    if (s) s.observeParsing();
   }
 
   function stopParseObserver() {
-    if (!parseObserver) return;
-
-    parseObserver.disconnect();
-    parseObserver = null;
+    if (scanner) scanner.stopParseObserver();
   }
 
   // Наблюдение за живым поддеревом: пересчёт с дебаунсом и только по
   // этому корню. Пока страница разбирается, работает поток, дальше —
   // этот наблюдатель.
   function observe(root) {
-    if (typeof MutationObserver === 'undefined') return;
+    var s = scannerOf();
 
-    root = root || document.body;
-
-    var i;
-
-    for (i = 0; i < observers.length; i++) {
-      if (observers[i].root === root) return;
-    }
-
-    var entry = { root: root, observer: null, timer: null };
-
-    entry.observer = new MutationObserver(function (mutations) {
-      if (!hasWork(mutations)) return;
-
-      if (entry.timer) clearTimeout(entry.timer);
-
-      entry.timer = setTimeout(function () {
-        entry.timer = null;
-        sweep(entry.root);
-      }, REFRESH_DELAY);
-    });
-
-    entry.observer.observe(root, { childList: true, subtree: true });
-    observers.push(entry);
+    if (s) s.observe(root);
   }
 
   // Снять всё наблюдение. Выданные классы и правила остаются: они
   // описывают текущее дерево и снимаются только сменой разметки.
   function stop() {
-    var i;
-
-    stopParseObserver();
-
-    for (i = 0; i < observers.length; i++) {
-      if (observers[i].timer) clearTimeout(observers[i].timer);
-
-      observers[i].observer.disconnect();
-    }
-
-    observers = [];
+    if (scanner) scanner.stop();
   }
 
   // Автостарт: только в браузере.

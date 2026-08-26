@@ -6,9 +6,14 @@
 
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
-| **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, опциональный ресет | 3.1 КБ CSS + 16.9 КБ JS |
-| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние | 9.6 КБ CSS |
-| **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | 10.2 КБ CSS |
+| **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | 3.3 КБ CSS + 4.8 КБ JS |
+| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние | 10.0 КБ CSS + 2.9 КБ JS |
+| **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | 14.2 КБ CSS + 2.5 КБ JS |
+
+JS-рантаймы опциональны: у ядра это раскладки и переключатель темы,
+у `ui` — поведение компонентов (подложка, крестик, тосты, клавиатура
+вкладок и их события), у `utils` — каскад скруглений и произвольные
+значения. Без них пакеты остаются рабочим CSS.
 
 `griffincss-core` самодостаточен. `griffincss-ui` и `griffincss-utils`
 peer-зависят от него: дизайн-токены и карта брейкпоинтов лежат в ядре
@@ -44,7 +49,7 @@ properties. JS-рантайм не требует сборки и не имее�
 
 ## Установка / Installation
 
-> **Текущая версия `0.16.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.17.0`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -71,10 +76,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.16.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.16.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.16.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.16.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.17.0/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.17.0/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.17.0/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.17.0/dist/griffincss.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
@@ -96,14 +101,19 @@ npm run build
 |---|---|
 | `packages/core/dist/griffincss-core.css` | Сетка, флекс, статические правила |
 | `packages/core/dist/griffincss-reset.css` | Ресет — отдельная точка входа, подключается по желанию |
+| `packages/core/dist/griffincss-styles.css` | Стратегии оформления `data-gr-style` (airy, strict, compact) — opt-in файл |
 | `packages/core/dist/griffincss.js` | Рантайм-парсер раскладок |
 | `packages/core/dist/griffincss-theme.js` | Рантайм переключателя темы — подключается отдельно и по желанию |
 | `packages/ui/dist/griffincss-ui.css` | Компоненты интерфейса |
 | `packages/ui/dist/griffincss-ui-scoped.css` | То же, обёрнутое в `@scope (.griffin)` |
-| `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты и клавиатура вкладок. 7.5 КБ gzip как есть — файл, как и рантайм ядра, не минифицируется |
+| `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты, клавиатура вкладок и события `griffincss:*` |
 | `packages/utils/dist/griffincss-utils.css` | Утилитарные классы |
 | `packages/utils/dist/griffincss-utils-scoped.css` | То же, обёрнутое в `@scope (.griffin)` |
-| `packages/utils/dist/griffincss-utils.js` | Опциональный рантайм утилит: каскад скруглений произвольной глубины. Как и остальные рантаймы, не минифицируется |
+| `packages/utils/dist/griffincss-utils.js` | Опциональный рантайм утилит: каскад скруглений произвольной глубины и произвольные значения `gr-*-[…]` |
+
+Рантаймы пишутся руками в `packages/*/src/` и минифицируются при сборке
+(terser, рядом лежат карты кода); правится всегда `src/`, файлы в `dist/` —
+артефакт.
 
 **Зависимости пакетов.** `griffincss-core` не зависит ни от чего.
 `griffincss-ui` и `griffincss-utils` объявляют `griffincss-core`
@@ -168,7 +178,7 @@ npm run build
 Весь CSS библиотеки объявлен в слоях, порядок один и тот же в каждой сборке:
 
 ```css
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils;
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
 ```
 
 | Слой | Что в нём |
@@ -177,10 +187,13 @@ npm run build
 | `griffincss.core` | `griffincss-core.css`, вывод компилтайм-миксина и весь CSS JS-рантайма |
 | `griffincss.ui` | `griffincss-ui.css` и `griffincss-ui-scoped.css` |
 | `griffincss.utils` | `griffincss-utils.css` и `griffincss-utils-scoped.css` |
+| `griffincss.style` | `griffincss-styles.css` — стратегии оформления `data-gr-style` |
 
 Компоненты старше ядра, утилиты старше компонентов. Первое нужно, чтобы
 `.gr-card` со своим `display: flex` не проигрывал `.gr-flex`; второе — чтобы
-`.gr-mb-0` на карточке побеждал её собственный `margin-bottom`.
+`.gr-mb-0` на карточке побеждал её собственный `margin-bottom`. Стратегии
+оформления — старше всего библиотечного: выбранный `data-gr-style` обязан
+переопределять метрики и компонентов, и утилит.
 
 Два следствия:
 
@@ -203,7 +216,7 @@ npm run build
 
   ```css
   /* app.css — подключён первым, до griffincss-*.css */
-  @layer griffincss.reset, griffincss.core, griffincss.app, griffincss.ui, griffincss.utils;
+  @layer griffincss.reset, griffincss.core, griffincss.app, griffincss.ui, griffincss.utils, griffincss.style;
 
   @layer griffincss.app {
     p { margin: 0.75rem 0; }   /* .gr-mb-0 на абзаце всё равно победит */
@@ -328,7 +341,9 @@ badge-эндпоинта — проверены пути `/actions/workflows/<ф
 - **Одно ядро**: `griffincss-core` самодостаточен; `griffincss-utils` — надстройка над ним
   (peer-зависимость), поэтому токены и брейкпоинты существуют в единственном экземпляре.
   Собранный `griffincss-utils.css` при этом подключается и без `griffincss-core.css`.
-- **Работает без JS**: рантайм только раскладывает сетки; всё остальное — чистый CSS.
+- **Работает без JS**: рантаймы опциональны и добавляют только то, чего CSS
+  не выражает — раскладки из `data-gr-layout`, переключение темы, каскад
+  скруглений, поведение компонентов; без них библиотека остаётся рабочим CSS.
 - **Современность**: CSS Grid + Flexbox, никаких float.
 - **Префикс `gr-`**: все классы и data-атрибуты используют префикс `gr-`.
 - **CSS custom properties**: все переменные доступны для переопределения в runtime.
@@ -395,124 +410,6 @@ npm run check                              # lint + build + test — полны�
 
 ---
 
-## Миграция с v0.6.0 / Migrating from v0.6.0
-
-**1. Пакет разделён надвое.** Пути `griffincss/dist/griffincss.css` и
-`griffincss/scss/core/*` больше не существуют:
-
-| Было | Стало |
-|---|---|
-| `griffincss/dist/griffincss.css` | `griffincss-core/dist/griffincss-core.css` + `griffincss-utils/dist/griffincss-utils.css` |
-| `griffincss/dist/griffincss-core.css` | `griffincss-core/dist/griffincss-core.css` |
-| `griffincss/dist/griffincss.js` | `griffincss-core/dist/griffincss.js` |
-| `@use 'griffincss/scss/core/grid-parser'` | `@use 'griffincss-core/scss/grid-parser'` |
-
-**2. Компилтайм-миксины переписаны.** Один вызов на контейнер, имя класса обязательно:
-
-```scss
-// Было
-@include p.gr-grid-layout('a2b2');
-@include p.gr-grid-layout-md('a1b3');
-
-// Стало
-@include p.gr-grid-layout('a2b2', $md: 'a1b3', $name: 'hero');
-// разметка: <div class="gr-l-hero">
-```
-
-Миксины `gr-grid-layout-{sm,md,lg,xl}` удалены. Правила больше не привязаны
-к значению `data-gr-layout` — рантайм вешает на контейнер класс `.gr-l-<хеш>` сам,
-разметку менять не нужно.
-
-**3. Каскад скруглений: `--gr-p` вместо чтения padding.** Рантайм больше не
-определяет зазор из вычисленных стилей — задайте его явно:
-
-```html
-<!-- Было -->
-<div class="gr-radius gr-radius-8" style="padding: 16px;">
-
-<!-- Стало -->
-<div class="gr-radius gr-radius-8" style="--gr-p: 16px;">
-```
-
-**4. Защита от FOUC ушла из статического CSS** в рантайм. Если вы полагались на
-`opacity: 0` из CSS при ручной инициализации (`data-auto="false"`), добавьте
-правило сами — либо вызывайте `Griffincss.init()` раньше.
-
-**5. Медиа-запросы — range-синтаксис** (`@media (width >= 768px)`). Требуется
-Chrome 104+, Safari 16.4+, Firefox 102+ (baseline 2023).
-
-**6. Весь CSS — в каскадных слоях** (`@layer griffincss.reset, griffincss.core,
-griffincss.utils`). Правила вне слоёв всегда сильнее правил в слоях, поэтому
-`!important`, которым раньше перебивали утилиты, можно убирать. Требуется
-Chrome 99+, Safari 15.4+, Firefox 97+. Если вы держите свой CSS в собственных
-слоях — объявите их после `griffincss.*`.
-
-**8. Спейсинг: единый суффиксный синтаксис адаптивности.** Префиксная форма
-с двоеточием удалена — в библиотеке остался один синтаксис, тот же, что
-у flex, grid, типографики и видимости:
-
-```html
-<!-- Было -->
-<div class="gr-p-4 gr-md:p-8 gr-lg:p-12">
-
-<!-- Стало -->
-<div class="gr-p-4 gr-p-8-md gr-p-12-lg">
-```
-
-Перенос механический: `gr-{bp}:{свойство}-{n}` → `gr-{свойство}-{n}-{bp}`.
-
-**9. Шкала спейсинга разрежена.** Ступени `9`, `11`, `13`, `14` и `15` убраны —
-остались `0 1 2 3 4 5 6 7 8 10 12 16`. Спейсинг занимал две трети библиотеки
-(1193 класса из 1782) при том, что за убранными ступенями не стоит сценария,
-который не решался бы соседней. Нужное промежуточное значение задаётся
-своим CSS.
-
-**10. Адаптивные классы радиуса удалены.** `.gr-radius-4-md` и подобных больше
-нет. Радиус приходит из `--gr-r`, поэтому меняется медиа-запросом, а каскад
-по вложенности пересчитывается сам:
-
-```css
-.card { --gr-r: 0; }
-@media (width >= 768px) { .card { --gr-r: 1rem; } }
-```
-
-**11. Ресет: маркеры списков возвращены.** Раньше `ul, ol` безусловно получали
-`list-style: none` — вместе с оформлением `<ul>` терял роль списка в VoiceOver
-и озвучку «список из N элементов». Теперь сброс применяется только
-к `ul[role="list"]` и `ol[role="list"]`:
-
-```html
-<!-- навигация: роль списка сохранена, оформление снято -->
-<ul role="list" class="gr-flex gr-gap">…</ul>
-```
-
-Обычному `<ul>` в тексте вернулись маркеры и отступ. Снять их без правки
-разметки можно классом `.gr-list-none`.
-
-**12. `.gr-sr-only` использует `clip-path` вместо `clip`.** Свойство `clip`
-объявлено устаревшим; результат тот же, менять ничего не нужно.
-
-**7. Токен `--gr-bp-2xl` удалён.** Классов на `2xl` библиотека не генерировала
-никогда, а значение вводило в заблуждение. Если он использовался в вашем CSS,
-задайте его сами или добавьте `2xl` в карту `$gr-breakpoints` — тогда появятся
-и токен, и адаптивные варианты утилит.
-
----
-
-**7. Семантические цвета стали темозависимыми.** Имена и смысл шести токенов
-(`--gr-color-bg`, `-text`, `-text-secondary`, `-border`, `-link`, `-link-hover`)
-сохранены, но два значения сдвинулись ради контраста: `--gr-color-text-secondary`
-взят на ступень темнее (L 29 % вместо 38 %), а `--gr-color-link` — на L 45 %
-вместо 50 %, потому что на 50 % ссылка давала 4,3:1 к белому фону, ниже AA.
-Литеральные утилиты (`.gr-bg-white`, `.gr-text-gray-900`) не изменились.
-
-Ресет теперь задаёт `body` фон и цвет текста из токенов — без этого
-переключатель темы не перекрашивал бы саму страницу. Если ваш проект
-рассчитывал на прозрачный `body`, задайте фон явно: пользовательский CSS
-вне слоёв выигрывает у библиотеки без `!important`.
-
----
-
 ## Структура проекта / Project Structure
 
 ```
@@ -531,6 +428,7 @@ GriffinCSS/
 │   │   ├── scss/
 │   │   │   ├── griffincss-core.scss    # Точка входа
 │   │   │   ├── griffincss-reset.scss   # Ресет — отдельная точка входа
+│   │   │   ├── griffincss-styles.scss  # Стратегии оформления — отдельная точка входа
 │   │   │   ├── _tokens.scss            # CSS custom properties — общие для всех трёх пакетов
 │   │   │   ├── _theme-values.scss      # Значения тем и режима доступности — только миксины
 │   │   │   ├── _theme.scss             # Блоки data-gr-theme и data-gr-a11y
@@ -550,7 +448,7 @@ GriffinCSS/
 │   │   │   ├── griffincss.js           # JS-рантайм раскладок (правится напрямую)
 │   │   │   └── griffincss-theme.js     # JS-рантайм переключателя темы
 │   │   ├── test/                       # node:test + мок-DOM
-│   │   └── dist/                       # Скомпилированный CSS + копия рантайма
+│   │   └── dist/                       # Скомпилированный CSS + минифицированные рантаймы
 │   ├── ui/                       # Пакет griffincss-ui (надстройка над core)
 │   │   ├── scss/
 │   │   │   ├── griffincss-ui.scss        # Точка входа
@@ -609,7 +507,11 @@ GriffinCSS/
 ├── scripts/
 │   ├── sync-breakpoints.mjs      # Фолбэки брейкпоинтов рантайма из карты SCSS
 │   ├── sync-rule-table.mjs       # Таблица правил рантайма утилит из карт SCSS
-│   └── check-dist.mjs            # Проверки собранного CSS
+│   ├── check-dist.mjs            # Проверки собранного CSS и бюджета рантаймов
+│   ├── check-links.mjs           # Целостность ссылок документации
+│   ├── build-docs-index.mjs      # Поисковый индекс доксайта
+│   ├── purge.mjs                 # Отсечение неиспользуемых утилит
+│   └── serve-stream.mjs          # Стенд потоковой раскладки
 ├── docs/                         # Демо и страницы документации
 └── .gitverse/workflows/          # Непрерывная проверка
 ```

@@ -160,7 +160,7 @@
     ? window.Griffincss.theme.get()
     : { theme: 'auto', a11y: false, style: 'standard' };
 
-  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.16.0</span></a>';
+  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.17.0</span></a>';
 
   html += '<div class="sidebar-controls">';
   html += '<fieldset class="gr-segmented gr-w-full" aria-label="Цветовая тема">';

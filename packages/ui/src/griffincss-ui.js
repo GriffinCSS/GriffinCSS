@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.16.0
+ * Griffincss UI — Runtime v0.17.0
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -50,7 +50,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.16.0';
+  var VERSION = '0.17.0';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -84,10 +84,6 @@
   // начатое в окне и законченное за его краем, щелчком по подложке не является.
   var pressed = null;
 
-  function isDialog(node) {
-    return !!node && node.tagName === 'DIALOG' && typeof node.close === 'function';
-  }
-
   // Щелчок по подложке приходит на сам <dialog>: подложка — его псевдоэлемент,
   // собственной цели у неё нет. Отличить её от полей окна можно только
   // по координатам.
@@ -118,27 +114,46 @@
     pressed = event.target;
   }
 
-  function onClick(event) {
-    // Три разных щелчка приходят одним событием, и порядок разбора значим:
-    // крестик внутри окна не должен считаться щелчком по подложке,
-    // а вкладка-ссылка не должна уводить страницу к якорю.
-    var trigger = closest(event.target, '[' + DISMISS_ATTR + ']');
-
-    if (trigger) {
-      dismissFrom(trigger);
-      return;
-    }
-
-    if (onTabClick(event)) return;
-
-    var dialog = event.target;
-
-    if (!isDialog(dialog)) return;
-    if (!dialog.hasAttribute(OVERLAY_ATTR)) return;
-    if (pressed !== null && pressed !== dialog) return;
-    if (!outsideBox(dialog, event)) return;
+  // Щелчок по подложке: обе половины щелчка пришлись на сам <dialog>
+  // и легли вне его прямоугольника. closest здесь недостаточен — щелчок
+  // по содержимому окна тоже нашёл бы диалог, поэтому цель события
+  // сверяется с найденным узлом напрямую. Что это <dialog>, гарантирует
+  // селектор регистрации; проверить остаётся только наличие close().
+  function onOverlayClick(event, dialog) {
+    if (event.target !== dialog) return false;
+    if (typeof dialog.close !== 'function') return false;
+    if (pressed !== null && pressed !== dialog) return false;
+    if (!outsideBox(dialog, event)) return false;
 
     dialog.close(OVERLAY_REASON);
+
+    return true;
+  }
+
+  // --- Реестр делегирования ---------------------------------------------------
+
+  // Компонент объявляет {событие, селектор, обработчик}; диспетчер один
+  // на тип события. Обработчик получает (event, node) — node найден
+  // closest по селектору — и возвращает true, когда событие обработано
+  // и очередь дальше не идёт. Порядок регистрации значим: крестик внутри
+  // окна не должен считаться щелчком по подложке, а вкладка-ссылка
+  // не должна уводить страницу к якорю.
+  var registry = {};   // тип события → [{selector, handler}]
+
+  function register(type, selector, handler) {
+    if (!registry[type]) registry[type] = [];
+
+    registry[type].push({ selector: selector, handler: handler });
+  }
+
+  function dispatch(event) {
+    var entries = registry[event.type] || [];
+
+    for (var i = 0; i < entries.length; i++) {
+      var node = closest(event.target, entries[i].selector);
+
+      if (node && entries[i].handler(event, node) === true) return;
+    }
   }
 
   // --- Общее ------------------------------------------------------------------
@@ -172,21 +187,34 @@
   }
 
   function warn(message) {
-    if (typeof console !== 'undefined' && console && typeof console.warn === 'function') {
-      console.warn('Griffincss UI: ' + message);
-    }
+    if (typeof console !== 'undefined' && console.warn) console.warn('Griffincss UI: ' + message);
   }
 
   function element(tag, className) {
     var node = document.createElement(tag);
 
     if (className) {
-      var names = className.split(' ');
-
-      for (var i = 0; i < names.length; i++) node.classList.add(names[i]);
+      className.split(' ').forEach(function (name) { node.classList.add(name); });
     }
 
     return node;
+  }
+
+  // Значение из закрытого списка или дефолт: чужое значение не должно
+  // уехать в имя класса.
+  function oneOf(list, value, fallback) {
+    return list.indexOf(value) === -1 ? fallback : value;
+  }
+
+  // Событие компонента — по образцу griffincss:themechange у рантайма
+  // темы. Диспетчеризуется на самом узле со всплытием; если окружение
+  // не даёт dispatchEvent на узле, уходит с документа.
+  function emitEvent(name, node, detail) {
+    try {
+      var target = node && typeof node.dispatchEvent === 'function' ? node : document;
+
+      target.dispatchEvent(new CustomEvent(name, { detail: detail, bubbles: true }));
+    } catch (e) { /* окружение без CustomEvent */ }
   }
 
   // --- Закрытие крестиком -----------------------------------------------------
@@ -196,8 +224,10 @@
   //   <button data-gr-dismiss="#banner">×</button>
   //
   // Пустое значение — обычный случай: убрать ближайшее сообщение,
-  // внутри которого стоит сам крестик.
-  function dismissFrom(trigger) {
+  // внутри которого стоит сам крестик. Сигнатура — как у обработчика
+  // реестра: регистрируется напрямую, и щелчок по крестику обработан
+  // всегда, даже когда закрывать оказалось нечего.
+  function dismissFrom(event, trigger) {
     var selector = trigger.getAttribute(DISMISS_ATTR);
     var target = selector
       ? (typeof document.querySelector === 'function' ? document.querySelector(selector) : null)
@@ -205,10 +235,12 @@
 
     if (!target) {
       warn('крестику нечего закрывать: ни цели в data-gr-dismiss, ни сообщения вокруг');
-      return;
+      return true;
     }
 
     dismiss(target);
+
+    return true;
   }
 
   // Тост уходит движением — у него для этого есть класс и переход;
@@ -303,8 +335,8 @@
   function toast(text, options) {
     options = options || {};
 
-    var status = indexOf(TOAST_STATUSES, options.status) === -1 ? '' : options.status;
-    var position = indexOf(TOAST_POSITIONS, options.position) === -1 ? 'bottom-end' : options.position;
+    var status = oneOf(TOAST_STATUSES, options.status, '');
+    var position = oneOf(TOAST_POSITIONS, options.position, 'bottom-end');
 
     // Срочность по умолчанию выводится из статуса: ошибка перебивает
     // текущее чтение, остальное ждёт своей очереди.
@@ -323,15 +355,9 @@
 
     if (timeout > 0) startTimer(node, timeout);
 
+    emitEvent('griffincss:toast', node, { node: node, status: status || null, position: position });
+
     return node;
-  }
-
-  function indexOf(list, value) {
-    for (var i = 0; i < list.length; i++) {
-      if (list[i] === value) return i;
-    }
-
-    return -1;
   }
 
   // Таймер живёт на самом узле: тостов на экране бывает несколько,
@@ -384,31 +410,17 @@
     }, TOAST_LEAVE);
   }
 
-  // pointerover / pointerout, а не enter / leave: эти всплывают, и хватает
-  // одного слушателя на документ. Переход между частями одного тоста —
-  // не уход: relatedTarget внутри того же узла.
-  function onPointerOver(event) {
-    pauseToast(closest(event.target, '.gr-toast'));
+  // pointerover / pointerout и focusin / focusout, а не enter / leave и
+  // focus / blur: эти всплывают, и хватает одного слушателя на документ.
+  // Пара обработчиков одна на указатель и фокус — реестр вешает её на оба
+  // типа события. Переход между частями одного тоста — не уход:
+  // relatedTarget внутри того же узла.
+  function onToastEnter(event, node) {
+    pauseToast(node);
   }
 
-  function onPointerOut(event) {
-    var node = closest(event.target, '.gr-toast');
-
-    if (!node || contains(node, event.relatedTarget)) return;
-
-    resumeToast(node);
-  }
-
-  function onFocusIn(event) {
-    pauseToast(closest(event.target, '.gr-toast'));
-  }
-
-  function onFocusOut(event) {
-    var node = closest(event.target, '.gr-toast');
-
-    if (!node || contains(node, event.relatedTarget)) return;
-
-    resumeToast(node);
+  function onToastLeave(event, node) {
+    if (!contains(node, event.relatedTarget)) resumeToast(node);
   }
 
   // --- Вкладки ----------------------------------------------------------------
@@ -465,7 +477,9 @@
       }
     }
 
-    select(tabs, selected, false);
+    // Тихий выбор: расстановка ролей при инициализации — не действие
+    // пользователя, события о ней не шлются.
+    select(tabs, selected, false, true);
   }
 
   // Панель — по href="#id" у ссылки или по aria-controls у кнопки.
@@ -479,7 +493,7 @@
     return document.getElementById(id);
   }
 
-  function select(tabs, index, focus) {
+  function select(tabs, index, focus, silent) {
     for (var i = 0; i < tabs.length; i++) {
       var tab = tabs[i];
       var on = i === index;
@@ -500,6 +514,14 @@
     }
 
     if (focus && typeof tabs[index].focus === 'function') tabs[index].focus();
+
+    if (!silent) {
+      emitEvent('griffincss:tabchange', tabs[index], {
+        index: index,
+        tab: tabs[index],
+        panel: panelOf(tabs[index])
+      });
+    }
   }
 
   function disabled(tab) {
@@ -526,21 +548,17 @@
     return step(tabs, index, delta);
   }
 
-  function onKeyDown(event) {
-    var tab = closest(event.target, '.gr-tab');
-
-    if (!tab) return;
-
+  function onTabKeyDown(event, tab) {
     var group = closest(tab, '[' + TABS_ATTR + ']');
 
-    if (!group) return;
+    if (!group) return false;
 
     // Список читается заново: вкладки добавляют и убирают вместе
     // с разметкой, и запомненный при инициализации массив устарел бы молча.
     var tabs = group.querySelectorAll('.gr-tab');
     var current = indexOfNode(tabs, tab);
 
-    if (current === -1) return;
+    if (current === -1) return false;
 
     var next = current;
     var key = event.key;
@@ -551,20 +569,18 @@
     else if (key === 'ArrowLeft' || key === 'ArrowUp') next = step(tabs, current, -1);
     else if (key === 'Home') next = edge(tabs, 1);
     else if (key === 'End') next = edge(tabs, -1);
-    else return;
+    else return false;
 
     if (typeof event.preventDefault === 'function') event.preventDefault();
 
     select(tabs, next, true);
+
+    return true;
   }
 
   // Щелчок по вкладке-ссылке переключает панель, а не уводит страницу
   // к якорю: прыжок сдвинул бы ряд вкладок за верхний край экрана.
-  function onTabClick(event) {
-    var tab = closest(event.target, '.gr-tab');
-
-    if (!tab) return false;
-
+  function onTabClick(event, tab) {
     var group = closest(tab, '[' + TABS_ATTR + ']');
 
     if (!group) return false;
@@ -584,12 +600,9 @@
     return true;
   }
 
+  // NodeList не имеет indexOf, но массивный метод работает по нему.
   function indexOfNode(list, node) {
-    for (var i = 0; i < list.length; i++) {
-      if (list[i] === node) return i;
-    }
-
-    return -1;
+    return Array.prototype.indexOf.call(list, node);
   }
 
   // Один делегированный обработчик на документ, а не по слушателю на окно:
@@ -599,17 +612,7 @@
     if (started) return publicApi;
 
     started = true;
-    document.addEventListener('pointerdown', onPointerDown, true);
-    document.addEventListener('click', onClick);
-    document.addEventListener('keydown', onKeyDown);
-
-    // pointerover / pointerout и focusin / focusout всплывают, в отличие
-    // от enter / leave и focus / blur: одного слушателя на документ хватает
-    // на все тосты сразу, включая ещё не созданные.
-    document.addEventListener('pointerover', onPointerOver);
-    document.addEventListener('pointerout', onPointerOut);
-    document.addEventListener('focusin', onFocusIn);
-    document.addEventListener('focusout', onFocusOut);
+    listen('addEventListener');
 
     return publicApi;
   }
@@ -619,16 +622,37 @@
 
     started = false;
     pressed = null;
-    document.removeEventListener('pointerdown', onPointerDown, true);
-    document.removeEventListener('click', onClick);
-    document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('pointerover', onPointerOver);
-    document.removeEventListener('pointerout', onPointerOut);
-    document.removeEventListener('focusin', onFocusIn);
-    document.removeEventListener('focusout', onFocusOut);
+    listen('removeEventListener');
 
     return publicApi;
   }
+
+  // Подписка и отписка — один список: диспетчер на каждый тип события
+  // из реестра плюс перехват нажатия для щелчка по подложке.
+  function listen(method) {
+    document[method]('pointerdown', onPointerDown, true);
+
+    for (var type in registry) {
+      if (Object.prototype.hasOwnProperty.call(registry, type)) {
+        document[method](type, dispatch);
+      }
+    }
+  }
+
+  // --- Регистрация компонентов ------------------------------------------------
+
+  // Порядок значим: крестик внутри окна — не щелчок по подложке,
+  // вкладка перехватывает щелчок раньше, чем он дойдёт до окна.
+  register('click', '[' + DISMISS_ATTR + ']', dismissFrom);
+  register('click', '.gr-tab', onTabClick);
+  register('click', 'dialog[' + OVERLAY_ATTR + ']', onOverlayClick);
+
+  register('keydown', '.gr-tab', onTabKeyDown);
+
+  register('pointerover', '.gr-toast', onToastEnter);
+  register('focusin', '.gr-toast', onToastEnter);
+  register('pointerout', '.gr-toast', onToastLeave);
+  register('focusout', '.gr-toast', onToastLeave);
 
   // Автостарт: только в браузере и только если его не отключили атрибутом
   // data-auto="false" на теге <script>.
