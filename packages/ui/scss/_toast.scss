@@ -1,0 +1,173 @@
+// Griffincss UI — Toast
+// Короткое уведомление в углу экрана. Живёт в регионе — закреплённом
+// контейнере, объявленном в разметке живой областью:
+//
+//   <div class="gr-toast-region gr-toast-region-bottom-end"
+//        role="status" aria-live="polite"></div>
+//
+// Регион ставится на страницу один раз и пустым: живая область обязана
+// существовать в дереве ДО того, как в неё что-то положат, иначе программа
+// чтения с экрана не заметит вставки. Пустой регион при этом ничего
+// не занимает и ничего не сообщает.
+//
+// Сообщения об ошибке требуют своего региона с aria-live="assertive"
+// и role="alert": «вежливая» область дочитает текущее и только потом
+// сообщит, а потеря данных ждать не может.
+//
+// Показывает и убирает тосты griffincss-ui.js: Griffincss.ui.toast(text).
+// Без скрипта модуль не используется — это единственный компонент
+// библиотеки, у которого нет статического применения.
+
+@use 'sass:list';
+
+.gr-toast-region {
+  --gr-toast-slide: -0.75rem;
+
+  position: fixed;
+
+  // Регион растянут по краю экрана и лежит поверх всего. Не сними он с себя
+  // указатель — прозрачная полоса перехватывала бы щелчки по странице
+  // под ней. Сами тосты указатель принимают: в них бывают крестик и ссылка.
+  z-index: var(--gr-z-toast);
+  inset-block: 0 auto;
+  inset-inline: auto 0;
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: var(--gr-ui-gap);
+  max-inline-size: min(26rem, 100%);
+  padding: var(--gr-gap);
+  pointer-events: none;
+}
+
+// --- Углы -------------------------------------------------------------------
+
+// Новый тост вставляется в конец региона. У нижних углов это значит
+// «ближе к краю экрана», поэтому колонка там перевёрнута: иначе свежее
+// сообщение уезжало бы вверх, а старое оставалось бы на виду.
+// Заодно переворачивается направление въезда.
+.gr-toast-region-top-start {
+  inset-block: 0 auto;
+  inset-inline: 0 auto;
+}
+
+.gr-toast-region-top-end {
+  inset-block: 0 auto;
+  inset-inline: auto 0;
+}
+
+.gr-toast-region-bottom-start {
+  --gr-toast-slide: 0.75rem;
+
+  inset-block: auto 0;
+  inset-inline: 0 auto;
+  flex-direction: column-reverse;
+}
+
+.gr-toast-region-bottom-end {
+  --gr-toast-slide: 0.75rem;
+
+  inset-block: auto 0;
+  inset-inline: auto 0;
+  flex-direction: column-reverse;
+}
+
+// --- Сообщение --------------------------------------------------------------
+
+.gr-toast {
+  --gr-toast-color: var(--gr-color-text-secondary);
+  --gr-toast-fill: var(--gr-color-border-strong);
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: flex-start;
+  gap: var(--gr-ui-gap);
+  padding-block: calc(var(--gr-ui-gap) * 1.25);
+  padding-inline: var(--gr-gap);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-inline-start-width: calc(var(--gr-border-width) * 4);
+  border-inline-start-color: var(--gr-toast-fill);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface-overlay);
+  box-shadow: var(--gr-shadow-lg);
+  color: var(--gr-color-text);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  pointer-events: auto;
+  transition:
+    opacity var(--gr-transition),
+    translate var(--gr-transition);
+}
+
+// Появление объявлено начальным состоянием, а не классом от скрипта.
+// Узел вставлен и сразу нарисован в конечном виде; @starting-style —
+// единственный способ показать въезд, не требуя от рантайма второго кадра
+// и пары «добавил класс — снял класс».
+@starting-style {
+  .gr-toast {
+    opacity: 0;
+    translate: 0 var(--gr-toast-slide, -0.75rem);
+  }
+}
+
+// Уход. Класс вешает рантайм и ждёт конца перехода — так тост исчезает
+// тем же движением, каким появился.
+.gr-toast-leaving {
+  opacity: 0;
+  translate: 0 var(--gr-toast-slide, -0.75rem);
+
+  // Уходящий тост уже не сообщение, а картинка: щелчок по нему пришёлся бы
+  // на то, чего человек больше не видит.
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-toast {
+    transition-duration: 0.01ms;
+  }
+}
+
+// Слот под иконку — как у сообщения о статусе: своих иконок библиотека
+// не везёт, сюда кладут любой знак.
+.gr-toast-icon {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  color: var(--gr-toast-color);
+  line-height: 1.25;
+  text-align: center;
+}
+
+.gr-toast-body {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+// Слово статуса. Тот же довод, что у .gr-alert-title: цвет не переживает
+// чёрно-белую печать и дальтонизм, слово переживает.
+.gr-toast-title {
+  display: block;
+  margin: 0;
+  color: var(--gr-toast-color);
+  font-size: inherit;
+  font-weight: 600;
+}
+
+// --- Статусы ----------------------------------------------------------------
+
+// Парами: цвет слова и иконки, цвет полосы. Расходятся они у предупреждения —
+// текстовый цвет обязан быть тёмным, чтобы читаться, а полоса такого цвета
+// не читается как «внимание».
+$gr-toast-statuses: (
+  info: (var(--gr-color-info), var(--gr-color-info)),
+  success: (var(--gr-color-success), var(--gr-color-success)),
+  warning: (var(--gr-color-warning), var(--gr-color-warning-surface)),
+  danger: (var(--gr-color-danger), var(--gr-color-danger))
+);
+
+@each $gr-name, $gr-value in $gr-toast-statuses {
+  .gr-toast-#{$gr-name} {
+    --gr-toast-color: #{list.nth($gr-value, 1)};
+    --gr-toast-fill: #{list.nth($gr-value, 2)};
+  }
+}

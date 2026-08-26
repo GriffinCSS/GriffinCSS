@@ -1,0 +1,110 @@
+// Griffincss UI — Card
+// Карточка: поверхность с границей, скруглением и тремя необязательными
+// поясами — шапкой, телом и подвалом.
+//
+// Колонка на flex, а не блок: подвал должен прижиматься к низу, когда
+// карточки в ряду выровнены по высоте (.gr-grid-rows, align-items: stretch),
+// а тело — забирать остаток.
+
+.gr-card {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  min-inline-size: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-color-text);
+  overflow: hidden;
+}
+
+// Тело забирает остаток высоты, поэтому подвал остаётся внизу
+// независимо от того, сколько в теле текста.
+.gr-card-body {
+  flex: 1 1 auto;
+  padding: var(--gr-gap);
+}
+
+.gr-card-header,
+.gr-card-footer {
+  padding-block: calc(var(--gr-gap) * 0.75);
+  padding-inline: var(--gr-gap);
+}
+
+.gr-card-header {
+  border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+  font-weight: 600;
+}
+
+.gr-card-footer {
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+  color: var(--gr-color-text-secondary);
+  font-size: 0.875rem;
+}
+
+// Картинка во всю ширину карточки. Скругление ей не нужно: его срезает
+// overflow: hidden обёртки, поэтому медиа одинаково лежит и сверху, и снизу.
+.gr-card-media {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  object-fit: cover;
+}
+
+// --- Варианты ---------------------------------------------------------------
+
+// Приподнятая: тень вместо границы. Плотность тени задаёт тема
+// (--gr-shadow-strength), поэтому на тёмном фоне карточка не растворяется.
+.gr-card-raised {
+  border-color: transparent;
+  background-color: var(--gr-color-surface-raised);
+  box-shadow: var(--gr-shadow-md);
+}
+
+// Плоская: только фон, ни границы, ни тени.
+.gr-card-flat {
+  border-color: transparent;
+  background-color: var(--gr-color-surface);
+  box-shadow: none;
+}
+
+// --- Кликабельная карточка --------------------------------------------------
+
+// Кликабельна вся площадь, но фокус остаётся на ссылке. Приём известен как
+// «растянутая ссылка»: ::after ссылки покрывает карточку целиком, поэтому
+// мышь попадает по всей плитке, а Tab по-прежнему приводит к одному
+// элементу с настоящим href — вторая обёртка <a> вокруг карточки такого
+// не даёт и ломает вложенные ссылки.
+//
+// Условие работы: у карточки position: relative, у ссылки — нет.
+.gr-card-interactive {
+  position: relative;
+  transition: border-color var(--gr-transition), box-shadow var(--gr-transition);
+}
+
+.gr-card-interactive :where(a[href])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+@media (hover: hover) {
+  .gr-card-interactive:hover {
+    border-color: var(--gr-color-border-strong);
+    box-shadow: var(--gr-shadow-md);
+  }
+}
+
+// Контур рисуется вокруг карточки, а не вокруг строчки текста ссылки:
+// мишень у указателя и мишень у клавиатуры должны совпадать.
+.gr-card-interactive:focus-within {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Текст ссылки внутри кликабельной карточки не подчёркивается и не красится:
+// ссылка здесь — вся карточка, а не одно её слово.
+.gr-card-interactive :where(a[href]) {
+  color: inherit;
+  text-decoration: none;
+}

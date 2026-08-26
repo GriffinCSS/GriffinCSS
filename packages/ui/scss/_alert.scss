@@ -1,0 +1,90 @@
+// Griffincss UI — Alert
+// Сообщение о статусе: информация, успех, предупреждение, ошибка.
+//
+// Статус читается словом, а не только цветом. Цветная полоса не переживает
+// чёрно-белую печать, дальтонизм и монохромный режим высокого контраста —
+// слово переживает. Поэтому .gr-alert-title в разметке обязателен, а иконка
+// в слоте — третий, необязательный признак поверх цвета и текста.
+//
+// Роль объявляется разметкой: role="alert" для того, что требует немедленного
+// внимания, role="status" для остального. Модуль их не подменяет.
+//
+// Статус задаёт две переменные: --gr-alert-color красит слово и иконку,
+// --gr-alert-fill — полосу и подложку. У трёх статусов из четырёх они
+// совпадают. Расходятся у предупреждения: чтобы читаться текстом на белом,
+// его цвет обязан быть тёмно-коричневым, а полоса такого цвета не читается
+// как «внимание».
+
+@use 'sass:list';
+
+.gr-alert {
+  --gr-alert-color: var(--gr-color-info);
+  --gr-alert-fill: var(--gr-color-info);
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: flex-start;
+  gap: var(--gr-ui-gap);
+  padding: var(--gr-gap);
+  border: var(--gr-border-width) solid var(--gr-alert-fill);
+  border-inline-start-width: calc(var(--gr-border-width) * 4);
+  border-radius: var(--gr-radius);
+  background-color: color-mix(in srgb, var(--gr-alert-fill) 10%, var(--gr-color-bg));
+  color: var(--gr-color-text);
+  line-height: 1.5;
+}
+
+// Слово статуса. Цвет — тот, что безопасен для текста: у предупреждения
+// он темнее полосы, у остальных совпадает с ней. Само слово при этом
+// остаётся читаемым и вовсе без цвета — это и есть смысл требования.
+.gr-alert-title {
+  display: block;
+  margin: 0;
+  color: var(--gr-alert-color);
+  font-size: inherit;
+  font-weight: 600;
+}
+
+// Слот под иконку. Своих иконок библиотека не везёт: сюда кладут <svg>,
+// эмодзи или любой знак — размер и выравнивание задаёт слот.
+.gr-alert-icon {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  color: var(--gr-alert-color);
+  line-height: 1.25;
+  text-align: center;
+}
+
+// Текст забирает остаток строки, кнопка закрытия прижимается к концу.
+.gr-alert-body {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+// --- Статусы ----------------------------------------------------------------
+
+// Парами: цвет слова и иконки, цвет полосы и подложки.
+$gr-alert-statuses: (
+  info: (var(--gr-color-info), var(--gr-color-info)),
+  success: (var(--gr-color-success), var(--gr-color-success)),
+  warning: (var(--gr-color-warning), var(--gr-color-warning-surface)),
+  danger: (var(--gr-color-danger), var(--gr-color-danger))
+);
+
+@each $gr-name, $gr-value in $gr-alert-statuses {
+  .gr-alert-#{$gr-name} {
+    --gr-alert-color: #{list.nth($gr-value, 1)};
+    --gr-alert-fill: #{list.nth($gr-value, 2)};
+  }
+}
+
+// --- Закрытие ---------------------------------------------------------------
+
+// Отступ под кнопку закрытия. Сама кнопка — обычная .gr-btn-icon.gr-btn-ghost
+// в конце строки; закрывает её делегированный обработчик [data-gr-dismiss]
+// из griffincss-ui.js (волна 8b). Без скрипта кнопку просто не ставят —
+// сообщение остаётся на месте, а не превращается в мёртвый крестик.
+.gr-alert-dismissible {
+  padding-inline-end: calc(var(--gr-gap) * 0.5);
+}

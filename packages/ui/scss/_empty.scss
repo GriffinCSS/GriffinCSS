@@ -1,0 +1,70 @@
+// Griffincss UI — Empty state
+// Пустое состояние: список без записей, поиск без результатов, папка,
+// в которую ещё ничего не положили.
+//
+//   <div class="gr-empty">
+//     <span class="gr-empty-icon" aria-hidden="true">📭</span>
+//     <p class="gr-empty-title">Пока пусто</p>
+//     <p class="gr-empty-text">Здесь появятся заказы, как только вы
+//       оформите первый.</p>
+//     <div class="gr-empty-actions">
+//       <a class="gr-btn gr-btn-primary" href="/catalog">В каталог</a>
+//     </div>
+//   </div>
+//
+// Пустое состояние без действия — тупик: человек прочитал, что записей нет,
+// и остался с этим один на один. Поэтому в модуле есть слот под кнопку,
+// и ставить её стоит везде, где следующий шаг вообще существует.
+
+.gr-empty {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  padding-block: calc(var(--gr-gap) * 2);
+  padding-inline: var(--gr-gap);
+  color: var(--gr-color-text-secondary);
+  text-align: center;
+}
+
+.gr-empty-icon {
+  color: var(--gr-color-text-muted);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.gr-empty-title {
+  margin: 0;
+  color: var(--gr-color-text);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+// Пояснение — единственный текст на пустом экране, и во всю ширину таблицы
+// оно читается плохо: строка уходит далеко за комфортные 60–70 знаков.
+// Ограничение задано в ch, поэтому оно следует кеглю и переживает режим
+// для слабовидящих.
+.gr-empty-text {
+  max-inline-size: 46ch;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.gr-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gr-ui-gap);
+  justify-content: center;
+  margin-block-start: calc(var(--gr-ui-gap) * 0.5);
+}
+
+// Вариант в рамке: то же состояние внутри пунктирной коробки — годится
+// там, где пустое место иначе не читается как часть интерфейса, например
+// в колонке доски задач.
+.gr-empty-boxed {
+  border: var(--gr-border-width) dashed var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: color-mix(in srgb, currentcolor 3%, transparent);
+}

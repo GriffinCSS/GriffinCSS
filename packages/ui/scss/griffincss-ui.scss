@@ -1,0 +1,64 @@
+// Griffincss UI — компоненты интерфейса
+// Кнопки, поля ввода, переключатели, карточки, таблицы, статусы, аватары,
+// навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель,
+// подсказки и пагинация.
+//
+// Надстройка над griffincss-core: токены, тема и карта брейкпоинтов берутся
+// оттуда (peer-зависимость). От griffincss-utils пакет не зависит вовсе —
+// компонент обязан выглядеть правильно сам по себе; утилиты нужны, чтобы
+// его подвинуть, а не чтобы он собрался.
+//
+// Собранный griffincss-ui.css самодостаточен: блок :root входит в него
+// целиком, подключать griffincss-core.css не требуется.
+//
+// Слой griffincss.ui стоит между ядром и утилитами. Компоненты старше ядра:
+// .gr-card задаёт display: flex и не должен проигрывать .gr-flex. Утилиты
+// старше компонентов: .gr-mb-0 на карточке обязан побеждать её собственный
+// margin-bottom.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод пакета — в слое griffincss.ui.
+@layer griffincss.ui {
+  @include meta.load-css('griffincss-core/scss/tokens');
+
+  // Тема подключается и здесь, как в utils: слой griffincss.ui старше
+  // griffincss.core, поэтому переопределения темы, приехавшие только
+  // с griffincss-core.css, проиграли бы базовому :root из этой сборки —
+  // независимо от специфичности селектора.
+  @include meta.load-css('griffincss-core/scss/theme');
+
+  // @keyframes живут отдельным файлом ради scoped-сборки — см. _keyframes.scss.
+  @include meta.load-css('keyframes');
+  @include meta.load-css('accordion');
+  @include meta.load-css('alert');
+  @include meta.load-css('avatar');
+  @include meta.load-css('badge');
+  @include meta.load-css('breadcrumb');
+  @include meta.load-css('button');
+  @include meta.load-css('card');
+  @include meta.load-css('choice');
+  @include meta.load-css('drawer');
+  @include meta.load-css('dropdown');
+  @include meta.load-css('empty');
+  @include meta.load-css('form');
+  @include meta.load-css('link');
+  @include meta.load-css('menu');
+  @include meta.load-css('modal');
+  @include meta.load-css('nav');
+  @include meta.load-css('pagination');
+  @include meta.load-css('progress');
+  @include meta.load-css('skeleton');
+  @include meta.load-css('spinner');
+  @include meta.load-css('steps');
+  @include meta.load-css('table');
+  @include meta.load-css('tabs');
+  @include meta.load-css('toast');
+  @include meta.load-css('tooltip');
+
+  // Структурные правила оси оформления — последними: они уточняют компоненты
+  // и обязаны идти после их базовых правил. В griffincss-ui-scoped.scss
+  // модуля нет намеренно, см. его шапку.
+  @include meta.load-css('style-rules');
+}

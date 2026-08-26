@@ -1,0 +1,14 @@
+// Griffincss Core — ресет (opt-in)
+// Подключается по желанию, независимо от griffincss-core.css.
+// Собственных токенов не требует.
+//
+// Нижний слой каскада: правила ресета проигрывают и утилитам, и
+// пользовательскому CSS — независимо от порядка подключения файлов.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод ресета — в нижнем слое griffincss.reset.
+@layer griffincss.reset {
+  @include meta.load-css('reset');
+}

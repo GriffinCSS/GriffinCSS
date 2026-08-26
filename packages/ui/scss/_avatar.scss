@@ -1,0 +1,90 @@
+// Griffincss UI — Avatar
+// Портрет пользователя: картинка, а если её нет — инициалы.
+//
+// Фолбэк не требует ни скрипта, ни второго элемента. Класс ставится
+// на контейнер с инициалами внутри, а <img> кладётся поверх и закрывает их
+// собой. Нет картинки — нет и перекрытия, инициалы остаются видны; битая
+// ссылка даёт тот же результат, потому что сломанный <img> ничего не рисует.
+
+.gr-avatar {
+  --gr-avatar-size: 2.5rem;
+
+  display: inline-flex;
+  position: relative;
+  box-sizing: border-box;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--gr-avatar-size);
+  block-size: var(--gr-avatar-size);
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-text-secondary);
+  font-size: calc(var(--gr-avatar-size) * 0.38);
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+  overflow: hidden;
+}
+
+// Картинка перекрывает инициалы целиком. object-fit: cover не даёт
+// непропорциональному портрету растянуться в овал.
+.gr-avatar img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+$gr-avatar-sizes: (
+  xs: 1.5rem,
+  sm: 2rem,
+  lg: 3rem,
+  xl: 4rem
+);
+
+@each $gr-name, $gr-size in $gr-avatar-sizes {
+  .gr-avatar-#{$gr-name} {
+    --gr-avatar-size: #{$gr-size};
+  }
+}
+
+// --- Форма ------------------------------------------------------------------
+
+// Скруглённый квадрат вместо круга — для логотипов и обложек,
+// которым круг срезает углы вместе со смыслом.
+.gr-avatar-square {
+  border-radius: var(--gr-radius);
+}
+
+// --- Стопка -----------------------------------------------------------------
+
+// Ряд с перекрытием: «и ещё пятеро». Кольцо цветом фона отделяет соседей
+// друг от друга — без него силуэты слипаются в одно пятно.
+.gr-avatar-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.gr-avatar-group > .gr-avatar {
+  box-shadow: 0 0 0 calc(var(--gr-border-width) * 2) var(--gr-color-bg);
+}
+
+.gr-avatar-group > .gr-avatar + .gr-avatar {
+  margin-inline-start: calc(var(--gr-avatar-size) * -0.3);
+}
+
+// В стопке каждый следующий аватар накрывает предыдущему край — так их
+// и рисует браузер по порядку разметки. Тот, на который навели или перешли
+// табом, поднимается наверх и показывается целиком.
+.gr-avatar-group > .gr-avatar:hover,
+.gr-avatar-group > .gr-avatar:focus-visible,
+.gr-avatar-group > .gr-avatar:focus-within {
+  position: relative;
+  z-index: 1;
+}

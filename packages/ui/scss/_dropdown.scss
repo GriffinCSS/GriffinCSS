@@ -1,0 +1,229 @@
+// Griffincss UI — Dropdown
+// Выпадающая панель под кнопкой. Внутрь кладут .gr-menu, но не обязательно:
+// панель — просто поверхность, на ней может стоять форма или список ссылок.
+//
+// Раскрытие берётся у платформы двумя способами, и оба работают без скрипта:
+//
+//   1. <details class="gr-dropdown"> — работает везде. Панель позиционируется
+//      абсолютно внутри обёртки. Закрытия по клику мимо и по Esc платформа
+//      здесь не даёт: <details> о них не знает.
+//
+//   2. <button popovertarget> + панель с атрибутом popover — верхний слой,
+//      закрытие по Esc и по клику мимо даёт браузер. Панель в верхнем слое
+//      позиционируется относительно окна, а не обёртки, поэтому привязать
+//      её к кнопке может только CSS anchor positioning. Там, где его нет,
+//      панель раскрывается листом у нижнего края экрана — положение не то,
+//      но меню доступно и закрывается штатно.
+//
+// Оба пути — один класс панели: .gr-dropdown-panel. Третий, .gr-dropdown-hover,
+// раскрывает ту же панель наведением — со своими ограничениями, см. ниже.
+
+// --- Обёртка ----------------------------------------------------------------
+
+.gr-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+// Кнопка на <summary>: родной треугольник снимается, остальное оформление
+// берётся у .gr-btn — класс ставится на тот же элемент.
+.gr-dropdown > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.gr-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+// --- Панель -----------------------------------------------------------------
+
+.gr-dropdown-panel {
+  position: absolute;
+  z-index: var(--gr-z-dropdown);
+  inset-block-start: calc(100% + var(--gr-ui-gap) * 0.5);
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  min-inline-size: max-content;
+  max-inline-size: min(20rem, 90vw);
+  margin: 0;
+}
+
+// Раскрытие к концу строки — для панели у правого края шапки, которая иначе
+// вылезла бы за экран.
+.gr-dropdown-end .gr-dropdown-panel {
+  inset-inline: auto 0;
+}
+
+// Раскрытие вверх — для панели в подвале страницы.
+.gr-dropdown-up .gr-dropdown-panel {
+  inset-block: auto calc(100% + var(--gr-ui-gap) * 0.5);
+}
+
+// --- Панель в верхнем слое --------------------------------------------------
+
+// UA-стиль попапа задаёт inset: 0 и margin: auto — панель повисла бы
+// посреди экрана. Сбрасываем и то, и другое; рамка и фон приходят
+// от .gr-menu или от того, что положат внутрь.
+// margin: 0 обязателен. У попапа UA-стиль ставит margin: auto, и при
+// раскладке по position-area свободное место уходит в автополя — заданный
+// отступ от кнопки съедается, панель прилипает к ней вплотную.
+.gr-dropdown-panel[popover] {
+  position: fixed;
+  inset: auto 0 0;
+  max-inline-size: 100%;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  overflow: visible;
+}
+
+// Привязка к кнопке. anchor-scope ограничивает имя якоря поддеревом обёртки:
+// без него все дропдауны страницы с одинаковым --gr-dropdown-anchor
+// притягивались бы к последнему в документе — правило выбора якоря берёт
+// последний подходящий элемент в порядке дерева.
+//
+// Вылеты заданы функцией anchor() поимённо, а не через position-area:
+// при раскладке по области поля панели уходят в выравнивание внутри неё,
+// и отступ от кнопки съедается — панель прилипает к ней вплотную.
+// С anchor() зазор считается там же, где у обычной, не всплывающей панели.
+@supports (anchor-name: --gr-dropdown-anchor) {
+  .gr-dropdown {
+    anchor-scope: --gr-dropdown-anchor;
+  }
+
+  .gr-dropdown > :where(summary, button, .gr-btn) {
+    anchor-name: --gr-dropdown-anchor;
+  }
+
+  .gr-dropdown-panel[popover] {
+    position-anchor: --gr-dropdown-anchor;
+    inset-block: calc(anchor(end) + var(--gr-ui-gap) * 0.5) auto;
+    inset-inline: anchor(start) auto;
+    min-inline-size: max-content;
+    max-inline-size: min(20rem, 90%);
+
+    // Если снизу места нет — панель переворачивается вверх, если не хватает
+    // вбок — к другому краю кнопки. Без этого меню у нижнего края окна
+    // уезжало бы за пределы экрана.
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  }
+
+  .gr-dropdown-end .gr-dropdown-panel[popover] {
+    inset-inline: auto anchor(end);
+  }
+
+  .gr-dropdown-up .gr-dropdown-panel[popover] {
+    inset-block: auto calc(anchor(start) + var(--gr-ui-gap) * 0.5);
+  }
+}
+
+// --- Раскрытие по наведению --------------------------------------------------
+
+// Третий способ раскрытия, для навигационных меню: панель показывается,
+// пока указатель на обёртке. Скрипт не нужен и здесь — но у способа есть
+// цена, и она честная:
+//
+//   * на сенсорном экране наведения нет вовсе, поэтому меню открывается
+//     по фокусу: тап по кнопке ставит фокус, :focus-within раскрывает
+//     панель. Кнопка обязана быть <button> — на <div> фокуса не будет;
+//   * состояние не сообщается разметкой: aria-expanded без скрипта
+//     не обновить, поэтому кнопке ставят aria-haspopup="true" и не ставят
+//     aria-expanded — лгать об открытости хуже, чем промолчать;
+//   * закрытия по Esc платформа тут не даёт: наведение — не «открытое
+//     состояние» с точки зрения браузера.
+//
+// Для меню с действиями — «Удалить», «Выйти» — берут <details> или попап:
+// там состояние настоящее. Наведение годится для навигации, где случайное
+// раскрытие ничего не стоит.
+//
+// Панель прячется visibility, а не display: скрытая через display, она
+// не участвовала бы в переходе, а visibility и из дерева доступности убирает,
+// и анимируется.
+.gr-dropdown-hover .gr-dropdown-panel {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--gr-transition),
+    visibility var(--gr-transition);
+
+  // Задержка на закрытие: указатель, соскользнувший с кнопки мимо панели,
+  // не должен захлопывать меню мгновенно.
+  transition-delay: 0.25s;
+}
+
+// Мостик через зазор между кнопкой и панелью. Без него указатель, идущий
+// от кнопки к меню, пересекает пустое место, наведение прерывается,
+// и панель закрывается на полпути.
+.gr-dropdown-hover .gr-dropdown-panel::before {
+  content: "";
+  position: absolute;
+  inset-block-end: 100%;
+  inset-inline: 0;
+  block-size: calc(var(--gr-ui-gap) * 0.5);
+}
+
+// У раскрытой вверх панели зазор с другой стороны.
+.gr-dropdown-hover.gr-dropdown-up .gr-dropdown-panel::before {
+  inset-block: 100% auto;
+}
+
+@media (hover: hover) {
+  .gr-dropdown-hover:hover .gr-dropdown-panel {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+  }
+}
+
+// Клавиатура и сенсорный экран: фокус внутри обёртки раскрывает панель
+// без всякого наведения.
+.gr-dropdown-hover:focus-within .gr-dropdown-panel {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-dropdown-hover .gr-dropdown-panel {
+    transition-duration: 0.01ms;
+  }
+}
+
+// --- Появление --------------------------------------------------------------
+
+// Панель появляется сдвигом на её же зазор и проявлением. Переход в display
+// объявлен через allow-discrete, иначе анимации не было бы вовсе: попап
+// переключается сразу из display: none.
+@supports (transition-behavior: allow-discrete) {
+  .gr-dropdown-panel[popover] {
+    opacity: 0;
+    translate: 0 calc(-1 * var(--gr-ui-gap) * 0.5);
+    transition:
+      opacity var(--gr-transition),
+      translate var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  .gr-dropdown-panel[popover]:popover-open {
+    opacity: 1;
+    translate: 0;
+  }
+
+  @starting-style {
+    .gr-dropdown-panel[popover]:popover-open {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--gr-ui-gap) * 0.5);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-dropdown-panel[popover] {
+    translate: none;
+    transition-duration: 0.01ms;
+  }
+}

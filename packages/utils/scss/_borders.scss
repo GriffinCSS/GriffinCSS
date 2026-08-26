@@ -1,0 +1,93 @@
+// Griffincss — Borders
+// Ширина, стиль и стороны границы.
+//
+// Разделение обязанностей внутри пакета:
+//   _borders.scss       — сама граница (width / style / side);
+//   _colors.scss        — цвет (.gr-border-primary и прочие);
+//   _border-radius.scss — скругления с каскадом по вложенности.
+//
+// Ширина по умолчанию — токен --gr-border-width: режим для слабовидящих
+// поднимает её до 2px, не переписывая ни одного правила. Явные .gr-border-2
+// и старше остаются литеральными: их ширину выбрал автор разметки.
+//
+// Каждый класс ширины самодостаточен — задаёт и стиль, и цвет по умолчанию,
+// поэтому .gr-border-2 виден сам по себе. Классы цвета подключаются в точке
+// входа после этого модуля, так что .gr-border-2.gr-border-danger даёт
+// красную границу в 2px: побеждает более поздний border-color.
+
+// Ширина. Ноль вынесен отдельно: там сбрасывается вся граница целиком.
+.gr-border-0 {
+  border: 0;
+}
+
+.gr-border {
+  border: var(--gr-border-width, 1px) solid var(--gr-color-border);
+}
+
+@each $gr-width in (2, 4, 8) {
+  .gr-border-#{$gr-width} {
+    border: #{$gr-width}px solid var(--gr-color-border);
+  }
+}
+
+// Стороны. Физические t/r/b/l остаются буквальными, логические s/e идут
+// рядом: в LTR они совпадают с l/r, в RTL меняются местами сами.
+$gr-border-sides: (
+  t: top,
+  r: right,
+  b: bottom,
+  l: left,
+  s: inline-start,
+  e: inline-end
+);
+
+// Ширина у стороны задаётся своим классом, а не парой .gr-border-l + .gr-border-4:
+// класс ширины пишет сокращённое свойство border и сбрасывает вместе с ним все
+// четыре стороны, так что «толстая граница слева» такой парой не получается.
+@each $gr-key, $gr-side in $gr-border-sides {
+  .gr-border-#{$gr-key} {
+    border-#{$gr-side}: var(--gr-border-width, 1px) solid var(--gr-color-border);
+  }
+
+  .gr-border-#{$gr-key}-0 {
+    border-#{$gr-side}: 0;
+  }
+
+  @each $gr-width in (2, 4, 8) {
+    .gr-border-#{$gr-key}-#{$gr-width} {
+      border-#{$gr-side}: #{$gr-width}px solid var(--gr-color-border);
+    }
+  }
+}
+
+// Оси — граница только по бокам либо только сверху и снизу.
+// Записаны логическими сокращениями: у оси обе стороны получают одно
+// и то же значение, поэтому направление письма результата не меняет,
+// а вместо двух объявлений выводится одно.
+$gr-border-axes: (
+  x: inline,
+  y: block
+);
+
+@each $gr-key, $gr-axis in $gr-border-axes {
+  .gr-border-#{$gr-key} {
+    border-#{$gr-axis}: var(--gr-border-width, 1px) solid var(--gr-color-border);
+  }
+
+  .gr-border-#{$gr-key}-0 {
+    border-#{$gr-axis}: 0;
+  }
+
+  @each $gr-width in (2, 4, 8) {
+    .gr-border-#{$gr-key}-#{$gr-width} {
+      border-#{$gr-axis}: #{$gr-width}px solid var(--gr-color-border);
+    }
+  }
+}
+
+// Стиль. Применяется поверх класса ширины: .gr-border .gr-border-dashed.
+@each $gr-style in (solid, dashed, dotted, double, none) {
+  .gr-border-#{$gr-style} {
+    border-style: $gr-style;
+  }
+}

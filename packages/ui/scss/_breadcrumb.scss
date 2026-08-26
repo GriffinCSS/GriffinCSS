@@ -1,0 +1,86 @@
+// Griffincss UI — Breadcrumb
+// Путь до текущей страницы. Разметка — <nav aria-label="Хлебные крошки">
+// со списком <ol>: порядок здесь значащий, и нумерованный список сообщает
+// об этом программе чтения с экрана.
+//
+// Разделитель рисует ::before у каждого пункта, кроме первого. Он объявлен
+// декоративным (aria-hidden не нужен — сгенерированное содержимое в дерево
+// доступности не попадает у современных движков), поэтому путь читается
+// вслух как «Главная, Каталог, Товар», а не «Главная слэш Каталог».
+//
+// Символ разделителя — переменная --gr-breadcrumb-sep: её меняют на месте,
+// не переписывая правило.
+
+.gr-breadcrumb {
+  --gr-breadcrumb-sep: "/";
+
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0;
+  padding: 0;
+  color: var(--gr-color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+// Пункт находится и по <li>, и по классу: список может быть развёрнут
+// в <nav> со ссылками подряд, без обёрток.
+.gr-breadcrumb > :where(li, .gr-breadcrumb-item) {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-breadcrumb > :where(li, .gr-breadcrumb-item) + :where(li, .gr-breadcrumb-item)::before {
+  content: var(--gr-breadcrumb-sep);
+  color: var(--gr-color-text-muted);
+}
+
+.gr-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .gr-breadcrumb a:hover {
+    color: var(--gr-color-link-hover);
+    text-decoration-line: underline;
+  }
+}
+
+.gr-breadcrumb a:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+  border-radius: calc(var(--gr-radius) * 0.5);
+}
+
+// Последний пункт — сама страница. Ссылкой он не бывает: вести ему некуда,
+// поэтому в разметке это текст с aria-current="page", а здесь — цвет
+// и вес, отличающие конец пути от его середины.
+.gr-breadcrumb [aria-current="page"] {
+  color: var(--gr-color-text);
+  font-weight: 600;
+}
+
+// --- Свёрнутый путь ---------------------------------------------------------
+
+// Длинный путь на узком экране: середина уезжает в горизонтальную прокрутку,
+// а не переносится на три строки. Первый и последний пункты при этом
+// остаются на виду.
+.gr-breadcrumb-scroll {
+  flex-wrap: nowrap;
+  overflow: auto hidden;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+.gr-breadcrumb-scroll > :where(li, .gr-breadcrumb-item) {
+  flex: none;
+}

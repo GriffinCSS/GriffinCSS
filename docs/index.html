@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Griffincss — Модульная SCSS-библиотека</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Griffincss</h1>
+  <p>
+    Модульная SCSS-библиотека для современной вёрстки на основе CSS Grid и Flexbox.
+    Компактная, расширяемая, без лишнего кода. Описывайте сложные сетки одной строкой.
+  </p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">v0.16.0</span>
+    <span class="badge">Dart Sass</span>
+    <span class="badge">CSS Grid</span>
+    <span class="badge">Flexbox</span>
+    <span class="badge">JS 9,9 КБ gzip</span>
+    <span class="badge">MIT</span>
+  </div>
+</div>
+
+<h2 id="features">Возможности</h2>
+
+<div class="gr-grid-auto-fit gr-gap gr-my-4">
+  <div class="feature-card">
+    <h4>Строковый Grid-парсер</h4>
+    <p>Уникальная фича: описывайте сложные CSS Grid раскладки одной компактной строкой формата <code>a3b4-c2d5</code>. JS-рантайм генерирует CSS на лету.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Адаптивные раскладки</h4>
+    <p>Переключайте grid-раскладки на разных брейкпоинтах через <code>data-gr-layout-{sm,md,lg,xl}</code>. Без медиа-запросов вручную.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Адаптивность по контейнеру</h4>
+    <p>Те же брейкпоинты, но от ширины блока, а не окна: <code>.gr-cq</code> на обёртке, <code>-cmd</code> на утилитах, <code>data-gr-layout-cmd</code> на раскладке. <a href="container-queries.html">Подробнее</a>.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Flexbox-утилиты</h4>
+    <p>Полный набор классов для flex-контейнеров: направление, выравнивание, перенос, gap. С адаптивными вариантами для каждого брейкпоинта.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Спейсинг-утилиты</h4>
+    <p>Margin и padding по разреженной шкале от 0 до 4rem с шагом 0.25rem. По сторонам, по осям, авто-маржины. Адаптивный вариант у каждого свойства.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Авто-присвоение областей</h4>
+    <p>Дочерние элементы без класса <code>gr-area-*</code> автоматически получают имена grid-областей в порядке документа. Меньше классов в HTML.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Компоненты на тех же токенах</h4>
+    <p>Кнопки, поля, карточки, таблицы, сообщения, плашки — отдельный пакет <code>griffincss-ui</code>. Ни одного литерального цвета и ни одной литеральной высоты: обе темы и режим для слабовидящих приходят к ним даром.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Защита от FOUC</h4>
+    <p>Grid-контейнеры скрываются через <code>opacity: 0</code> до обработки JS-рантаймом, затем плавно проявляются. Без скачков вёрстки. Правило ставит сам рантайм — если скрипт не выполнился, его просто нет и контент виден.</p>
+  </div>
+</div>
+
+<h2 id="advantages">Достоинства</h2>
+
+<table>
+  <tr><th>Характеристика</th><th>Описание</th></tr>
+  <tr><td>Минимализм</td><td>Ядро содержит только токены, темы, grid и flex. Компоненты и утилиты — отдельные пакеты, каждый подключается по желанию.</td></tr>
+  <tr><td>Модульность</td><td>Три независимых пакета. Можно подключить только <code>griffincss-core.css</code> — или только <code>griffincss-ui.css</code>: он самодостаточен, <code>:root</code> входит в него целиком.</td></tr>
+  <tr><td>Современность</td><td>Только CSS Grid и Flexbox. Никаких float, inline-block хаков, табличной вёрстки.</td></tr>
+  <tr><td>Строковый DSL</td><td>Компактный формат <code>"a3b4-c2d5"</code> — интуитивно понятнее, чем ручное описание grid-template-areas.</td></tr>
+  <tr><td>Дедупликация</td><td>JS-рантайм генерирует CSS-правила однократно. Даже если на странице 100 одинаковых раскладок, в DOM попадёт ровно один блок CSS.</td></tr>
+  <tr><td>Непересекающиеся брейкпоинты</td><td>Адаптивные правила используют диапазоны в range-синтаксисе (<code>(768px &lt;= width &lt; 1024px)</code>), исключая конфликты между брейкпоинтами и щели на дробных ширинах.</td></tr>
+  <tr><td>Сохранение display</td><td>Авто-скрытие элементов через <code>:not()</code> добавляет <code>display:none</code> только скрываемым. Исходный display (flex, table, etc.) сохраняется.</td></tr>
+  <tr><td>CSS-переменные</td><td>Все ключевые значения вынесены в CSS custom properties на <code>:root</code>. Переопределяются в рантайме без пересборки.</td></tr>
+  <tr><td>Независимость раскладок</td><td>Вложенные <code>data-gr-layout</code> контейнеры полностью изолированы. Имена grid-area не конфликтуют между родителем и потомком.</td></tr>
+</table>
+
+<h2 id="limitations">Ограничения</h2>
+
+<div class="callout callout-warning">
+  <p><strong>CSS Grid ограничение:</strong> именованная область должна образовывать прямоугольник. L-образные и T-образные формы невалидны. Область, занимающая несколько строк, обязана находиться в одних и тех же колонках на всех рядах.</p>
+</div>
+
+<table>
+  <tr><th>Ограничение</th><th>Пояснение</th></tr>
+  <tr>
+    <td>Прямоугольность grid-областей</td>
+    <td>Ограничение самого CSS Grid, не библиотеки. Область не может менять позицию между рядами.</td>
+  </tr>
+  <tr>
+    <td>JS-зависимость для data-gr-layout</td>
+    <td>Динамический парсинг атрибутов требует <code>griffincss.js</code>. Без JS работают только статические SCSS-миксины и утилитарные классы.</td>
+  </tr>
+  <tr>
+    <td>Нет прекомпиляции раскладок</td>
+    <td>В отличие от Tailwind, griffincss не генерирует CSS для всех возможных комбинаций на этапе сборки. Каждая раскладка описывается явно.</td>
+  </tr>
+  <tr>
+    <td>Только современные браузеры</td>
+    <td>CSS Grid, Flexbox, CSS custom properties. IE11 не поддерживается.</td>
+  </tr>
+  <tr>
+    <td>Ограниченный набор утилит</td>
+    <td>Ядро (<code>griffincss-core</code>) — только сетка, флекс и отступы между ячейками. Спейсинг, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность и переходы живут в <code>griffincss-utils</code>, а элементы интерфейса — в <code>griffincss-ui</code>. Виджетов с состоянием — карусели, таблицы с сортировкой, выбора даты — в библиотеке нет и не планируется: это другая задача.</td>
+  </tr>
+  <tr>
+    <td>Авто-присвоение по базовому layout</td>
+    <td><code>assignAreaClasses</code> читает только базовый <code>data-gr-layout</code> (без суффикса брейкпоинта). Адаптивные варианты не влияют на порядок присвоения.</td>
+  </tr>
+</table>
+
+<h2 id="quickstart">Быстрый старт</h2>
+
+<h3>1. Подключение</h3>
+
+<pre><code>&lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-ui/dist/griffincss-ui.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-utils/dist/griffincss-utils.css"&gt;
+&lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;</code></pre>
+
+<h3>2. Первая раскладка</h3>
+
+<pre><code>&lt;div data-gr-layout="a3b4-c2d5"&gt;
+  &lt;div class="gr-area-a"&gt;A — 3 колонки&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;B — 4 колонки&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C — 2 колонки&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D — 5 колонок&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div data-gr-layout="a3b4-c2d5">
+    <div class="gr-area-a dg-a demo-grid-item">A (3 колонки)</div>
+    <div class="gr-area-b dg-b demo-grid-item">B (4 колонки)</div>
+    <div class="gr-area-c dg-c demo-grid-item">C (2 колонки)</div>
+    <div class="gr-area-d dg-d demo-grid-item">D (5 колонок)</div>
+  </div>
+</div>
+
+<p>JS-рантайм автоматически сгенерирует:</p>
+
+<pre><code>/* класс .gr-l-&lt;хеш&gt; рантайм вешает на контейнер сам */
+.gr-l-k7gi9w {
+  display: grid;
+  grid-template-areas: "a a a b b b b" "c c d d d d d";
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(2, auto);
+}</code></pre>
+
+<h3>3. Адаптивная раскладка</h3>
+
+<pre><code>&lt;div data-gr-layout="a1b1"
+     data-gr-layout-md="a3b4-c2d5"
+     data-gr-layout-lg="hdr4-main4-side2_2-ftr4"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;B&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D&lt;/div&gt;
+  &lt;div class="gr-area-hdr"&gt;Header&lt;/div&gt;
+  &lt;div class="gr-area-main"&gt;Main&lt;/div&gt;
+  &lt;div class="gr-area-side"&gt;Sidebar&lt;/div&gt;
+  &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<h3>4. Flex-центрирование одной строкой</h3>
+
+<pre><code>&lt;div class="gr-flex gr-flex-center gr-flex-items-center"&gt;
+  &lt;div&gt;Идеально по центру&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-center gr-flex-items-center flex-demo-box">
+    <div class="flex-demo-item">Идеально по центру</div>
+  </div>
+</div>
+
+<h3>5. Адаптивные колонки без медиа-запросов</h3>
+
+<pre><code>&lt;div class="gr-grid-auto-fit"&gt;
+  &lt;div&gt;Карточка 1&lt;/div&gt;
+  &lt;div&gt;Карточка 2&lt;/div&gt;
+  &lt;div&gt;Карточка 3&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<h2 id="kuda-dalshe">Куда дальше</h2>
+
+<p>
+  Документация ищется, а не листается: поле поиска в боковой панели знает
+  про все классы библиотеки, токены и заголовки разделов — или нажмите
+  <kbd>/</kbd> на любой странице. У каждого примера есть вкладка «Код»
+  и кнопка копирования, а классы и атрибуты в тексте копируются нажатием.
+</p>
+
+<table>
+  <tr><th>Что нужно</th><th>Куда</th></tr>
+  <tr><td>Взять готовый крупный сегмент вёрстки</td><td><a href="patterns.html">Готовые блоки</a> — шапка, первый экран, тарифы, админка, подвал</td></tr>
+  <tr><td>Найти класс в полном списке</td><td><a href="reference-core.html">Ядро</a>, <a href="reference-ui.html">Компоненты</a>, <a href="reference-utils.html">Утилиты</a></td></tr>
+  <tr><td>Разобраться с раскладками</td><td><a href="core-grid.html">Grid-парсер</a></td></tr>
+  <tr><td>Настроить темы</td><td><a href="theme.html">Темы</a> и <a href="style-presets.html">Стратегии оформления</a></td></tr>
+</table>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

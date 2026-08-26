@@ -1,0 +1,61 @@
+// Griffincss — Container Query Mixins
+// Обёртка @container и разбор ключей адаптивности. Статических правил
+// в файле нет — только функции и миксины.
+//
+// Почему отдельный файл, а не _container-queries.scss: griffincss-utils
+// подключает эти миксины по пакетному пути, а класс .gr-cq принадлежит ядру.
+// Модуль с CSS, подключённый из другого пакета, вынес бы .gr-cq в обе сборки,
+// и check-dist сообщил бы о классе, поделённом между пакетами.
+//
+// Шкала — та же карта $gr-breakpoints, что и у оконных запросов. Отдельная
+// шкала для контейнеров удвоила бы источник правды ровно там, где Этап 3
+// его сводил.
+//
+// Ключ адаптивности: 'md' — окно, 'cmd' — контейнер. Разница в одну букву,
+// строй тот же, синтаксис в библиотеке остаётся один.
+
+@use 'sass:map';
+@use 'sass:string';
+@use 'breakpoints' as bp;
+
+// Ключ описывает контейнерный запрос? Имена брейкпоинтов проверяются
+// по карте, а не по первой букве: брейкпоинт с именем на «c» иначе
+// молча превратился бы в контейнерный.
+@function gr-is-container($key) {
+  @return not map.has-key(bp.$gr-breakpoints, $key)
+    and string.slice($key, 1, 1) == 'c'
+    and map.has-key(bp.$gr-breakpoints, string.slice($key, 2));
+}
+
+// Значение брейкпоинта по ключу — одинаково для 'md' и 'cmd'.
+@function gr-bp-value($key) {
+  @if map.has-key(bp.$gr-breakpoints, $key) {
+    @return map.get(bp.$gr-breakpoints, $key);
+  }
+
+  @if gr-is-container($key) {
+    @return map.get(bp.$gr-breakpoints, string.slice($key, 2));
+  }
+
+  @error 'Griffincss: unknown breakpoint "#{$key}"';
+}
+
+// Контейнерный запрос от брейкпоинта и выше — пара к @media (width >= …)
+// в адаптивных вариантах утилит. Range-синтаксис здесь тот же самый:
+// @container понимает его наравне с @media.
+//
+//   @include gr-container-media(md) { .gr-p-4-cmd { … } }
+//   @include gr-container-media(md, card) { … }   // именованный контейнер
+@mixin gr-container-media($bp, $name: null) {
+  $value: gr-bp-value($bp);
+
+  @if $name {
+    @container #{$name} (width >= #{$value}) {
+      @content;
+    }
+  } @else {
+    @container (width >= #{$value}) {
+      @content;
+    }
+  }
+}

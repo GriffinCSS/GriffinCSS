@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flex-утилиты — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Flex-утилиты</h1>
+  <p>Полный набор классов для Flexbox-вёрстки: направление, выравнивание, перенос, gap и flex-grow. Все утилиты имеют адаптивные варианты для каждого брейкпоинта.</p>
+</div>
+
+<h2>Активация flex</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex</code></td><td><code>display: flex</code></td></tr>
+  <tr><td><code>.gr-inline-flex</code></td><td><code>display: inline-flex</code></td></tr>
+</table>
+
+<h2>Направление (flex-direction)</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex-row</code></td><td><code>flex-direction: row</code></td></tr>
+  <tr><td><code>.gr-flex-col</code></td><td><code>flex-direction: column</code></td></tr>
+</table>
+
+<h2>Перенос (flex-wrap)</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex-wrap</code></td><td><code>flex-wrap: wrap</code></td></tr>
+  <tr><td><code>.gr-flex-nowrap</code></td><td><code>flex-wrap: nowrap</code></td></tr>
+</table>
+
+<h2>Выравнивание по главной оси (justify-content)</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Поведение</th></tr>
+  <tr><td><code>.gr-flex-start</code></td><td><code>justify-content: flex-start</code></td><td>Элементы в начале</td></tr>
+  <tr><td><code>.gr-flex-center</code></td><td><code>justify-content: center</code></td><td>Элементы по центру</td></tr>
+  <tr><td><code>.gr-flex-end</code></td><td><code>justify-content: flex-end</code></td><td>Элементы в конце</td></tr>
+  <tr><td><code>.gr-flex-between</code></td><td><code>justify-content: space-between</code></td><td>Равномерно с отступами по краям</td></tr>
+  <tr><td><code>.gr-flex-around</code></td><td><code>justify-content: space-around</code></td><td>Равномерно с половинными отступами</td></tr>
+  <tr><td><code>.gr-flex-evenly</code></td><td><code>justify-content: space-evenly</code></td><td>Равномерно с одинаковыми отступами</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">justify-content примеры</div>
+
+  <p class="gr-text-xs gr-mb-2"><code>.gr-flex-start</code></p>
+  <div class="gr-flex gr-flex-start flex-demo-box gr-mb-3">
+    <div class="flex-demo-item">1</div>
+    <div class="flex-demo-item">2</div>
+    <div class="flex-demo-item">3</div>
+  </div>
+
+  <p class="gr-text-xs gr-mb-2"><code>.gr-flex-center</code></p>
+  <div class="gr-flex gr-flex-center flex-demo-box gr-mb-3">
+    <div class="flex-demo-item">1</div>
+    <div class="flex-demo-item">2</div>
+    <div class="flex-demo-item">3</div>
+  </div>
+
+  <p class="gr-text-xs gr-mb-2"><code>.gr-flex-between</code></p>
+  <div class="gr-flex gr-flex-between flex-demo-box gr-mb-3">
+    <div class="flex-demo-item">1</div>
+    <div class="flex-demo-item">2</div>
+    <div class="flex-demo-item">3</div>
+  </div>
+
+  <p class="gr-text-xs gr-mb-2"><code>.gr-flex-evenly</code></p>
+  <div class="gr-flex gr-flex-evenly flex-demo-box">
+    <div class="flex-demo-item">1</div>
+    <div class="flex-demo-item">2</div>
+    <div class="flex-demo-item">3</div>
+  </div>
+</div>
+
+<h2>Выравнивание по поперечной оси (align-items)</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex-items-start</code></td><td><code>align-items: flex-start</code></td></tr>
+  <tr><td><code>.gr-flex-items-center</code></td><td><code>align-items: center</code></td></tr>
+  <tr><td><code>.gr-flex-items-end</code></td><td><code>align-items: flex-end</code></td></tr>
+  <tr><td><code>.gr-flex-items-stretch</code></td><td><code>align-items: stretch</code></td></tr>
+  <tr><td><code>.gr-flex-items-baseline</code></td><td><code>align-items: baseline</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">align-items примеры</div>
+
+  <p class="gr-text-xs gr-mb-2"><code>.gr-flex-items-center</code></p>
+  <div class="gr-flex gr-flex-items-center flex-demo-box gr-mb-3">
+    <div class="flex-demo-item gr-py-4 gr-px-5">Высокий</div>
+    <div class="flex-demo-item">Низкий</div>
+    <div class="flex-demo-item gr-py-6 gr-px-5">Ещё выше</div>
+  </div>
+</div>
+
+<h2>Индивидуальное выравнивание (align-self)</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex-self-start</code></td><td><code>align-self: flex-start</code></td></tr>
+  <tr><td><code>.gr-flex-self-center</code></td><td><code>align-self: center</code></td></tr>
+  <tr><td><code>.gr-flex-self-end</code></td><td><code>align-self: flex-end</code></td></tr>
+  <tr><td><code>.gr-flex-self-stretch</code></td><td><code>align-self: stretch</code></td></tr>
+</table>
+
+<h2>Flex-grow</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-flex-1</code></td><td><code>flex: 1</code></td></tr>
+</table>
+
+<h2>Gap-утилиты</h2>
+
+<p>
+  Классы отступа общие для флекса, сетки и раскладок <code>data-gr-layout</code>:
+  один <code>.gr-gap</code> вместо отдельных флекс- и грид-модификаторов.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение gap</th><th>До md (768px)</th><th>С md</th></tr>
+  <tr><td><code>.gr-gap-sm</code></td><td><code>var(--gr-gap-sm)</code></td><td>0.375rem</td><td>0.5rem</td></tr>
+  <tr><td><code>.gr-gap</code></td><td><code>var(--gr-gap)</code></td><td>0.75rem</td><td>1rem</td></tr>
+  <tr><td><code>.gr-gap-lg</code></td><td><code>var(--gr-gap-lg)</code></td><td>1.25rem</td><td>2rem</td></tr>
+</table>
+
+<p>
+  Отдельных вариантов с суффиксом брейкпоинта нет: значение меняют сами токены,
+  поэтому один и тот же класс даёт меньший отступ на мобильном и привычный — на десктопе.
+</p>
+
+<h2>Центрирование одним классом</h2>
+
+<pre><code>&lt;div class="gr-flex gr-flex-center gr-flex-items-center"&gt;
+  &lt;div&gt;Идеально по центру&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-center gr-flex-items-center flex-demo-box">
+    <div class="flex-demo-item">Идеально по центру</div>
+  </div>
+</div>
+
+<h2>Адаптивные варианты</h2>
+
+<p>
+  Все flex-утилиты имеют варианты с суффиксом брейкпоинта. Они применяются только начиная с указанного размера экрана.
+  Доступны суффиксы: <code>-sm</code>, <code>-md</code>, <code>-lg</code>, <code>-xl</code>.
+</p>
+
+<table>
+  <tr><th>Базовый класс</th><th>Адаптивный вариант</th><th>Применение</th></tr>
+  <tr><td><code>.gr-flex</code></td><td><code>.gr-flex-md</code></td><td>flex от 768px</td></tr>
+  <tr><td><code>.gr-flex-row</code></td><td><code>.gr-flex-row-lg</code></td><td>row от 1024px</td></tr>
+  <tr><td><code>.gr-flex-col</code></td><td><code>.gr-flex-col-sm</code></td><td>column от 640px</td></tr>
+  <tr><td><code>.gr-flex-wrap</code></td><td><code>.gr-flex-wrap-xl</code></td><td>wrap от 1280px</td></tr>
+  <tr><td><code>.gr-flex-center</code></td><td><code>.gr-flex-center-md</code></td><td>center от 768px</td></tr>
+  <tr><td><code>.gr-flex-between</code></td><td><code>.gr-flex-between-lg</code></td><td>space-between от 1024px</td></tr>
+  <tr><td><code>.gr-flex-items-center</code></td><td><code>.gr-flex-items-center-md</code></td><td>align-items: center от 768px</td></tr>
+  <tr><td><code>.gr-flex-self-end</code></td><td><code>.gr-flex-self-end-sm</code></td><td>align-self: flex-end от 640px</td></tr>
+  <tr><td><code>.gr-inline-flex</code></td><td><code>.gr-inline-flex-md</code></td><td>inline-flex от 768px</td></tr>
+  <tr><td><code>.gr-flex-1</code></td><td><code>.gr-flex-1-lg</code></td><td>flex: 1 от 1024px</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Адаптивные варианты действуют <strong>от</strong> брейкпоинта и выше — накопительно,
+    в отличие от раскладок <code>data-gr-layout-*</code>, где диапазоны не пересекаются.
+    Поэтому базовый класс задаёт мобильное поведение, а суффиксные его перекрывают:
+    <code>.gr-flex-col .gr-flex-row-md</code> — колонка до 768px, ряд дальше.
+    Порядок классов в атрибуте роли не играет, решает порядок правил в CSS
+    (<code>sm</code> → <code>md</code> → <code>lg</code> → <code>xl</code>).
+  </p>
+</div>
+
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-flex-row-md"&gt;
+  &lt;div&gt;На мобильных — колонка&lt;/div&gt;
+  &lt;div&gt;На планшетах — ряд&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат (измените ширину окна)</div>
+  <div class="gr-flex gr-flex-col gr-flex-row-md gr-gap">
+    <div class="flex-demo-item">На мобильных — колонка</div>
+    <div class="flex-demo-item">На планшетах (≥768px) — ряд</div>
+  </div>
+</div>
+
+<h2>Практические примеры</h2>
+
+<h3>Шапка с навигацией</h3>
+
+<pre><code>&lt;header class="gr-flex gr-flex-between gr-flex-items-center gr-p-4"&gt;
+  &lt;div class="gr-flex gr-flex-items-center gr-gap"&gt;
+    &lt;strong&gt;Logo&lt;/strong&gt;
+    &lt;nav class="gr-flex gr-gap"&gt;
+      &lt;a href="#"&gt;Home&lt;/a&gt;
+      &lt;a href="#"&gt;About&lt;/a&gt;
+      &lt;a href="#"&gt;Contact&lt;/a&gt;
+    &lt;/nav&gt;
+  &lt;/div&gt;
+  &lt;button&gt;Login&lt;/button&gt;
+&lt;/header&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-between gr-flex-items-center gr-p-4 gr-bg-surface gr-radius-2">
+    <div class="gr-flex gr-flex-items-center gr-gap">
+      <strong class="gr-text-accent">Logo</strong>
+      <nav class="gr-flex gr-gap">
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
+      </nav>
+    </div>
+    <div class="flex-demo-item gr-py-2 gr-px-4">Login</div>
+  </div>
+</div>
+
+<h3>Карточки в ряд с переносом</h3>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap"&gt;
+  &lt;div&gt;Карточка 1&lt;/div&gt;
+  &lt;div&gt;Карточка 2&lt;/div&gt;
+  &lt;div&gt;Карточка 3&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 1</h4></div>
+    <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 2</h4></div>
+    <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 3</h4></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

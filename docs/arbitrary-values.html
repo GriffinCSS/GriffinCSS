@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Произвольные значения — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/utils/dist/griffincss-utils.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Произвольные значения</h1>
+  <p>Разовое значение прямо в имени класса: <code>gr-mt-[13px]</code>. Правило собирает рантайм — статический файл выразить это не может, потому что список возможных значений неизвестен до того, как страница написана.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Требует JS</span>
+    <span class="badge">packages/utils/src/griffincss-utils.js</span>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Без JS не работает — и не может работать.</strong>
+    Класса <code>.gr-mt-[13px]</code> в собранном CSS нет: правило создаётся
+    в момент, когда рантайм видит элемент. Если скрипт не подключён или не
+    выполнился, отступа не будет. Поэтому произвольным значением задаётся
+    оформление, а не то, от чего зависит читаемость страницы: шкала
+    <code>.gr-mt-4</code> работает всегда, и она остаётся основным способом.
+  </p>
+</div>
+
+<h2>Как это выглядит</h2>
+
+<pre><code>&lt;script src="griffincss.js"&gt;&lt;/script&gt;
+&lt;script src="griffincss-utils.js"&gt;&lt;/script&gt;
+
+&lt;div class="gr-mt-[13px]"&gt;отступ сверху 13px&lt;/div&gt;
+&lt;div class="gr-w-[42%]"&gt;ширина 42%&lt;/div&gt;
+&lt;div class="gr-p-[calc(1rem+3px)]"&gt;паддинг из calc()&lt;/div&gt;</code></pre>
+
+<p>
+  Рантайм разбирает имя класса, находит свойство по части до скобки
+  и добавляет правило в тот же слой <code>griffincss.utils</code>, где живут
+  обычные утилиты. Значит, произвольное значение спорит с классом из шкалы
+  по порядку в слое, а не по весу селектора, — как и любые два класса
+  библиотеки между собой.
+</p>
+
+<pre><code>/* что оказывается в &lt;style id="griffincss-dynamic"&gt; */
+@layer griffincss.utils {
+  .gr-mt-\[13px\]{margin-top:13px}
+  .gr-w-\[42\%\]{width:42%}
+}</code></pre>
+
+<p>
+  Обратные слэши в селекторе рантайм проставляет сам: без экранирования
+  браузер прочитал бы <code>.gr-mt-[13px]</code> как класс
+  <code>gr-mt-</code> и следом селектор по атрибуту — правило не совпало бы
+  ни с чем.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-bg-surface gr-radius-2 gr-p-4">
+    <div class="gr-bg-primary gr-radius-[14px] gr-p-[13px] gr-text-white">gr-radius-[14px] + gr-p-[13px]</div>
+    <div class="gr-mt-[13px] gr-w-[42%] gr-bg-accent gr-radius-1 gr-p-2 gr-text-white">gr-mt-[13px] + gr-w-[42%]</div>
+  </div>
+</div>
+
+<h2>Какие свойства доступны</h2>
+
+<p>
+  Таблица свойств повторяет объявления статического класса один в один:
+  <code>.gr-p-4</code> пишет и <code>--gr-p</code>, и <code>padding</code>, —
+  и <code>.gr-p-[13px]</code> пишет столько же. Иначе каскад скруглений видел
+  бы зазор у одного класса и не видел у другого.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Свойство</th></tr>
+  <tr><td><code>.gr-m-[…]</code>, <code>.gr-mt-[…]</code>, <code>.gr-mr-[…]</code>, <code>.gr-mb-[…]</code>, <code>.gr-ml-[…]</code></td><td><code>margin</code> и стороны</td></tr>
+  <tr><td><code>.gr-ms-[…]</code>, <code>.gr-me-[…]</code>, <code>.gr-mx-[…]</code>, <code>.gr-my-[…]</code></td><td>логические и осевые маржины</td></tr>
+  <tr><td><code>.gr-p-[…]</code>, <code>.gr-pt-[…]</code>, <code>.gr-pr-[…]</code>, <code>.gr-pb-[…]</code>, <code>.gr-pl-[…]</code></td><td><code>padding</code> и стороны</td></tr>
+  <tr><td><code>.gr-ps-[…]</code>, <code>.gr-pe-[…]</code>, <code>.gr-px-[…]</code>, <code>.gr-py-[…]</code></td><td>логические и осевые паддинги</td></tr>
+  <tr><td><code>.gr-radius-[…]</code></td><td><code>--gr-r</code> + <code>border-radius</code></td></tr>
+  <tr><td><code>.gr-gap-[…]</code></td><td><code>gap</code></td></tr>
+  <tr><td><code>.gr-w-[…]</code>, <code>.gr-h-[…]</code></td><td><code>width</code>, <code>height</code></td></tr>
+  <tr><td><code>.gr-min-w-[…]</code>, <code>.gr-max-w-[…]</code>, <code>.gr-min-h-[…]</code>, <code>.gr-max-h-[…]</code></td><td>минимумы и максимумы</td></tr>
+  <tr><td><code>.gr-top-[…]</code>, <code>.gr-right-[…]</code>, <code>.gr-bottom-[…]</code>, <code>.gr-left-[…]</code>, <code>.gr-inset-[…]</code></td><td>смещения позиционирования</td></tr>
+  <tr><td><code>.gr-z-[…]</code></td><td><code>z-index</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Почему нет <code>.gr-text-[…]</code>.</strong>
+    У префикса <code>gr-text-</code> два смысла: <code>.gr-text-2xl</code> —
+    это кегль, а <code>.gr-text-white</code> — цвет. Что означает
+    <code>.gr-text-[13px]</code>, пришлось бы угадывать, а рантайм не
+    угадывает. Цвета и кегль задаются своим CSS или переменной
+    <code>--gr-*</code> на элементе.
+  </p>
+</div>
+
+<h2>Что считается невалидным</h2>
+
+<p>
+  Содержимое скобок приходит из разметки, поэтому проверяется так же, как
+  строка раскладки в ядре. Невалидное даёт <code>console.warn</code>
+  и пропуск класса — не сломанное правило, за которым в таблице стилей идут
+  все остальные.
+</p>
+
+<table>
+  <tr><th>Отклоняется</th><th>Пример</th></tr>
+  <tr><td>пустые скобки</td><td><code>gr-mt-[]</code></td></tr>
+  <tr><td>значение длиннее 48 символов</td><td><code>gr-mt-[calc(1px+1px+…)]</code></td></tr>
+  <tr><td><code>{</code>, <code>}</code> или <code>;</code> в значении</td><td><code>gr-mt-[1px;color:red]</code></td></tr>
+  <tr><td>комментарий <code>/*</code> в значении</td><td><code>gr-mt-[1px/*x*/]</code></td></tr>
+  <tr><td>свойство неизвестно таблице</td><td><code>gr-zzz-[13px]</code></td></tr>
+</table>
+
+<p>
+  Пробела в значении не бывает по устройству разметки: атрибут
+  <code>class</code> разделяется пробелами, и <code>gr-mt-[1px + 2px]</code>
+  распался бы на три класса. Составное значение пишется без пробелов:
+  <code>gr-mt-[calc(1px+2px)]</code>.
+</p>
+
+<h2>Вместе с каскадом скруглений</h2>
+
+<p>
+  Произвольные <code>.gr-radius-[…]</code> и <code>.gr-p-[…]</code> участвуют
+  в каскаде скруглений наравне со ступенями шкалы: рантайм читает их как
+  объявленные значения и выводит радиус вложенного
+  <code>.gr-radius</code> по той же рекурренте.
+</p>
+
+<pre><code>&lt;div class="gr-radius gr-radius-[2rem] gr-p-[8px]"&gt;
+  &lt;div class="gr-radius"&gt;радиус max(0px, calc(2rem - 8px))&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-radius gr-radius-[2rem] gr-p-[8px] gr-bg-primary">
+    <div class="gr-radius gr-bg-surface gr-p-4">Вложенный блок — радиус выведен из родителя</div>
+  </div>
+</div>
+
+<h2>Отсечение неиспользуемого</h2>
+
+<p>
+  <code>npm run purge</code> произвольных значений не касается: в статическом
+  файле их правил нет, отсекать нечего, и в safelist их вносить не нужно.
+  Safelist нужен для обратного случая — классов из шкалы, которые собираются
+  в коде склейкой (<code>'gr-mt-' + n</code>).
+</p>
+
+<h2>Когда лучше не надо</h2>
+
+<ul>
+  <li><strong>Значение повторяется.</strong> Три одинаковых
+    <code>gr-p-[13px]</code> на странице — это ступень шкалы, которой не
+    хватает, или своя переменная, а не три произвольных значения.</li>
+  <li><strong>От значения зависит читаемость.</strong> Без JS правила не
+    будет; критичное к содержимому оформление задаётся статикой.</li>
+  <li><strong>Значение приходит из данных.</strong> Ширина полосы прогресса
+    в процентах — это инлайновое <code>style</code> или CSS-переменная,
+    а не новый класс на каждое число: каждое уникальное значение добавляет
+    в таблицу стилей своё правило.</li>
+</ul>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

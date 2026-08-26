@@ -1,0 +1,122 @@
+// Griffincss — Visibility Utilities
+// Display, visibility, and accessibility helpers
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
+
+// Display. Флекс и грид сюда не входят: .gr-flex, .gr-inline-flex и .gr-grid
+// живут в ядре, вместе с остальной раскладкой и своими адаптивными
+// вариантами. Дубли .gr-flex-display / .gr-grid-display, разошедшиеся
+// с ядром только из-за запрета пересечения классов, удалены в 0.8.0.
+.gr-hidden        { display: none; }
+.gr-block         { display: block; }
+.gr-inline        { display: inline; }
+.gr-inline-block  { display: inline-block; }
+
+// Видимость без изъятия из потока: место под элемент сохраняется
+.gr-invisible { visibility: hidden; }
+.gr-visible   { visibility: visible; }
+
+// Overflow — по обеим осям и по каждой отдельно
+@each $gr-value in (auto, hidden, clip, scroll, visible) {
+  .gr-overflow-#{$gr-value}   { overflow: $gr-value; }
+  .gr-overflow-x-#{$gr-value} { overflow-x: $gr-value; }
+  .gr-overflow-y-#{$gr-value} { overflow-y: $gr-value; }
+}
+
+// Прокрутка внутри скруглённого блока. Полосу прокрутки Blink рисует
+// прямоугольником и по border-radius НЕ обрезает: у блока с overflow: auto
+// нижние (или боковые) углы срезаются полосой — скругление пропадает ровно
+// там, где полоса появилась. Свойство overflow тут бессильно, а clip-path
+// режет всю отрисовку элемента, полосу включительно.
+//
+// Радиус берётся из --gr-r — той самой переменной, которую публикуют
+// .gr-radius* (Этап 9). Без неё утилита не делает ничего: фолбэк 0 оставляет
+// прямые углы прямыми, вместо того чтобы скруглить блок, который скруглять
+// не просили.
+//
+//   <div class="gr-radius gr-overflow-x-auto gr-scroll-clip">…</div>
+//
+// Границы приёма. Углы обрезка возвращает, рамку — нет: полоса рисуется
+// поверх нижней границы своего элемента, и свойствами самого блока эту
+// границу не вернуть. Блоку с рамкой (а равно с внешней тенью, которую
+// clip-path тоже срежет) нужен внешний узел: рамка и радиус снаружи,
+// overflow внутри — тогда полосу обрежет обычный overflow: hidden.
+// Прокручиваемой области с tabindex контур фокуса возвращают отрицательным
+// outline-offset.
+.gr-scroll-clip {
+  clip-path: inset(0 round var(--gr-r, 0));
+}
+
+// Только для скринридера. clip: rect() заменён на clip-path: inset(50%) —
+// первое свойство объявлено устаревшим, второе даёт тот же результат.
+// Правила собраны в миксин: focusable-вариант применяет их же, но лишь
+// пока элемент не в фокусе.
+@mixin gr-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gr-sr-only {
+  @include gr-visually-hidden;
+}
+
+// Скрыт, пока его не выбрали с клавиатуры. Так делается ссылка «к содержимому»
+// в начале страницы: мышью её не видно, по Tab она появляется.
+.gr-sr-only-focusable:not(:focus, :focus-within) {
+  @include gr-visually-hidden;
+}
+
+// Обратная операция: вернуть в поток элемент, скрытый на узких экранах
+.gr-not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+
+// Адаптивный набор — один на оба вида запроса. Оконный вариант получает
+// суффикс брейкпоинта, контейнерный — тот же суффикс с буквой c; правила
+// описаны один раз, поэтому разойтись не могут.
+@mixin gr-visibility-scale($suffix) {
+  .gr-hidden#{$suffix} {
+    display: none;
+  }
+
+  .gr-block#{$suffix} {
+    display: block;
+  }
+
+  .gr-inline#{$suffix} {
+    display: inline;
+  }
+
+  .gr-inline-block#{$suffix} {
+    display: inline-block;
+  }
+}
+
+// Адаптивное скрытие по ширине окна
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @include gr-visibility-scale('-#{$bp-name}');
+  }
+}
+
+// Контейнерное скрытие — от ширины ближайшего предка с .gr-cq
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-visibility-scale('-c#{$bp-name}');
+  }
+}

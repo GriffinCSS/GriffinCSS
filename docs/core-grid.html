@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid-парсер — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Grid-парсер</h1>
+  <p>Уникальная система описания CSS Grid раскладок через компактный строковый формат. JS-рантайм автоматически парсит атрибуты и генерирует CSS на лету.</p>
+</div>
+
+<h2>Формат раскладки</h2>
+
+<p>
+  Раскладка описывается строкой, где <code>-</code> разделяет ряды, буквы задают имена grid-областей, а цифры — количество повторений. Символ <code>_</code> создаёт пустую ячейку.
+</p>
+
+<table>
+  <tr><th>Элемент</th><th>Назначение</th><th>Пример</th></tr>
+  <tr><td><code>-</code></td><td>Разделитель рядов</td><td><code>a3b4-c2d5</code> → 2 ряда</td></tr>
+  <tr><td>Буквы</td><td>Имя grid-области: начинается с латинской буквы, дальше буквы и <code>_</code></td><td><code>hdr</code>, <code>main</code>, <code>side_a</code></td></tr>
+  <tr><td>Цифры</td><td>Количество повторений предыдущего имени</td><td><code>a3</code> → <code>a a a</code></td></tr>
+  <tr><td><code>_</code></td><td>Пустая ячейка (в CSS: <code>.</code>)</td><td><code>_3</code> → <code>. . .</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Раскладка проверяется до генерации CSS: счётчик без имени, нулевой счётчик, счётчик
+    больше 64, имя длиннее 32 символов, недопустимые символы и пустой ряд отвергаются.
+    Такой контейнер пропускается целиком, а в консоль уходит <code>Griffincss: …</code> —
+    полный список правил на странице <a href="runtime.html">JS-рантайм</a>.
+  </p>
+</div>
+
+<h2>Базовое использование</h2>
+
+<pre><code>&lt;div data-gr-layout="a3b4-c2d5"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;B&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: a3b4-c2d5</div>
+  <div data-gr-layout="a3b4-c2d5">
+    <div class="gr-area-a dg-a demo-grid-item">A (3 колонки)</div>
+    <div class="gr-area-b dg-b demo-grid-item">B (4 колонки)</div>
+    <div class="gr-area-c dg-c demo-grid-item">C (2 колонки)</div>
+    <div class="gr-area-d dg-d demo-grid-item">D (5 колонок)</div>
+  </div>
+</div>
+
+<p>Сгенерированный CSS:</p>
+
+<pre><code>/* класс .gr-l-&lt;хеш&gt; рантайм вешает на контейнер сам */
+.gr-l-k7gi9w {
+  display: grid;
+  grid-template-areas: "a a a b b b b" "c c d d d d d";
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(2, auto);
+}
+.gr-area-a { grid-area: a; }
+.gr-area-b { grid-area: b; }
+.gr-area-c { grid-area: c; }
+.gr-area-d { grid-area: d; }</code></pre>
+
+<p>
+  <code>gap</code> в этом правиле не пишется: отступ раскладкам даёт одно статическое
+  правило <code>[class*="gr-l-"]</code> из <code>griffincss-core.css</code>. Поэтому
+  модификаторы <code>.gr-gap-sm</code> / <code>.gr-gap</code> / <code>.gr-gap-lg</code>
+  перекрывают его на обычных правах — см. <a href="core-grid-helpers.html">Grid-утилиты</a>.
+</p>
+
+<h2>Именованные области</h2>
+
+<p>Имена могут состоять из нескольких букв — используйте осмысленные названия для семантических областей страницы.</p>
+
+<pre><code>&lt;div data-gr-layout="hdr4-main4-side2_2-ftr4"&gt;
+  &lt;div class="gr-area-hdr"&gt;Header&lt;/div&gt;
+  &lt;div class="gr-area-main"&gt;Main Content&lt;/div&gt;
+  &lt;div class="gr-area-side"&gt;Sidebar&lt;/div&gt;
+  &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: hdr4-main4-side2_2-ftr4</div>
+  <div data-gr-layout="hdr4-main4-side2_2-ftr4">
+    <div class="gr-area-hdr dg-a demo-grid-item">Header (hdr × 4)</div>
+    <div class="gr-area-main dg-b demo-grid-item">Main Content (main × 4)</div>
+    <div class="gr-area-side dg-c demo-grid-item">Sidebar (side × 2)</div>
+    <div class="gr-area-ftr dg-d demo-grid-item">Footer (ftr × 4)</div>
+  </div>
+</div>
+
+<h2>Пустые ячейки</h2>
+
+<p>
+  Символ <code>_</code> создаёт пустую ячейку (преобразуется в <code>.</code> в CSS). <code>_3</code> — три пустых ячейки подряд.
+  Полезно для создания асимметричных раскладок и отступов.
+</p>
+
+<pre><code>&lt;div data-gr-layout="hdr6-nav2hero4-news3_3-ftr6"&gt;
+  &lt;div class="gr-area-hdr"&gt;Header&lt;/div&gt;
+  &lt;div class="gr-area-nav"&gt;Nav&lt;/div&gt;
+  &lt;div class="gr-area-hero"&gt;Hero&lt;/div&gt;
+  &lt;div class="gr-area-news"&gt;News&lt;/div&gt;
+  &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: hdr6-nav2hero4-news3_3-ftr6</div>
+  <div data-gr-layout="hdr6-nav2hero4-news3_3-ftr6">
+    <div class="gr-area-hdr dg-a demo-grid-item">Header (6 колонок)</div>
+    <div class="gr-area-nav dg-b demo-grid-item">Nav (2 колонки)</div>
+    <div class="gr-area-hero dg-c demo-grid-item">Hero (4 колонки)</div>
+    <div class="gr-area-news dg-d demo-grid-item">News (3 колонки)</div>
+    <div class="gr-area-ftr dg-e demo-grid-item">Footer (6 колонок)</div>
+  </div>
+</div>
+
+<div class="callout">
+  <p><strong>Совет:</strong> пустые ячейки <code>_</code> создают настоящие CSS Grid ячейки с <code>.</code> в grid-template-areas. Они занимают место в сетке и влияют на распределение колонок.</p>
+</div>
+
+<h2>Многострочные области (прямоугольники)</h2>
+
+<p>
+  Область может занимать несколько рядов, если она повторяется с одинаковым количеством колонок.
+  Это соответствует требованию CSS Grid: именованная область должна быть прямоугольной.
+</p>
+
+<pre><code>&lt;div data-gr-layout="hero3nav3-hero3side3-ftr6"&gt;
+  &lt;div class="gr-area-hero"&gt;Hero (2 ряда × 3 колонки)&lt;/div&gt;
+  &lt;div class="gr-area-nav"&gt;Nav&lt;/div&gt;
+  &lt;div class="gr-area-side"&gt;Sidebar&lt;/div&gt;
+  &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: hero3nav3-hero3side3-ftr6</div>
+  <div data-gr-layout="hero3nav3-hero3side3-ftr6">
+    <div class="gr-area-hero dg-a demo-grid-item">Hero (2 ряда × 3 кол)</div>
+    <div class="gr-area-nav dg-b demo-grid-item">Nav (3 кол)</div>
+    <div class="gr-area-side dg-c demo-grid-item">Sidebar (3 кол)</div>
+    <div class="gr-area-ftr dg-d demo-grid-item">Footer (6 кол)</div>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Важно:</strong> область на нескольких строках должна занимать одинаковые колонки во всех рядах (прямоугольник). Это фундаментальное ограничение CSS Grid. L-образные и T-образные формы недопустимы.</p>
+</div>
+
+<h2>Адаптивные раскладки</h2>
+
+<p>
+  Атрибуты <code>data-gr-layout-{sm,md,lg,xl}</code> задают раскладку для соответствующего брейкпоинта.
+  JS-рантайм генерирует непересекающиеся <code>@media</code>-диапазоны. Элементы, чьи grid-area отсутствуют в текущем шаблоне, автоматически скрываются.
+</p>
+
+<pre><code>&lt;div data-gr-layout="a1b1"
+     data-gr-layout-md="a3b4-c2d5"
+     data-gr-layout-lg="hdr4-main4-side2_2-ftr4"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;B&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D&lt;/div&gt;
+  &lt;div class="gr-area-hdr"&gt;Header&lt;/div&gt;
+  &lt;div class="gr-area-main"&gt;Main&lt;/div&gt;
+  &lt;div class="gr-area-side"&gt;Sidebar&lt;/div&gt;
+  &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат (измените ширину окна)</div>
+  <div data-gr-layout="a1b1" data-gr-layout-md="a3b4-c2d5" data-gr-layout-lg="hdr4-main4-side2_2-ftr4">
+    <div class="gr-area-a dg-a demo-grid-item">A</div>
+    <div class="gr-area-b dg-b demo-grid-item">B</div>
+    <div class="gr-area-c dg-c demo-grid-item">C</div>
+    <div class="gr-area-d dg-d demo-grid-item">D</div>
+    <div class="gr-area-hdr dg-a demo-grid-item">Header</div>
+    <div class="gr-area-main dg-b demo-grid-item">Main</div>
+    <div class="gr-area-side dg-c demo-grid-item">Sidebar</div>
+    <div class="gr-area-ftr dg-d demo-grid-item">Footer</div>
+  </div>
+</div>
+
+<p>Брейкпоинты по умолчанию (переопределяются через CSS-переменные):</p>
+
+<table>
+  <tr><th>Брейкпоинт</th><th>Атрибут</th><th>Значение</th><th>CSS-переменная</th></tr>
+  <tr><td>Базовый</td><td><code>data-gr-layout</code></td><td>—</td><td>—</td></tr>
+  <tr><td>sm</td><td><code>data-gr-layout-sm</code></td><td>640px</td><td><code>--gr-bp-sm</code></td></tr>
+  <tr><td>md</td><td><code>data-gr-layout-md</code></td><td>768px</td><td><code>--gr-bp-md</code></td></tr>
+  <tr><td>lg</td><td><code>data-gr-layout-lg</code></td><td>1024px</td><td><code>--gr-bp-lg</code></td></tr>
+  <tr><td>xl</td><td><code>data-gr-layout-xl</code></td><td>1280px</td><td><code>--gr-bp-xl</code></td></tr>
+</table>
+
+<p>
+  Те же брейкпоинты доступны и по ширине <em>контейнера</em>, а не окна —
+  атрибуты <code>data-gr-layout-c{sm,md,lg,xl}</code>. Разница в одну букву,
+  диапазоны строятся так же, а вместо <code>@media</code> рантайм пишет
+  <code>@container</code>. Подробности и оговорки — на странице
+  <a href="container-queries.html">«Контейнерные запросы»</a>.
+</p>
+
+<div class="callout callout-success">
+  <p><strong>Непересекающиеся диапазоны:</strong> в отличие от простого накопления <code>min-width</code>,
+  griffincss описывает каждый брейкпоинт диапазоном в range-синтаксисе:
+  <code>(width &lt; 768px)</code>, <code>(768px &lt;= width &lt; 1024px)</code>, <code>(width &gt;= 1024px)</code>.
+  Правило базовой раскладки действует до первой адаптивной, промежуточные — в своих диапазонах,
+  а последняя — от своего значения и выше. Арифметики <code>-1px</code> нет, поэтому щелей
+  на дробных ширинах не остаётся, а единицы измерения брейкпоинта могут быть любыми.
+  Границы считаются только по тем атрибутам, которые есть на элементе: если задан один
+  <code>data-gr-layout-lg</code>, база действует до 1024px, а не до 640px.</p>
+</div>
+
+<h2>Авто-присвоение grid-area</h2>
+
+<p>
+  Если дочерним элементам не указан класс <code>gr-area-*</code>, JS-рантайм автоматически присваивает имена областей в порядке документа.
+  Имена берутся из базового <code>data-gr-layout</code> (без суффикса брейкпоинта) в порядке первого появления
+  в раскладке. Имена, уже проставленные детям вручную, из раздачи исключаются, поэтому дубликаты невозможны —
+  даже если область занимает несколько рядов. Подробности — на странице <a href="runtime.html">JS-рантайм</a>.
+</p>
+
+<pre><code>&lt;div data-gr-layout="a2b2c2-a2d2e2"&gt;
+  &lt;div&gt;A — 2×2 на 2 ряда&lt;/div&gt;
+  &lt;div&gt;Карточка B&lt;/div&gt;
+  &lt;div&gt;Карточка C&lt;/div&gt;
+  &lt;div&gt;Карточка D&lt;/div&gt;
+  &lt;div&gt;Карточка E&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: без единого gr-area-* класса</div>
+  <div data-gr-layout="a2b2c2-a2d2e2">
+    <div class="demo-grid-item dg-a">A — 2×2 (2 ряда)</div>
+    <div class="card-demo"><h4>Карточка B</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Ряд 1, колонки 3–4</p></div>
+    <div class="card-demo"><h4>Карточка C</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Ряд 1, колонки 5–6</p></div>
+    <div class="card-demo"><h4>Карточка D</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Ряд 2, колонки 3–4</p></div>
+    <div class="card-demo"><h4>Карточка E</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Ряд 2, колонки 5–6</p></div>
+  </div>
+</div>
+
+<h2>Вложенные раскладки</h2>
+
+<p>
+  Grid-контейнеры можно вкладывать друг в друга без ограничений. Каждый контейнер изолирует свои grid-area имена — конфликтов между родителем и потомком не возникает.
+  JS-рантайм генерирует каждое CSS-правило однократно, независимо от количества повторений.
+</p>
+
+<pre><code>&lt;div data-gr-layout="a3b4-c2d5"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;
+    &lt;div data-gr-layout="a1c3"&gt;
+      &lt;div class="gr-area-a"&gt;Вложенный A&lt;/div&gt;
+      &lt;div class="gr-area-c"&gt;Вложенный C&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: вложенные раскладки</div>
+  <div data-gr-layout="a3b4-c2d5">
+    <div class="gr-area-a dg-a demo-grid-item">A — верхний уровень</div>
+    <div class="gr-area-b gr-bg-surface gr-p-2 gr-radius-2">
+      <div data-gr-layout="a1c3">
+        <div class="gr-area-a dg-c demo-grid-item">a (влож., 1 кол.)</div>
+        <div class="gr-area-c dg-d demo-grid-item">c (влож., 3 кол.)</div>
+      </div>
+    </div>
+    <div class="gr-area-c dg-c demo-grid-item">C — верхний уровень</div>
+    <div class="gr-area-d dg-d demo-grid-item">D — верхний уровень</div>
+  </div>
+</div>
+
+<h2>SCSS-миксины (компилтайм)</h2>
+
+<p>
+  Альтернативный способ — сгенерировать раскладки на этапе компиляции SCSS через миксины. Это не требует JS-рантайма, но раскладки фиксируются в CSS.
+</p>
+
+<pre><code>@use 'griffincss-core/scss/grid-parser' as p;
+
+// Один набор раскладок = один класс. Имя задаёте вы:
+@include p.gr-grid-layout(
+  'a3b4-c2d5',
+  $md: 'hdr4-main4-side2_2-ftr4',
+  $lg: 'hero3nav3-hero3side3-ftr6',
+  $name: 'page'
+);</code></pre>
+
+<pre><code>&lt;div class="gr-l-page"&gt;…&lt;/div&gt;</code></pre>
+
+<p>
+  Миксин генерирует <strong>тот же CSS</strong>, что и рантайм: непересекающиеся диапазоны
+  в range-синтаксисе, <code>grid-template-areas</code>, классы <code>gr-area-*</code> и правила
+  авто-скрытия. Разница одна: рантайм берёт имя класса из хеша набора
+  (<code>.gr-l-&lt;хеш&gt;</code>), а компилтайм — из <code>$name</code>.
+  Раздачу <code>gr-area-*</code> детям компилтайм не делает — проставьте классы в разметке.
+</p>
+
+<div class="callout callout-warning">
+  <p><strong>Изменение в v0.7.0:</strong> миксины <code>gr-grid-layout-sm/md/lg/xl</code> удалены,
+  а <code>gr-grid-layout()</code> больше не принимает список раскладок — теперь это один вызов
+  на контейнер с аргументами <code>$sm</code>, <code>$md</code>, <code>$lg</code>, <code>$xl</code>
+  и обязательным <code>$name</code>. Правила больше не привязаны к значению атрибута
+  <code>data-gr-layout</code>.</p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

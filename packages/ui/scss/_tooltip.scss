@@ -1,0 +1,143 @@
+// Griffincss UI — Tooltip
+// Короткая подсказка у элемента. Показывается и указателем, и с клавиатуры,
+// и то и другое — чистым CSS: подсказка лежит внутри обёртки, а обёртка
+// реагирует на :hover и на :focus-within. Скрипт для этого не нужен.
+//
+//   <span class="gr-tooltip-anchor">
+//     <button class="gr-btn" aria-describedby="t1">Сохранить</button>
+//     <span class="gr-tooltip" id="t1" role="tooltip">Ctrl + S</span>
+//   </span>
+//
+// aria-describedby в разметке обязателен: без него подсказку услышит
+// только тот, кто её видит. Роль tooltip сообщает, что это пояснение
+// к элементу, а не отдельная надпись рядом.
+//
+// Подсказка не прячется display: none и не появляется display: block:
+// скрытая так, она исчезла бы из дерева доступности целиком, и связь
+// по aria-describedby оборвалась бы. Прячут её прозрачность
+// и visibility — то и другое анимируется и обратимо.
+
+.gr-tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.gr-tooltip {
+  --gr-tooltip-offset: calc(var(--gr-ui-gap) * 0.75);
+
+  position: absolute;
+  z-index: var(--gr-z-dropdown);
+  inset-block-end: calc(100% + var(--gr-tooltip-offset));
+  inset-inline-start: 50%;
+  box-sizing: border-box;
+  inline-size: max-content;
+  max-inline-size: min(16rem, 70vw);
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: calc(var(--gr-control-padding-x) * 0.6);
+  border-radius: calc(var(--gr-radius) * 0.75);
+  background-color: var(--gr-color-text);
+  color: var(--gr-color-bg);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  text-align: center;
+  translate: -50% 0;
+  opacity: 0;
+  visibility: hidden;
+
+  // Скрытая подсказка не должна влиять на раскладку страницы. visibility
+  // убирает её с экрана и из дерева доступности, но место в области
+  // прокрутки за ней остаётся: боковая подсказка у правого края узкого
+  // экрана растягивала документ вбок — появлялась горизонтальная прокрутка
+  // страницы, на которой ничего не видно. content-visibility снимает
+  // содержимое и с раскладки; переход по нему объявлен allow-discrete,
+  // иначе появление шло бы рывком.
+  content-visibility: hidden;
+  transition:
+    opacity var(--gr-transition),
+    visibility var(--gr-transition),
+    content-visibility var(--gr-transition) allow-discrete;
+
+  // Подсказка не должна перехватывать указатель: наведённая мышью, она
+  // иначе закрыла бы собой элемент, к которому относится.
+  pointer-events: none;
+}
+
+// Клавиатура. :focus-within, а не :focus: фокус приходит на кнопку внутри
+// обёртки, а правило написано на обёртку.
+.gr-tooltip-anchor:focus-within .gr-tooltip {
+  opacity: 1;
+  visibility: visible;
+  content-visibility: visible;
+}
+
+// Указатель — отдельным правилом в @media (hover: hover): на сенсорном
+// экране :hover залипает после тапа, и подсказка осталась бы висеть.
+@media (hover: hover) {
+  .gr-tooltip-anchor:hover .gr-tooltip {
+    opacity: 1;
+    visibility: visible;
+    content-visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-tooltip {
+    transition-duration: 0.01ms;
+  }
+}
+
+// --- Стороны ----------------------------------------------------------------
+
+.gr-tooltip-bottom {
+  inset-block: calc(100% + var(--gr-tooltip-offset)) auto;
+}
+
+// У боковых подсказок смещение по другой оси: центрируется высота,
+// а не ширина.
+.gr-tooltip-start,
+.gr-tooltip-end {
+  inset-block: 50% auto;
+  translate: 0 -50%;
+}
+
+.gr-tooltip-start {
+  inset-inline: auto calc(100% + var(--gr-tooltip-offset));
+}
+
+.gr-tooltip-end {
+  inset-inline: calc(100% + var(--gr-tooltip-offset)) auto;
+}
+
+// --- Подсказка в верхнем слое -----------------------------------------------
+
+// Подсказка внутри прокручиваемого блока или таблицы с overflow: hidden
+// обрезается его краем. Лечится верхним слоем: тот же .gr-tooltip
+// с атрибутом popover рисуется поверх всего и притягивается к элементу
+// якорем. Показывает такую подсказку скрипт (showPopover), поэтому
+// правила :hover и :focus-within её не касаются.
+@supports (anchor-name: --gr-tooltip-anchor) {
+  .gr-tooltip-anchor:has(> [popover].gr-tooltip) {
+    anchor-scope: --gr-tooltip-anchor;
+    anchor-name: --gr-tooltip-anchor;
+  }
+
+  [popover].gr-tooltip {
+    position: fixed;
+    position-anchor: --gr-tooltip-anchor;
+    position-area: block-start center;
+    inset: auto;
+    margin: 0;
+    margin-block-end: var(--gr-tooltip-offset);
+    border: 0;
+    translate: none;
+    overflow: visible;
+    position-try-fallbacks: flip-block;
+  }
+
+  [popover].gr-tooltip:popover-open {
+    opacity: 1;
+    visibility: visible;
+    content-visibility: visible;
+  }
+}

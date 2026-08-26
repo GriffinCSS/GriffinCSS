@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset &amp; Переменные — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Reset &amp; Переменные</h1>
+  <p>Минимальный CSS reset и система CSS custom properties — фундамент, на котором строится вся библиотека.</p>
+</div>
+
+<h2>CSS Reset</h2>
+
+<p>
+  Griffincss включает минимальный, но тщательно продуманный сброс стилей. Ничего лишнего — только то, что действительно нужно для современной вёрстки.
+</p>
+
+<h3>Что делает reset</h3>
+
+<table>
+  <tr><th>Правило</th><th>Назначение</th></tr>
+  <tr><td><code>box-sizing: border-box</code></td><td>У всех элементов и псевдоэлементов. Размеры включают padding и border.</td></tr>
+  <tr><td><code>html { scroll-behavior: smooth }</code></td><td>Плавная прокрутка при якорных ссылках — только внутри <code>@media (prefers-reduced-motion: no-preference)</code>: безусловная плавная прокрутка вызывает укачивание у части пользователей.</td></tr>
+  <tr><td><code>html { -webkit-text-size-adjust: 100% }</code></td><td>Отключает автоувеличение шрифта при повороте экрана в iOS Safari.</td></tr>
+  <tr><td><code>body { margin: 0; padding: 0; min-height: 100vh }</code></td><td>Убирает стандартные отступы, растягивает на весь viewport.</td></tr>
+  <tr><td><code>body { line-height: 1.5 }</code></td><td>Читаемый интерлиньяж по умолчанию. Размер и семейство шрифта не задаются.</td></tr>
+  <tr><td>Сглаживание шрифта</td><td><code>-webkit-font-smoothing: antialiased</code>, <code>-moz-osx-font-smoothing: grayscale</code></td></tr>
+  <tr><td>Обнуление margin у заголовков, параграфов</td><td><code>h1–h6, p, figure, blockquote, dl, dd</code></td></tr>
+  <tr><td>Медиа-элементы как блоки</td><td><code>img, picture, video, canvas, svg { display: block; max-width: 100% }</code></td></tr>
+  <tr><td>Наследование шрифта и цвета у форм</td><td><code>input, button, textarea, select { font: inherit; color: inherit }</code></td></tr>
+  <tr><td>Курсор у кнопок</td><td><code>button { cursor: pointer }</code></td></tr>
+  <tr><td>Сброс списков</td><td><code>ul[role="list"], ol[role="list"] { list-style: none; padding: 0; margin: 0 }</code> — маркеры снимаются только со списков, размеченных как список явно. Обычный <code>&lt;ul&gt;</code> в тексте сохраняет и маркеры, и отступ, а <code>role="list"</code> оставляет элементу роль списка в скринридере при снятом оформлении.</td></tr>
+  <tr><td>Сброс таблиц</td><td><code>table { border-collapse: collapse; border-spacing: 0 }</code></td></tr>
+  <tr><td><code>a { color: inherit; text-decoration: none }</code></td><td>Ссылки наследуют цвет, без подчёркивания.</td></tr>
+  <tr><td><code>[hidden] { display: none }</code></td><td>Атрибут hidden гарантированно скрывает элемент.</td></tr>
+</table>
+
+<div class="callout callout-success">
+  <p><strong>Осознанный минимализм:</strong> reset не сбрасывает шрифты и размеры текста — вы сами выбираете типографику для проекта. Он убирает только browser inconsistencies, которые мешают вёрстке.</p>
+</div>
+
+<h2>CSS Custom Properties</h2>
+
+<p>
+  Все ключевые значения библиотеки вынесены в CSS-переменные на <code>:root</code>. Это позволяет переопределять их в рантайме без пересборки SCSS — просто задайте новое значение в своём CSS или через JavaScript.
+</p>
+
+<h3>Полный список переменных</h3>
+
+<p>
+  Все токены объявлены в одном месте — <code>packages/core/scss/_tokens.scss</code> пакета
+  <code>griffincss-core</code>. Пакет <code>griffincss-utils</code> подключает этот же файл,
+  поэтому блок <code>:root</code> в обеих сборках одинаковый и любую из них можно подключать
+  отдельно.
+</p>
+
+<table>
+  <tr><th>Переменная</th><th>По умолчанию</th><th>Назначение</th></tr>
+  <tr><td><code>--gr-gap</code></td><td><code>0.75rem</code> → <code>1rem</code> с md</td><td>Базовый отступ для grid и flex</td></tr>
+  <tr><td><code>--gr-gap-sm</code></td><td><code>0.375rem</code> → <code>0.5rem</code> с md</td><td>Малый отступ</td></tr>
+  <tr><td><code>--gr-gap-lg</code></td><td><code>1.25rem</code> → <code>2rem</code> с md</td><td>Большой отступ</td></tr>
+  <tr><td><code>--gr-max-width</code></td><td><code>1440px</code></td><td>Максимальная ширина контейнера</td></tr>
+  <tr><td><code>--gr-font-sans</code></td><td><code>system-ui, -apple-system, sans-serif</code></td><td>Семейство sans-serif</td></tr>
+  <tr><td><code>--gr-font-serif</code></td><td><code>Georgia, Cambria, serif</code></td><td>Семейство serif</td></tr>
+  <tr><td><code>--gr-font-mono</code></td><td><code>SFMono-Regular, Menlo, Consolas, monospace</code></td><td>Семейство monospace</td></tr>
+  <tr><td><code>--gr-font-size-base</code></td><td><code>1rem</code></td><td>Базовый размер шрифта</td></tr>
+  <tr><td><code>--gr-hsl-white</code>, <code>--gr-hsl-gray-50…900</code>, <code>--gr-hsl-black</code></td><td><code>0, 0%, 100%</code> … <code>0, 0%, 0%</code></td><td>HSL-компоненты нейтральной шкалы — см. <a href="colors.html">Colors</a></td></tr>
+  <tr><td><code>--gr-hsl-primary</code> / <code>secondary</code> / <code>success</code> / <code>warning</code> / <code>danger</code> / <code>info</code> (+ <code>-light</code>, <code>-dark</code>)</td><td><code>220, 80%, 50%</code> …</td><td>HSL-компоненты акцентных цветов</td></tr>
+  <tr><td><code>--gr-color-bg</code>, <code>--gr-color-text</code>, <code>--gr-color-text-secondary</code>, <code>--gr-color-border</code>, <code>--gr-color-link</code>, <code>--gr-color-link-hover</code></td><td><code>hsl(var(--gr-hsl-*))</code></td><td>Семантические цвета, собранные из HSL-токенов</td></tr>
+  <tr><td><code>--gr-radius</code></td><td><code>0.5rem</code></td><td>Базовое скругление (для кастомных компонентов)</td></tr>
+  <tr><td><code>--gr-transition</code></td><td><code>0.2s ease</code></td><td>Базовая анимация переходов</td></tr>
+  <tr><td><code>--gr-bp-sm</code></td><td><code>640px</code></td><td>Брейкпоинт sm (справочно, читается JS)</td></tr>
+  <tr><td><code>--gr-bp-md</code></td><td><code>768px</code></td><td>Брейкпоинт md</td></tr>
+  <tr><td><code>--gr-bp-lg</code></td><td><code>1024px</code></td><td>Брейкпоинт lg</td></tr>
+  <tr><td><code>--gr-bp-xl</code></td><td><code>1280px</code></td><td>Брейкпоинт xl</td></tr>
+</table>
+
+<h3>Переопределение переменных</h3>
+
+<p>Чтобы изменить значения под свой проект, переопределите нужные переменные в вашем CSS:</p>
+
+<pre><code>:root {
+  --gr-gap: 1.25rem;
+  --gr-max-width: 1200px;
+  --gr-radius: 0.75rem;
+  --gr-bp-md: 800px;
+}</code></pre>
+
+<p>Или через JavaScript в рантайме:</p>
+
+<pre><code>document.documentElement.style.setProperty('--gr-gap', '1.25rem');
+document.documentElement.style.setProperty('--gr-bp-md', '800px');</code></pre>
+
+<div class="callout">
+  <p><strong>JS-рантайм и брейкпоинты:</strong> <code>griffincss.js</code> читает значения <code>--gr-bp-*</code> из computed styles при инициализации. Поэтому переопределять брейкпоинты нужно до загрузки JS-скрипта или до вызова <code>Griffincss.init()</code> (если автоинициализация отключена).</p>
+</div>
+
+<h3>Категории переменных</h3>
+
+<div class="gr-grid-auto-fit gr-gap gr-my-4">
+  <div class="feature-card">
+    <h4>Spacing</h4>
+    <p><code>--gr-gap</code>, <code>--gr-gap-sm</code>, <code>--gr-gap-lg</code> — управляют отступами в grid- и flex-контейнерах и в раскладках. Значения по умолчанию подрастают с брейкпоинта md, поэтому классы <code>.gr-gap-*</code> адаптивны сами по себе. Переопределение в <code>:root</code> отключает этот шаг — значение станет фиксированным.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Layout</h4>
+    <p><code>--gr-max-width</code> — максимальная ширина для <code>.gr-container</code>. Ограничивает контент на широких экранах.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Visual</h4>
+    <p><code>--gr-radius</code>, <code>--gr-transition</code> — базовые визуальные токены для использования в собственных компонентах.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Breakpoints</h4>
+    <p><code>--gr-bp-sm</code> … <code>--gr-bp-xl</code> — справочные значения, читаемые JS-рантаймом для адаптивных раскладок. Собираются из единственной карты <code>$gr-breakpoints</code> в <code>scss/_breakpoints.scss</code>.</p>
+  </div>
+</div>
+
+<h2>Печать</h2>
+
+<p>
+  Ресет несёт блок <code>@media print</code>. Он приезжает вместе с ресетом
+  и только с ним: <code>griffincss-reset.css</code> — отдельная точка входа,
+  не подключили — на печать ничего из этого не поедет.
+</p>
+
+<table>
+  <tr><th>Правило</th><th>Зачем</th></tr>
+  <tr><td><code>body { background: #fff; color: #000 }</code></td><td>Тема и бумага — разные среды. Фоны браузер по умолчанию не печатает, и светлый текст тёмной темы исчез бы на белом листе. Значения намеренно буквальные: смысл в том, чтобы выйти из темы, а не сменить её.</td></tr>
+  <tr><td><code>details::details-content { content-visibility: visible }</code></td><td>Свёрнутый <code>&lt;details&gt;</code> на бумаге — потерянный текст: раскрыть его читатель уже не сможет. Селектор понимают не все браузеры — там правило отбрасывается как невалидное, и раздел печатается свёрнутым, как раньше.</td></tr>
+  <tr><td><code>h1–h6 { break-after: avoid }</code></td><td>Заголовок не остаётся один в конце страницы.</td></tr>
+  <tr><td><code>blockquote, figure, img, pre, table { break-inside: avoid }</code></td><td>Таблица, картинка и блок кода не разрываются посередине.</td></tr>
+  <tr><td><code>p { orphans: 3; widows: 3 }</code></td><td>Одна строка абзаца, оторванная от остальных, читается как обрывок.</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Тени гасятся не здесь, а в теме — и потому во всех сборках.</strong>
+    Ресет живёт в самом младшем слое <code>griffincss.reset</code>, и правило
+    <code>box-shadow: none</code> оттуда проиграло бы и компоненту,
+    и утилите <code>.gr-shadow-*</code>. Поэтому на печати обнуляется
+    множитель <code>--gr-shadow-strength</code>: семь готовых теней собраны
+    из него, и ноль означает нулевую непрозрачность у каждой — в ядре,
+    в компонентах и в утилитах разом, независимо от слоя и от того,
+    подключён ли ресет.
+  </p>
+  <p>
+    Там же, в <code>griffincss-utils.css</code>, на печати останавливаются
+    <code>.gr-animate-spin</code> и классы переходов: вращающийся индикатор
+    печатается замершим в случайном положении.
+  </p>
+</div>
+
+<h2>FOUC-защита</h2>
+
+<p>
+  Grid-контейнеры с <code>data-gr-layout</code> скрываются через <code>opacity: 0</code> до обработки JS-рантаймом.
+  После генерации CSS-правил JS добавляет класс <code>.gr-ready</code> — контейнер плавно проявляется.
+</p>
+
+<pre><code>/* Внедряется рантаймом в &lt;style id="griffincss-dynamic"&gt;.
+   В собранном griffincss-core.css этого правила нет. */
+[data-gr-layout]:not(.gr-ready),
+[data-gr-layout-sm]:not(.gr-ready),
+[data-gr-layout-md]:not(.gr-ready),
+[data-gr-layout-lg]:not(.gr-ready),
+[data-gr-layout-xl]:not(.gr-ready),
+[data-gr-layout-csm]:not(.gr-ready),
+[data-gr-layout-cmd]:not(.gr-ready),
+[data-gr-layout-clg]:not(.gr-ready),
+[data-gr-layout-cxl]:not(.gr-ready) {
+  opacity: 0;
+}
+
+[data-gr-layout].gr-ready,
+[data-gr-layout-sm].gr-ready,
+… /* и так далее по всем девяти атрибутам */ {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}</code></pre>
+
+<div class="callout callout-success">
+  <p><strong>Почему opacity, а не display:none?</strong> <code>opacity: 0</code> сохраняет геометрию элемента — он занимает место в потоке. Это предотвращает Cumulative Layout Shift (CLS) при загрузке страницы. Контейнер невидим, но его размеры уже учтены браузером.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Правила нет в статическом CSS — и это принципиально.</strong> Его первым же действием
+  внедряет <code>griffincss.js</code>. Если скрипт заблокирован, не загрузился или упал, правило
+  не появляется вовсе — контент остаётся видимым, пусть и без сетки. Ценой становится краткий кадр
+  без раскладки, а не пустая страница. Контейнер открывается (получает <code>.gr-ready</code>)
+  даже когда раскладка невалидна или значение атрибута пустое.</p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

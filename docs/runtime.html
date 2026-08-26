@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS-рантайм — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>JS-рантайм</h1>
+  <p><code>griffincss.js</code> — компактный IIFE-скрипт (27 КБ, 8,3 КБ gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">8,3 КБ gzip</span>
+    <span class="badge">IIFE</span>
+    <span class="badge">Нет зависимостей</span>
+    <span class="badge">Авто-инициализация</span>
+  </div>
+</div>
+
+<h2>Архитектура</h2>
+
+<div class="gr-grid-auto-fit gr-gap gr-my-4">
+  <div class="feature-card">
+    <h4>DOM-сканирование</h4>
+    <p>Обходит все элементы с <code>data-gr-layout</code> и его вариантами, собирает наборы раскладок для каждого элемента.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Генерация CSS</h4>
+    <p>Внедряет <code>&lt;style id="griffincss-dynamic"&gt;</code> с тремя секциями: FOUC guard, Grid Layouts и Grid Areas.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Класс на набор</h4>
+    <p>Набор раскладок элемента хешируется в класс <code>.gr-l-&lt;хеш&gt;</code>. Правила пишутся под класс, поэтому одинаковая базовая раскладка с разной адаптивностью не конфликтует.</p>
+  </div>
+  <div class="feature-card">
+    <h4>Непересекающиеся брейкпоинты</h4>
+    <p>Диапазоны в range-синтаксисе: <code>(768px &lt;= width &lt; 1024px)</code>. Без арифметики <code>-1px</code>, поэтому единицы измерения не важны и щелей на дробных ширинах нет.</p>
+  </div>
+</div>
+
+<h2>Жизненный цикл</h2>
+
+<ol>
+  <li>Скрипт загружается (IIFE выполняется немедленно).</li>
+  <li>Первым действием ставит FOUC-защиту: <code>[data-gr-layout]:not(.gr-ready) { opacity: 0 }</code>. В статическом CSS этого правила нет — если скрипт не выполнился, контент остаётся видимым.</li>
+  <li>Если <code>document.readyState === 'loading'</code> — ждёт <code>DOMContentLoaded</code>.</li>
+  <li><code>Griffincss.init()</code> читает CSS-переменные <code>--gr-bp-*</code> из computed styles.</li>
+  <li>Сканирует DOM: находит все элементы с layout-атрибутами.</li>
+  <li>Группирует раскладки по элементам, хеширует набор в класс <code>.gr-l-&lt;хеш&gt;</code> и вешает его на контейнер.</li>
+  <li>Генерирует CSS: <code>grid-template-areas</code>, <code>grid-area</code> классы, правила авто-скрытия.</li>
+  <li>Внедряет CSS в <code>&lt;style id="griffincss-dynamic"&gt;</code> в <code>&lt;head&gt;</code>.</li>
+  <li>Выполняет авто-присвоение <code>gr-area-*</code> детям без явного класса.</li>
+  <li>Добавляет <code>.gr-ready</code> на grid-контейнеры (снятие FOUC-защиты).</li>
+</ol>
+
+<h2 id="api">API</h2>
+
+<p>Глобальный объект <code>window.Griffincss</code> предоставляет следующие методы:</p>
+
+<h3>Griffincss.init()</h3>
+
+<pre><code>// Запускает сканирование DOM и генерацию CSS.
+// Вызывается автоматически при загрузке страницы.
+// При data-auto="false" на теге script нужно вызвать вручную.
+Griffincss.init();</code></pre>
+
+<h3>Griffincss.refresh(root?)</h3>
+
+<pre><code>// Повторно сканирует DOM и обновляет CSS.
+// Вызывайте после динамического добавления элементов с layout-атрибутами.
+// root — опциональный корневой элемент (по умолчанию document).
+
+Griffincss.refresh();
+Griffincss.refresh(document.getElementById('dynamic-content'));</code></pre>
+
+<h3>Griffincss.observe(root?)</h3>
+
+<pre><code>// Включает MutationObserver для автоматического отслеживания
+// новых элементов с layout-атрибутами в DOM.
+// root — опционально (по умолчанию document.body).
+
+Griffincss.observe();
+
+// Для конкретного контейнера:
+Griffincss.observe(document.getElementById('app'));</code></pre>
+
+<h3>Griffincss.destroy()</h3>
+
+<pre><code>// Полностью останавливает рантайм:
+// - Отключает все MutationObserver и отменяет отложенные перерисовки
+// - Снимает с элементов .gr-ready, .gr-l-* и назначенные им gr-area-*
+//   (явно проставленные в разметке gr-area-* остаются)
+// - Очищает кеш сгенерированных CSS-правил
+// - Удаляет &lt;style id="griffincss-dynamic"&gt;
+
+Griffincss.destroy();</code></pre>
+
+<h3>Griffincss.parseLayout(str)</h3>
+
+<pre><code>// Парсит layout-строку и возвращает двумерный массив.
+// Полезно для отладки и понимания формата.
+
+Griffincss.parseLayout('a3b4-c2d5');
+// → [['a','a','a','b','b','b','b'], ['c','c','d','d','d','d','d']]
+
+Griffincss.parseLayout('hdr4-main4-side2_2-ftr4');
+// → [['hdr','hdr','hdr','hdr'],
+//    ['main','main','main','main'],
+//    ['side','side','.','.'],
+//    ['ftr','ftr','ftr','ftr']]</code></pre>
+
+<div class="callout">
+  <p><strong>parseLayout</strong> — отличный инструмент для изучения формата. Откройте консоль браузера и экспериментируйте с разными строками.</p>
+</div>
+
+<h3>Griffincss.version</h3>
+
+<pre><code>// Версия рантайма — строка, совпадающая с версией пакета griffincss-core.
+Griffincss.version;   // '0.16.0'</code></pre>
+
+<h2>Валидация раскладок</h2>
+
+<p>
+  Рантайм проверяет layout-строку до генерации CSS. Раскладка отвергается, если в ней есть:
+</p>
+
+<table>
+  <tr><th>Ошибка</th><th>Пример</th></tr>
+  <tr><td>счётчик без имени области</td><td><code>3a</code></td></tr>
+  <tr><td>нулевой счётчик</td><td><code>a0b2</code></td></tr>
+  <tr><td>счётчик больше 64</td><td><code>a99999b</code></td></tr>
+  <tr><td>имя длиннее 32 символов</td><td><code>aaaa…a1</code></td></tr>
+  <tr><td>недопустимые символы в имени</td><td><code>a.b1</code></td></tr>
+  <tr><td>пустой ряд</td><td><code>a1-</code></td></tr>
+</table>
+
+<p>
+  При ошибке контейнер пропускается целиком — сломанный CSS не генерируется, а в консоль уходит
+  <code>Griffincss: …</code> с описанием. Контейнер при этом остаётся видимым:
+  FOUC-защита с него снимается.
+</p>
+
+<p>
+  Пустое значение (<code>data-gr-layout=""</code>) ошибкой не считается и предупреждения
+  не даёт — раскладывать просто нечего. Контейнер всё равно открывается: FOUC-защита ловит
+  элемент по наличию атрибута, и без <code>.gr-ready</code> он остался бы прозрачным навсегда.
+</p>
+
+<div class="callout">
+  <p><code>Griffincss.parseLayout()</code> на невалидной строке бросает исключение — это удобно
+  для проверки раскладок в консоли.</p>
+</div>
+
+<h2>Авто-инициализация</h2>
+
+<p>По умолчанию скрипт автоматически инициализируется при загрузке страницы. Чтобы отключить это поведение:</p>
+
+<pre><code>&lt;script src="griffincss.js" data-auto="false"&gt;&lt;/script&gt;
+&lt;script&gt;
+  // Ручная инициализация в нужный момент
+  document.addEventListener('DOMContentLoaded', function () {
+    Griffincss.init();
+  });
+&lt;/script&gt;</code></pre>
+
+<h2>Авто-присвоение областей (Auto-Assign)</h2>
+
+<p>
+  Если дочерние элементы не имеют явного класса <code>gr-area-*</code>, JS-рантайм присваивает их автоматически:
+</p>
+
+<ol>
+  <li>Читает имена областей из <strong>базового</strong> <code>data-gr-layout</code> (без суффикса брейкпоинта).</li>
+  <li>Собирает имена, уже проставленные детям явно, — они исключаются из раздачи.</li>
+  <li>Оставшиеся свободные имена раздаёт детям без класса, в порядке первого появления в раскладке.</li>
+  <li>Дубликаты невозможны: одно имя не выдаётся дважды, даже если оно занимает несколько рядов.</li>
+  <li>Детям сверх числа областей класс не выдаётся.</li>
+</ol>
+
+<div class="callout callout-warning">
+  <p><strong>Важно:</strong> авто-присвоение использует только базовый <code>data-gr-layout</code>, не адаптивные варианты. Порядок присвоения фиксирован и не меняется при смене брейкпоинта.</p>
+</div>
+
+<h2>Авто-скрытие (Auto-Hide)</h2>
+
+<p>
+  JS-рантайм генерирует CSS-правила, которые автоматически скрывают элементы с <code>gr-area-*</code>, чьё имя отсутствует в <code>grid-template-areas</code> для текущего брейкпоинта.
+</p>
+
+<pre><code>/* Сгенерированное правило для набора с data-gr-layout="a1b1" */
+.gr-l-3exjl0 > [class*="gr-area-"]:not(.gr-area-a):not(.gr-area-b) {
+  display: none;
+}</code></pre>
+
+<div class="callout callout-success">
+  <p><strong>Сохранение display:</strong> правило использует <code>:not()</code> и добавляет <code>display: none</code> только скрываемым элементам. Элементы, которые должны быть видны, не получают принудительного display — сохраняется их нативный тип (flex, block, table и т.д.).</p>
+</div>
+
+<h2>Дедупликация CSS</h2>
+
+<p>
+  JS-рантайм группирует раскладки по уникальным наборам и генерирует каждое CSS-правило ровно один раз:
+</p>
+
+<ul>
+  <li>Каждый уникальный <strong>набор</strong> раскладок → один класс <code>.gr-l-&lt;хеш&gt;</code> и один комплект правил</li>
+  <li>Каждое уникальное имя области → один класс <code>.gr-area-X</code> в <code>/* Grid Areas */</code></li>
+  <li>Элементы с одинаковым набором получают один и тот же класс; разные наборы — разные классы, даже если базовая раскладка совпадает</li>
+</ul>
+
+<pre><code>/* Структура сгенерированного CSS */
+@layer griffincss.reset, griffincss.core, griffincss.utils;
+@layer griffincss.core {
+  /* FOUC guard */
+  [data-gr-layout]:not(.gr-ready), … { opacity: 0; }
+  [data-gr-layout].gr-ready, …      { opacity: 1; transition: opacity 0.3s ease; }
+
+  /* Grid Layouts */
+  .gr-l-k7gi9w { … }
+  @media (width &lt; 768px)  { .gr-l-19l1jw3 { … } }
+  @media (width &gt;= 768px) { .gr-l-19l1jw3 { … } }
+
+  /* Grid Areas */
+  .gr-area-a { grid-area: a; }
+  .gr-area-b { grid-area: b; }
+  .gr-area-hdr { grid-area: hdr; }
+  /* end */
+}</code></pre>
+
+<div class="callout">
+  <p><strong>Слой каскада.</strong> Весь вывод рантайма лежит в <code>@layer griffincss.core</code> —
+  там же, где статический <code>griffincss-core.css</code>. Порядок слоёв объявляется целиком,
+  поэтому страница, на которой подключён только JS, задаёт его так же. Практический смысл:
+  пользовательский CSS вне слоёв выигрывает у библиотеки без <code>!important</code>,
+  каким бы ни был порядок подключения файлов.</p>
+</div>
+
+<h2>Непересекающиеся брейкпоинты</h2>
+
+<p>
+  В отличие от традиционного подхода с накоплением <code>min-width</code>, griffincss использует диапазоны:
+</p>
+
+<table>
+  <tr><th>Layout</th><th>@media-правило</th></tr>
+  <tr><td>Базовый (<code>data-gr-layout</code>)</td><td><code>(width &lt; 640px)</code> — до первого адаптивного</td></tr>
+  <tr><td><code>data-gr-layout-sm</code></td><td><code>(640px &lt;= width &lt; 768px)</code></td></tr>
+  <tr><td><code>data-gr-layout-md</code></td><td><code>(768px &lt;= width &lt; 1024px)</code></td></tr>
+  <tr><td><code>data-gr-layout-lg</code></td><td><code>(1024px &lt;= width &lt; 1280px)</code></td></tr>
+  <tr><td><code>data-gr-layout-xl</code> (последний)</td><td><code>(width &gt;= 1280px)</code> — от последнего</td></tr>
+</table>
+
+<div class="callout">
+  <p><strong>Зачем?</strong> Это гарантирует, что только один набор правил активен в любой момент. Правила авто-скрытия из одного брейкпоинта не конфликтуют с другим.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Границы считаются по атрибутам элемента, а не по всей шкале.</strong> В таблице выше
+  заданы все четыре варианта, поэтому диапазоны идут подряд. Если на элементе только
+  <code>data-gr-layout</code> и <code>data-gr-layout-lg</code>, диапазонов будет два:
+  <code>(width &lt; 1024px)</code> и <code>(width &gt;= 1024px)</code>. Раскладка без единого
+  адаптивного варианта правило в <code>@media</code> не заворачивает вовсе.</p>
+</div>
+
+<h2>MutationObserver</h2>
+
+<p>
+  <code>Griffincss.observe()</code> подписывается на изменения DOM и автоматически вызывает <code>refresh()</code>
+  при появлении новых элементов с layout-атрибутами. Это удобно для SPA и динамического контента.
+  Перерисовка идёт с дебаунсом и только по тому корню, за которым ведётся наблюдение, — серия мутаций
+  даёт один проход, а остальной документ не пересканируется.
+</p>
+
+<pre><code>// Автоматическое отслеживание во всём document.body
+Griffincss.observe();
+
+// Или в конкретном контейнере
+var app = document.getElementById('app');
+Griffincss.observe(app);
+
+// Позже добавляем контент динамически
+app.innerHTML += '&lt;div data-gr-layout="a2b2"&gt;...&lt;/div&gt;';
+// MutationObserver автоматически вызовет refresh()</code></pre>
+
+<div class="callout callout-warning">
+  <p><strong>Наблюдение идёт за добавлением узлов, не за атрибутами.</strong>
+  Наблюдатель подписан на <code>childList</code> и <code>subtree</code>, поэтому смена
+  <code>data-gr-layout</code> на уже существующем элементе его не разбудит — вызовите
+  <code>Griffincss.refresh()</code> сами. Такой повторный проход безопасен: прежний класс
+  <code>.gr-l-*</code> снимается, а выданные раньше <code>gr-area-*</code> переназначаются
+  по новой раскладке (классы, проставленные в разметке вручную, остаются на месте).</p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

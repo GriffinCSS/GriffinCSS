@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadows — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Shadows</h1>
+  <p>Тени для передачи глубины интерфейса. Семь ступеней плюс внутренняя тень.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_shadows.scss</span>
+  </div>
+</div>
+
+<h2>Классы</h2>
+
+<table>
+  <tr><th>Класс</th><th>Токен</th><th>Применение</th></tr>
+  <tr><td><code>.gr-shadow-xs</code></td><td><code>--gr-shadow-xs</code></td><td>Едва заметный контур: поля ввода, разделители</td></tr>
+  <tr><td><code>.gr-shadow-sm</code></td><td><code>--gr-shadow-sm</code></td><td>Карточки в спокойном состоянии</td></tr>
+  <tr><td><code>.gr-shadow-md</code></td><td><code>--gr-shadow-md</code></td><td>Карточка под курсором, кнопка</td></tr>
+  <tr><td><code>.gr-shadow-lg</code></td><td><code>--gr-shadow-lg</code></td><td>Выпадающие списки, поповеры</td></tr>
+  <tr><td><code>.gr-shadow-xl</code></td><td><code>--gr-shadow-xl</code></td><td>Боковые панели</td></tr>
+  <tr><td><code>.gr-shadow-2xl</code></td><td><code>--gr-shadow-2xl</code></td><td>Модальные окна</td></tr>
+  <tr><td><code>.gr-shadow-inner</code></td><td><code>--gr-shadow-inner</code></td><td>Вдавленность: нажатая кнопка, поле ввода</td></tr>
+  <tr><td><code>.gr-shadow-none</code></td><td>—</td><td>Снять тень</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Ступени</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-lg gr-bg-gray-50 gr-p-8 gr-radius-3">
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-xs gr-text-gray-900">xs</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-sm gr-text-gray-900">sm</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-md gr-text-gray-900">md</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-lg gr-text-gray-900">lg</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-xl gr-text-gray-900">xl</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-2xl gr-text-gray-900">2xl</div>
+    <div class="gr-bg-white gr-radius-2 gr-p-4 gr-shadow-inner gr-text-gray-900">inner</div>
+  </div>
+</div>
+
+<h2>Настройка</h2>
+
+<p>
+  Геометрия теней отделена от цвета. Цвет задаётся одной переменной
+  <code>--gr-shadow-color</code> в формате HSL-компонент — перекрасить
+  все семь теней разом можно, не трогая ни одну из них:
+</p>
+
+<pre><code>:root {
+  /* холодная синеватая тень вместо нейтральной чёрной */
+  --gr-shadow-color: 220, 40%, 20%;
+}</code></pre>
+
+<p>Отдельная тень переопределяется так же, обычной переменной:</p>
+
+<pre><code>:root {
+  --gr-shadow-md: 0 2px 8px hsl(var(--gr-shadow-color), 14%);
+}</code></pre>
+
+<div class="callout">
+  <p>
+    Токены <code>--gr-shadow-*</code> объявлены в <code>_tokens.scss</code> ядра,
+    поэтому приезжают и с <code>griffincss-core.css</code>, и с
+    <code>griffincss-utils.css</code>: блок <code>:root</code> в обеих сборках
+    обязан совпадать — это отдельно проверяется при сборке.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

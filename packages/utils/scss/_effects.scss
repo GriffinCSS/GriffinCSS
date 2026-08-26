@@ -1,0 +1,28 @@
+// Griffincss — Effects
+// Прозрачность, вписывание медиа и пропорции блока.
+
+// Прозрачность
+$gr-opacities: (0: 0, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1);
+
+@each $gr-step, $gr-value in $gr-opacities {
+  .gr-opacity-#{$gr-step} { opacity: $gr-value; }
+}
+
+// Вписывание картинки или видео в отведённую рамку.
+// Ресет уже задаёт медиа display: block и max-width: 100%, поэтому здесь
+// остаётся только кадрирование.
+@each $gr-fit in (cover, contain, fill, none, scale-down) {
+  .gr-object-#{$gr-fit} { object-fit: $gr-fit; }
+}
+
+// Точка привязки кадра: у портретов обрезать снизу, а не по центру.
+@each $gr-pos in (center, top, right, bottom, left) {
+  .gr-object-pos-#{$gr-pos} { object-position: $gr-pos; }
+}
+
+// Пропорции блока
+.gr-aspect-square   { aspect-ratio: 1 / 1; }
+.gr-aspect-video    { aspect-ratio: 16 / 9; }
+.gr-aspect-wide     { aspect-ratio: 21 / 9; }
+.gr-aspect-portrait { aspect-ratio: 3 / 4; }
+.gr-aspect-auto     { aspect-ratio: auto; }

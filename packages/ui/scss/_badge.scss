@@ -1,0 +1,162 @@
+// Griffincss UI — Badge
+// Мелкие маркеры: плашка статуса, тег с крестиком, точка-индикатор
+// и счётчик непрочитанного.
+//
+// Все четыре — строчные: стоят внутри строки текста, заголовка или кнопки
+// и не ломают её высоту. Кегль задан в em, а не в rem: плашка рядом
+// с заголовком должна быть крупнее, чем та же плашка в подписи.
+//
+// Статус задаёт три переменные, а не одну: --gr-badge-color для текста
+// и линии, --gr-badge-fill для заливки и --gr-badge-on-fill для чернил
+// на ней. У четырёх статусов из пяти первые две совпадают; расходятся они
+// только у предупреждения — его текстовый цвет в светлой теме обязан быть
+// тёмно-коричневым, чтобы читаться на белом, а точка или счётчик такого
+// цвета выглядят не предупреждением, а грязью.
+
+@use 'sass:list';
+
+.gr-badge {
+  --gr-badge-color: var(--gr-color-text-secondary);
+  --gr-badge-fill: var(--gr-color-text-secondary);
+  --gr-badge-on-fill: var(--gr-color-on-accent);
+
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  padding-block: 0.125em;
+  padding-inline: 0.5em;
+  border: var(--gr-border-width) solid transparent;
+  border-radius: calc(var(--gr-radius) * 0.5);
+  background-color: color-mix(in srgb, var(--gr-badge-fill) 16%, var(--gr-color-bg));
+  color: var(--gr-badge-color);
+  font-size: 0.8125em;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+// Тройками: текст и линия, заливка, чернила на заливке.
+$gr-badge-statuses: (
+  accent: (var(--gr-color-accent), var(--gr-color-accent), var(--gr-color-on-accent)),
+  success: (var(--gr-color-success), var(--gr-color-success-surface), var(--gr-color-on-success)),
+  warning: (var(--gr-color-warning), var(--gr-color-warning-surface), var(--gr-color-on-warning)),
+  danger: (var(--gr-color-danger), var(--gr-color-danger-surface), var(--gr-color-on-danger)),
+  info: (var(--gr-color-info), var(--gr-color-info-surface), var(--gr-color-on-info))
+);
+
+@each $gr-name, $gr-value in $gr-badge-statuses {
+  .gr-badge-#{$gr-name} {
+    --gr-badge-color: #{list.nth($gr-value, 1)};
+    --gr-badge-fill: #{list.nth($gr-value, 2)};
+    --gr-badge-on-fill: #{list.nth($gr-value, 3)};
+  }
+}
+
+// Скруглённая до полукруга — под счётчики и короткие метки.
+.gr-badge-pill {
+  padding-inline: 0.6em;
+  border-radius: var(--gr-radius-pill);
+}
+
+// Контурная: фон уходит, остаётся линия. Полезна поверх цветной подложки,
+// где заливка плашки слилась бы с фоном.
+.gr-badge-outline {
+  border-color: currentcolor;
+  background-color: transparent;
+}
+
+// --- Счётчик ----------------------------------------------------------------
+
+// Круг с числом. min-inline-size равна высоте, поэтому одна цифра даёт круг,
+// а три — вытянутую пилюлю, и обе версии остаются одного роста.
+//
+// Здесь цвет статуса работает заливкой, а не текстом, поэтому берётся
+// --gr-badge-fill, и чернила — соответствующие ему.
+.gr-badge-count {
+  justify-content: center;
+  min-inline-size: 1.6em;
+  padding-inline: 0.4em;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-badge-fill);
+  color: var(--gr-badge-on-fill);
+  font-variant-numeric: tabular-nums;
+}
+
+// --- Тег --------------------------------------------------------------------
+
+// Плашка, которую можно снять: тот же корпус, но с местом под крестик.
+// Крестик — обычная кнопка внутри; закрытие делает [data-gr-dismiss]
+// из griffincss-ui.js (волна 8b).
+.gr-tag {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  padding-block: 0.125em;
+  padding-inline: 0.5em;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: calc(var(--gr-radius) * 0.5);
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-text);
+  font-size: 0.875em;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.gr-tag-remove {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.2em;
+  block-size: 1.2em;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+  background-color: transparent;
+  color: var(--gr-color-text-secondary);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gr-tag-remove:hover {
+    background-color: var(--gr-color-border);
+    color: var(--gr-color-text);
+  }
+}
+
+.gr-tag-remove:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 1px;
+}
+
+// --- Точка ------------------------------------------------------------------
+
+// Индикатор состояния без текста. Сам по себе он ничего не сообщает
+// скринридеру, поэтому в разметке рядом обязана стоять подпись —
+// хотя бы .gr-sr-only из griffincss-utils.
+//
+// Точка — чистая заливка, текста на ней нет, поэтому цвет берётся
+// из --gr-badge-fill, а не из --gr-badge-color.
+.gr-dot {
+  --gr-badge-fill: var(--gr-color-text-secondary);
+
+  display: inline-block;
+  inline-size: 0.6em;
+  block-size: 0.6em;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-badge-fill);
+  vertical-align: middle;
+}
+
+@each $gr-name, $gr-value in $gr-badge-statuses {
+  .gr-dot-#{$gr-name} {
+    --gr-badge-fill: #{list.nth($gr-value, 2)};
+  }
+}

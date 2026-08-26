@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Griffincss — Demo</title>
+  <style>
+    /* Оформление на средствах библиотеки: интерфейс страницы — на семантических
+       токенах, поэтому обе темы приходят даром; плашки раскладок — на литеральной
+       палитре, потому что образец обязан выглядеть одинаково в любой теме.
+       Слой docs объявлен до пакетов и стоит перед griffincss.utils:
+       любая утилита перекрывает здешние правила. */
+    @layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.utils;
+
+    @layer griffincss.docs {
+      body { font-family: var(--gr-font-sans); }
+
+      .demo-section {
+        padding: 2rem;
+        max-width: var(--gr-max-width);
+        margin: 0 auto;
+      }
+
+      .demo-title {
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .demo-subtitle {
+        margin-bottom: 1.5rem;
+        max-width: 68ch;
+        color: var(--gr-color-text-secondary);
+      }
+
+      .demo-code {
+        padding: 0.1rem 0.35rem;
+        background-color: var(--gr-color-surface-sunken);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+      }
+
+      hr {
+        border: none;
+        border-top: var(--gr-border-width) solid var(--gr-color-border);
+        margin: 0 2rem;
+      }
+
+      /* Плашки раскладок */
+      [data-gr-layout] > * {
+        min-height: 3.75rem;
+        padding: 1rem;
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: hsl(var(--gr-hsl-white));
+      }
+
+      .area-a,
+      .area-hdr,
+      .area-hero,
+      .area-header { background-color: hsl(var(--gr-hsl-primary-dark)); }
+
+      .area-b,
+      .area-main,
+      .area-nav { background-color: hsl(var(--gr-hsl-secondary-dark)); }
+
+      .area-c,
+      .area-ftr,
+      .area-news { background-color: hsl(var(--gr-hsl-info-dark)); }
+
+      .area-d,
+      .area-side,
+      .area-side2 { background-color: hsl(var(--gr-hsl-gray-700)); }
+
+      .area-foot { background-color: hsl(var(--gr-hsl-gray-800)); }
+
+      /* Вложенные раскладки — светлая половина той же шкалы: уровень
+         вложенности виден яркостью, а не случайным набором оттенков. */
+      .nested-grid { padding: 0 !important; border-radius: calc(var(--gr-radius) / 2); }
+
+      .nested-grid [data-gr-layout] > * {
+        min-height: 2.25rem;
+        padding: 0.5rem;
+        color: hsl(var(--gr-hsl-gray-900));
+      }
+
+      .nested-a { background-color: hsl(var(--gr-hsl-primary-light)); }
+      .nested-b { background-color: hsl(var(--gr-hsl-secondary-light)); }
+      .nested-c { background-color: hsl(var(--gr-hsl-info-light)); }
+      .nested-d { background-color: hsl(var(--gr-hsl-success-light)); }
+
+      .card {
+        padding: 1.25rem;
+        background-color: var(--gr-color-surface);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: var(--gr-radius);
+        box-shadow: var(--gr-shadow-sm);
+      }
+
+      .card h4 { margin-bottom: 0.35rem; font-weight: 600; }
+      .card p  { color: var(--gr-color-text-secondary); }
+
+      .flex-center-box {
+        min-height: 12.5rem;
+        background-color: var(--gr-color-surface-sunken);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: var(--gr-radius);
+      }
+
+      .flex-center-inner {
+        padding: 2rem;
+        border-radius: var(--gr-radius);
+        background-color: var(--gr-color-accent);
+        color: var(--gr-color-on-accent);
+      }
+
+      .tag {
+        padding: 0.6rem 1.1rem;
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: hsl(var(--gr-hsl-white));
+      }
+
+      .tag-red    { background-color: hsl(var(--gr-hsl-primary-dark)); }
+      .tag-blue   { background-color: hsl(var(--gr-hsl-secondary-dark)); }
+      .tag-purple { background-color: hsl(var(--gr-hsl-info-dark)); }
+
+      .badge {
+        width: fit-content;
+        padding: 0.2rem 0.6rem;
+        border-radius: calc(var(--gr-radius) / 2);
+        background-color: var(--gr-color-accent);
+        color: var(--gr-color-on-accent);
+        font-family: var(--gr-font-mono);
+        font-size: 0.75rem;
+      }
+
+      /* Каскад радиусов: три вложенных уровня — три ступени яркости. */
+      .radius-demo-container {
+        background-color: hsl(var(--gr-hsl-secondary-dark));
+        color: hsl(var(--gr-hsl-white));
+      }
+
+      .radius-demo-child {
+        width: 100%;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: hsl(var(--gr-hsl-primary));
+      }
+
+      .radius-demo-deep {
+        width: 100%;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: hsl(var(--gr-hsl-primary-light));
+        color: hsl(var(--gr-hsl-gray-900));
+      }
+
+      .radius-demo-explicit { border-radius: 8px !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+  <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+  <script src="../packages/core/dist/griffincss-theme.js"></script>
+  <script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body class="gr-font-sans">
+<!-- Возврат в документацию: страница открывается по ссылке из боковой панели,
+     а собственной панели у стенда нет — без этой строки читатель оказывался
+     в тупике и уходил кнопкой «назад». -->
+<p class="gr-p-4 gr-m-0 gr-text-sm"><a href="index.html">← Документация Griffincss</a></p>
+
+
+<div class="gr-py-8">
+  <div class="demo-section">
+    <h1 class="gr-text-3xl gr-mb-2">Griffincss Demo</h1>
+    <p class="gr-text-ink-secondary gr-text-base gr-leading-normal gr-mb-6" style="max-width:600px;">
+      Модульная SCSS-библиотека на основе CSS Grid и Flexbox.
+      Grid-раскладки генерируются автоматически из <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout</span> атрибутов.
+    </p>
+
+    <!-- 1. Буквенные grid-области -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">1. Grid через data-gr-layout (буквы)</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="a3b4-c2d5"</span> —
+      Ряд 1: область <b>a</b> × 3 + область <b>b</b> × 4.
+      Ряд 2: область <b>c</b> × 2 + область <b>d</b> × 5.
+      JS-рантайм парсит атрибут и генерирует CSS на лету.
+    </p>
+    <div data-gr-layout="a3b4-c2d5" class="gr-mb-4">
+      <div class="gr-area-a area-a gr-text-center gr-font-semibold gr-text-sm">A (3 колонки)</div>
+      <div class="gr-area-b area-b gr-text-center gr-font-semibold gr-text-sm">B (4 колонки)</div>
+      <div class="gr-area-c area-c gr-text-center gr-font-semibold gr-text-sm">C (2 колонки)</div>
+      <div class="gr-area-d area-d gr-text-center gr-font-semibold gr-text-sm">D (5 колонок)</div>
+    </div>
+
+    <!-- 1b. Вложенный grid — одинаковые и разные раскладки -->
+    <h2 class="demo-title gr-mt-8">1b. Вложенный grid — независимость от вложенности</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      Родительский блок <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="a3b4-c2d5"</span>.
+      Внутри области <b>b</b> — <b>такая же</b> раскладка <span class="demo-code gr-font-mono gr-text-sm">a3b4-c2d5</span>.
+      Внутри области <b>d</b> — <b>другая</b> раскладка <span class="demo-code gr-font-mono gr-text-sm">e1f3</span>.
+      Имена grid-area (<span class="demo-code gr-font-mono gr-text-sm">gr-area-a</span>) не конфликтуют —
+      каждый grid-контейнер изолирует свои области. JS-рантайм генерирует CSS-правила
+      <b>однократно</b>: набор раскладок хешируется в класс
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-l-&lt;хеш&gt;</span>, и он вместе с
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-area-a</span> объявлен по одному разу, несмотря на
+      повторное использование.
+    </p>
+    <div data-gr-layout="a3b4-c2d5" class="gr-mb-4">
+      <div class="gr-area-a area-a gr-text-center gr-font-semibold gr-text-sm">A — верхний уровень</div>
+
+      <!-- Область B содержит вложенный grid с ТАКИМ ЖЕ layout -->
+      <div class="gr-area-b nested-grid">
+        <div data-gr-layout="a3b4-c2d5">
+          <div class="gr-area-a nested-a gr-text-center gr-font-semibold gr-text-xs">a (влож.)</div>
+          <div class="gr-area-b nested-b gr-text-center gr-font-semibold gr-text-xs">b (влож.)</div>
+          <div class="gr-area-c nested-c gr-text-center gr-font-semibold gr-text-xs">c (влож.)</div>
+          <div class="gr-area-d nested-d gr-text-center gr-font-semibold gr-text-xs">d (влож.)</div>
+        </div>
+      </div>
+
+      <div class="gr-area-c area-c gr-text-center gr-font-semibold gr-text-sm">C — верхний уровень</div>
+
+      <!-- Область D содержит вложенный grid с ДРУГИМ layout -->
+      <div class="gr-area-d nested-grid">
+        <div data-gr-layout="a1c3">
+          <div class="gr-area-a nested-a gr-text-center gr-font-semibold gr-text-xs">a (1 кол.)</div>
+          <div class="gr-area-c nested-c gr-text-center gr-font-semibold gr-text-xs">c (3 кол.)</div>
+        </div>
+      </div>
+    </div>
+    <h2 class="demo-title gr-mt-8">2. Grid через data-gr-layout (именованные области)</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="hdr4-main4-side2_2-ftr4"</span> —
+      header, main, sidebar, footer. <span class="demo-code gr-font-mono gr-text-sm">_2</span> — две пустые ячейки.
+    </p>
+    <div data-gr-layout="hdr4-main4-side2_2-ftr4" class="gr-mb-4">
+      <div class="gr-area-hdr area-hdr gr-text-center gr-font-semibold gr-text-sm">Header (hdr × 4)</div>
+      <div class="gr-area-main area-main gr-text-center gr-font-semibold gr-text-sm">Main Content (main × 4)</div>
+      <div class="gr-area-side area-side gr-text-center gr-font-semibold gr-text-sm">Sidebar (side × 2)</div>
+      <div class="gr-area-ftr area-ftr gr-text-center gr-font-semibold gr-text-sm">Footer (ftr × 4)</div>
+    </div>
+
+    <!-- 3. Сложная страничная раскладка -->
+    <h2 class="demo-title gr-mt-8">3. Страничная раскладка с пустыми ячейками</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="hdr6-nav2hero4-news3_3-ftr6"</span> —
+      Символ <span class="demo-code gr-font-mono gr-text-sm">_</span> создаёт пустую ячейку.
+      <span class="demo-code gr-font-mono gr-text-sm">_3</span> — три пустых ячейки подряд.
+    </p>
+    <div data-gr-layout="hdr6-nav2hero4-news3_3-ftr6" class="gr-mb-4">
+      <div class="gr-area-hdr area-header gr-text-center gr-font-semibold gr-text-sm">Header (6 колонок)</div>
+      <div class="gr-area-nav area-nav gr-text-center gr-font-semibold gr-text-sm">Nav (2 колонки)</div>
+      <div class="gr-area-hero area-hero gr-text-center gr-font-semibold gr-text-sm">Hero (4 колонки)</div>
+      <div class="gr-area-news area-news gr-text-center gr-font-semibold gr-text-sm">News (3 колонки)</div>
+      <div class="gr-area-ftr area-foot gr-text-center gr-font-semibold gr-text-sm">Footer (6 колонок)</div>
+    </div>
+
+    <hr>
+
+    <!-- 4. Flex-центрирование -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">4. Flexbox — центрирование</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-flex .gr-flex-center .gr-flex-items-center</span> —
+      идеальное центрирование по обеим осям.
+    </p>
+    <div class="gr-flex gr-flex-center gr-flex-items-center flex-center-box">
+      <div class="flex-center-inner gr-font-bold gr-text-lg">Идеально по центру</div>
+    </div>
+
+    <hr>
+
+    <!-- 5. Адаптивная сетка auto-fit -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">5. Адаптивная сетка — auto-fit</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-grid-auto-fit</span> — колонки auto-fit с min 250px.
+      Без медиа-запросов, чисто на CSS Grid.
+    </p>
+    <div class="gr-grid-auto-fit gr-mb-4">
+      <div class="card"><h4 class="gr-text-lg">Карточка 1</h4><p class="gr-text-sm gr-leading-normal">Адаптируется под ширину.</p></div>
+      <div class="card"><h4 class="gr-text-lg">Карточка 2</h4><p class="gr-text-sm gr-leading-normal">При сужении — перенос.</p></div>
+      <div class="card"><h4 class="gr-text-lg">Карточка 3</h4><p class="gr-text-sm gr-leading-normal">Чистый CSS Grid.</p></div>
+      <div class="card"><h4 class="gr-text-lg">Карточка 4</h4><p class="gr-text-sm gr-leading-normal">Минимум кода.</p></div>
+      <div class="card"><h4 class="gr-text-lg">Карточка 5</h4><p class="gr-text-sm gr-leading-normal">auto-fit + minmax.</p></div>
+    </div>
+
+    <hr>
+
+    <!-- 6. Спейсинг-утилиты -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">6. Спейсинг-утилиты</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-m-4</span> = margin 1rem,
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-p-6</span> = padding 1.5rem.
+      Шаг 0.25rem (gr-m-1 = 0.25rem, gr-m-16 = 4rem).
+    </p>
+    <div class="gr-grid-1 gr-grid-3-md gr-mb-4">
+      <div class="card gr-p-4">
+        <h4>gr-p-4 (1rem)</h4>
+        <p class="gr-mt-2">gr-mt-2 (0.5rem)</p>
+      </div>
+      <div class="card gr-p-6">
+        <h4>gr-p-6 (1.5rem)</h4>
+        <p class="gr-mt-4">gr-mt-4 (1rem)</p>
+      </div>
+      <div class="card gr-p-8">
+        <h4>gr-p-8 (2rem)</h4>
+        <p class="gr-mb-2">gr-mb-2</p>
+        <div class="gr-flex gr-flex-end">
+          <div class="badge gr-font-semibold gr-text-sm">ml-auto работает во flex</div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- 7. Видимость -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">7. Управление видимостью</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-hidden-sm</span> — скрыт на экранах ≥ 640px.
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-hidden</span> — скрыт всегда.
+    </p>
+    <div class="gr-flex gr-flex-wrap gr-gap gr-mb-4">
+      <div class="gr-hidden-sm tag tag-red gr-font-semibold gr-text-base">
+        Виден только на мобильных (&lt;640px)
+      </div>
+      <div class="tag tag-blue gr-font-semibold gr-text-base">
+        Виден всегда
+      </div>
+      <div class="gr-hidden tag tag-purple gr-font-semibold gr-text-base">
+        Скрыт всегда (display:none)
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- 8. Адаптивная сетка (2→3→4 колонки) -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">8. Адаптивная сетка (breakpoints)</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-grid-2</span> — 2 колонки по умолчанию,
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-grid-3-md</span> — 3 колонки от 768px,
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-grid-4-lg</span> — 4 колонки от 1024px.
+    </p>
+    <div class="gr-grid-2 gr-grid-3-md gr-grid-4-lg">
+      <div class="card"><h4 class="gr-text-lg">Колонка 1</h4><p class="gr-text-sm gr-leading-normal">На мобильных: 2 в ряд</p></div>
+      <div class="card"><h4 class="gr-text-lg">Колонка 2</h4><p class="gr-text-sm gr-leading-normal">Планшет: 3 в ряд</p></div>
+      <div class="card"><h4 class="gr-text-lg">Колонка 3</h4><p class="gr-text-sm gr-leading-normal">Десктоп: 4 в ряд</p></div>
+      <div class="card"><h4 class="gr-text-lg">Колонка 4</h4><p class="gr-text-sm gr-leading-normal">Адаптивно!</p></div>
+    </div>
+
+    <hr>
+
+    <!-- 9. Адаптивный data-gr-layout -->
+    <h2 class="demo-title gr-text-2xl gr-font-bold">9. Адаптивный data-gr-layout по брейкпоинтам</h2>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      Один контейнер — разные раскладки на разных разрешениях.
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="a1b1"</span> (базовая: 2 колонки),
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout-md="a3b4-c2d5"</span> (≥768px: 7 колонок),
+      <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout-lg="hdr4-main4-side2_2-ftr4"</span> (≥1024px: страничная).
+      <b>Без классов <span class="demo-code gr-font-mono gr-text-sm">gr-hidden-*</span></b> — JS-рантайм автоматически
+      генерирует CSS-правила, скрывающие <span class="demo-code gr-font-mono gr-text-sm">gr-area-*</span> элементы,
+      чьё имя отсутствует в <span class="demo-code gr-font-mono gr-text-sm">grid-template-areas</span> текущего брейкпоинта.
+      Сузьте окно браузера, чтобы увидеть переходы.
+    </p>
+    <div data-gr-layout="a1b1"
+         data-gr-layout-md="a3b4-c2d5"
+         data-gr-layout-lg="hdr4-main4-side2_2-ftr4"
+         class="gr-mb-4">
+      <div class="gr-area-a area-a gr-text-center gr-font-semibold gr-text-sm">A</div>
+      <div class="gr-area-b area-b gr-text-center gr-font-semibold gr-text-sm">B</div>
+      <div class="gr-area-c area-c gr-text-center gr-font-semibold gr-text-sm">C</div>
+      <div class="gr-area-d area-d gr-text-center gr-font-semibold gr-text-sm">D</div>
+      <div class="gr-area-hdr area-hdr gr-text-center gr-font-semibold gr-text-sm">Header</div>
+      <div class="gr-area-main area-main gr-text-center gr-font-semibold gr-text-sm">Main</div>
+      <div class="gr-area-side area-side gr-text-center gr-font-semibold gr-text-sm">Sidebar</div>
+      <div class="gr-area-ftr area-ftr gr-text-center gr-font-semibold gr-text-sm">Footer</div>
+    </div>
+    <p class="gr-text-ink-muted gr-mt-2 gr-text-sm">
+      * Все 8 дочерних элементов присутствуют в HTML без классов скрытия.
+      JS-рантайм для каждой раскладки генерирует правило
+      <span class="demo-code gr-font-mono gr-text-sm">.gr-l-&lt;хеш&gt; > [class*="gr-area-"]:not(.gr-area-X):not(.gr-area-Y) { display: none }</span>,
+      автоматически скрывая элементы, чьи grid-area не входят в текущий шаблон.
+    </p>
+
+  <hr>
+
+  <!-- 10. Авто-присвоение grid-area и область на нескольких строках -->
+  <h2 class="demo-title gr-text-2xl gr-font-bold">10. Авто-присвоение grid-area + блок на нескольких строках</h2>
+  <p class="demo-subtitle gr-text-sm gr-leading-normal">
+    Если дочерним элементам НЕ указан класс <span class="demo-code gr-font-mono gr-text-sm">gr-area-*</span>,
+    JS-рантайм присваивает их автоматически в порядке документа, беря имена из
+    базового <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout</span>.
+    Имена, занимающие несколько строк (как <b>hero</b> здесь), пропускаются при
+    повторном появлении — подразумевается один и тот же блок.
+    <b>Важно:</b> область на нескольких строках должна занимать одинаковые колонки
+    (образовывать прямоугольник) — это требование CSS Grid.
+  </p>
+
+  <div class="gr-grid-1 gr-grid-2-md gr-mb-6">
+    <!-- Левый пример: явные классы -->
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">С классами (явно)</h4>
+      <div data-gr-layout="hero3nav3-hero3side3-ftr6" class="gr-mb-2">
+        <div class="gr-area-hero area-hero gr-text-center gr-font-semibold gr-text-sm">Hero (2 ряда × 3 кол)</div>
+        <div class="gr-area-nav area-nav gr-text-center gr-font-semibold gr-text-sm">Nav (3 кол)</div>
+        <div class="gr-area-side area-side2 gr-text-center gr-font-semibold gr-text-sm">Side (3 кол)</div>
+        <div class="gr-area-ftr area-ftr gr-text-center gr-font-semibold gr-text-sm">Footer (6 кол)</div>
+      </div>
+    </div>
+
+    <!-- Правый пример: авто-присвоение -->
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Без классов (авто)</h4>
+      <div data-gr-layout="hero3nav3-hero3side3-ftr6" class="gr-mb-2">
+        <div class="area-hero gr-text-center gr-font-semibold gr-text-sm">Hero (авто)</div>
+        <div class="area-nav gr-text-center gr-font-semibold gr-text-sm">Nav (авто)</div>
+        <div class="area-side2 gr-text-center gr-font-semibold gr-text-sm">Side (авто)</div>
+        <div class="area-ftr gr-text-center gr-font-semibold gr-text-sm">Footer (авто)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ещё пример: карточки с авто-присвоением -->
+  <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Карточная раскладка — авто-присвоение</h4>
+  <p class="demo-subtitle gr-text-sm gr-leading-normal">
+    <span class="demo-code gr-font-mono gr-text-sm">data-gr-layout="a2b2c2-a2d2e2"</span> —
+    <b>a</b> (2×2 колонки) в левом верхнем углу на оба ряда.
+    Без единого <span class="demo-code gr-font-mono gr-text-sm">gr-area-*</span> в HTML.
+  </p>
+  <div data-gr-layout="a2b2c2-a2d2e2" class="gr-mb-4">
+    <div class="card gr-bg-accent gr-text-on-accent">A — 2×2 на 2 ряда</div>
+    <div class="card"><h4 class="gr-text-lg">Карточка B</h4><p class="gr-text-sm gr-leading-normal">Ряд 1, колонки 3–4</p></div>
+    <div class="card"><h4 class="gr-text-lg">Карточка C</h4><p class="gr-text-sm gr-leading-normal">Ряд 1, колонки 5–6</p></div>
+    <div class="card"><h4 class="gr-text-lg">Карточка D</h4><p class="gr-text-sm gr-leading-normal">Ряд 2, колонки 3–4</p></div>
+    <div class="card"><h4 class="gr-text-lg">Карточка E</h4><p class="gr-text-sm gr-leading-normal">Ряд 2, колонки 5–6</p></div>
+  </div>
+
+  <hr>
+
+  <!-- 11. Каскадный border-radius -->
+  <h2 class="demo-title gr-text-2xl gr-font-bold">11. Каскадный border-radius</h2>
+  <p class="demo-subtitle gr-text-sm gr-leading-normal">
+    <span class="demo-code gr-font-mono gr-text-sm">.gr-radius</span> — контейнер с каскадным border-radius.
+    Прямые потомки автоматически получают радиус = <span class="demo-code gr-font-mono gr-text-sm">max(0, parent-r − gap)</span>.
+    <span class="demo-code gr-font-mono gr-text-sm">--gr-r</span> задаёт радиус контейнера.
+    Зазор <span class="demo-code gr-font-mono gr-text-sm">--gr-p</span> задаётся переменной,
+    из неё же выводится <span class="demo-code gr-font-mono gr-text-sm">padding</span> контейнера —
+    JS для каскада не нужен.
+  </p>
+
+  <div class="gr-grid-1 gr-grid-2-md gr-mb-4">
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Радиус 30px, зазор 5px</h4>
+      <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 30px; --gr-p: 5px;">
+        <div class="radius-demo-child gr-text-center gr-font-semibold gr-text-sm">25px авто</div>
+      </div>
+    </div>
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Радиус 30px, зазор 10px</h4>
+      <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 30px; --gr-p: 10px;">
+        <div class="radius-demo-child gr-text-center gr-font-semibold gr-text-sm">20px авто</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gr-mb-6">
+    <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Три уровня вложенности (50px → 35px → 20px → 0px)</h4>
+    <p class="demo-subtitle gr-text-sm gr-leading-normal">
+      Каждый вложенный <span class="demo-code gr-font-mono gr-text-sm">.gr-radius</span> явно задаёт
+      <span class="demo-code gr-font-mono gr-text-sm">--gr-r</span>. Каскад работает на прямых потомках.
+      <span class="demo-code gr-font-mono gr-text-sm">--gr-p</span> задаёт зазор, из него выводится <span class="demo-code gr-font-mono gr-text-sm">padding</span>.
+    </p>
+    <div class="gr-radius gr-text-center gr-font-semibold gr-text-sm radius-demo-container" style="--gr-r: 50px; --gr-p: 15px; max-width: 500px;">
+       <div class="gr-radius gr-text-center gr-font-semibold gr-text-sm radius-demo-child" style="--gr-r: 35px; --gr-p: 15px;">
+        <div class="gr-radius gr-text-center gr-font-semibold gr-text-xs radius-demo-deep" style="--gr-r: 20px; --gr-p: 20px;">
+          <div class="gr-text-center gr-font-semibold gr-text-xs gr-bg-white gr-text-gray-900" style="padding:0.75rem;">0px (обнулилось)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gr-mb-6">
+    <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Перекрытие собственным стилем</h4>
+    <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 30px; --gr-p: 5px;">
+      <div class="radius-demo-child radius-demo-explicit">8px (перекрыто)</div>
+    </div>
+  </div>
+
+  <div class="gr-grid-1 gr-grid-3-md gr-mb-4">
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Одинаковый padding (5px)</h4>
+      <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 30px; --gr-p: 5px;">
+        <div class="radius-demo-child gr-text-center gr-font-semibold gr-text-sm">25px</div>
+      </div>
+    </div>
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Зазор ≠ padding</h4>
+      <p class="gr-text-ink-secondary gr-mb-1 gr-text-xs">--gr-p: 5px, padding: 5×10</p>
+      <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 30px; --gr-p: 5px; padding: 5px 10px;">
+        <div class="radius-demo-child gr-text-center gr-font-semibold gr-text-sm">25px</div>
+      </div>
+    </div>
+    <div>
+      <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Зазор больше радиуса</h4>
+      <div class="gr-radius radius-demo-container gr-text-center gr-font-semibold gr-text-sm" style="--gr-r: 10px; --gr-p: 12px;">
+        <div class="radius-demo-child gr-text-center gr-font-semibold gr-text-sm">0px</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- 12. Классы предопределённых радиусов -->
+  <h2 class="demo-title gr-text-2xl gr-font-bold">12. Классы предопределённых радиусов</h2>
+  <p class="demo-subtitle gr-text-sm gr-leading-normal">
+    <span class="demo-code gr-font-mono gr-text-sm">.gr-radius-{0..16}</span> — радиус от 0 до 4rem с шагом 0.25rem.
+    <span class="demo-code gr-font-mono gr-text-sm">.gr-radius-full</span> — полное скругление (9999px).
+    Совместимы с <span class="demo-code gr-font-mono gr-text-sm">.gr-radius</span> для каскада.
+    Адаптивный радиус задаётся переменной <span class="demo-code gr-font-mono gr-text-sm">--gr-r</span> в своём медиа-запросе.
+  </p>
+
+  <div class="gr-flex gr-flex-wrap gr-gap gr-mb-4">
+    <div class="gr-radius gr-radius-4 gr-p-4 gr-text-center gr-font-semibold gr-text-sm area-b">.gr-radius-4 (1rem)</div>
+    <div class="gr-radius gr-radius-6 gr-p-4 gr-text-center gr-font-semibold gr-text-sm area-a">.gr-radius-6 (1.5rem)</div>
+    <div class="gr-radius gr-radius-8 gr-p-4 gr-text-center gr-font-semibold gr-text-sm area-d">.gr-radius-8 (2rem)</div>
+    <div class="gr-radius gr-radius-12 gr-p-4 gr-text-center gr-font-semibold gr-text-sm area-c">.gr-radius-12 (3rem)</div>
+    <div class="gr-radius gr-radius-full gr-p-4 gr-text-center gr-font-semibold gr-text-sm area-b">.gr-radius-full</div>
+  </div>
+
+  <h4 class="gr-font-semibold gr-text-sm gr-mb-2">Каскад с классами</h4>
+  <div class="gr-radius gr-radius-12 radius-demo-container" style="--gr-p: 12px; max-width: 400px;">
+    <div class="gr-text-center area-a">
+      .gr-radius-12 + padding 12px → <span id="cascade-label">&hellip;</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var el = document.getElementById('cascade-label');
+      if (!el) return;
+      var child = el.parentElement;
+      if (!child) return;
+      var cs = getComputedStyle(child);
+      el.textContent = cs.borderRadius + ' авто';
+    })();
+  </script>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,236 @@
+// Griffincss UI — Form
+// Поля ввода, метки, подсказки и сообщения об ошибке.
+//
+// Три поля — .gr-input, .gr-textarea, .gr-select — одна семья элементов
+// управления: общая высота, общий кегль, общие состояния. Поэтому и размер
+// у них задаётся одной парой классов, .gr-input-sm / .gr-input-lg,
+// на любом из трёх.
+//
+// Родной вид элемента не подменяется там, где его можно оставить:
+// у <input type="date"> остаётся системный календарь, у <input type="color"> —
+// системная палитра. Меняются рамка, фон и кегль.
+//
+// Исключение — стрелка <select>. Её положение задаёт браузер, и на
+// padding-inline-end она не реагирует: стрелка прижимается вплотную к краю
+// поля, а в разных браузерах ещё и выглядит по-разному. Поэтому у списка
+// appearance: none и своя стрелка фоном, отбитая от края на --gr-control-padding-x.
+// Сам элемент при этом остаётся <select> — как <input type="checkbox">
+// остаётся собой под классом .gr-switch.
+
+// --- Обёртка ----------------------------------------------------------------
+
+// Метка, поле и подсказка одной колонкой. Зазор вдвое меньше --gr-ui-gap:
+// подпись должна читаться как часть поля, а не как соседний блок.
+.gr-field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+}
+
+.gr-label {
+  color: var(--gr-color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.gr-hint {
+  color: var(--gr-color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+// Сообщение об ошибке. Цвет — не единственный признак: рядом с полем стоит
+// текст, который переживает и печать, и дальтонизм.
+.gr-error {
+  color: var(--gr-color-danger);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+// --- Поля -------------------------------------------------------------------
+
+.gr-input,
+.gr-textarea,
+.gr-select {
+  --gr-control-h: var(--gr-control-height);
+
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: var(--gr-control-h);
+  margin: 0;
+  padding-block: 0.375rem;
+  padding-inline: var(--gr-control-padding-x);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-bg);
+  color: var(--gr-color-text);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  line-height: 1.4;
+  transition: border-color var(--gr-transition);
+}
+
+// Многострочное поле выше однострочного и тянется только по вертикали:
+// горизонтальное растягивание ломает колонку разметки.
+.gr-textarea {
+  min-block-size: calc(var(--gr-control-h) * 2);
+  resize: vertical;
+}
+
+// Стрелка — один треугольник из конического градиента. Не картинка
+// и не data-URI: цвет берётся из currentcolor, поэтому стрелка следует
+// и теме, и состоянию :disabled, а SVG с зашитым цветом не следовал бы
+// ни тому, ни другому.
+//
+// Раньше её складывали из двух линейных градиентов, стыкующихся встык.
+// Геометрия сходилась точно — сдвиг между слоями был ровно равен ширине
+// половины, — но координаты обеих половин дробные, а округляются при
+// растеризации независимо. Стоило стилю оформления сдвинуть отступ так,
+// что одна половина попадала на 10.5px, а другая на 15.94px, как половины
+// расходились на полпикселя и «галочка» выглядела сломанной. Одна фигура
+// одним слоем такого шва не имеет в принципе.
+//
+// Сектор 90°, отсчёт от −45°: из нижней центральной точки лучи идут
+// в верхние углы коробки, вдвое более широкой, чем высокой.
+.gr-select {
+  --gr-select-arrow: 0.34rem;
+
+  padding-inline-end: calc(var(--gr-control-padding-x) * 2 + var(--gr-select-arrow) * 2);
+  background-image: conic-gradient(from -45deg at 50% 100%, currentcolor 0 90deg, transparent 0);
+  background-repeat: no-repeat;
+
+  // Отсчёт от правого края в три значения: так отступ задаётся точно,
+  // а не долей от разницы размеров, как при записи процентом.
+  background-position: right var(--gr-control-padding-x) center;
+  background-size: calc(var(--gr-select-arrow) * 2) var(--gr-select-arrow);
+  appearance: none;
+}
+
+// Список с несколькими строками не выпадает — стрелке там нечего показывать.
+.gr-select[multiple],
+.gr-select[size] {
+  padding-inline-end: var(--gr-control-padding-x);
+  background-image: none;
+}
+
+.gr-input::placeholder,
+.gr-textarea::placeholder {
+  color: var(--gr-color-text-muted);
+  opacity: 1;
+}
+
+.gr-input:focus-visible,
+.gr-textarea:focus-visible,
+.gr-select:focus-visible {
+  border-color: var(--gr-color-accent);
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 1px;
+}
+
+// :user-invalid, а не :invalid — пустое обязательное поле не должно краснеть
+// до того, как человек его тронул. Атрибут aria-invalid рядом: его ставит
+// серверная проверка, которой правила браузера не касаются.
+.gr-input:user-invalid,
+.gr-textarea:user-invalid,
+.gr-select:user-invalid,
+.gr-input[aria-invalid="true"],
+.gr-textarea[aria-invalid="true"],
+.gr-select[aria-invalid="true"] {
+  border-color: var(--gr-color-danger);
+}
+
+.gr-input:disabled,
+.gr-textarea:disabled,
+.gr-select:disabled {
+  border-color: var(--gr-color-border);
+  background-color: var(--gr-color-surface-sunken);
+  color: var(--gr-color-text-disabled);
+  cursor: not-allowed;
+}
+
+.gr-input:read-only:not(:disabled),
+.gr-textarea:read-only:not(:disabled) {
+  background-color: var(--gr-color-surface);
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+.gr-input-sm {
+  --gr-control-h: var(--gr-control-height-sm);
+
+  padding-block: 0.1875rem;
+  padding-inline: calc(var(--gr-control-padding-x) * 0.7);
+  font-size: 0.875rem;
+}
+
+.gr-input-lg {
+  --gr-control-h: var(--gr-control-height-lg);
+
+  padding-block: 0.5rem;
+  padding-inline: calc(var(--gr-control-padding-x) * 1.4);
+  font-size: 1.125rem;
+}
+
+// --- Группа с аддонами ------------------------------------------------------
+
+// Поле и приклеенные к нему подпись или кнопка. Как и в .gr-btn-group,
+// соседние границы наезжают друг на друга на свою толщину.
+.gr-input-group {
+  display: flex;
+  inline-size: 100%;
+}
+
+.gr-input-group > * {
+  border-radius: 0;
+}
+
+.gr-input-group > :first-child {
+  border-start-start-radius: var(--gr-radius);
+  border-end-start-radius: var(--gr-radius);
+}
+
+.gr-input-group > :last-child {
+  border-start-end-radius: var(--gr-radius);
+  border-end-end-radius: var(--gr-radius);
+}
+
+.gr-input-group > * + * {
+  margin-inline-start: calc(-1 * var(--gr-border-width));
+}
+
+// Поле в группе тянется, аддон — нет.
+.gr-input-group > .gr-input,
+.gr-input-group > .gr-select {
+  flex: 1 1 auto;
+  inline-size: auto;
+  min-inline-size: 0;
+}
+
+// Сфокусированное поле поднимается над соседями: иначе контур фокуса
+// оказался бы наполовину закрыт аддоном.
+.gr-input-group > :focus-within,
+.gr-input-group > :focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+// Неинтерактивная подпись у края поля — единица измерения, валюта, префикс.
+// Своя --gr-control-h, а не унаследованная: аддон полю не потомок, а сосед,
+// поэтому размер ему задаётся тем же .gr-input-sm на нём самом.
+.gr-input-addon {
+  --gr-control-h: var(--gr-control-height);
+
+  display: inline-flex;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-items: center;
+  min-block-size: var(--gr-control-h);
+  padding-inline: var(--gr-control-padding-x);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-text-secondary);
+  font-size: var(--gr-control-font-size);
+  white-space: nowrap;
+}

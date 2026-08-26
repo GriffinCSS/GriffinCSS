@@ -1,0 +1,114 @@
+// Griffincss — Flex Utilities
+// Utility classes for Flexbox layouts
+
+@use 'sass:map';
+@use 'breakpoints' as bp;
+
+// --- Functions ---
+@function gr-flex-justify-value($key) {
+  $map: (
+    start: flex-start,
+    center: center,
+    end: flex-end,
+    between: space-between,
+    around: space-around,
+    evenly: space-evenly
+  );
+
+  @return map.get($map, $key);
+}
+
+@function gr-flex-align-value($key) {
+  $map: (
+    start: flex-start,
+    center: center,
+    end: flex-end,
+    stretch: stretch,
+    baseline: baseline
+  );
+
+  @return map.get($map, $key);
+}
+
+.gr-flex {
+  display: flex;
+}
+
+.gr-inline-flex {
+  display: inline-flex;
+}
+
+// Direction
+.gr-flex-row {
+  flex-direction: row;
+}
+
+.gr-flex-col {
+  flex-direction: column;
+}
+
+// Wrap
+.gr-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.gr-flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+// Justify-content
+@each $val in (start, center, end, between, around, evenly) {
+  .gr-flex-#{$val} {
+    justify-content: gr-flex-justify-value($val);
+  }
+}
+
+// Align-items
+@each $val in (start, center, end, stretch, baseline) {
+  .gr-flex-items-#{$val} {
+    align-items: gr-flex-align-value($val);
+  }
+}
+
+// Align-self
+@each $val in (start, center, end, stretch) {
+  .gr-flex-self-#{$val} {
+    align-self: gr-flex-align-value($val);
+  }
+}
+
+// Flex grow
+.gr-flex-1 {
+  flex: 1;
+}
+
+// --- Responsive variants ---
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    .gr-flex-#{$bp-name} { display: flex; }
+    .gr-inline-flex-#{$bp-name} { display: inline-flex; }
+    .gr-flex-row-#{$bp-name} { flex-direction: row; }
+    .gr-flex-col-#{$bp-name} { flex-direction: column; }
+    .gr-flex-wrap-#{$bp-name} { flex-wrap: wrap; }
+    .gr-flex-nowrap-#{$bp-name} { flex-wrap: nowrap; }
+    .gr-flex-1-#{$bp-name} { flex: 1; }
+
+    @each $j in (start, center, end, between, around, evenly) {
+      .gr-flex-#{$j}-#{$bp-name} {
+        justify-content: gr-flex-justify-value($j);
+      }
+    }
+
+    @each $a in (start, center, end, stretch, baseline) {
+      .gr-flex-items-#{$a}-#{$bp-name} {
+        align-items: gr-flex-align-value($a);
+      }
+    }
+
+    @each $s in (start, center, end, stretch) {
+      .gr-flex-self-#{$s}-#{$bp-name} {
+        align-self: gr-flex-align-value($s);
+      }
+    }
+  }
+}

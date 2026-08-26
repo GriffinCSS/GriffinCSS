@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сообщения — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Сообщения</h1>
+  <p>Всё, чем интерфейс отвечает на действие: сообщение о статусе, полоса выполнения, шкала, кольцо занятости и всплывающее уведомление. Статус везде читается словом, а не только цветом.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_alert.scss</span>
+    <span class="badge">packages/ui/scss/_progress.scss</span>
+    <span class="badge">packages/ui/scss/_spinner.scss</span>
+    <span class="badge">packages/ui/scss/_toast.scss</span>
+  </div>
+</div>
+
+<h2>Сообщение о статусе</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-alert</code></td><td>Сообщение целиком; по умолчанию — информационное</td></tr>
+  <tr><td><code>.gr-alert-{info,success,warning,danger}</code></td><td>Статус: полоса, рамка, подложка и цвет заголовка</td></tr>
+  <tr><td><code>.gr-alert-title</code></td><td>Слово статуса — обязательная часть, а не украшение</td></tr>
+  <tr><td><code>.gr-alert-icon</code></td><td>Слот под иконку: <code>&lt;svg&gt;</code>, эмодзи, любой знак</td></tr>
+  <tr><td><code>.gr-alert-body</code></td><td>Текст; забирает остаток строки</td></tr>
+  <tr><td><code>.gr-alert-dismissible</code></td><td>Отступ под кнопку закрытия в конце строки</td></tr>
+</table>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Почему заголовок обязателен.</strong> Цветная полоса не переживает
+    чёрно-белую печать, дальтонизм и монохромный режим высокого контраста.
+    Слово переживает. Поэтому у каждого сообщения есть
+    <code>.gr-alert-title</code> — «Ошибка», «Готово», «Внимание», — а цвет
+    и иконка остаются вторым и третьим признаком поверх него, а не вместо.
+    Это прямой вывод фазы 6a.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Четыре статуса</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-alert gr-alert-info" role="status">
+      <span class="gr-alert-icon" aria-hidden="true">ℹ</span>
+      <div class="gr-alert-body">
+        <strong class="gr-alert-title">К сведению</strong>
+        Сборка обновится автоматически при следующем запуске <code>npm run build</code>.
+      </div>
+    </div>
+
+    <div class="gr-alert gr-alert-success" role="status">
+      <span class="gr-alert-icon" aria-hidden="true">✓</span>
+      <div class="gr-alert-body">
+        <strong class="gr-alert-title">Готово</strong>
+        Все 120 тестов пройдены, <code>check-dist</code> без замечаний.
+      </div>
+    </div>
+
+    <div class="gr-alert gr-alert-warning" role="status">
+      <span class="gr-alert-icon" aria-hidden="true">!</span>
+      <div class="gr-alert-body">
+        <strong class="gr-alert-title">Внимание</strong>
+        Пакет не опубликован в npm — установка идёт из репозитория.
+      </div>
+    </div>
+
+    <div class="gr-alert gr-alert-danger" role="alert">
+      <span class="gr-alert-icon" aria-hidden="true">✕</span>
+      <div class="gr-alert-body">
+        <strong class="gr-alert-title">Ошибка</strong>
+        Класс протёк между пакетами: <code>.gr-select</code> найден и в ui, и в utils.
+      </div>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-alert gr-alert-danger" role="alert"&gt;
+  &lt;span class="gr-alert-icon" aria-hidden="true"&gt;✕&lt;/span&gt;
+  &lt;div class="gr-alert-body"&gt;
+    &lt;strong class="gr-alert-title"&gt;Ошибка&lt;/strong&gt;
+    Форму не удалось отправить.
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Слово и полоса красятся разными токенами.</strong> Заголовок
+    берёт <code>--gr-alert-color</code> — цвет, безопасный для текста;
+    полоса и подложка берут <code>--gr-alert-fill</code>. У трёх статусов
+    из четырёх это одно и то же. Расходятся они у предупреждения: чтобы
+    читаться текстом на белом, его цвет обязан быть тёмно-коричневым,
+    а полоса такого цвета не читается как «внимание». Поэтому слово тёмное,
+    а полоса и подложка — янтарные.
+  </p>
+</div>
+
+<h2>Роль объявляется разметкой</h2>
+
+<table>
+  <tr><th>Атрибут</th><th>Когда</th><th>Как читается</th></tr>
+  <tr><td><code>role="alert"</code></td><td>Требует немедленного внимания: ошибка, потеря данных</td><td>Скринридер прерывает текущее чтение</td></tr>
+  <tr><td><code>role="status"</code></td><td>Всё остальное: подтверждение, справка</td><td>Дочитывает текущее, затем сообщает</td></tr>
+  <tr><td>без роли</td><td>Сообщение было на странице с самого начала</td><td>Читается в свою очередь, как обычный текст</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    Модуль ролей не подставляет. <code>role="alert"</code> на статичном
+    сообщении, которое лежит на странице с загрузки, заставляет скринридер
+    прерваться на пустом месте; <code>role="status"</code> на блоке, который
+    так и не появится динамически, не делает ничего. Выбор зависит от того,
+    когда сообщение возникает, — а это знает разметка, а не CSS.
+  </p>
+</div>
+
+<h2>Иконка</h2>
+
+<p>
+  Своих иконок библиотека не везёт — слот принимает что угодно: символ,
+  эмодзи или <code>&lt;svg&gt;</code>. Размер и выравнивание задаёт слот,
+  цвет наследуется от статуса.
+</p>
+
+<div class="callout">
+  <p>
+    Иконке нужен <code>aria-hidden="true"</code>: она дублирует слово
+    заголовка, и без атрибута скринридер прочитает статус дважды — сначала
+    как «галочка», потом как «Готово».
+  </p>
+</div>
+
+<h2>Закрытие</h2>
+
+<p>
+  <code>.gr-alert-dismissible</code> оставляет место под кнопку закрытия
+  в конце строки. Сама кнопка — обычная <code>.gr-btn-icon.gr-btn-ghost</code>,
+  а закрывает её делегированный обработчик <code>[data-gr-dismiss]</code>
+  из <code>griffincss-ui.js</code>. Крестик в примере ниже — рабочий:
+  скрипт подключён на этой странице.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">С кнопкой закрытия</div>
+  <div class="gr-alert gr-alert-info gr-alert-dismissible" role="status">
+    <span class="gr-alert-icon" aria-hidden="true">ℹ</span>
+    <div class="gr-alert-body">
+      <strong class="gr-alert-title">Черновик сохранён</strong>
+      Вернуться к нему можно из списка проектов.
+    </div>
+    <button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm" type="button" data-gr-dismiss aria-label="Закрыть сообщение">×</button>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    Без скрипта кнопку закрытия просто не ставят. Мёртвый крестик, который
+    не убирает сообщение, хуже отсутствия крестика: человек нажимает на него
+    и получает подтверждение, что интерфейс сломан.
+  </p>
+</div>
+
+<h2>Полоса выполнения</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-progress</code></td><td>Полоса на <code>&lt;progress&gt;</code>; значение показывает сам элемент</td></tr>
+  <tr><td><code>.gr-progress-sm</code> / <code>-lg</code></td><td>Тоньше и толще</td></tr>
+  <tr><td><code>.gr-progress-{success,warning,danger}</code></td><td>Цвет заполнения</td></tr>
+  <tr><td><code>.gr-progress-indeterminate</code></td><td>Работа идёт, доля неизвестна: бегущий отрезок</td></tr>
+  <tr><td><code>.gr-meter</code></td><td>Шкала на <code>&lt;meter&gt;</code>; цвет вычисляет браузер</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Четыре полосы и неопределённое состояние</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <label>
+      Загрузка файла — 40 %
+      <progress class="gr-progress" value="40" max="100">40 %</progress>
+    </label>
+    <label>
+      Проверка пройдена
+      <progress class="gr-progress gr-progress-success" value="100" max="100">100 %</progress>
+    </label>
+    <label>
+      Место на диске заканчивается
+      <progress class="gr-progress gr-progress-warning gr-progress-lg" value="88" max="100">88 %</progress>
+    </label>
+    <label>
+      Идёт сборка, доля неизвестна
+      <progress class="gr-progress gr-progress-indeterminate">Выполняется</progress>
+    </label>
+  </div>
+</div>
+
+<pre><code>&lt;label&gt;
+  Загрузка файла — 40 %
+  &lt;progress class="gr-progress" value="40" max="100"&gt;40 %&lt;/progress&gt;
+&lt;/label&gt;
+
+&lt;progress class="gr-progress gr-progress-indeterminate"&gt;Выполняется&lt;/progress&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Вендорные псевдоэлементы объявлены каждый своим правилом.</strong>
+    Дорожку и заполнение рисуют <code>::-webkit-progress-bar</code>,
+    <code>::-webkit-progress-value</code> и <code>::-moz-progress-bar</code>,
+    и собрать их в один селектор через запятую нельзя: неизвестный селектор
+    делает невалидной всю группу, и WebKit, встретив рядом чужой
+    псевдоэлемент, выбрасывает правило целиком. Полоса осталась бы
+    некрашеной в обоих браузерах сразу.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Текст внутри <code>&lt;progress&gt;</code> — не подпись.</strong>
+    Это запасной путь для движка, который элемента не знает вовсе. Видимую
+    подпись ставят рядом — в <code>&lt;label&gt;</code>, как в примерах выше:
+    полоса без числа рядом сообщает «что-то происходит», но не сообщает,
+    сколько осталось.
+  </p>
+</div>
+
+<h2>Шкала</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Значение в известном диапазоне</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <label>
+      Место на диске: 120 ГБ из 500
+      <meter class="gr-meter" value="0.24" low="0.5" high="0.85" optimum="0">24 %</meter>
+    </label>
+    <label>
+      Заполненность корзины: 92 %
+      <meter class="gr-meter" value="0.92" low="0.5" high="0.85" optimum="0">92 %</meter>
+    </label>
+  </div>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>У шкалы нет классов-статусов, и это решение, а не пропуск.</strong>
+    <code>&lt;meter&gt;</code> сам вычисляет по <code>low</code>,
+    <code>high</code> и <code>optimum</code>, попало ли значение в хороший
+    диапазон, — модуль лишь красит три вычисленных состояния. Класс
+    <code>.gr-meter-danger</code> позволил бы разметке сказать «плохо» там,
+    где элемент вычислил «хорошо», и цвет разошёлся бы со смыслом.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <code>&lt;progress&gt;</code> — про <em>ход задачи</em>: он начинается
+    и заканчивается. <code>&lt;meter&gt;</code> — про <em>измеренную
+    величину</em>: заполненность диска, оценку, запас топлива. Полоса,
+    показывающая занятое место, — частая ошибка: у занятого места нет
+    завершения.
+  </p>
+</div>
+
+<h2>Кольцо занятости</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-spinner</code></td><td>Кольцо; диаметр — <code>1.5em</code> от кегля родителя</td></tr>
+  <tr><td><code>.gr-spinner-sm</code> / <code>-lg</code></td><td>Меньше и крупнее</td></tr>
+  <tr><td><code>.gr-spinner-current</code></td><td>Кольцо цветом текста — для цветной кнопки</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три размера и кольцо внутри кнопки</div>
+  <div class="gr-flex gr-gap" style="align-items: center">
+    <span class="gr-spinner gr-spinner-sm" role="status" aria-label="Загрузка"></span>
+    <span class="gr-spinner" role="status" aria-label="Загрузка"></span>
+    <span class="gr-spinner gr-spinner-lg" role="status" aria-label="Загрузка"></span>
+    <button class="gr-btn gr-btn-primary" type="button" disabled>
+      <span class="gr-spinner gr-spinner-sm gr-spinner-current" aria-hidden="true"></span>
+      Сохраняем…
+    </button>
+  </div>
+</div>
+
+<pre><code>&lt;span class="gr-spinner" role="status" aria-label="Загрузка"&gt;&lt;/span&gt;
+
+&lt;button class="gr-btn gr-btn-primary" disabled&gt;
+  &lt;span class="gr-spinner gr-spinner-sm gr-spinner-current" aria-hidden="true"&gt;&lt;/span&gt;
+  Сохраняем…
+&lt;/button&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Пустой <code>&lt;span&gt;</code> молчит.</strong> Кольцу нужны
+    <code>role="status"</code> и подпись, иначе человек, который его не видит,
+    не узнает, что страница чего-то ждёт. Если рядом уже стоит видимое слово —
+    как «Сохраняем…» в кнопке, — кольцу хватает
+    <code>aria-hidden="true"</code>: иначе загрузка будет объявлена дважды.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>При <code>prefers-reduced-motion</code> кольцо замедляется, но
+    не останавливается.</strong> Остановленный индикатор занятости сообщает
+    «зависло» — ровно обратное тому, зачем он поставлен. Мерцание заглушки
+    в такой же ситуации снимается совсем: она сообщает о загрузке самим
+    своим присутствием.
+  </p>
+</div>
+
+<h2>Всплывающие уведомления</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-toast-region</code></td><td>Живая область; в разметке ей задают <code>aria-live</code> и роль</td></tr>
+  <tr><td><code>.gr-toast-region-{top,bottom}-{start,end}</code></td><td>Четыре угла; у нижних колонка перевёрнута</td></tr>
+  <tr><td><code>.gr-toast</code></td><td>Сообщение</td></tr>
+  <tr><td><code>.gr-toast-{info,success,warning,danger}</code></td><td>Статус: полоса и цвет заголовка</td></tr>
+  <tr><td><code>.gr-toast-title</code></td><td>Слово статуса</td></tr>
+  <tr><td><code>.gr-toast-icon</code> / <code>-body</code></td><td>Слот под знак и текст</td></tr>
+  <tr><td><code>.gr-toast-leaving</code></td><td>Уход; класс вешает рантайм</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Живая демонстрация — <code>Griffincss.ui.toast()</code></div>
+  <div class="gr-flex gr-gap" style="flex-wrap: wrap">
+    <button class="gr-btn" type="button" data-toast="plain">Простой</button>
+    <button class="gr-btn gr-btn-success" type="button" data-toast="success">Успех</button>
+    <button class="gr-btn gr-btn-warning" type="button" data-toast="warning">Предупреждение</button>
+    <button class="gr-btn gr-btn-danger" type="button" data-toast="danger">Ошибка — без таймера</button>
+    <button class="gr-btn gr-btn-ghost" type="button" data-toast="corner">В другом углу</button>
+  </div>
+</div>
+
+<pre><code>Griffincss.ui.toast('Черновик сохранён', {
+  status: 'success',   // info | success | warning | danger
+  title: 'Готово',     // слово статуса — цвет один его не сообщает
+  timeout: 5000,       // 0 — без таймера, только крестик
+  position: 'bottom-end'
+});</code></pre>
+
+<table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>status</code></td><td>нет</td><td>Полоса и цвет заголовка; <code>danger</code> заодно переводит область в <code>assertive</code></td></tr>
+  <tr><td><code>title</code></td><td>нет</td><td>Слово статуса. Задан статус без слова — рантайм предупреждает в консоль</td></tr>
+  <tr><td><code>timeout</code></td><td><code>5000</code></td><td>Миллисекунды до ухода; <code>0</code> — ждать крестика</td></tr>
+  <tr><td><code>position</code></td><td><code>bottom-end</code></td><td>Один из четырёх углов</td></tr>
+  <tr><td><code>icon</code></td><td>нет</td><td>Знак в слот <code>.gr-toast-icon</code></td></tr>
+  <tr><td><code>dismissible</code></td><td><code>true</code></td><td><code>false</code> убирает крестик</td></tr>
+  <tr><td><code>assertive</code></td><td>по статусу</td><td>Прямое указание, какой областью показать</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Живая область обязана существовать до вставки.</strong> Программа
+    чтения с экрана следит за изменениями внутри <code>aria-live</code>,
+    а не за появлением самой области, поэтому регион ставят на страницу
+    один раз и пустым:
+  </p>
+  <pre><code>&lt;div class="gr-toast-region gr-toast-region-bottom-end"
+     role="status" aria-live="polite"&gt;&lt;/div&gt;</code></pre>
+  <p>
+    Рантайм найдёт готовый регион и положит тост в него. Если региона нет,
+    он создаст свой — это работает в современных движках, но остаётся
+    запасным путём, а не рекомендацией.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>У ошибки своя область.</strong> <code>aria-live="polite"</code>
+    дочитает текущее и только потом сообщит; потеря данных ждать не может,
+    поэтому <code>status: 'danger'</code> уходит в отдельный регион
+    с <code>aria-live="assertive"</code> и <code>role="alert"</code>.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Таймер стоит под указателем и под фокусом.</strong> Сообщение,
+    исчезающее ровно тогда, когда его начали читать или потянулись к ссылке
+    внутри, — не удобство, а ловушка. Остаток дочитывается, а не начинается
+    заново: иначе тост висел бы, пока по нему возят мышью.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Это единственный компонент библиотеки без статического
+    применения.</strong> Без <code>griffincss-ui.js</code> модуль
+    не используется вовсе — показать и убрать тост некому. Всё остальное
+    в библиотеке работает и без скрипта.
+  </p>
+</div>
+
+<h2>Появление объявлено начальным состоянием</h2>
+
+<p>
+  Тост вставляют в документ уже нарисованным в конечном виде, поэтому
+  обычный переход ничего бы не показал: анимировать нечего, начального
+  кадра нет. Его задаёт <code>@starting-style</code>:
+</p>
+
+<pre><code>@starting-style {
+  .gr-toast {
+    opacity: 0;
+    translate: 0 var(--gr-toast-slide, -0.75rem);
+  }
+}</code></pre>
+
+<p>
+  Так рантайму не нужны ни второй кадр, ни пара «добавил класс — снял класс»:
+  он просто кладёт узел в регион. Направление въезда берётся у региона —
+  у верхних углов тост приезжает сверху, у нижних снизу.
+</p>
+
+</main>
+</div>
+
+<!--
+  Живые области объявлены в разметке и пустые: программа чтения с экрана
+  следит за изменениями ВНУТРИ aria-live, а не за появлением самой области.
+  Регион для левого верхнего угла намеренно не объявлен — кнопка «В другом
+  углу» показывает запасной путь, когда рантайм создаёт область сам.
+-->
+<div class="gr-toast-region gr-toast-region-bottom-end" role="status" aria-live="polite"></div>
+<div class="gr-toast-region gr-toast-region-bottom-end" role="alert" aria-live="assertive"></div>
+
+<script>
+// Демонстрация тостов. Всё, что делает страница, — зовёт Griffincss.ui.toast();
+// область, вставку, таймер и крестик берёт на себя рантайм.
+document.addEventListener('click', function (event) {
+  var trigger = event.target.closest('[data-toast]');
+  if (!trigger) return;
+
+  var demos = {
+    plain: ['Ссылка скопирована', {}],
+    success: ['Изменения вступят в силу через минуту', { status: 'success', title: 'Сохранено', icon: '✓' }],
+    warning: ['Осталось 5 % места на диске', { status: 'warning', title: 'Внимание', icon: '!' }],
+    danger: ['Не удалось отправить форму — проверьте связь', { status: 'danger', title: 'Ошибка', icon: '✕', timeout: 0 }],
+    corner: ['Этот приехал в левый верхний угол', { position: 'top-start', title: 'Угол', status: 'info' }]
+  };
+
+  var demo = demos[trigger.getAttribute('data-toast')];
+  if (demo) Griffincss.ui.toast(demo[0], demo[1]);
+});
+</script>
+
+  <script src="nav.js"></script>
+</body>
+</html>

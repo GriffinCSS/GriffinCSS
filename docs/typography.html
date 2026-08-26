@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typography — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+@layer griffincss.docs {
+  .typo-demo-text { margin: 0; padding: 0; max-width: none; }
+
+  .typo-demo-label {
+    font-family: var(--gr-font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gr-color-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .typo-demo-row { margin-bottom: 1rem; }
+  .typo-demo-weights { font-size: 1.5rem; line-height: 1.4; }
+  .typo-demo-decor { font-size: 1.125rem; }
+
+  .typo-demo-align-box,
+  .typo-demo-truncate-box,
+  .typo-demo-family {
+    background-color: var(--gr-color-surface-sunken);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+    border-radius: var(--gr-radius);
+  }
+
+  .typo-demo-rel-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+  }
+
+  .typo-demo-rel {
+    background-color: var(--gr-color-surface-sunken);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+    border-radius: var(--gr-radius);
+    padding: 1rem;
+  }
+
+  .typo-demo-rel h4 { margin: 0 0 0.35em; }
+  .typo-demo-rel p { margin: 0 0 0.5em; max-width: none; }
+  .typo-demo-rel p:last-child { margin-bottom: 0; }
+
+  .typo-demo-align-box { padding: 1rem; margin-bottom: 0.5rem; }
+  .typo-demo-truncate-box { max-width: 17.5rem; padding: 0.5rem 0.75rem; }
+  .typo-demo-family { font-size: 1.2rem; padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Typography</h1>
+  <p>Полный набор типографических утилит: размеры абсолютные и относительные, насыщенность, выравнивание, трансформация, межстрочный интервал, декор, переносы и шрифтовые семейства. Классы имеют адаптивные варианты с суффиксами <code>-sm</code>, <code>-md</code>, <code>-lg</code>, <code>-xl</code> — кроме относительных размеров.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_typography.scss</span>
+    <span class="badge">~230 классов</span>
+  </div>
+</div>
+
+<h2>CSS-переменные</h2>
+
+<table>
+  <tr><th>Переменная</th><th>Значение</th><th>Назначение</th></tr>
+  <tr>
+    <td><code>--gr-font-sans</code></td>
+    <td><code>system-ui, -apple-system, sans-serif</code></td>
+    <td>Семейство без засечек</td>
+  </tr>
+  <tr>
+    <td><code>--gr-font-serif</code></td>
+    <td><code>Georgia, Cambria, serif</code></td>
+    <td>Семейство с засечками</td>
+  </tr>
+  <tr>
+    <td><code>--gr-font-mono</code></td>
+    <td><code>SFMono-Regular, Menlo, Consolas, monospace</code></td>
+    <td>Моноширинное семейство</td>
+  </tr>
+  <tr>
+    <td><code>--gr-font-size-base</code></td>
+    <td><code>1rem</code></td>
+    <td>Базовый размер шрифта</td>
+  </tr>
+</table>
+
+<h2>Размер шрифта</h2>
+
+<p>10 размеров от 12px до 60px. Генерируются SCSS-циклом по карте <code>(xs: 0.75rem, sm: 0.875rem, ...)</code>.</p>
+
+<table>
+  <tr><th>Класс</th><th>REM</th><th>PX</th></tr>
+  <tr><td><code>.gr-text-xs</code></td><td>0.75rem</td><td>12px</td></tr>
+  <tr><td><code>.gr-text-sm</code></td><td>0.875rem</td><td>14px</td></tr>
+  <tr><td><code>.gr-text-base</code></td><td>1rem</td><td>16px</td></tr>
+  <tr><td><code>.gr-text-lg</code></td><td>1.125rem</td><td>18px</td></tr>
+  <tr><td><code>.gr-text-xl</code></td><td>1.25rem</td><td>20px</td></tr>
+  <tr><td><code>.gr-text-2xl</code></td><td>1.5rem</td><td>24px</td></tr>
+  <tr><td><code>.gr-text-3xl</code></td><td>1.875rem</td><td>30px</td></tr>
+  <tr><td><code>.gr-text-4xl</code></td><td>2.25rem</td><td>36px</td></tr>
+  <tr><td><code>.gr-text-5xl</code></td><td>3rem</td><td>48px</td></tr>
+  <tr><td><code>.gr-text-6xl</code></td><td>3.75rem</td><td>60px</td></tr>
+</table>
+
+<pre><code>&lt;p class="gr-text-xs"&gt;12px — подписи, сноски&lt;/p&gt;
+&lt;p class="gr-text-sm"&gt;14px — вспомогательный текст&lt;/p&gt;
+&lt;p class="gr-text-base"&gt;16px — основной текст&lt;/p&gt;
+&lt;h3 class="gr-text-2xl"&gt;24px — подзаголовок&lt;/h3&gt;
+&lt;h1 class="gr-text-5xl"&gt;48px — крупный заголовок&lt;/h1&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-xs (12px)</div><p class="typo-demo-text gr-text-xs">Подписи, сноски, мелкий вспомогательный текст</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-sm (14px)</div><p class="typo-demo-text gr-text-sm">Вспомогательный текст, описания полей</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-base (16px)</div><p class="typo-demo-text gr-text-base">Основной текст документа, body</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-lg (18px)</div><p class="typo-demo-text gr-text-lg">Укрупнённый текст, лиды</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-xl (20px)</div><p class="typo-demo-text gr-text-xl">Подзаголовки</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-2xl (24px)</div><p class="typo-demo-text gr-text-2xl">Заголовки разделов</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-3xl (30px)</div><p class="typo-demo-text gr-text-3xl">Крупные заголовки</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-4xl (36px)</div><p class="typo-demo-text gr-text-4xl">Герой-секции</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-5xl (48px)</div><p class="typo-demo-text gr-text-5xl">Главный заголовок страницы</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-text-6xl (60px)</div><p class="typo-demo-text gr-text-6xl">Лендинги, промо</p></div>
+</div>
+
+<h2>Относительный размер</h2>
+
+<p>Базовые <code>.gr-text-*</code> считают размер в <code>rem</code> — от корня документа,
+независимо от окружения. Для страницы это правильно, но неудобно для блока, который
+показывают в разных местах шаблона: виджет в шапке и он же в подвале должны отличаться
+размером, а содержимое у них одно. То же с текстом, подгружаемым из БД: на этапе вёрстки
+неизвестно, куда его вставят.</p>
+
+<p><code>.gr-text-rel-*</code> не задают размер, а сдвигают текущий на фиксированный шаг
+в пикселях. Шаг взят в пикселях, а не долей <code>em</code>, намеренно: от базовых 16px
+четыре младшие ступени попадают в базовую шкалу ровно, без округлений.</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th><th>При родителе 16px</th></tr>
+  <tr><td><code>.gr-text-rel-xs</code></td><td><code>calc(1em - 4px)</code></td><td>12px — как <code>.gr-text-xs</code></td></tr>
+  <tr><td><code>.gr-text-rel-sm</code></td><td><code>calc(1em - 2px)</code></td><td>14px — как <code>.gr-text-sm</code></td></tr>
+  <tr><td><code>.gr-text-rel-lg</code></td><td><code>calc(1em + 2px)</code></td><td>18px — как <code>.gr-text-lg</code></td></tr>
+  <tr><td><code>.gr-text-rel-xl</code></td><td><code>calc(1em + 4px)</code></td><td>20px — как <code>.gr-text-xl</code></td></tr>
+  <tr><td><code>.gr-text-rel-2xl</code></td><td><code>calc(1em + 6px)</code></td><td>22px</td></tr>
+  <tr><td><code>.gr-text-rel-3xl</code></td><td><code>calc(1em + 8px)</code></td><td>24px</td></tr>
+</table>
+
+<p>Ступени <code>base</code> в наборе нет: класс, не меняющий размер, не нужен — его роль
+играет отсутствие класса. Шкала обрывается на <code>3xl</code>: крупнее — это уже не
+подстройка блока под окружение, а отдельный заголовок, для которого есть базовый набор.</p>
+
+<pre><code>&lt;!-- разметка виджета одна, размер задаёт только класс на корне --&gt;
+&lt;article class="gr-text-sm"&gt;
+  &lt;h4 class="gr-text-rel-xl"&gt;Заголовок виджета&lt;/h4&gt;
+  &lt;p&gt;Текст из БД&lt;/p&gt;
+  &lt;p class="gr-text-rel-xs"&gt;Сноска&lt;/p&gt;
+&lt;/article&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Один виджет, два места в шаблоне</div>
+  <div class="typo-demo-rel-pair">
+    <div class="typo-demo-rel gr-text-sm">
+      <div class="typo-demo-label">корень: .gr-text-sm (14px)</div>
+      <h4 class="gr-text-rel-xl gr-font-semibold">Заголовок виджета</h4>
+      <p>Текст, подгружаемый из БД. Размер сдвигается вместе с корнем блока.</p>
+      <p class="gr-text-rel-xs">Сноска</p>
+    </div>
+    <div class="typo-demo-rel gr-text-xl">
+      <div class="typo-demo-label">корень: .gr-text-xl (20px)</div>
+      <h4 class="gr-text-rel-xl gr-font-semibold">Заголовок виджета</h4>
+      <p>Текст, подгружаемый из БД. Размер сдвигается вместе с корнем блока.</p>
+      <p class="gr-text-rel-xs">Сноска</p>
+    </div>
+  </div>
+</div>
+
+<p>Четыре особенности, о которых стоит помнить:</p>
+
+<ul>
+  <li><strong>Шаг фиксирован, а не пропорционален.</strong> При родителе 32px
+    <code>.gr-text-rel-sm</code> даст 30px, а не 28px. Это плата за точное попадание
+    в шкалу от базовых 16px.</li>
+  <li><strong>Шаги складываются при вложении.</strong> <code>.gr-text-rel-sm</code>
+    внутри <code>.gr-text-rel-sm</code> — это −4px суммарно. Это и есть смысл набора:
+    блок сдвигается целиком. Каскадировать его глубже двух уровней обычно не нужно.</li>
+  <li><strong>Базовый <code>.gr-text-*</code> внутри обрывает цепочку.</strong> Он в
+    <code>rem</code> и вернёт абсолютный размер независимо от родителя. Смешивать оба набора
+    в одном поддереве — верный способ получить неожиданный результат.</li>
+  <li><strong>Адаптивных и контейнерных вариантов у набора нет намеренно.</strong> Размер здесь
+    задаёт вложенность, а не ширина окна. Чтобы виджет реагировал ещё и на своё окружение,
+    поставьте <code>.gr-text-rel-*</code> внутри, а размер корня меняйте контейнерным
+    <code>.gr-text-sm-cmd</code>.</li>
+</ul>
+
+<h2>Насыщенность</h2>
+
+<p>9 значений <code>font-weight</code> от 100 до 900. Генерируются SCSS-циклом по карте.</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th><th>Роль</th></tr>
+  <tr><td><code>.gr-font-thin</code></td><td>100</td><td>Сверхтонкий</td></tr>
+  <tr><td><code>.gr-font-extralight</code></td><td>200</td><td>Очень тонкий</td></tr>
+  <tr><td><code>.gr-font-light</code></td><td>300</td><td>Тонкий</td></tr>
+  <tr><td><code>.gr-font-normal</code></td><td>400</td><td>Нормальный (по умолчанию)</td></tr>
+  <tr><td><code>.gr-font-medium</code></td><td>500</td><td>Средний</td></tr>
+  <tr><td><code>.gr-font-semibold</code></td><td>600</td><td>Полужирный</td></tr>
+  <tr><td><code>.gr-font-bold</code></td><td>700</td><td>Жирный</td></tr>
+  <tr><td><code>.gr-font-extrabold</code></td><td>800</td><td>Очень жирный</td></tr>
+  <tr><td><code>.gr-font-black</code></td><td>900</td><td>Сверхжирный</td></tr>
+</table>
+
+<pre><code>&lt;span class="gr-font-light"&gt;Тонкий текст&lt;/span&gt;
+&lt;span class="gr-font-semibold"&gt;Полужирный текст&lt;/span&gt;
+&lt;span class="gr-font-bold"&gt;Жирный текст&lt;/span&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-thin (100)</div><p class="typo-demo-weights gr-font-thin">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-light (300)</div><p class="typo-demo-weights gr-font-light">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-normal (400)</div><p class="typo-demo-weights gr-font-normal">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-medium (500)</div><p class="typo-demo-weights gr-font-medium">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-semibold (600)</div><p class="typo-demo-weights gr-font-semibold">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-bold (700)</div><p class="typo-demo-weights gr-font-bold">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-extrabold (800)</div><p class="typo-demo-weights gr-font-extrabold">Griffincss — модульная типографика</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-font-black (900)</div><p class="typo-demo-weights gr-font-black">Griffincss — модульная типографика</p></div>
+</div>
+
+<h2>Выравнивание</h2>
+
+<p>Шесть классов <code>text-align</code>: четыре физических и два логических.</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th><th>В RTL</th></tr>
+  <tr><td><code>.gr-text-left</code></td><td><code>text-align: left</code></td><td>слева</td></tr>
+  <tr><td><code>.gr-text-center</code></td><td><code>text-align: center</code></td><td>по центру</td></tr>
+  <tr><td><code>.gr-text-right</code></td><td><code>text-align: right</code></td><td>справа</td></tr>
+  <tr><td><code>.gr-text-justify</code></td><td><code>text-align: justify</code></td><td>по ширине</td></tr>
+  <tr><td><code>.gr-text-start</code></td><td><code>text-align: start</code></td><td>справа</td></tr>
+  <tr><td><code>.gr-text-end</code></td><td><code>text-align: end</code></td><td>слева</td></tr>
+</table>
+
+<p>
+  <code>start</code> и <code>end</code> — начало и конец строки, а не сторона
+  экрана: в LTR они совпадают с <code>left</code> и <code>right</code>,
+  в RTL меняются местами. Для текста, который может оказаться на арабском
+  или иврите, нужны именно они; <code>left</code> и <code>right</code>
+  остаются для случаев, где сторона выбрана буквально.
+</p>
+
+<pre><code>&lt;p class="gr-text-left"&gt;По левому краю&lt;/p&gt;
+&lt;p class="gr-text-center"&gt;По центру&lt;/p&gt;
+&lt;p class="gr-text-right"&gt;По правому краю&lt;/p&gt;
+&lt;p class="gr-text-justify"&gt;По ширине с растяжением пробелов&lt;/p&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-left</div>
+    <div class="typo-demo-align-box gr-text-left">Этот текст выровнен по левому краю. Стандартное поведение для языков с письмом слева направо.</div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-center</div>
+    <div class="typo-demo-align-box gr-text-center">Этот текст выровнен по центру. Используется для заголовков и коротких блоков.</div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-right</div>
+    <div class="typo-demo-align-box gr-text-right">Этот текст выровнен по правому краю. Для RTL-языков или специальных случаев.</div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-justify</div>
+    <div class="typo-demo-align-box gr-text-justify">Этот текст выровнен по ширине. Слова растягиваются так, чтобы заполнить всю строку от левого до правого края. Хорошо для газетных колонок.</div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-start</div>
+    <div class="typo-demo-align-box gr-text-start">Выравнивание по началу строки. Здесь, в русском тексте, — слева; в блоке с <code>dir="rtl"</code> тот же класс выровняет текст справа.</div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-start в dir="rtl"</div>
+    <div class="typo-demo-align-box gr-text-start" dir="rtl">النص محاذى إلى بداية السطر — على اليمين في الكتابة من اليمين إلى اليسار.</div>
+  </div>
+</div>
+
+<h2>Трансформация</h2>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th></tr>
+  <tr><td><code>.gr-uppercase</code></td><td><code>text-transform: uppercase</code></td></tr>
+  <tr><td><code>.gr-lowercase</code></td><td><code>text-transform: lowercase</code></td></tr>
+  <tr><td><code>.gr-capitalize</code></td><td><code>text-transform: capitalize</code></td></tr>
+</table>
+
+<pre><code>&lt;span class="gr-uppercase"&gt;все буквы заглавные&lt;/span&gt;
+&lt;span class="gr-lowercase"&gt;ВСЕ БУКВЫ СТРОЧНЫЕ&lt;/span&gt;
+&lt;span class="gr-capitalize"&gt;каждое слово с заглавной&lt;/span&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-uppercase</div>
+    <p class="typo-demo-text gr-uppercase">griffincss typography module — все буквы заглавные</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-lowercase</div>
+    <p class="typo-demo-text gr-lowercase">GRIFFINCSS TYPOGRAPHY MODULE — ВСЕ БУКВЫ СТРОЧНЫЕ</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-capitalize</div>
+    <p class="typo-demo-text gr-capitalize">griffincss typography module — каждое слово с заглавной</p>
+  </div>
+</div>
+
+<h2>Межстрочный интервал</h2>
+
+<p>5 значений <code>line-height</code>.</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th><th>Применение</th></tr>
+  <tr><td><code>.gr-leading-tight</code></td><td>1.25</td><td>Крупные заголовки</td></tr>
+  <tr><td><code>.gr-leading-snug</code></td><td>1.375</td><td>Подзаголовки</td></tr>
+  <tr><td><code>.gr-leading-normal</code></td><td>1.5</td><td>Основной текст</td></tr>
+  <tr><td><code>.gr-leading-relaxed</code></td><td>1.625</td><td>Длинные тексты, статьи</td></tr>
+  <tr><td><code>.gr-leading-loose</code></td><td>2</td><td>Разреженный текст, поэзия</td></tr>
+</table>
+
+<pre><code>&lt;p class="gr-text-sm gr-leading-tight"&gt;Плотный интервал — для заголовков&lt;/p&gt;
+&lt;p class="gr-text-sm gr-leading-normal"&gt;Нормальный интервал — для основного текста&lt;/p&gt;
+&lt;p class="gr-text-sm gr-leading-loose"&gt;Свободный интервал — для разреженного текста&lt;/p&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-leading-tight (1.25)</div>
+    <p class="typo-demo-text gr-leading-tight" style="max-width:400px;">Плотный межстрочный интервал хорошо подходит для крупных заголовков, где строки должны быть визуально сгруппированы. Несколько строк текста с плотным интервалом.</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-leading-normal (1.5)</div>
+    <p class="typo-demo-text gr-leading-normal" style="max-width:400px;">Нормальный межстрочный интервал — стандарт для основного текста. Обеспечивает комфортное чтение. Несколько строк с нормальным интервалом.</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-leading-loose (2)</div>
+    <p class="typo-demo-text gr-leading-loose" style="max-width:400px;">Свободный межстрочный интервал создаёт воздух между строками. Используется для поэзии, цитат или разреженного текста. Двойной интервал.</p>
+  </div>
+</div>
+
+<h2>Текстовый декор</h2>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th></tr>
+  <tr><td><code>.gr-underline</code></td><td><code>text-decoration: underline</code></td></tr>
+  <tr><td><code>.gr-no-underline</code></td><td><code>text-decoration: none</code></td></tr>
+  <tr><td><code>.gr-line-through</code></td><td><code>text-decoration: line-through</code></td></tr>
+  <tr><td><code>.gr-italic</code></td><td><code>font-style: italic</code></td></tr>
+  <tr><td><code>.gr-not-italic</code></td><td><code>font-style: normal</code></td></tr>
+</table>
+
+<pre><code>&lt;span class="gr-underline"&gt;Подчёркнутый текст&lt;/span&gt;
+&lt;span class="gr-line-through"&gt;Зачёркнутый текст&lt;/span&gt;
+&lt;em&gt;Курсив, и только &lt;span class="gr-not-italic"&gt;эта часть&lt;/span&gt; прямая&lt;/em&gt;
+&lt;span class="gr-italic"&gt;Курсивный текст&lt;/span&gt;
+&lt;a class="gr-no-underline"&gt;Ссылка без подчёркивания&lt;/a&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-underline</div><p class="typo-demo-decor gr-underline">Подчёркнутый текст — для ссылок и акцентов</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-line-through</div><p class="typo-demo-decor gr-line-through">Зачёркнутый текст — старая цена, удалённое</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-italic</div><p class="typo-demo-decor gr-italic">Курсивный текст — цитаты, термины, акцент</p></div>
+  <div class="typo-demo-row"><div class="typo-demo-label">.gr-not-italic</div><p class="typo-demo-decor"><em>Весь этот текст в <code>&lt;em&gt;</code> — курсив, и только <span class="gr-not-italic">эти три слова выпрямлены</span></em></p></div>
+</div>
+
+<h2>Переносы и пробелы</h2>
+
+<table>
+  <tr><th>Класс</th><th>Свойства</th></tr>
+  <tr><td><code>.gr-break-words</code></td><td><code>overflow-wrap: break-word</code></td></tr>
+  <tr><td><code>.gr-truncate</code></td><td><code>overflow: hidden; text-overflow: ellipsis; white-space: nowrap</code></td></tr>
+  <tr><td><code>.gr-whitespace-nowrap</code></td><td><code>white-space: nowrap</code></td></tr>
+  <tr><td><code>.gr-whitespace-pre</code></td><td><code>white-space: pre</code></td></tr>
+  <tr><td><code>.gr-whitespace-normal</code></td><td><code>white-space: normal</code></td></tr>
+</table>
+
+<pre><code>&lt;p class="gr-break-words"&gt;
+  ДлинныйURLилиСловоБезПробеловКотороеНеПомещаетсяВКонтейнер
+&lt;/p&gt;
+
+&lt;p class="gr-truncate"&gt;
+  Очень длинный текст который обрезается многоточием когда не помещается в одну строку
+&lt;/p&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-break-words</div>
+    <div class="typo-demo-truncate-box">
+      <p class="typo-demo-text gr-break-words gr-m-0 gr-text-sm">SuperLongUnbreakableWordWithoutSpacesThatWrapsAutomatically</p>
+    </div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-truncate</div>
+    <div class="typo-demo-truncate-box">
+      <p class="typo-demo-text gr-truncate gr-m-0 gr-text-sm">Очень длинный текст который не помещается в одну строку и обрезается многоточием</p>
+    </div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-whitespace-nowrap</div>
+    <div class="typo-demo-truncate-box gr-overflow-hidden">
+      <p class="typo-demo-text gr-whitespace-nowrap gr-overflow-x-auto gr-m-0 gr-text-sm">Текст не переносится на новую строку никогда</p>
+    </div>
+  </div>
+</div>
+
+<h2>Перенос строк</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Где уместен</th></tr>
+  <tr><td><code>.gr-text-balance</code></td><td><code>text-wrap: balance</code></td><td>Заголовки: браузер выравнивает длину строк, последняя не остаётся из одного слова</td></tr>
+  <tr><td><code>.gr-text-pretty</code></td><td><code>text-wrap: pretty</code></td><td>Абзацы: убираются висячие слова в конце</td></tr>
+</table>
+
+<p>
+  <code>balance</code> рассчитан на короткий текст — браузеры применяют его
+  к нескольким первым строкам, поэтому для длинных абзацев берите
+  <code>pretty</code>.
+</p>
+
+<pre><code>&lt;h2 class="gr-text-balance"&gt;Заголовок в две строки, разбитый поровну&lt;/h2&gt;
+&lt;p class="gr-text-pretty"&gt;Длинный абзац без висячих слов…&lt;/p&gt;</code></pre>
+
+<h2>Обрезка по числу строк</h2>
+
+<p>
+  <code>.gr-line-clamp-{1…6}</code> обрезает текст после указанного числа
+  строк и ставит многоточие. В отличие от <code>.gr-truncate</code>, который
+  работает только на одной строке, здесь текст переносится нормально.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Результат</th></tr>
+  <tr><td><code>.gr-line-clamp-1</code> … <code>.gr-line-clamp-6</code></td><td>Не больше N строк, дальше — многоточие</td></tr>
+  <tr><td><code>.gr-line-clamp-none</code></td><td>Снять обрезку</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">.gr-line-clamp-2 в карточке</div>
+  <div class="card-demo" style="max-width:340px;">
+    <h4>Заголовок карточки</h4>
+    <p class="gr-line-clamp-2 gr-m-0 gr-text-sm gr-text-ink-secondary">
+      Описание товара, которое в исходнике занимает четыре строки, а в карточке
+      должно занимать ровно две — иначе карточки в ряду разъедутся по высоте
+      и сетка перестанет читаться как сетка. Вот эта часть текста уже не видна.
+    </p>
+  </div>
+</div>
+
+<pre><code>&lt;p class="gr-line-clamp-2"&gt;Описание товара…&lt;/p&gt;</code></pre>
+
+<h2>Списки</h2>
+
+<p>
+  Ресет снимает маркеры только со списков, размеченных как
+  <code>role="list"</code> — обычный <code>&lt;ul&gt;</code> в тексте
+  сохраняет и маркеры, и отступ. Эти классы меняют оформление там,
+  где разметку трогать нельзя.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-list-none</code></td><td><code>list-style: none; padding-inline-start: 0</code></td></tr>
+  <tr><td><code>.gr-list-disc</code></td><td><code>list-style: disc</code></td></tr>
+  <tr><td><code>.gr-list-decimal</code></td><td><code>list-style: decimal</code></td></tr>
+  <tr><td><code>.gr-list-inside</code></td><td><code>list-style-position: inside</code></td></tr>
+  <tr><td><code>.gr-list-outside</code></td><td><code>list-style-position: outside</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Безусловный <code>list-style: none</code> лишает <code>&lt;ul&gt;</code>
+    роли списка в VoiceOver, а вместе с ней — озвучки «список из N элементов».
+    Атрибут <code>role="list"</code> возвращает роль, оставляя оформление
+    снятым: <code>&lt;ul role="list" class="gr-flex gr-gap"&gt;</code> — то, что
+    нужно навигации.
+  </p>
+</div>
+
+<h2>Шрифтовые семейства</h2>
+
+<p>Три класса, ссылающиеся на CSS-переменные <code>--gr-font-*</code>. Переопределите переменные для кастомных шрифтов.</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th></tr>
+  <tr><td><code>.gr-font-sans</code></td><td><code>var(--gr-font-sans)</code></td></tr>
+  <tr><td><code>.gr-font-serif</code></td><td><code>var(--gr-font-serif)</code></td></tr>
+  <tr><td><code>.gr-font-mono</code></td><td><code>var(--gr-font-mono)</code></td></tr>
+</table>
+
+<pre><code>&lt;p class="gr-font-sans"&gt;system-ui, -apple-system, sans-serif&lt;/p&gt;
+&lt;p class="gr-font-serif"&gt;Georgia, Cambria, serif&lt;/p&gt;
+&lt;p class="gr-font-mono"&gt;SFMono-Regular, Menlo, Consolas, monospace&lt;/p&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-font-sans</div>
+    <p class="typo-demo-family gr-font-sans">Griffincss — The quick brown fox jumps over the lazy dog. 1234567890.</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-font-serif</div>
+    <p class="typo-demo-family gr-font-serif">Griffincss — The quick brown fox jumps over the lazy dog. 1234567890.</p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-font-mono</div>
+    <p class="typo-demo-family gr-font-mono">Griffincss — The quick brown fox jumps over the lazy dog. 1234567890.</p>
+  </div>
+</div>
+
+<h2>Адаптивные варианты</h2>
+
+<p>
+  Классы выше имеют варианты с суффиксом брейкпоинта: <code>-sm</code> (≥640px), <code>-md</code> (≥768px),
+  <code>-lg</code> (≥1024px), <code>-xl</code> (≥1280px). Размер шрифта, насыщенность, выравнивание,
+  трансформация, интервал, декор, переносы и семейство — любые свойства можно менять на разных разрешениях.
+  Исключение — относительные размеры <code>.gr-text-rel-*</code>: у них вариантов нет,
+  размер там задаёт вложенность, а не ширина окна.
+</p>
+
+<pre><code>&lt;!-- Базовый размер sm, от 768px становится lg, от 1024px — xl --&gt;
+&lt;p class="gr-text-sm gr-text-lg-md gr-text-xl-lg"&gt;
+  Адаптивный размер шрифта
+&lt;/p&gt;
+
+&lt;!-- На мобильных — по левому краю, от 1024px — по центру --&gt;
+&lt;h2 class="gr-text-left gr-text-center-lg"&gt;
+  Адаптивное выравнивание
+&lt;/h2&gt;
+
+&lt;!-- Нормальная насыщенность, от 768px — жирный --&gt;
+&lt;span class="gr-font-normal gr-font-bold-md"&gt;
+  Адаптивная насыщенность
+&lt;/span&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат (измените ширину окна)</div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-sm .gr-text-lg-md .gr-text-xl-lg</div>
+    <p class="typo-demo-text gr-text-sm gr-text-lg-md gr-text-xl-lg">
+      Этот текст меняет размер на разных разрешениях: 14px → 18px (≥768px) → 20px (≥1024px)
+    </p>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-text-left .gr-text-center-lg</div>
+    <div class="typo-demo-align-box gr-text-left gr-text-center-lg">
+      На мобильных — по левому краю. На десктопе (≥1024px) — по центру.
+    </div>
+  </div>
+  <div class="typo-demo-row">
+    <div class="typo-demo-label">.gr-font-normal .gr-font-bold-md</div>
+    <p class="typo-demo-weights gr-font-normal gr-font-bold-md">
+      Нормальная насыщенность на мобильных, жирный от 768px
+    </p>
+  </div>
+</div>
+
+<h2>Практический пример: карточка статьи</h2>
+
+<pre><code>&lt;article class="gr-font-sans gr-leading-normal"&gt;
+  &lt;span class="gr-text-xs gr-uppercase gr-font-semibold"&gt;Дизайн&lt;/span&gt;
+  &lt;h3 class="gr-text-2xl gr-font-bold gr-leading-tight"&gt;
+    Как типографика влияет на восприятие
+  &lt;/h3&gt;
+  &lt;p class="gr-text-sm"&gt;
+    Правильно подобранный шрифт и интервал улучшают читаемость
+    и удержание внимания. Модульные классы Griffincss позволяют
+    настроить типографику без единой строки CSS.
+  &lt;/p&gt;
+  &lt;footer class="gr-text-xs gr-no-underline"&gt;
+    &lt;span class="gr-font-medium"&gt;Иван Петров&lt;/span&gt;
+    &lt;span&gt;· 5 мин чтения&lt;/span&gt;
+  &lt;/footer&gt;
+&lt;/article&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="card-demo" style="max-width:460px;">
+    <article class="gr-font-sans gr-leading-normal">
+      <span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent">Дизайн</span>
+      <h3 class="gr-text-2xl gr-font-bold gr-leading-tight gr-mt-2 gr-mb-3">Как типографика влияет на восприятие</h3>
+      <p class="gr-text-sm gr-text-ink-secondary">Правильно подобранный шрифт и интервал улучшают читаемость и удержание внимания. Модульные классы Griffincss позволяют настроить типографику без единой строки CSS.</p>
+      <footer class="gr-text-xs gr-text-ink-secondary gr-mt-4">
+        <span class="gr-font-medium">Иван Петров</span>
+        <span>· 5 мин чтения</span>
+      </footer>
+    </article>
+  </div>
+</div>
+
+<h2>SCSS-реализация</h2>
+
+<pre><code>// _typography.scss — все утилиты генерируются циклами
+
+// Размеры
+$gr-text-sizes: (
+  xs: 0.75rem, sm: 0.875rem, base: 1rem,
+  lg: 1.125rem, xl: 1.25rem, 2xl: 1.5rem,
+  3xl: 1.875rem, 4xl: 2.25rem, 5xl: 3rem, 6xl: 3.75rem
+);
+@each $name, $size in $gr-text-sizes {
+  .gr-text-#{$name} { font-size: $size; }
+}
+
+// Относительные размеры — шаг в px от текущего размера
+$gr-text-rel-steps: (
+  xs: -4px, sm: -2px, lg: 2px,
+  xl: 4px, 2xl: 6px, 3xl: 8px
+);
+@each $gr-name, $gr-delta in $gr-text-rel-steps {
+  .gr-text-rel-#{$gr-name} {
+    @if $gr-delta &lt; 0 {
+      font-size: calc(1em - #{math.abs($gr-delta)});
+    } @else {
+      font-size: calc(1em + #{$gr-delta});
+    }
+  }
+}
+
+// Насыщенность
+$gr-weights: (
+  "thin": 100, "extralight": 200, "light": 300,
+  "normal": 400, "medium": 500, "semibold": 600,
+  "bold": 700, "extrabold": 800, "black": 900
+);
+@each $name, $weight in $gr-weights {
+  .gr-font-#{$name} { font-weight: $weight; }
+}
+
+// Адаптивные варианты генерируются для всех групп
+@each $bp-name, $bp-value in $gr-breakpoints {
+  @media (width >= $bp-value) {
+    @each $name, $size in $gr-text-sizes {
+      .gr-text-#{$name}-#{$bp-name} { font-size: $size; }
+    }
+    // ... остальные группы аналогично
+  }
+}</code></pre>
+
+<h2>Советы</h2>
+
+<div class="callout callout-success">
+  <p><strong>Комбинируйте классы.</strong> <code>gr-text-lg gr-font-bold gr-leading-tight</code> — три класса дают готовый заголовок. Не нужно писать отдельные CSS-правила для каждого элемента.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Переопределяйте переменные.</strong> Хотите кастомный шрифт? <code>--gr-font-sans: 'Inter', sans-serif;</code> на <code>:root</code> — и все <code>.gr-font-sans</code> подхватят его автоматически.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Аккуратно с <code>gr-truncate</code>.</strong> Класс обрезает текст и скрывает его. Не используйте на элементах, где важна полная доступность контента. Для многострочного усечения — свойство <code>line-clamp</code> вручную.</p>
+</div>
+
+</main>
+</div>
+
+<script src="nav.js"></script>
+</body>
+</html>

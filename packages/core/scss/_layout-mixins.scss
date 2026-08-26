@@ -1,0 +1,182 @@
+// Griffincss — Layout Mixins
+// Компилтайм-раскладки: тот же CSS, что генерирует рантайм.
+// Имя класса задаёт пользователь, потому что компилтайм не знает элемент:
+//   @include gr-grid-layout('a2b2', $md: 'a1b3', $name: 'hero');
+//   → .gr-l-hero
+// Файл не содержит статических правил — только миксины и функции.
+
+@use 'breakpoints' as bp;
+@use 'container-mixins' as cq;
+@use 'functions' as fn;
+@use 'sass:list';
+@use 'sass:map';
+
+// Слой каскада для вывода миксина — тот же, что у рантайма и статики.
+// false отключает обёртку: правила выйдут вне слоёв и станут сильнее
+// любого стиля в слоях.
+//   @use 'griffincss-core/scss/grid-parser' with ($gr-default-layer: false);
+// Именно false, а не null: `!default` считает null «значение не задано»
+// и вернул бы дефолт. У самого миксина в аргументе годится и null, и false.
+$gr-default-layer: 'griffincss.core' !default;
+
+// Непересекающийся диапазон для брейкпоинта; '' — базовая раскладка.
+// Range-синтаксис: без арифметики -1px и без щелей на дробных ширинах.
+// Запись одна на оба вида запроса: @container понимает range наравне
+// с @media, а различает их только обёртка.
+@function _gr-range($bp, $active) {
+  @if list.length($active) == 0 {
+    @return null;
+  }
+
+  @if $bp == '' {
+    @return '(width < #{cq.gr-bp-value(list.nth($active, 1))})';
+  }
+
+  $index: list.index($active, $bp);
+
+  @if $index == list.length($active) {
+    @return '(width >= #{cq.gr-bp-value($bp)})';
+  }
+
+  @return '(#{cq.gr-bp-value($bp)} <= width < #{cq.gr-bp-value(list.nth($active, $index + 1))})';
+}
+
+// Правило сетки + авто-скрытие чужих областей.
+// Отступ здесь не пишется — его даёт статическое правило [class*="gr-l-"]
+// в _grid-parser.scss, общее с рантаймом.
+@mixin _gr-layout-block($selector, $grid) {
+  #{$selector} {
+    display: grid;
+    grid-template-areas: fn.gr-grid-areas($grid);
+    grid-template-columns: repeat(fn.gr-grid-columns($grid), 1fr);
+    grid-template-rows: repeat(fn.gr-grid-rows($grid), auto);
+  }
+
+  $names: fn.gr-area-names($grid);
+
+  @if list.length($names) > 0 {
+    $not-chain: '';
+
+    @each $name in $names {
+      $not-chain: $not-chain + ':not(.gr-area-#{$name})';
+    }
+
+    #{$selector} > [class*="gr-area-"]#{$not-chain} {
+      display: none;
+    }
+  }
+}
+
+// Набор раскладок одного контейнера → класс .gr-l-<name>
+// Контейнерные варианты — параметры $csm…$cxl, пара к атрибутам
+// data-gr-layout-c<брейкпоинт> рантайма.
+@mixin gr-grid-layout(
+  $base: null, $sm: null, $md: null, $lg: null, $xl: null,
+  $csm: null, $cmd: null, $clg: null, $cxl: null,
+  $name: null, $layer: $gr-default-layer
+) {
+  @if $layer {
+    @layer #{$layer} {
+      @include _gr-layout-set($base, $sm, $md, $lg, $xl, $csm, $cmd, $clg, $cxl, $name);
+    }
+  } @else {
+    @include _gr-layout-set($base, $sm, $md, $lg, $xl, $csm, $cmd, $clg, $cxl, $name);
+  }
+}
+
+// Тело набора без обёртки слоя
+@mixin _gr-layout-set($base, $sm, $md, $lg, $xl, $csm, $cmd, $clg, $cxl, $name) {
+  @if not $name {
+    @error 'Griffincss: gr-grid-layout() requires $name — it becomes the class .gr-l-<name>';
+  }
+
+  @if not ($base or $sm or $md or $lg or $xl or $csm or $cmd or $clg or $cxl) {
+    @error 'Griffincss: gr-grid-layout($name: "#{$name}") got no layouts';
+  }
+
+  $selector: '.gr-l-#{$name}';
+  $responsive: ();
+
+  // Порядок ключей тот же, что у BP_ORDER рантайма: сначала оконные,
+  // потом контейнерные. В этом же порядке правила выходят в таблицу.
+  @each $bp, $layout in (sm: $sm, md: $md, lg: $lg, xl: $xl, csm: $csm, cmd: $cmd, clg: $clg, cxl: $cxl) {
+    @if $layout {
+      $responsive: map.set($responsive, $bp, $layout);
+    }
+  }
+
+  // Две независимые цепочки: ширина окна и ширина контейнера меняются
+  // порознь, и диапазоны одной не обязаны считаться с другой.
+  $win-active: ();
+  $cq-active: ();
+
+  @each $bp in map.keys($responsive) {
+    @if cq.gr-is-container($bp) {
+      $cq-active: list.append($cq-active, $bp);
+    } @else {
+      $win-active: list.append($win-active, $bp);
+    }
+  }
+
+  $grids: ();
+
+  @if $base {
+    $grid: fn.gr-parse-layout($base);
+    $grids: list.append($grids, $grid, comma);
+    $window-range: _gr-range('', $win-active);
+    $container-range: _gr-range('', $cq-active);
+
+    // Базу закрывают обе цепочки сразу. Оставь её открытой по одной
+    // из осей — она накрыла бы диапазон другой, и какая раскладка
+    // победит, решал бы порядок правил, а не ширина.
+    @if $window-range and $container-range {
+      @media #{$window-range} {
+        @container #{$container-range} {
+          @include _gr-layout-block($selector, $grid);
+        }
+      }
+    } @else if $window-range {
+      @media #{$window-range} {
+        @include _gr-layout-block($selector, $grid);
+      }
+    } @else if $container-range {
+      @container #{$container-range} {
+        @include _gr-layout-block($selector, $grid);
+      }
+    } @else {
+      @include _gr-layout-block($selector, $grid);
+    }
+  }
+
+  @each $bp, $layout in $responsive {
+    $grid: fn.gr-parse-layout($layout);
+    $grids: list.append($grids, $grid, comma);
+
+    @if cq.gr-is-container($bp) {
+      @container #{_gr-range($bp, $cq-active)} {
+        @include _gr-layout-block($selector, $grid);
+      }
+    } @else {
+      @media #{_gr-range($bp, $win-active)} {
+        @include _gr-layout-block($selector, $grid);
+      }
+    }
+  }
+
+  // Классы областей — общие для всех диапазонов набора
+  $names: ();
+
+  @each $grid in $grids {
+    @each $name-in-grid in fn.gr-area-names($grid) {
+      @if not list.index($names, $name-in-grid) {
+        $names: list.append($names, $name-in-grid, comma);
+      }
+    }
+  }
+
+  @each $area in $names {
+    .gr-area-#{$area} {
+      grid-area: #{$area};
+    }
+  }
+}

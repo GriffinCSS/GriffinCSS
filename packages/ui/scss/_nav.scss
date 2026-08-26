@@ -1,0 +1,233 @@
+// Griffincss UI — Nav
+// Навигация: ряд ссылок, шапка сайта и её сворачивание на узком экране.
+//
+// Класс ставится на любую разметку: <nav> со ссылками, <ul> со списком —
+// список обнуляется здесь же, потому что ресет опционален.
+//
+// Активный пункт помечается в разметке атрибутом aria-current="page",
+// а не отдельным классом: тот же признак, по которому пункт находит
+// программа чтения с экрана, красит его и на экране. Класс без атрибута
+// подсветил бы пункт только зрячему.
+
+@use 'sass:map';
+@use 'griffincss-core/scss/breakpoints' as bp;
+
+// Экран, с которого шапка перестаёт сворачиваться.
+$gr-nav-expand: map.get(bp.$gr-breakpoints, md);
+
+// --- Ряд ссылок -------------------------------------------------------------
+
+.gr-nav {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Ряд на <ul>: обёртка <li> не должна ни добавлять полей, ни мешать пункту
+// растянуться по ширине колонки. :where() держит специфичность нулевой,
+// чтобы класс на самом <li> оставался сильнее.
+.gr-nav > :where(li) {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-nav-vertical > :where(li) {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+// Вертикальная — боковое меню раздела. Пункты растянуты по ширине колонки,
+// иначе подсветка активного обрывалась бы по длине слова.
+.gr-nav-vertical {
+  flex-flow: column nowrap;
+  align-items: stretch;
+}
+
+.gr-nav-link {
+  --gr-nav-fg: var(--gr-color-text-secondary);
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  min-block-size: var(--gr-control-height-sm);
+  padding-block: 0;
+  padding-inline: calc(var(--gr-control-padding-x) * 0.75);
+  border: 0;
+  border-radius: var(--gr-radius);
+  background-color: transparent;
+  color: var(--gr-nav-fg);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// Текущий пункт из подсветки исключён: правило с :hover весомее правила
+// состояния, и наведение гасило бы акцентную подложку текущего раздела.
+@media (hover: hover) {
+  .gr-nav-link:hover:not([aria-current], [aria-disabled="true"]) {
+    --gr-nav-fg: var(--gr-color-text);
+
+    background-color: color-mix(in srgb, currentcolor 8%, transparent);
+  }
+}
+
+.gr-nav-link:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Текущий раздел. Цвет — не единственный признак: у активного пункта
+// ещё и подложка, а вес шрифта тяжелее, поэтому он находится и на
+// чёрно-белой печати.
+.gr-nav-link[aria-current] {
+  --gr-nav-fg: var(--gr-color-accent);
+
+  background-color: color-mix(in srgb, var(--gr-color-accent) 12%, transparent);
+  font-weight: 600;
+}
+
+.gr-nav-link[aria-disabled="true"] {
+  color: var(--gr-color-text-disabled);
+  cursor: not-allowed;
+}
+
+// --- Подсветка линией -------------------------------------------------------
+
+// Вариант без подложки: активный пункт подчёркнут. Линия объявлена
+// прозрачной у всех пунктов сразу — иначе ряд подпрыгивал бы на её толщину
+// в момент, когда пункт становится текущим.
+.gr-nav-underline .gr-nav-link {
+  border-block-end: calc(var(--gr-border-width) * 2) solid transparent;
+  border-radius: 0;
+}
+
+.gr-nav-underline .gr-nav-link[aria-current] {
+  border-block-end-color: var(--gr-color-accent);
+  background-color: transparent;
+}
+
+@media (hover: hover) {
+  .gr-nav-underline .gr-nav-link:hover:not([aria-current], [aria-disabled="true"]) {
+    border-block-end-color: var(--gr-color-border-strong);
+    background-color: transparent;
+  }
+}
+
+// Вертикальная разновидность того же варианта отбивает линией начало строки,
+// а не низ: подчёркивание в столбце читалось бы как разделитель пунктов.
+.gr-nav-underline.gr-nav-vertical .gr-nav-link {
+  border-block-end: 0;
+  border-inline-start: calc(var(--gr-border-width) * 2) solid transparent;
+}
+
+.gr-nav-underline.gr-nav-vertical .gr-nav-link[aria-current] {
+  border-inline-start-color: var(--gr-color-accent);
+}
+
+// --- Шапка ------------------------------------------------------------------
+
+.gr-navbar {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  padding-block: calc(var(--gr-gap) * 0.5);
+  padding-inline: var(--gr-gap);
+  border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-color-text);
+}
+
+// Название сайта. Забирает остаток строки, поэтому навигация и кнопки
+// прижимаются к её концу без единой утилиты.
+.gr-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  margin-inline-end: auto;
+  color: var(--gr-color-text);
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+// --- Сворачивание на узком экране -------------------------------------------
+
+// Переключатель — <details>, но навигация лежит не внутри него, а следующим
+// соседом: содержимое <details> скрывается самим браузером, и на широком
+// экране раскрыть его без скрипта или ::details-content нельзя. Соседом же
+// управляет обычный селектор, и медиазапрос отменяет сворачивание целиком.
+//
+//   <div class="gr-navbar">
+//     <a class="gr-navbar-brand" href="/">Сайт</a>
+//     <details class="gr-nav-toggle"><summary>Меню</summary></details>
+//     <nav class="gr-nav gr-nav-collapse">…</nav>
+//   </div>
+.gr-nav-toggle > summary {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--gr-control-height);
+  min-block-size: var(--gr-control-height);
+  padding-inline: calc(var(--gr-control-padding-x) * 0.5);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  color: var(--gr-color-text);
+  font-size: var(--gr-control-font-size);
+  list-style: none;
+  cursor: pointer;
+}
+
+// Родной треугольник снимается в обоих движках: в WebKit — своим
+// псевдоэлементом, в остальных — через list-style выше.
+.gr-nav-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gr-nav-toggle > summary:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Свёрнутая навигация занимает всю строку под шапкой, а не втискивается
+// в её ряд: пункты должны читаться столбцом, как в боковом меню.
+.gr-nav-collapse {
+  display: none;
+  flex-basis: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+// Общий сосед, а не следующий: между переключателем и навигацией в шапке
+// может стоять что угодно — поиск, кнопка входа, — и раскрытие не должно
+// от этого ломаться.
+.gr-nav-toggle[open] ~ .gr-nav-collapse {
+  display: flex;
+}
+
+// Со средних экранов сворачивания нет вовсе: кнопка убирается, навигация
+// возвращается в строку шапки независимо от того, открыт <details> или нет.
+@media (width >= $gr-nav-expand) {
+  .gr-nav-toggle {
+    display: none;
+  }
+
+  .gr-nav-collapse {
+    display: flex;
+    flex-basis: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+}

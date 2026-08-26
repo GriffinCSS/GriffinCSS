@@ -1,0 +1,82 @@
+// Griffincss — Transitions & Animation
+// Плавные переходы, их длительность и один-единственный keyframe.
+//
+// Полноценной библиотеки анимаций здесь нет и не планируется: fade, slide
+// и pulse — задача уровня приложения, а не фреймворка раскладки. Оставлен
+// gr-spin: индикатор загрузки нужен практически в каждом проекте.
+//
+// Всё содержимое модуля выключается при prefers-reduced-motion: reduce —
+// движение не убирается совсем (иначе ломаются состояния, завязанные
+// на конец перехода), а сжимается до неразличимого.
+
+.gr-transition {
+  transition: all var(--gr-transition);
+}
+
+.gr-transition-colors {
+  transition:
+    color var(--gr-transition),
+    background-color var(--gr-transition),
+    border-color var(--gr-transition),
+    fill var(--gr-transition),
+    stroke var(--gr-transition);
+}
+
+.gr-transition-opacity {
+  transition: opacity var(--gr-transition);
+}
+
+.gr-transition-transform {
+  transition: transform var(--gr-transition);
+}
+
+.gr-transition-shadow {
+  transition: box-shadow var(--gr-transition);
+}
+
+.gr-transition-none {
+  transition: none;
+}
+
+// Длительность. Перебивает часть токена --gr-transition, функция сглаживания
+// при этом сохраняется — она приходит из того же сокращённого свойства выше.
+@each $gr-ms in (75, 100, 150, 200, 300, 500, 700, 1000) {
+  .gr-duration-#{$gr-ms} {
+    transition-duration: #{$gr-ms}ms;
+  }
+}
+
+.gr-animate-spin {
+  animation: gr-spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-transition,
+  .gr-transition-colors,
+  .gr-transition-opacity,
+  .gr-transition-transform,
+  .gr-transition-shadow {
+    transition-duration: 0.01ms;
+  }
+
+  .gr-animate-spin {
+    animation-duration: 3s;
+  }
+}
+
+// Печать. Переход на бумаге не значит ничего, а вращающийся индикатор
+// печатается замершим в случайном положении. Блок стоит последним в модуле:
+// специфичность у него та же, что у правил выше, и решает порядок.
+@media print {
+  .gr-transition,
+  .gr-transition-colors,
+  .gr-transition-opacity,
+  .gr-transition-transform,
+  .gr-transition-shadow {
+    transition: none;
+  }
+
+  .gr-animate-spin {
+    animation: none;
+  }
+}

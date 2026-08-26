@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Griffincss — потоковая раскладка выключена</title>
+  <style>
+    /* Оформление на средствах библиотеки: цвета — семантические токены,
+       поэтому страница следует системной теме без единого своего значения.
+       Слой docs объявлен до пакетов и стоит перед griffincss.utils —
+       любая утилита перекрывает здешние правила. */
+    @layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.utils;
+
+    @layer griffincss.docs {
+      body {
+        font-family: var(--gr-font-sans);
+        max-width: var(--gr-max-width);
+        margin-inline: auto;
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+      }
+
+      h2 {
+        margin-top: 2.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--gr-color-text-muted);
+      }
+
+      /* Каскад скруглений: три ступени одного тона, чтобы уровни
+         вложенности читались без семантических цветов. */
+      .br-l1 { background-color: hsl(var(--gr-hsl-primary-dark)); }
+      .br-l2 { background-color: hsl(var(--gr-hsl-primary)); }
+      .br-l3 { background-color: hsl(var(--gr-hsl-primary-light)); }
+
+      .br-leaf {
+        padding: 0.75rem 1rem;
+        background-color: hsl(var(--gr-hsl-white), 0.5);
+        font-family: var(--gr-font-mono);
+        font-size: 0.75rem;
+        color: hsl(var(--gr-hsl-gray-900));
+      }
+
+      .note {
+        max-width: 62ch;
+        color: var(--gr-color-text-secondary);
+      }
+
+      .note code {
+        padding: 0.1rem 0.35rem;
+        background-color: var(--gr-color-surface-sunken);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.85em;
+      }
+
+      /* Показания: моноширинные и с табличными цифрами — это замеры,
+         а не костюм «под технологию». */
+      #gr-log,
+      .tick {
+        font-family: var(--gr-font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      #gr-log {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10;
+        padding: 0.6rem 0.8rem;
+        background-color: var(--gr-color-surface-raised);
+        color: var(--gr-color-text);
+        border: var(--gr-border-width) solid var(--gr-color-border-strong);
+        border-radius: var(--gr-radius);
+        font-size: 0.75rem;
+        line-height: 1.6;
+      }
+
+      .tick {
+        margin-left: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--gr-color-success);
+      }
+
+      .mode {
+        display: inline-block;
+        margin: 1rem 0;
+        padding: 0.4rem 0.8rem;
+        border: var(--gr-border-width) solid currentcolor;
+        border-radius: var(--gr-radius);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: var(--gr-color-success);
+      }
+
+      /* Выключенный режим — предупреждение словом и цветом текста,
+         а не заливка во всю плашку. */
+      .mode-off { color: var(--gr-color-warning); }
+
+      /* Плашки областей — литеральная шкала: образец раскладки обязан
+         выглядеть одинаково в любой теме. */
+      [data-gr-layout] > * {
+        min-height: 4rem;
+        padding: 1.25rem;
+        border-radius: calc(var(--gr-radius) / 2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: hsl(var(--gr-hsl-white));
+      }
+
+      .area-a { background-color: hsl(var(--gr-hsl-primary)); }
+      .area-b { background-color: hsl(var(--gr-hsl-primary-dark)); }
+      .area-c { background-color: hsl(var(--gr-hsl-secondary)); }
+      .area-d { background-color: hsl(var(--gr-hsl-secondary-dark)); }
+      .area-e { background-color: hsl(var(--gr-hsl-info-dark)); }
+    }
+  </style>
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+  <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+  <!-- data-stream="false" отключает потоковый режим: рантайм ждёт
+       DOMContentLoaded, как до версии 0.7.0. -->
+  <script src="../packages/core/dist/griffincss-theme.js"></script>
+  <script src="../packages/core/dist/griffincss.js" data-stream="false"></script>
+  <script src="../packages/utils/dist/griffincss-utils.js" data-stream="false"></script>
+  <script>
+    // Отметка времени прибытия порции: сколько прошло от начала разбора
+    // документа до момента, когда парсер дошёл до этой строки.
+    function grTick() {
+      var marks = document.querySelectorAll('.tick');
+      var last = marks[marks.length - 1];
+      if (last) last.textContent = '+' + Math.round(performance.now()) + ' мс';
+    }
+  </script>
+  <script>
+    // Журнал: время, когда рантайм разложил очередной контейнер. В потоковом
+    // режиме отметки разнесены на паузы сервера, без него — сливаются
+    // в одну, на DOMContentLoaded.
+    window.grLog = [];
+    window.grFade = 0;
+
+    // Плавное появление засчитываем по факту: событие перехода
+    // всплывает до документа, если контейнер действительно
+    // проявлялся, а не возник сразу непрозрачным.
+    document.addEventListener('transitionstart', function (e) {
+      if (e.propertyName === 'opacity') window.grFade++;
+    }, true);
+
+    new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        var el = records[i].target;
+
+        if (!el.hasAttribute || !el.hasAttribute('data-gr-layout')) continue;
+        if (!el.classList.contains('gr-ready') || el.getAttribute('data-logged')) continue;
+
+        el.setAttribute('data-logged', '1');
+        window.grLog.push(Math.round(performance.now()));
+        grRenderLog();
+      }
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+      subtree: true
+    });
+
+    function grRenderLog() {
+      if (!document.body) return;
+
+      var panel = document.getElementById('gr-log');
+
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'gr-log';
+        document.body.appendChild(panel);
+      }
+
+      var html = '<b>Разложено</b>';
+
+      for (var i = 0; i < window.grLog.length; i++) {
+        html += '<div>контейнер ' + (i + 1) + ' — +' + window.grLog[i] + ' мс</div>';
+      }
+
+      html += '<div>плавных появлений: ' + window.grFade + '</div>';
+
+      panel.innerHTML = html;
+    }
+  </script>
+</head>
+<body>
+<!-- Возврат в документацию: страница открывается по ссылке из боковой панели,
+     а собственной панели у стенда нет — без этой строки читатель оказывался
+     в тупике и уходил кнопкой «назад». -->
+<p class="gr-p-4 gr-m-0 gr-text-sm"><a href="index.html">← Документация Griffincss</a></p>
+
+
+<h1>Потоковая раскладка</h1>
+<p class="mode mode-off">Потоковый режим выключен</p>
+<p class="note">
+  Та же страница, но со снятым потоковым режимом. Порции приходят так же,
+  а контейнеры остаются невидимыми под FOUC-защитой до
+  <code>DOMContentLoaded</code> и появляются разом, в конце загрузки.
+  Цифра рядом с заголовком — время прибытия порции от начала разбора.
+</p>
+<p class="note">
+  Сравнение: <a href="stream.html">та же страница с потоковым режимом</a> —
+  там каждый контейнер раскладывается сразу по прибытии.
+</p>
+
+<!-- gr:chunk -->
+<h2>Порция 1 <span class="tick"></span></h2>
+<script>grTick()</script>
+<div data-gr-layout="a3b4-c2d5">
+  <div class="area-a">A</div>
+  <div class="area-b">B</div>
+  <div class="area-c">C</div>
+  <div class="area-d">D</div>
+</div>
+
+<!-- gr:chunk -->
+<h2>Порция 2 <span class="tick"></span></h2>
+<script>grTick()</script>
+<div data-gr-layout="a2b2c2-a2d2e2">
+  <div class="area-a">A</div>
+  <div class="area-b">B</div>
+  <div class="area-c">C</div>
+  <div class="area-d">D</div>
+  <div class="area-e">E</div>
+</div>
+
+<!-- gr:chunk -->
+<h2>Порция 3 — адаптивная раскладка <span class="tick"></span></h2>
+<script>grTick()</script>
+<div data-gr-layout="a1b1" data-gr-layout-md="a1b1c1">
+  <div class="area-a">A</div>
+  <div class="area-b">B</div>
+  <div class="area-c">C</div>
+</div>
+
+<!-- gr:chunk -->
+<h2>Порция 4 <span class="tick"></span></h2>
+<script>grTick()</script>
+<div data-gr-layout="a4b2-a4c2">
+  <div class="area-a">A</div>
+  <div class="area-b">B</div>
+  <div class="area-c">C</div>
+</div>
+
+<!-- gr:chunk -->
+<h2>Порция 5 — каскад скруглений <span class="tick"></span></h2>
+<script>grTick()</script>
+<p class="note">
+  <span class="tick" id="br-state"></span><br>
+  Явный радиус задан только внешнему контейнеру. Остальные три уровня выводит
+  рантайм утилит: 64px → 52 → 44 → 36, вычитая зазор каждого уровня.
+  Здесь поток выключен: вложенные уровни стоят квадратными до самого <code>DOMContentLoaded</code>.
+</p>
+<div class="gr-radius gr-radius-16 gr-p-3 br-l1" id="br-root">
+  <div class="gr-radius gr-p-2 br-l2">
+    <div class="gr-radius gr-p-2 br-l3">
+      <div class="br-leaf">радиус выведен из предков</div>
+    </div>
+  </div>
+</div>
+<script>
+  // Показание снимается сразу после разбора блока: если поток работает,
+  // класс уровня 2 уже выдан, а документ ещё в состоянии loading.
+  (function () {
+    var level2 = document.querySelector('#br-root > .gr-radius');
+    var derived = /gr-r-[0-9a-z]+/.exec(level2.className);
+
+    document.getElementById('br-state').textContent =
+      'при разборе блока: readyState=' + document.readyState
+      + ', класс уровня 2 — ' + (derived ? derived[0] : 'ещё не выдан');
+  })();
+</script>
+</body>
+</html>

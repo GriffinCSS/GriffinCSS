@@ -1,0 +1,177 @@
+// Griffincss — CSS Custom Properties
+// All design tokens exposed as CSS variables for runtime customization.
+// Единственный экземпляр на оба пакета: griffincss-utils подключает этот файл
+// по пакетному пути (@use 'griffincss-core/scss/tokens'), поэтому его сборка
+// остаётся самодостаточной — блок :root в ней тот же самый.
+
+@use 'sass:map';
+@use 'breakpoints' as bp;
+@use 'metrics' as m;
+@use 'theme-values' as tv;
+
+// Брейкпоинт, с которого отступы становятся крупнее (см. блок @media внизу).
+$gr-gap-step: map.get(bp.$gr-breakpoints, md);
+
+// Свойства каскада скруглений. Оба ненаследуемые: значение уровня
+// объявляется на нём самом, а вниз уходит публикация --gr-r-down и
+// --gr-r-gap. Наследуйся --gr-r, вложенный .gr-radius копировал бы
+// радиус предка один в один — это и был дефект каскада до Этапа 9.
+// <length-percentage>, а не <length>: border-radius: 50% — обычное дело.
+@property --gr-r {
+  syntax: "<length-percentage>";
+  inherits: false;
+
+  // Единица у нуля намеренна: это дескриптор длины, и браузер
+  // сериализует его обратно в 0px в любом случае.
+  // stylelint-disable-next-line length-zero-no-unit
+  initial-value: 0px;
+}
+
+@property --gr-p {
+  syntax: "<length-percentage>";
+  inherits: false;
+
+  // Единица у нуля намеренна: это дескриптор длины, и браузер
+  // сериализует его обратно в 0px в любом случае.
+  // stylelint-disable-next-line length-zero-no-unit
+  initial-value: 0px;
+}
+
+// Имя элемента — одно на все роли, которым нужен идентификатор:
+// container-name у .gr-cq сегодня, anchor-name и view-transition-name
+// завтра. Поэтому --gr-name, а не --gr-cq-name: имя принадлежит элементу,
+// а не конкретной возможности CSS.
+//
+// Ненаследуемое по той же причине, что и свойства каскада скруглений:
+// вложенный .gr-cq перенял бы имя предка, и запрос @container <имя>
+// нашёл бы не тот элемент.
+//
+// syntax: "*" — идентификатор произвольный, проверять его типом нечем;
+// при незаданном значении var() берёт фолбэк none.
+@property --gr-name {
+  syntax: "*";
+  inherits: false;
+}
+
+:root {
+  // Spacing — мобильная база, со средних экранов значения крупнее
+  @include m.gr-gap-scale;
+
+  // Layout
+  --gr-max-width: 1440px;
+
+  // Typography
+  --gr-font-sans: system-ui, -apple-system, sans-serif;
+  --gr-font-serif: Georgia, Cambria, serif;
+  --gr-font-mono: SFMono-Regular, Menlo, Consolas, monospace;
+  --gr-font-size-base: 1rem;
+
+  // Colors — Neutral gray scale (Fibonacci lightness)
+  --gr-hsl-white:   0, 0%, 100%;
+  --gr-hsl-gray-50: 0, 0%, 96%;
+  --gr-hsl-gray-100: 0, 0%, 89%;
+  --gr-hsl-gray-200: 0, 0%, 82%;
+  --gr-hsl-gray-300: 0, 0%, 67%;
+  --gr-hsl-gray-400: 0, 0%, 50%;
+  --gr-hsl-gray-500: 0, 0%, 38%;
+  --gr-hsl-gray-600: 0, 0%, 29%;
+  --gr-hsl-gray-700: 0, 0%, 21%;
+  --gr-hsl-gray-800: 0, 0%, 13%;
+  --gr-hsl-gray-900: 0, 0%, 5%;
+  --gr-hsl-black:   0, 0%, 0%;
+
+  // Colors — Accent colors (72° step on color wheel)
+  --gr-hsl-primary:       220, 80%, 50%;
+  --gr-hsl-primary-light: 220, 80%, 65%;
+  --gr-hsl-primary-dark:  220, 80%, 35%;
+  --gr-hsl-secondary:       220, 50%, 50%;
+  --gr-hsl-secondary-light: 220, 50%, 65%;
+  --gr-hsl-secondary-dark:  220, 50%, 35%;
+  --gr-hsl-success:       148, 70%, 50%;
+  --gr-hsl-success-light: 148, 70%, 65%;
+  --gr-hsl-success-dark:  148, 70%, 35%;
+  --gr-hsl-warning:       36, 90%, 50%;
+  --gr-hsl-warning-light: 36, 90%, 65%;
+  --gr-hsl-warning-dark:  36, 90%, 35%;
+  --gr-hsl-danger:       4, 80%, 50%;
+  --gr-hsl-danger-light: 4, 80%, 65%;
+  --gr-hsl-danger-dark:  4, 80%, 35%;
+  --gr-hsl-info:       292, 60%, 50%;
+  --gr-hsl-info-light: 292, 60%, 65%;
+  --gr-hsl-info-dark:  292, 60%, 35%;
+
+  // Тема — светлая как база. Меняет только HSL-триплеты семантической шкалы;
+  // блоки тёмной темы и режима доступности — в _theme.scss.
+  @include tv.gr-theme-light;
+
+  // Размеры, которые режим для слабовидящих увеличивает, — отдельными
+  // токенами: правится значение, а не каждое правило.
+  --gr-border-width: 1px;
+  --gr-focus-width: 2px;
+  --gr-leading-base: 1.5;
+  --gr-tracking-base: normal;
+  --gr-a11y-scale: 1.25;
+
+  // Visual
+  --gr-radius: 0.5rem;
+  --gr-transition: 0.2s ease;
+
+  // Ручки оси оформления (data-gr-style). В ядре они нейтральны: значения
+  // здесь и есть стандартный стиль. Три остальных стиля приезжают отдельным
+  // файлом griffincss-styles.css и двигают только эти ручки, ничего больше
+  // не зная о компонентах.
+  //
+  // Плотность и высота теней — множители, а не значения. Переопредели стиль
+  // --gr-gap напрямую, он снёс бы адаптивный шаг из блока @media внизу файла;
+  // а умножить заданную темой плотность тени на себя нельзя вовсе —
+  // это циклическая ссылка.
+  --gr-density: 1;
+  --gr-elevation: 1;
+
+  // Таблеточный радиус отдельной ручкой: строгому стилю нужно уметь
+  // выпрямить бейдж, а «половина высоты» токеном --gr-radius не выражается.
+  --gr-radius-pill: 999px;
+
+  // Тени. Цвет и плотность отделены от геометрии: тёмная тема поднимает
+  // --gr-shadow-strength, стиль оформления — --gr-elevation, а семь готовых
+  // теней остаются как есть.
+  --gr-shadow-color: 0, 0%, 0%;
+
+  @include m.gr-shadow-set;
+
+  // Компоненты (griffincss-ui). Живут здесь, а не в своём пакете: блок :root
+  // собирается в каждую сборку целиком, и токены, приехавшие только с ui,
+  // проиграли бы базовому :root из ядра. Заодно тема и режим для слабовидящих
+  // дотягиваются до кнопок теми же средствами, что до всего остального.
+  //
+  // Высоты в rem, а не в px: режим для слабовидящих поднимает кегль корня,
+  // и элементы управления растут вместе со страницей, без единого правила.
+  @include m.gr-control-metrics;
+
+  --gr-control-font-size: 1rem;
+
+  // Подложка модалки и ящика. Цвет тот же, что у теней, — чёрный в обеих
+  // темах: подложка затемняет, а не перекрашивает.
+  --gr-overlay: hsl(var(--gr-shadow-color), 55%);
+
+  // Порядок наложения. <dialog> уходит в top layer и в этих числах
+  // не нуждается — они для попапов и тостов, которым верхний слой не достался.
+  --gr-z-dropdown: 1000;
+  --gr-z-modal: 1100;
+  --gr-z-toast: 1200;
+
+  // Breakpoints (reference values, not media queries)
+  // Источник — _breakpoints.scss; JS-рантайм читает эти переменные.
+  @each $gr-bp-name, $gr-bp-value in bp.$gr-breakpoints {
+    --gr-bp-#{$gr-bp-name}: #{$gr-bp-value};
+  }
+}
+
+// Адаптивный шаг отступов. Живёт здесь, а не в _gap.scss: токены собираются
+// в оба пакета, а слой griffincss.utils старше griffincss.core — переопределение
+// из модуля ядра проиграло бы блоку :root, приехавшему с griffincss-utils.
+@media (width >= $gr-gap-step) {
+  :root {
+    @include m.gr-gap-scale-lg;
+  }
+}

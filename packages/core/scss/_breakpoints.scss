@@ -1,0 +1,22 @@
+// Griffincss — Breakpoints
+// Единственный источник значений брейкпоинтов для обоих пакетов.
+//
+// Отсюда берутся:
+//   - все медиа-запросы SCSS (grid-helpers, flex, layout-mixins, spacing,
+//     border-radius, visibility);
+//   - токены --gr-bp-* в _tokens.scss;
+//   - фолбэки BREAKPOINTS в packages/core/src/griffincss.js
+//     (блок между маркерами gr:breakpoints, сверяется scripts/sync-breakpoints.mjs).
+//
+// griffincss-utils подключает этот же файл по пакетному пути
+// (@use 'griffincss-core/scss/breakpoints'), собственной копии у него нет.
+//
+// Переопределение на стороне пользователя — до подключения точек входа:
+//   @use 'griffincss-core/scss/breakpoints' with ($gr-breakpoints: (md: 720px));
+
+$gr-breakpoints: (
+  sm: 640px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px
+) !default;

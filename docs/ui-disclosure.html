@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Раскрытие — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Раскрытие</h1>
+  <p>Аккордеон и вкладки. Раскрытие, клавиатура и эксклюзивность разделов — от платформы; библиотеке остаётся вид.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">_accordion.scss</span>
+    <span class="badge">_tabs.scss</span>
+  </div>
+</div>
+
+<h2>Аккордеон</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-accordion</code></td><td>Обёртка: рамка, скругление, линии между разделами</td></tr>
+  <tr><td><code>.gr-accordion-item</code></td><td>Раздел — <code>&lt;details&gt;</code></td></tr>
+  <tr><td><code>.gr-accordion-trigger</code></td><td>Заголовок — <code>&lt;summary&gt;</code>; родной треугольник снят, стрелка своя</td></tr>
+  <tr><td><code>.gr-accordion-panel</code></td><td>Содержимое раздела</td></tr>
+  <tr><td><code>.gr-accordion-flush</code></td><td>Без рамки и фона — внутрь карточки или колонки текста</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Эксклюзивный: общий <code>name</code> — открыт всегда один раздел</div>
+  <div class="gr-accordion">
+    <details class="gr-accordion-item" name="faq" open>
+      <summary class="gr-accordion-trigger">Нужен ли Griffincss сборщик?</summary>
+      <div class="gr-accordion-panel">
+        Нет. Готовые <code>.css</code> подключаются тегом <code>&lt;link&gt;</code>;
+        SCSS-исходники нужны только тем, кто собирает свою сборку с частью модулей.
+      </div>
+    </details>
+    <details class="gr-accordion-item" name="faq">
+      <summary class="gr-accordion-trigger">Обязателен ли ресет?</summary>
+      <div class="gr-accordion-panel">
+        Нет, он отдельным файлом и подключается по желанию. Поэтому каждый
+        компонент задаёт <code>box-sizing</code>, <code>font-family: inherit</code>
+        и обнуление полей сам — на чужой ресет он не рассчитывает.
+      </div>
+    </details>
+    <details class="gr-accordion-item" name="faq">
+      <summary class="gr-accordion-trigger">Что будет без JavaScript?</summary>
+      <div class="gr-accordion-panel">
+        Всё, кроме раскладок <code>data-gr-layout</code>: они и есть рантайм.
+        Компоненты раскрытия работают без единой строки скрипта — этот
+        аккордеон в том числе.
+      </div>
+    </details>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-accordion"&gt;
+  &lt;details class="gr-accordion-item" name="faq"&gt;
+    &lt;summary class="gr-accordion-trigger"&gt;Вопрос&lt;/summary&gt;
+    &lt;div class="gr-accordion-panel"&gt;Ответ&lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Эксклюзивность — атрибут, а не скрипт.</strong> Одинаковый
+    <code>name</code> у соседних <code>&lt;details&gt;</code> заставляет браузер
+    закрывать предыдущий раздел при открытии следующего. Ни одной строки CSS
+    и ни одной строки JS на это не потрачено. Уберите <code>name</code> — разделы
+    начнут открываться независимо, и это тоже рабочий режим.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Без обёртки — <code>.gr-accordion-flush</code></div>
+  <div class="gr-accordion gr-accordion-flush">
+    <details class="gr-accordion-item">
+      <summary class="gr-accordion-trigger">Доставка</summary>
+      <div class="gr-accordion-panel">Два дня по городу, пять по стране.</div>
+    </details>
+    <details class="gr-accordion-item">
+      <summary class="gr-accordion-trigger">Возврат</summary>
+      <div class="gr-accordion-panel">Четырнадцать дней без объяснения причин.</div>
+    </details>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Анимация высоты — украшение поверх работающего раздела.</strong>
+    Она включается только там, где браузер умеет интерполировать
+    <code>auto</code> (<code>interpolate-size: allow-keywords</code>) и выбирать
+    содержимое <code>&lt;details&gt;</code> селектором
+    (<code>::details-content</code>). Не выполнено хотя бы одно условие —
+    раздел раскрывается мгновенно, и это нормальное состояние, а не поломка:
+    ни одного правила, скрывающего содержимое, за пределами
+    <code>@supports</code> в модуле нет.
+  </p>
+</div>
+
+<h2>Вкладки</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-tabs</code></td><td>Обёртка</td></tr>
+  <tr><td><code>.gr-tablist</code></td><td>Ряд заголовков; прокручивается вбок, а не переносится</td></tr>
+  <tr><td><code>.gr-tab</code></td><td>Заголовок — ссылка-якорь или кнопка</td></tr>
+  <tr><td><code>.gr-tab-panel</code></td><td>Панель</td></tr>
+  <tr><td><code>.gr-tabs-pills</code></td><td>Активная вкладка залита, а не подчёркнута</td></tr>
+  <tr><td><code>.gr-tabs-stretch</code></td><td>Вкладки делят ширину поровну</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Со скриптом: та же разметка плюс <code>data-gr-tabs</code></div>
+  <div class="gr-tabs" data-gr-tabs>
+    <nav class="gr-tablist" aria-label="Разделы пакета">
+      <a class="gr-tab" href="#tab-core" aria-current="page">Ядро</a>
+      <a class="gr-tab" href="#tab-ui">Компоненты</a>
+      <a class="gr-tab" href="#tab-utils">Утилиты</a>
+    </nav>
+    <section class="gr-tab-panel" id="tab-core">
+      <h3 class="gr-mt-0">Ядро</h3>
+      <p class="gr-mb-0">Токены, темы, ресет, сетка и рантайм раскладок — 3,0 КБ gzip.</p>
+    </section>
+    <section class="gr-tab-panel" id="tab-ui">
+      <h3 class="gr-mt-0">Компоненты</h3>
+      <p class="gr-mb-0">Двадцать пять модулей: от кнопки до пустого состояния.</p>
+    </section>
+    <section class="gr-tab-panel" id="tab-utils">
+      <h3 class="gr-mt-0">Утилиты</h3>
+      <p class="gr-mb-0">Почти полторы тысячи классов — отступы, цвета, типографика.</p>
+    </section>
+  </div>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Разметка одна и та же — с атрибутом и без.</strong> Уберите
+    <code>data-gr-tabs</code> или скрипт, и останутся три секции подряд
+    и ряд ссылок, ведущих к ним якорями: страница читается сверху вниз,
+    печатается целиком и работает без JS. С атрибутом
+    <code>griffincss-ui.js</code> добавляет <code>role="tablist"</code>,
+    <code>aria-selected</code>, стрелки <kbd>←</kbd> <kbd>→</kbd>,
+    <kbd>Home</kbd> / <kbd>End</kbd> и roving tabindex, а неактивные панели
+    прячет атрибутом <code>hidden</code>.
+  </p>
+</div>
+
+<table>
+  <tr><th>Клавиша</th><th>Что делает</th></tr>
+  <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Соседняя вкладка; ряд замкнут в кольцо</td></tr>
+  <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Первая и последняя доступные вкладки</td></tr>
+  <tr><td><kbd>Tab</kbd></td><td>Уводит из ряда в содержимое панели, а не по всем вкладкам подряд</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Roving tabindex.</strong> В порядке обхода остаётся одна
+    вкладка — выбранная; у остальных <code>tabindex="-1"</code>. Ряд
+    из десяти вкладок иначе стоил бы десяти нажатий <kbd>Tab</kbd> на пути
+    к содержимому. Панель получает <code>tabindex="0"</code>, поэтому
+    следующее нажатие приводит именно в неё.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Щелчок по вкладке-ссылке не уводит к якорю.</strong> Прыжок
+    сдвинул бы ряд вкладок за верхний край экрана: человек нажал
+    на заголовок и потерял его из виду. Скрипт отменяет переход
+    и переключает панель на месте — а без скрипта якорь работает как якорь,
+    и это правильное поведение для страницы без JS.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Заливкой — <code>.gr-tabs-pills</code></div>
+  <div class="gr-tabs gr-tabs-pills">
+    <div class="gr-tablist">
+      <button class="gr-tab" type="button" aria-selected="true">День</button>
+      <button class="gr-tab" type="button">Неделя</button>
+      <button class="gr-tab" type="button">Месяц</button>
+      <button class="gr-tab" type="button" disabled>Год</button>
+    </div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Во всю ширину — <code>.gr-tabs-stretch</code></div>
+  <div class="gr-tabs gr-tabs-stretch">
+    <div class="gr-tablist">
+      <button class="gr-tab" type="button" aria-selected="true">Вход</button>
+      <button class="gr-tab" type="button">Регистрация</button>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-tabs"&gt;
+  &lt;nav class="gr-tablist" aria-label="Разделы"&gt;
+    &lt;a class="gr-tab" href="#core" aria-current="page"&gt;Ядро&lt;/a&gt;
+    &lt;a class="gr-tab" href="#ui"&gt;Компоненты&lt;/a&gt;
+  &lt;/nav&gt;
+  &lt;section class="gr-tab-panel" id="core"&gt;…&lt;/section&gt;
+  &lt;section class="gr-tab-panel" id="ui"&gt;…&lt;/section&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Панель прячет разметка, а не библиотека.</strong> В модуле нет
+    правила <code>.gr-tab-panel { display: none }</code> — и не появится:
+    оно убрало бы панель с экрана, но оставило бы её в порядке обхода Tab
+    и в озвучке. Атрибут <code>hidden</code> убирает и то, и другое, поэтому
+    скрытие остаётся делом разметки и скрипта, а не таблицы стилей.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Навигация — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Навигация</h1>
+  <p>Ряд ссылок, шапка сайта с бургером, путь до страницы и постраничный ряд. Ни одному из четырёх модулей не нужен скрипт.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">_nav.scss</span>
+    <span class="badge">_breadcrumb.scss</span>
+    <span class="badge">_pagination.scss</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Текущий пункт помечается атрибутом, а не классом.</strong>
+    Во всех трёх модулях подсветка висит на <code>aria-current</code> — том же
+    признаке, по которому текущий раздел находит программа чтения с экрана.
+    Отдельный класс подсветил бы пункт только зрячему: разметка сообщала бы
+    одно, экран — другое.
+  </p>
+</div>
+
+<h2>Ряд ссылок</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-nav</code></td><td>Ряд; работает и на <code>&lt;nav&gt;</code>, и на <code>&lt;ul&gt;</code> — список обнуляется самим классом</td></tr>
+  <tr><td><code>.gr-nav-link</code></td><td>Пункт: ссылка или кнопка</td></tr>
+  <tr><td><code>.gr-nav-vertical</code></td><td>Колонка вместо ряда — боковое меню раздела</td></tr>
+  <tr><td><code>.gr-nav-underline</code></td><td>Активный пункт подчёркнут, а не залит</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Подсветка подложкой — по умолчанию</div>
+  <nav class="gr-nav">
+    <a class="gr-nav-link" href="#nav" aria-current="page">Обзор</a>
+    <a class="gr-nav-link" href="#nav">Документация</a>
+    <a class="gr-nav-link" href="#nav">Примеры</a>
+    <a class="gr-nav-link" href="#nav" aria-disabled="true">Скоро</a>
+  </nav>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Подсветка линией — <code>.gr-nav-underline</code></div>
+  <nav class="gr-nav gr-nav-underline">
+    <a class="gr-nav-link" href="#nav">Обзор</a>
+    <a class="gr-nav-link" href="#nav" aria-current="page">Документация</a>
+    <a class="gr-nav-link" href="#nav">Примеры</a>
+  </nav>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Колонка — <code>.gr-nav-vertical</code></div>
+  <div class="gr-grid-1 gr-grid-2-md gr-gap">
+    <nav class="gr-nav gr-nav-vertical">
+      <a class="gr-nav-link" href="#nav" aria-current="page">Токены</a>
+      <a class="gr-nav-link" href="#nav">Темы</a>
+      <a class="gr-nav-link" href="#nav">Раскладки</a>
+    </nav>
+    <nav class="gr-nav gr-nav-vertical gr-nav-underline">
+      <a class="gr-nav-link" href="#nav">Токены</a>
+      <a class="gr-nav-link" href="#nav" aria-current="page">Темы</a>
+      <a class="gr-nav-link" href="#nav">Раскладки</a>
+    </nav>
+  </div>
+</div>
+
+<pre><code>&lt;nav class="gr-nav gr-nav-underline"&gt;
+  &lt;a class="gr-nav-link" href="/docs" aria-current="page"&gt;Документация&lt;/a&gt;
+  &lt;a class="gr-nav-link" href="/examples"&gt;Примеры&lt;/a&gt;
+&lt;/nav&gt;</code></pre>
+
+<h2>Шапка сайта</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-navbar</code></td><td>Полоса шапки: фон поверхности, линия снизу, ряд с переносом</td></tr>
+  <tr><td><code>.gr-navbar-brand</code></td><td>Название сайта; забирает остаток строки и отжимает остальное к её концу</td></tr>
+  <tr><td><code>.gr-nav-toggle</code></td><td>Переключатель на <code>&lt;details&gt;</code>: виден до 768px</td></tr>
+  <tr><td><code>.gr-nav-collapse</code></td><td>Навигация, сворачиваемая на узком экране</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Шапка целиком. Сузьте окно до 768px — появится кнопка «Меню»</div>
+  <div class="gr-navbar">
+    <a class="gr-navbar-brand" href="#nav">Griffincss</a>
+    <details class="gr-nav-toggle">
+      <summary aria-label="Меню">☰</summary>
+    </details>
+    <nav class="gr-nav gr-nav-collapse">
+      <a class="gr-nav-link" href="#nav" aria-current="page">Обзор</a>
+      <a class="gr-nav-link" href="#nav">Компоненты</a>
+      <a class="gr-nav-link" href="#nav">Утилиты</a>
+    </nav>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-navbar"&gt;
+  &lt;a class="gr-navbar-brand" href="/"&gt;Сайт&lt;/a&gt;
+  &lt;details class="gr-nav-toggle"&gt;&lt;summary aria-label="Меню"&gt;☰&lt;/summary&gt;&lt;/details&gt;
+  &lt;nav class="gr-nav gr-nav-collapse"&gt;…&lt;/nav&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Навигация лежит рядом с <code>&lt;details&gt;</code>, а не внутри него.</strong>
+    Содержимое <code>&lt;details&gt;</code> скрывает сам браузер, и вернуть его
+    на широком экране нечем: <code>display</code> тут не помогает, а
+    <code>::details-content</code> понимают не все движки. Поэтому переключатель
+    пустой — в нём только <code>&lt;summary&gt;</code>, — а раскрытием управляет
+    соседний селектор <code>.gr-nav-toggle[open] + .gr-nav-collapse</code>.
+    С 768px медиазапрос убирает кнопку и возвращает ряд в строку шапки
+    независимо от того, открыт переключатель или нет.
+  </p>
+</div>
+
+<h2>Хлебные крошки</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-breadcrumb</code></td><td>Путь целиком; разметка — <code>&lt;nav&gt;</code> с <code>&lt;ol&gt;</code></td></tr>
+  <tr><td><code>.gr-breadcrumb-item</code></td><td>Пункт, если разметка без <code>&lt;li&gt;</code></td></tr>
+  <tr><td><code>.gr-breadcrumb-scroll</code></td><td>Длинный путь уезжает в прокрутку, а не переносится на три строки</td></tr>
+  <tr><td><code>--gr-breadcrumb-sep</code></td><td>Символ разделителя; по умолчанию <code>"/"</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Путь до страницы</div>
+  <nav aria-label="Хлебные крошки">
+    <ol class="gr-breadcrumb">
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="#nav">Компоненты</a></li>
+      <li><span aria-current="page">Навигация</span></li>
+    </ol>
+  </nav>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Свой разделитель — одна переменная в разметке</div>
+  <nav aria-label="Хлебные крошки">
+    <ol class="gr-breadcrumb" style="--gr-breadcrumb-sep: '→'">
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="#nav">Каталог</a></li>
+      <li><span aria-current="page">Товар</span></li>
+    </ol>
+  </nav>
+</div>
+
+<pre><code>&lt;nav aria-label="Хлебные крошки"&gt;
+  &lt;ol class="gr-breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="/"&gt;Главная&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;span aria-current="page"&gt;Навигация&lt;/span&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    Список нумерованный не случайно: порядок здесь значащий, и <code>&lt;ol&gt;</code>
+    сообщает об этом программе чтения с экрана. Разделитель рисует
+    <code>::before</code>, поэтому путь читается вслух как «Главная, Каталог,
+    Товар», а не «Главная слэш Каталог слэш Товар» — сгенерированное
+    содержимое в озвучку не попадает.
+  </p>
+</div>
+
+<h2>Пагинация</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-pagination</code></td><td>Ряд страниц</td></tr>
+  <tr><td><code>.gr-page</code></td><td>Страница — ссылка или кнопка</td></tr>
+  <tr><td><code>.gr-page-gap</code></td><td>Многоточие: ряд прерван</td></tr>
+  <tr><td><code>.gr-pagination-compact</code></td><td>Плотный ряд — для подвала таблицы</td></tr>
+  <tr><td><code>.gr-pagination-joined</code></td><td>Слипшаяся лента вместо отдельных клавиш</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Обычный ряд</div>
+  <nav aria-label="Страницы">
+    <ul class="gr-pagination">
+      <li><a class="gr-page" href="#nav" aria-disabled="true">←</a></li>
+      <li><a class="gr-page" href="#nav">1</a></li>
+      <li><a class="gr-page" href="#nav" aria-current="page">2</a></li>
+      <li><a class="gr-page" href="#nav">3</a></li>
+      <li><span class="gr-page-gap" aria-hidden="true">…</span></li>
+      <li><a class="gr-page" href="#nav">24</a></li>
+      <li><a class="gr-page" href="#nav">→</a></li>
+    </ul>
+  </nav>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Лента — <code>.gr-pagination-joined</code></div>
+  <nav aria-label="Страницы">
+    <ul class="gr-pagination gr-pagination-joined">
+      <li><a class="gr-page" href="#nav">1</a></li>
+      <li><a class="gr-page" href="#nav">2</a></li>
+      <li><a class="gr-page" href="#nav" aria-current="page">3</a></li>
+      <li><a class="gr-page" href="#nav">4</a></li>
+      <li><a class="gr-page" href="#nav">5</a></li>
+    </ul>
+  </nav>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Плотный ряд — <code>.gr-pagination-compact</code></div>
+  <nav aria-label="Страницы">
+    <ul class="gr-pagination gr-pagination-compact">
+      <li><a class="gr-page" href="#nav" aria-current="page">1</a></li>
+      <li><a class="gr-page" href="#nav">2</a></li>
+      <li><span class="gr-page-gap" aria-hidden="true">…</span></li>
+      <li><a class="gr-page" href="#nav">9</a></li>
+    </ul>
+  </nav>
+</div>
+
+<pre><code>&lt;nav aria-label="Страницы"&gt;
+  &lt;ul class="gr-pagination"&gt;
+    &lt;li&gt;&lt;a class="gr-page" href="?page=1"&gt;1&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a class="gr-page" href="?page=2" aria-current="page"&gt;2&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;span class="gr-page-gap" aria-hidden="true"&gt;…&lt;/span&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a class="gr-page" href="?page=24"&gt;24&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Страница — настоящая ссылка с <code>href</code>.</strong> Кнопка,
+    меняющая содержимое скриптом, не откроется в новой вкладке, не попадёт
+    в историю и не переживёт обновление страницы. Кнопка «дальше» на последней
+    странице получает <code>aria-disabled="true"</code> и остаётся в порядке
+    обхода: исчезнувшая кнопка сбивает счёт нажатий Tab, приглушённая — нет.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

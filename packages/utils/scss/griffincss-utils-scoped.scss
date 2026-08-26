@@ -1,0 +1,38 @@
+// Griffincss Utils — версия, ограниченная областью .griffin
+// Утилитарные классы действуют только внутри элементов с классом .griffin,
+// что позволяет подключать библиотеку в чужую разметку без конфликтов.
+// Токены (из griffincss-core) объявляются вне @scope: :root должен остаться глобальным.
+//
+// Слой тот же, что и у обычной сборки, — griffincss.utils.
+//
+// Требует поддержки CSS @scope (Chrome 118+, Safari 17.4+, Firefox 128+).
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод пакета — в слое griffincss.utils.
+@layer griffincss.utils {
+  @include meta.load-css('griffincss-core/scss/tokens');
+
+  // Тема — тоже вне @scope: атрибут data-gr-theme стоит на <html>,
+  // то есть заведомо снаружи области .griffin.
+  @include meta.load-css('griffincss-core/scss/theme');
+
+  // @keyframes внутри @scope недействительны — подключаются вне области.
+  @include meta.load-css('keyframes');
+
+  @scope (.griffin) {
+    @include meta.load-css('animations');
+    @include meta.load-css('border-radius');
+    @include meta.load-css('borders');
+    @include meta.load-css('colors');
+    @include meta.load-css('effects');
+    @include meta.load-css('interactivity');
+    @include meta.load-css('position');
+    @include meta.load-css('shadows');
+    @include meta.load-css('sizing');
+    @include meta.load-css('spacing');
+    @include meta.load-css('typography');
+    @include meta.load-css('visibility');
+  }
+}

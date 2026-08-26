@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Плашки и аватары — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Плашки и аватары</h1>
+  <p>Мелкие маркеры, которые живут внутри строки: статус, тег, точка, счётчик и портрет с инициалами вместо картинки.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_badge.scss</span>
+    <span class="badge">packages/ui/scss/_avatar.scss</span>
+  </div>
+</div>
+
+<h2>Плашка</h2>
+
+<table>
+  <tr><th>Класс</th><th>Что делает</th></tr>
+  <tr><td><code>.gr-badge</code></td><td>Плашка статуса: тонкая заливка цветом статуса и текст, безопасный для чтения на ней</td></tr>
+  <tr><td><code>.gr-badge-{accent,success,warning,danger,info}</code></td><td>Цвет статуса</td></tr>
+  <tr><td><code>.gr-badge-pill</code></td><td>Скругление до полукруга</td></tr>
+  <tr><td><code>.gr-badge-outline</code></td><td>Контурная: фон уходит, остаётся линия</td></tr>
+  <tr><td><code>.gr-badge-count</code></td><td>Счётчик: плотная заливка, круг при одной цифре</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Статусы</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <span class="gr-badge">Черновик</span>
+    <span class="gr-badge gr-badge-accent">В работе</span>
+    <span class="gr-badge gr-badge-success">Опубликовано</span>
+    <span class="gr-badge gr-badge-warning">Требует внимания</span>
+    <span class="gr-badge gr-badge-danger">Отклонено</span>
+    <span class="gr-badge gr-badge-info">Архив</span>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Пилюли, контуры и счётчики</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <span class="gr-badge gr-badge-pill gr-badge-success">Стабильно</span>
+    <span class="gr-badge gr-badge-outline gr-badge-danger">Устарело</span>
+    <span class="gr-badge gr-badge-count gr-badge-danger">3</span>
+    <span class="gr-badge gr-badge-count gr-badge-accent">128</span>
+    <button class="gr-btn">Входящие <span class="gr-badge gr-badge-count gr-badge-danger">12</span></button>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Статус задаёт три цвета, а не один:</strong> текст и линию
+    (<code>--gr-badge-color</code>), заливку (<code>--gr-badge-fill</code>)
+    и чернила на заливке (<code>--gr-badge-on-fill</code>). У четырёх статусов
+    из пяти первые два совпадают. Расходятся они у предупреждения: чтобы
+    читаться <em>текстом</em> на белом, его цвет обязан быть тёмно-коричневым —
+    а точка или счётчик такого цвета выглядят не предупреждением, а грязью.
+    Поэтому <code>.gr-badge-warning</code> красит текст тёмным, а заливает
+    янтарным. То же правило действует у кнопки и у сообщения о статусе.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    Кегль плашки задан в <code>em</code>, а не в <code>rem</code>: плашка
+    рядом с заголовком должна быть крупнее, чем та же плашка в подписи.
+    Внутри кнопки она наследует её кегль и не ломает высоту строки.
+  </p>
+</div>
+
+<h2>Тег</h2>
+
+<p>
+  Плашка, которую можно снять. Крестик — обычная кнопка внутри
+  с атрибутом <code>data-gr-dismiss</code>; убирает тег делегированный
+  обработчик из <code>griffincss-ui.js</code>. Теги в примере ниже —
+  рабочие: нажмите крестик.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">gr-tag</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <span class="gr-tag">css</span>
+    <span class="gr-tag">scss
+      <button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать тег scss">×</button>
+    </span>
+    <span class="gr-tag">grid
+      <button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать тег grid">×</button>
+    </span>
+  </div>
+</div>
+
+<pre><code>&lt;span class="gr-tag"&gt;scss
+  &lt;button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать тег scss"&gt;×&lt;/button&gt;
+&lt;/span&gt;</code></pre>
+
+<h2>Точка-индикатор</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">gr-dot</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <span><span class="gr-dot gr-dot-success"></span> <span class="gr-sr-only">Статус:</span> В сети</span>
+    <span><span class="gr-dot gr-dot-warning"></span> <span class="gr-sr-only">Статус:</span> Отошёл</span>
+    <span><span class="gr-dot"></span> <span class="gr-sr-only">Статус:</span> Не в сети</span>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    Точка сама по себе не сообщает скринридеру ничего — это пустой
+    <code>&lt;span&gt;</code> с фоном. Рядом обязана стоять подпись: либо
+    видимая, как в примере, либо <code>.gr-sr-only</code> из
+    <code>griffincss-utils</code>. Иначе состояние знают только зрячие.
+  </p>
+</div>
+
+<h2>Аватар</h2>
+
+<table>
+  <tr><th>Класс</th><th>Что делает</th></tr>
+  <tr><td><code>.gr-avatar</code></td><td>Круг 2.5rem; внутри — инициалы</td></tr>
+  <tr><td><code>.gr-avatar-{xs,sm,lg,xl}</code></td><td>1.5rem, 2rem, 3rem, 4rem</td></tr>
+  <tr><td><code>.gr-avatar-square</code></td><td>Скруглённый квадрат вместо круга</td></tr>
+  <tr><td><code>.gr-avatar-group</code></td><td>Ряд с перекрытием</td></tr>
+</table>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Фолбэк без скрипта.</strong> Инициалы лежат в самом контейнере,
+    а <code>&lt;img&gt;</code> кладётся поверх и закрывает их собой. Нет
+    картинки — нет и перекрытия, инициалы остаются видны. Битая ссылка даёт
+    тот же результат: сломанный <code>&lt;img&gt;</code> ничего не рисует.
+    Обработчик <code>onerror</code> не нужен.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Размеры и формы</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <span class="gr-avatar gr-avatar-xs">МЛ</span>
+    <span class="gr-avatar gr-avatar-sm">МЛ</span>
+    <span class="gr-avatar">МЛ</span>
+    <span class="gr-avatar gr-avatar-lg">МЛ</span>
+    <span class="gr-avatar gr-avatar-xl">МЛ</span>
+    <span class="gr-avatar gr-avatar-lg gr-avatar-square">GR</span>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Стопка</div>
+  <div class="gr-flex gr-flex-items-center gr-gap">
+    <span class="gr-avatar-group">
+      <span class="gr-avatar" title="Анна">АК</span>
+      <span class="gr-avatar" title="Борис">БП</span>
+      <span class="gr-avatar" title="Вера">ВС</span>
+      <span class="gr-avatar gr-bg-accent gr-text-on-accent">+7</span>
+    </span>
+    <span class="gr-text-ink-secondary">участвуют в проекте</span>
+  </div>
+</div>
+
+<pre><code>&lt;span class="gr-avatar"&gt;
+  МЛ
+  &lt;img src="/фото.jpg" alt=""&gt;
+&lt;/span&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    У <code>&lt;img&gt;</code> внутри аватара <code>alt=""</code>: имя человека
+    уже стоит рядом в разметке — в подписи, ссылке или заголовке. Повторять
+    его в альтернативном тексте значит заставить скринридер прочитать имя
+    дважды подряд.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

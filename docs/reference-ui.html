@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Справочник компонентов — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Справочник компонентов</h1>
+  <p>Двадцать пять модулей интерфейса на токенах ядра: кнопки, поля, карточки, таблицы, навигация, всплывающие слои, состояния.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">полный список</span>
+  </div>
+</div>
+
+<p>Готовые элементы интерфейса на токенах ядра. Обе темы и режим для слабовидящих приходят к ним даром — тем же механизмом, что и ко всему остальному: компоненты не знают ни одного литерального цвета и ни одной литеральной высоты.</p>
+
+<p>Peer-зависимость — только <code>griffincss-core</code>. От <code>griffincss-utils</code> пакет не зависит: компонент обязан выглядеть правильно сам по себе, утилиты нужны, чтобы его подвинуть.</p>
+
+<p>Именование плоское, в один дефис: <code>.gr-btn-primary</code>, а не <code>.gr-btn--primary</code>. Тот же строй, что в ядре и утилитах — двух синтаксисов в библиотеке нет.</p>
+
+<p>Двадцать пять модулей тремя волнами. Первая — статические: ни один не открывается, ни одному не нужен JS. Вторая — навигация и раскрытие: всё, что открывается, открывается средствами платформы — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, Popover API, — а не скриптом библиотеки. Третья — обратная связь и состояния: прогресс, кольцо занятости, заглушки на время загрузки, тосты, шаги процесса и пустое состояние.</p>
+
+<h2>Кнопки (<code>scss/_button.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-btn</code></td><td>Базовая кнопка: поверхность с границей. Ставится на <code>&lt;button&gt;</code>, <code>&lt;a&gt;</code> или <code>&lt;input type="submit"&gt;</code></td></tr>
+  <tr><td><code>.gr-btn-primary</code> / <code>-secondary</code></td><td>Заливка акцентом / контур акцентом</td></tr>
+  <tr><td><code>.gr-btn-success</code> / <code>-warning</code> / <code>-danger</code> / <code>-info</code></td><td>Заливка цветом статуса</td></tr>
+  <tr><td><code>.gr-btn-ghost</code> / <code>-link</code></td><td>Без фона и границы / в виде ссылки</td></tr>
+  <tr><td><code>.gr-btn-sm</code> / <code>-lg</code></td><td>Размеры из <code>--gr-control-height-sm</code> / <code>-lg</code></td></tr>
+  <tr><td><code>.gr-btn-block</code></td><td>Во всю ширину родителя</td></tr>
+  <tr><td><code>.gr-btn-icon</code></td><td>Квадратная, под одну иконку; требует <code>aria-label</code></td></tr>
+  <tr><td><code>.gr-btn-group</code></td><td>Слипшийся ряд: скругления только по краям, границы не удваиваются</td></tr>
+</table>
+
+<p>Состояния: <code>:hover</code> (внутри <code>@media (hover: hover)</code>), <code>:active</code>, <code>:focus-visible</code>, <code>:disabled</code>, <code>[aria-disabled="true"]</code>, <code>[aria-busy="true"]</code>.</p>
+
+<p>Вариант задаёт три переменные — <code>--gr-btn-bg</code>, <code>--gr-btn-fg</code>, <code>--gr-btn-border</code>. Поэтому <code>:hover</code> и <code>:active</code> написаны один раз на все девять: они подмешивают к фону варианта его же цвет текста через <code>color-mix()</code>, а насколько это темнее или светлее — решает тема.</p>
+
+<h2>Ссылки (<code>scss/_link.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-link</code></td><td>Цвет ссылки, подчёркивание <code>from-font</code>, состояния <code>:visited</code> / <code>:hover</code> / <code>:active</code> / <code>:focus-visible</code></td></tr>
+  <tr><td><code>.gr-link-muted</code></td><td>Цвет вторичного текста — подписи, футер</td></tr>
+  <tr><td><code>.gr-link-inherit</code></td><td>Цвет наследуется от окружения — ссылка-заголовок, ссылка на плашке</td></tr>
+  <tr><td><code>.gr-link-quiet</code></td><td>Подчёркивание только при наведении и фокусе</td></tr>
+  <tr><td><code>.gr-link-external</code></td><td>Стрелка-указатель после текста</td></tr>
+  <tr><td><code>.gr-link-dotted</code> / <code>-dashed</code> / <code>-wavy</code> / <code>-double</code></td><td>Стиль линии; сочетается с любым вариантом</td></tr>
+</table>
+
+<p>Модуль нужен потому, что ресет снимает с <code>&lt;a&gt;</code> и цвет, и подчёркивание (<code>color: inherit; text-decoration: none</code>) — это правильно для ссылки-обёртки вокруг карточки, но обычную ссылку в тексте оставляет неотличимой от текста.</p>
+
+<p><code>.gr-link</code> и <code>.gr-btn-link</code> — разные вещи: первая ведёт по адресу, вторая выполняет действие на текущей странице. Выбирает разметка, оформление лишь подтверждает выбор.</p>
+
+<p>Линия объявлена только длинными свойствами — <code>text-decoration-line</code>, <code>-thickness</code>, <code>-style</code>. Сокращённое <code>text-decoration</code> сбрасывает остальные длинные в исходные значения, поэтому одно <code>text-decoration: underline</code> в <code>:hover</code> обнуляло бы толщину <code>from-font</code> из базового класса.</p>
+
+<p><code>.gr-link-quiet</code> применим там, где ссылка опознаётся по положению — навигация, ряд карточек, футер, — но не в тексте абзаца. Режим для слабовидящих перекрывает его: правило <code>[data-gr-a11y="low-vision"] a[href]</code> из темы возвращает и цвет, и подчёркивание.</p>
+
+<h2>Формы (<code>scss/_form.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-field</code></td><td>Обёртка «метка + поле + подсказка» одной колонкой</td></tr>
+  <tr><td><code>.gr-label</code> / <code>.gr-hint</code> / <code>.gr-error</code></td><td>Метка, пояснение, сообщение об ошибке</td></tr>
+  <tr><td><code>.gr-input</code> / <code>.gr-textarea</code> / <code>.gr-select</code></td><td>Три поля одной семьи: общая высота, кегль и состояния. У списка своя стрелка на <code>currentcolor</code>, отбитая от края на <code>--gr-control-padding-x</code>: положение системной задаёт браузер, и она прижимается вплотную к краю</td></tr>
+  <tr><td><code>.gr-input-sm</code> / <code>-lg</code></td><td>Размер — на любом из трёх полей</td></tr>
+  <tr><td><code>.gr-input-group</code></td><td>Поле с приклеенными аддонами</td></tr>
+  <tr><td><code>.gr-input-addon</code></td><td>Неинтерактивная подпись у края поля</td></tr>
+</table>
+
+<p>Состояния: <code>:focus-visible</code>, <code>:user-invalid</code>, <code>[aria-invalid="true"]</code>, <code>:disabled</code>, <code>:read-only</code>. <code>:user-invalid</code>, а не <code>:invalid</code>: пустое обязательное поле не должно краснеть до того, как его тронули.</p>
+
+<h2>Выбор (<code>scss/_choice.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-checkbox</code> / <code>.gr-radio</code></td><td>Системный элемент, цвет отметки — через <code>accent-color</code></td></tr>
+  <tr><td><code>.gr-switch</code></td><td>Тумблер на <code>&lt;input type="checkbox"&gt;</code>; дорожка и бегунок рисуются фоном</td></tr>
+  <tr><td><code>.gr-choice</code></td><td><code>&lt;label&gt;</code>-обёртка: подпись в строку с элементом и кликабельна целиком</td></tr>
+  <tr><td><code>.gr-segmented</code></td><td>Сегментный переключатель из радиогруппы в <code>&lt;fieldset&gt;</code></td></tr>
+</table>
+
+<p>Элемент не подменяется: класс ставится на сам <code>&lt;input&gt;</code>, а не на спрятанный input рядом с оформленным <code>&lt;span&gt;</code>. Родная разметка сохраняет участие в форме, клавиатуру и объявление состояния скринридером.</p>
+
+<h2>Карточки (<code>scss/_card.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-card</code></td><td>Поверхность с границей и скруглением; колонка на flex</td></tr>
+  <tr><td><code>.gr-card-header</code> / <code>-body</code> / <code>-footer</code></td><td>Шапка, тело, подвал</td></tr>
+  <tr><td><code>.gr-card-media</code></td><td>Картинка во всю ширину; углы срезает сама карточка</td></tr>
+  <tr><td><code>.gr-card-raised</code> / <code>-flat</code></td><td>Тень вместо границы / только фон</td></tr>
+  <tr><td><code>.gr-card-interactive</code></td><td>Кликабельна целиком, но в табе — один элемент со ссылкой</td></tr>
+</table>
+
+<h2>Таблицы (<code>scss/_table.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-table</code></td><td>Схлопнутые границы, отступы в ячейках, приглушённая шапка</td></tr>
+  <tr><td><code>.gr-table-striped</code> / <code>-bordered</code> / <code>-compact</code> / <code>-relaxed</code> / <code>-hover</code></td><td>Полосы, полная сетка, плотный и разреженный варианты, подсветка строки</td></tr>
+  <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой — вбок уезжает таблица, а не страница</td></tr>
+  <tr><td><code>.gr-table-sticky</code></td><td>Липкая шапка внутри прокручиваемой области; линию под ней рисует внутренняя тень — схлопнутая граница с уехавшей ячейкой не едет</td></tr>
+</table>
+
+<h2>Сообщения (<code>scss/_alert.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-alert</code></td><td>Сообщение о статусе</td></tr>
+  <tr><td><code>.gr-alert-info</code> / <code>-success</code> / <code>-warning</code> / <code>-danger</code></td><td>Статус</td></tr>
+  <tr><td><code>.gr-alert-title</code></td><td>Слово статуса — обязательная часть</td></tr>
+  <tr><td><code>.gr-alert-icon</code> / <code>-body</code></td><td>Слот под иконку и текст</td></tr>
+  <tr><td><code>.gr-alert-dismissible</code></td><td>Отступ под кнопку закрытия</td></tr>
+</table>
+
+<p>Слово берёт <code>--gr-alert-color</code> (безопасный для текста), полоса и подложка — <code>--gr-alert-fill</code>. У предупреждения это разные цвета: подробности ниже, в разделе о токенах.</p>
+
+<p>Статус читается словом, а не только цветом: цветная полоса не переживает чёрно-белую печать, дальтонизм и монохромный режим высокого контраста, а слово переживает. Роль (<code>role="alert"</code> или <code>role="status"</code>) объявляется разметкой — модуль её не подставляет.</p>
+
+<h2>Плашки (<code>scss/_badge.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-badge</code></td><td>Плашка статуса; цвета <code>-accent</code> / <code>-success</code> / <code>-warning</code> / <code>-danger</code> / <code>-info</code></td></tr>
+  <tr><td><code>.gr-badge-pill</code> / <code>-outline</code> / <code>-count</code></td><td>Пилюля, контур, счётчик</td></tr>
+  <tr><td><code>.gr-tag</code> / <code>.gr-tag-remove</code></td><td>Тег и кнопка-крестик; крестику нужен <code>data-gr-dismiss</code> и рантайм</td></tr>
+  <tr><td><code>.gr-dot</code></td><td>Точка-индикатор; цвета те же</td></tr>
+</table>
+
+<p>Статус задаёт три цвета, а не один: <code>--gr-badge-color</code> для текста и линии, <code>--gr-badge-fill</code> для заливки и <code>--gr-badge-on-fill</code> для чернил на ней. У четырёх статусов из пяти первые два совпадают; расходятся они у предупреждения — см. <code>--gr-color-warning-surface</code> в таблице токенов.</p>
+
+<h2>Аватары (<code>scss/_avatar.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-avatar</code></td><td>Круг с инициалами; <code>&lt;img&gt;</code> внутри перекрывает их собой</td></tr>
+  <tr><td><code>.gr-avatar-xs</code> / <code>-sm</code> / <code>-lg</code> / <code>-xl</code></td><td><code>1.5rem</code> / <code>2rem</code> / <code>3rem</code> / <code>4rem</code></td></tr>
+  <tr><td><code>.gr-avatar-square</code></td><td>Скруглённый квадрат вместо круга</td></tr>
+  <tr><td><code>.gr-avatar-group</code></td><td>Ряд с перекрытием</td></tr>
+</table>
+
+<p>Фолбэк не требует скрипта: нет картинки — нет и перекрытия, инициалы остаются видны. Битая ссылка даёт тот же результат.</p>
+
+<h2>Навигация (<code>scss/_nav.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-nav</code></td><td>Ряд ссылок; работает и на <code>&lt;nav&gt;</code>, и на <code>&lt;ul&gt;</code> — список обнуляется здесь же</td></tr>
+  <tr><td><code>.gr-nav-link</code></td><td>Пункт: ссылка или кнопка</td></tr>
+  <tr><td><code>.gr-nav-vertical</code></td><td>Колонка вместо ряда — боковое меню раздела</td></tr>
+  <tr><td><code>.gr-nav-underline</code></td><td>Активный пункт подчёркнут, а не залит</td></tr>
+  <tr><td><code>.gr-navbar</code> / <code>.gr-navbar-brand</code></td><td>Шапка сайта и название в ней</td></tr>
+  <tr><td><code>.gr-nav-toggle</code> / <code>.gr-nav-collapse</code></td><td>Переключатель на <code>&lt;details&gt;</code> и сворачиваемая навигация</td></tr>
+</table>
+
+<p>Активный пункт помечается <code>aria-current="page"</code> — тем же признаком, по которому его находит программа чтения с экрана. Отдельного класса на это нет: класс подсветил бы пункт только зрячему.</p>
+
+<p>Сворачивание не прячет навигацию внутрь <code>&lt;details&gt;</code>: содержимое <code>&lt;details&gt;</code> скрывает сам браузер, и вернуть его на широком экране без скрипта нечем. Навигация стоит следующим соседом переключателя, поэтому раскрытием управляет <code>.gr-nav-toggle[open] + .gr-nav-collapse</code>, а с 768px медиазапрос отменяет сворачивание целиком:</p>
+
+<pre><code>&lt;div class="gr-navbar"&gt;
+  &lt;a class="gr-navbar-brand" href="/"&gt;Сайт&lt;/a&gt;
+  &lt;details class="gr-nav-toggle"&gt;&lt;summary&gt;Меню&lt;/summary&gt;&lt;/details&gt;
+  &lt;nav class="gr-nav gr-nav-collapse"&gt;…&lt;/nav&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>Хлебные крошки (<code>scss/_breadcrumb.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-breadcrumb</code></td><td>Путь до страницы; разметка — <code>&lt;nav&gt;</code> с <code>&lt;ol&gt;</code></td></tr>
+  <tr><td><code>.gr-breadcrumb-item</code></td><td>Пункт, если списка <code>&lt;li&gt;</code> нет</td></tr>
+  <tr><td><code>.gr-breadcrumb-scroll</code></td><td>Длинный путь уезжает в прокрутку, а не переносится</td></tr>
+</table>
+
+<p>Разделитель рисует <code>::before</code> у каждого пункта, кроме первого; символ — переменная <code>--gr-breadcrumb-sep</code> (по умолчанию <code>/</code>). Последний пункт не ссылка, а текст с <code>aria-current="page"</code>.</p>
+
+<h2>Меню (<code>scss/_menu.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-menu</code></td><td>Список действий: поверхность, рамка, тень</td></tr>
+  <tr><td><code>.gr-menu-item</code></td><td>Пункт — <code>&lt;button&gt;</code> или <code>&lt;a&gt;</code></td></tr>
+  <tr><td><code>.gr-menu-header</code> / <code>.gr-menu-sep</code></td><td>Заголовок группы и разделитель на <code>&lt;hr&gt;</code></td></tr>
+  <tr><td><code>.gr-menu-danger</code></td><td>Опасное действие</td></tr>
+  <tr><td><code>.gr-menu-icon</code> / <code>.gr-menu-shortcut</code></td><td>Слот под иконку и под сочетание клавиш</td></tr>
+</table>
+
+<p>Собственного раскрытия у модуля нет — это оформление списка. Открывает его <code>.gr-dropdown</code>.</p>
+
+<h2>Выпадающая панель (<code>scss/_dropdown.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-dropdown</code></td><td>Обёртка: <code>&lt;div&gt;</code> с попапом или сам <code>&lt;details&gt;</code></td></tr>
+  <tr><td><code>.gr-dropdown-panel</code></td><td>Панель; внутрь кладут <code>.gr-menu</code> или что угодно ещё</td></tr>
+  <tr><td><code>.gr-dropdown-end</code> / <code>-up</code></td><td>Раскрытие к концу строки и вверх</td></tr>
+  <tr><td><code>.gr-dropdown-hover</code></td><td>Раскрытие по наведению; с клавиатуры и на сенсорном экране — по фокусу</td></tr>
+</table>
+
+<p>Два пути, оба без скрипта. <code>&lt;details class="gr-dropdown"&gt;</code> работает везде, но не закрывается по Esc и по клику мимо — <code>&lt;details&gt;</code> о них не знает. <code>&lt;button popovertarget&gt;</code> с панелью <code>popover</code> получает и то, и другое от браузера; привязать её к кнопке умеет только CSS anchor positioning, поэтому там, где его нет, панель раскрывается листом у нижнего края экрана. Положение не то — меню доступно и закрывается штатно.</p>
+
+<p>Третий способ — <code>.gr-dropdown-hover</code>: панель держится, пока указатель на обёртке, и уходит с четвертьсекундной задержкой; зазор до панели перекрыт невидимым мостиком, иначе наведение прерывалось бы на полпути. Скрипт не нужен и здесь: показ — <code>:hover</code> внутри <code>@media (hover: hover)</code>, а на сенсорном экране и с клавиатуры — <code>:focus-within</code>, поэтому кнопка обязана быть <code>&lt;button&gt;</code>. Цена способа: <code>aria-expanded</code> без скрипта не обновить (кнопке ставят <code>aria-haspopup="true"</code> и молчат об открытости), а закрытия по Esc платформа тут не даёт — наведение для браузера не «открытое состояние». Годится для навигации; меню с «Удалить» и «Выйти» делают на <code>&lt;details&gt;</code> или на попапе, где состояние настоящее.</p>
+
+<h2>Аккордеон (<code>scss/_accordion.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-accordion</code></td><td>Обёртка с рамкой и линиями между разделами</td></tr>
+  <tr><td><code>.gr-accordion-item</code></td><td>Раздел — <code>&lt;details&gt;</code></td></tr>
+  <tr><td><code>.gr-accordion-trigger</code></td><td>Заголовок — <code>&lt;summary&gt;</code>; стрелка своя, родная снята</td></tr>
+  <tr><td><code>.gr-accordion-panel</code></td><td>Содержимое раздела</td></tr>
+  <tr><td><code>.gr-accordion-flush</code></td><td>Без рамки и фона — внутрь карточки или колонки текста</td></tr>
+</table>
+
+<p>Эксклюзивность (открыт только один раздел) даёт платформа: общий атрибут <code>name</code> у соседних <code>&lt;details&gt;</code>. CSS на это не нужен вовсе.</p>
+
+<p>Плавное раскрытие включается только там, где браузер умеет анимировать высоту до <code>auto</code> (<code>interpolate-size: allow-keywords</code>) и выбирать содержимое <code>&lt;details&gt;</code> селектором (<code>::details-content</code>). Без обоих условий раздел раскрывается сразу — и это рабочее состояние, а не поломка.</p>
+
+<h2>Вкладки (<code>scss/_tabs.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-tabs</code></td><td>Обёртка</td></tr>
+  <tr><td><code>.gr-tablist</code></td><td>Ряд заголовков; прокручивается вбок, а не переносится</td></tr>
+  <tr><td><code>.gr-tab</code></td><td>Заголовок — ссылка-якорь или кнопка</td></tr>
+  <tr><td><code>.gr-tab-panel</code></td><td>Панель</td></tr>
+  <tr><td><code>.gr-tabs-pills</code> / <code>-stretch</code></td><td>Заливка вместо линии; ряд во всю ширину</td></tr>
+</table>
+
+<p>Без скрипта это ссылки-якоря и подряд идущие секции: страница читается и печатается целиком. Со скриптом (<code>griffincss-ui.js</code>) появляются <code>role="tablist"</code>, стрелки, Home/End и roving tabindex, а неактивные панели прячет атрибут <code>hidden</code> — не правило библиотеки: <code>display: none</code> убрал бы панель с экрана, но оставил бы её в порядке обхода.</p>
+
+<h2>Модальное окно (<code>scss/_modal.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-modal</code></td><td>Окно на <code>&lt;dialog&gt;</code></td></tr>
+  <tr><td><code>.gr-modal-header</code> / <code>-title</code> / <code>-body</code> / <code>-footer</code></td><td>Пояса; прокручивается только тело</td></tr>
+  <tr><td><code>.gr-modal-sm</code> / <code>-lg</code> / <code>-full</code></td><td>Размеры</td></tr>
+</table>
+
+<p>Верхний слой без <code>z-index</code>, удержание фокуса внутри окна, закрытие по Esc, возврат фокуса на кнопку, инертность страницы под окном — всё это даёт <code>&lt;dialog&gt;</code>. Открывает окно <code>showModal()</code>, закрывает <code>&lt;form method="dialog"&gt;</code> внутри него — без единой строки собственного JS.</p>
+
+<p>Единственное, чего <code>&lt;dialog&gt;</code> не умеет, — закрытие щелчком по подложке. Его добавляет опциональный <code>griffincss-ui.js</code>, и включается оно атрибутом на самом окне, а не глобальной настройкой:</p>
+
+<pre><code>&lt;dialog class="gr-modal" data-gr-overlay-close&gt;…&lt;/dialog&gt;
+
+&lt;script src="griffincss-ui/dist/griffincss-ui.js"&gt;&lt;/script&gt;</code></pre>
+
+<p>Работает и на <code>.gr-drawer</code> — это тот же <code>&lt;dialog&gt;</code>. После такого закрытия <code>dialog.returnValue</code> равен <code>"overlay"</code>, поэтому обработчик отличит щелчок мимо от кнопки «Сохранить». Выделение текста, начатое внутри окна и законченное за его краем, окно не закрывает: рантайм сверяет обе половины щелчка. У окна с наполовину заполненной формой атрибут просто не ставят.</p>
+
+<h2>Выдвижная панель (<code>scss/_drawer.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-drawer</code></td><td>Тот же <code>&lt;dialog&gt;</code>, прижатый к краю экрана</td></tr>
+  <tr><td><code>.gr-drawer-start</code> / <code>-end</code> / <code>-top</code> / <code>-bottom</code></td><td>Сторона</td></tr>
+  <tr><td><code>.gr-drawer-sm</code> / <code>-lg</code></td><td>Ширина</td></tr>
+</table>
+
+<p>Пояса берутся у модалки — <code>.gr-modal-header</code>, <code>-body</code>, <code>-footer</code> работают и здесь: панель отличается положением, а не устройством. Стороны заданы логическими свойствами, поэтому в разметке справа налево панель «конца строки» выезжает слева.</p>
+
+<h2>Подсказка (<code>scss/_tooltip.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-tooltip-anchor</code></td><td>Обёртка вокруг элемента и подсказки</td></tr>
+  <tr><td><code>.gr-tooltip</code></td><td>Сама подсказка</td></tr>
+  <tr><td><code>.gr-tooltip-bottom</code> / <code>-start</code> / <code>-end</code></td><td>Сторона (по умолчанию сверху)</td></tr>
+</table>
+
+<p>Показывается и указателем, и с клавиатуры, и то и другое — чистым CSS: <code>:hover</code> внутри <code>@media (hover: hover)</code> и <code>:focus-within</code>. <code>aria-describedby</code> в разметке обязателен, иначе подсказку получит только тот, кто её видит. Прячут её <code>visibility</code> и прозрачность, а не <code>display: none</code>: скрытая через <code>display</code>, она исчезла бы из дерева доступности вместе со связью.</p>
+
+<h2>Пагинация (<code>scss/_pagination.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-pagination</code></td><td>Ряд страниц</td></tr>
+  <tr><td><code>.gr-page</code></td><td>Страница — ссылка или кнопка</td></tr>
+  <tr><td><code>.gr-page-gap</code></td><td>Многоточие: пропуск страниц</td></tr>
+  <tr><td><code>.gr-pagination-compact</code> / <code>-joined</code></td><td>Плотный ряд; слипшаяся лента</td></tr>
+</table>
+
+<p>Текущая страница помечается <code>aria-current="page"</code> и выделяется заливкой, а не только цветом: в ряду одинаковых цифр разница в оттенке замечается хуже, чем разница в весе пятна. Недоступная кнопка «дальше» получает <code>aria-disabled="true"</code> и остаётся в порядке обхода — исчезнувшая кнопка сбивает счёт нажатий Tab, приглушённая не сбивает.</p>
+
+<h2>Полоса выполнения и шкала (<code>scss/_progress.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-progress</code></td><td>Полоса на <code>&lt;progress&gt;</code>; значение показывает сам элемент</td></tr>
+  <tr><td><code>.gr-progress-sm</code> / <code>-lg</code></td><td>Толщина</td></tr>
+  <tr><td><code>.gr-progress-success</code> / <code>-warning</code> / <code>-danger</code></td><td>Цвет заполнения</td></tr>
+  <tr><td><code>.gr-progress-indeterminate</code></td><td>Работа идёт, доля неизвестна: бегущий отрезок</td></tr>
+  <tr><td><code>.gr-meter</code></td><td>Шкала на <code>&lt;meter&gt;</code>; цвет вычисляет браузер</td></tr>
+</table>
+
+<p>Дорожку и заполнение рисуют вендорные псевдоэлементы, и каждый объявлен <strong>своим</strong> правилом: неизвестный селектор делает невалидной всю группу, поэтому <code>::-webkit-progress-value</code> рядом с <code>::-moz-progress-bar</code> не покрасил бы ни того, ни другого.</p>
+
+<p>У шкалы классов-статусов нет намеренно. <code>&lt;meter&gt;</code> сам вычисляет по <code>low</code>, <code>high</code> и <code>optimum</code>, попало ли значение в хороший диапазон; класс позволил бы разметке сказать «плохо» там, где элемент вычислил «хорошо».</p>
+
+<p><code>&lt;progress&gt;</code> — про ход задачи, у которой есть конец. <code>&lt;meter&gt;</code> — про измеренную величину: заполненность диска, оценку, запас.</p>
+
+<h2>Кольцо занятости (<code>scss/_spinner.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-spinner</code></td><td>Кольцо; диаметр <code>1.5em</code> от кегля родителя</td></tr>
+  <tr><td><code>.gr-spinner-sm</code> / <code>-lg</code></td><td>Меньше и крупнее</td></tr>
+  <tr><td><code>.gr-spinner-current</code></td><td>Кольцо цветом текста — для цветной кнопки</td></tr>
+</table>
+
+<p>Размеры в <code>em</code>, а не в <code>rem</code>: кольцо внутри кнопки должно быть по её кеглю. Пустому <code>&lt;span&gt;</code> нужны <code>role="status"</code> и подпись, иначе о загрузке узнает только тот, кто видит кольцо; рядом с видимым словом «Сохраняем…» хватает <code>aria-hidden="true"</code>.</p>
+
+<p>При <code>prefers-reduced-motion</code> вращение замедляется, но не снимается: остановленный индикатор занятости сообщает «зависло».</p>
+
+<h2>Заглушка на время загрузки (<code>scss/_skeleton.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-skeleton</code></td><td>Прямоугольник на месте будущего содержимого</td></tr>
+  <tr><td><code>.gr-skeleton-text</code></td><td>Строка высотой в кегль; последняя в блоке короче</td></tr>
+  <tr><td><code>.gr-skeleton-circle</code></td><td>Круг под аватар</td></tr>
+  <tr><td><code>.gr-skeleton-group</code></td><td>Коробка заглушки: свои отступы и зазоры между фигурами</td></tr>
+  <tr><td><code>.gr-skeleton-stack</code></td><td>Колонка строк внутри коробки</td></tr>
+</table>
+
+<p>Залито оттенком <code>currentcolor</code>, а не серым: непрозрачный цвет совпал бы с одной из подложек и стал бы невидимым. <code>.gr-skeleton-group</code> задаёт отступы и зазоры сама, поэтому в карточке встаёт вместо <code>.gr-card-body</code> — у самой <code>.gr-card</code> внутренних отступов нет. Обёртке нужен <code>aria-hidden="true"</code>, а рядом — слово в <code>role="status"</code>: пустые прямоугольники в озвучке не значат ничего.</p>
+
+<p>Мерцание по <code>prefers-reduced-motion</code> снимается совсем — в отличие от спиннера: заглушка сообщает о загрузке самим своим присутствием.</p>
+
+<h2>Всплывающие уведомления (<code>scss/_toast.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-toast-region</code></td><td>Живая область; <code>aria-live</code> и роль задаёт разметка</td></tr>
+  <tr><td><code>.gr-toast-region-top-start</code> / <code>-top-end</code> / <code>-bottom-start</code> / <code>-bottom-end</code></td><td>Угол; у нижних колонка перевёрнута</td></tr>
+  <tr><td><code>.gr-toast</code></td><td>Сообщение</td></tr>
+  <tr><td><code>.gr-toast-info</code> / <code>-success</code> / <code>-warning</code> / <code>-danger</code></td><td>Статус</td></tr>
+  <tr><td><code>.gr-toast-title</code></td><td>Слово статуса</td></tr>
+  <tr><td><code>.gr-toast-icon</code> / <code>-body</code></td><td>Слот под знак и текст</td></tr>
+  <tr><td><code>.gr-toast-leaving</code></td><td>Уход; класс вешает рантайм</td></tr>
+</table>
+
+<p>Единственный компонент библиотеки без статического применения: показывает и убирает тосты <code>griffincss-ui.js</code>.</p>
+
+<pre><code>&lt;div class="gr-toast-region gr-toast-region-bottom-end"
+     role="status" aria-live="polite"&gt;&lt;/div&gt;</code></pre>
+
+<pre><code>Griffincss.ui.toast('Черновик сохранён', { status: 'success', title: 'Готово' });</code></pre>
+
+<p>Регион ставят на страницу один раз и пустым: программа чтения с экрана следит за изменениями внутри <code>aria-live</code>, а не за появлением самой области. Появление тоста объявлено через <code>@starting-style</code>, поэтому рантайму не нужны ни второй кадр, ни пара «добавил класс — снял класс».</p>
+
+<h2>Шаги процесса (<code>scss/_steps.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-steps</code></td><td>Ряд шагов; разметка — <code>&lt;ol&gt;</code></td></tr>
+  <tr><td><code>.gr-steps-vertical</code></td><td>Тот же ряд колонкой</td></tr>
+  <tr><td><code>.gr-step</code></td><td>Шаг; по умолчанию — ожидающий</td></tr>
+  <tr><td><code>.gr-step-done</code></td><td>Пройденный: линия от него к следующему залита</td></tr>
+  <tr><td><code>.gr-step-disabled</code></td><td>Пропущенный или отменённый</td></tr>
+  <tr><td><code>.gr-step-marker</code> / <code>-label</code> / <code>-note</code> / <code>-body</code></td><td>Кружок со знаком, название, пояснение, колонка подписи</td></tr>
+</table>
+
+<p>Текущий шаг помечается <code>aria-current="step"</code> — тем же признаком, по которому его находит программа чтения с экрана; класса для него нет. Знак в маркере (номер, галочка) кладут в разметку: цвет не переживает чёрно-белую печать и дальтонизм, знак переживает.</p>
+
+<p>Линия — хвост шага, ведущий к следующему: <code>::after</code> у левого, в колонке — у верхнего. Залита она у пройденного, у текущего остаётся серой. Так решено потому, что только у левого шага длину линии считает сам CSS: сколько текста висит под маркером предыдущего шага, правило, написанное на следующего, знать не может, и в колонке хвост, растущий вверх, не доставал бы до соседнего маркера.</p>
+
+<h2>Пустое состояние (<code>scss/_empty.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-empty</code></td><td>Колонка по центру: иконка, заголовок, пояснение, действие</td></tr>
+  <tr><td><code>.gr-empty-boxed</code></td><td>То же внутри пунктирной рамки</td></tr>
+  <tr><td><code>.gr-empty-icon</code> / <code>-title</code> / <code>-text</code> / <code>-actions</code></td><td>Части</td></tr>
+</table>
+
+<p>Ширина пояснения ограничена в <code>ch</code>, а не в пикселях, поэтому ограничение в 46 знаков остаётся таким же и в режиме для слабовидящих. Слот под кнопку есть потому, что пустое состояние без действия — тупик.</p>
+
+<h2>Рантайм компонентов (<code>dist/griffincss-ui.js</code>)</h2>
+
+<p>ES5-совместимый файл без зависимостей, пишется руками и не компилируется. Автостарт по <code>DOMContentLoaded</code>; отключается атрибутом <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code>. Делает четыре вещи, которых платформа не даёт:</p>
+
+<table>
+  <tr><th>Что</th><th>Как</th></tr>
+  <tr><td>Закрытие окна щелчком по подложке</td><td><code>data-gr-overlay-close</code> на <code>&lt;dialog&gt;</code>; <code>returnValue</code> — <code>"overlay"</code></td></tr>
+  <tr><td>Крестик</td><td><code>[data-gr-dismiss]</code> внутри <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>; значение атрибута — селектор цели, если она снаружи</td></tr>
+  <tr><td>Тосты</td><td><code>Griffincss.ui.toast(text, options)</code></td></tr>
+  <tr><td>Клавиатура вкладок</td><td><code>data-gr-tabs</code> на обёртке: роли, <code>aria-selected</code>, стрелки, Home/End, roving tabindex, <code>hidden</code> у неактивных панелей</td></tr>
+</table>
+
+<table>
+  <tr><th>Параметр <code>toast</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>status</code></td><td>нет</td><td><code>info</code> / <code>success</code> / <code>warning</code> / <code>danger</code>; <code>danger</code> переводит область в <code>assertive</code></td></tr>
+  <tr><td><code>title</code></td><td>нет</td><td>Слово статуса; статус без слова — предупреждение в консоль</td></tr>
+  <tr><td><code>timeout</code></td><td><code>5000</code></td><td>Миллисекунды до ухода; <code>0</code> — ждать крестика</td></tr>
+  <tr><td><code>position</code></td><td><code>bottom-end</code></td><td>Один из четырёх углов</td></tr>
+  <tr><td><code>icon</code></td><td>нет</td><td>Знак в слот <code>.gr-toast-icon</code></td></tr>
+  <tr><td><code>dismissible</code></td><td><code>true</code></td><td><code>false</code> убирает крестик</td></tr>
+  <tr><td><code>assertive</code></td><td>по статусу</td><td>Прямое указание, какой областью показать</td></tr>
+</table>
+
+<p>Таймер тоста останавливается под указателем и под фокусом и дочитывает остаток, а не начинается заново. Все обработчики — делегированные, по одному на документ: <code>Griffincss.ui.start()</code> и <code>.destroy()</code> поднимают и снимают их целиком.</p>
+
+<p>Клавиатура вкладок включается только при <code>data-gr-tabs</code>. Без атрибута и без скрипта та же разметка остаётся списком ссылок-якорей и секциями подряд — страница читается сверху вниз и печатается целиком.</p>
+
+<hr>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

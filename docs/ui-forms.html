@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Формы — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Формы</h1>
+  <p>Поля, метки, подсказки, флажки, переключатели и сегментный выбор. Ни один элемент не подменяется другим: класс ставится на сам <code>&lt;input&gt;</code> или <code>&lt;select&gt;</code>.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_form.scss</span>
+    <span class="badge">packages/ui/scss/_choice.scss</span>
+  </div>
+</div>
+
+<h2>Поле и его обвязка</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-field</code></td><td>Обёртка «метка + поле + подсказка» одной колонкой</td></tr>
+  <tr><td><code>.gr-label</code></td><td>Метка поля</td></tr>
+  <tr><td><code>.gr-hint</code></td><td>Пояснение под полем</td></tr>
+  <tr><td><code>.gr-error</code></td><td>Сообщение об ошибке</td></tr>
+  <tr><td><code>.gr-input</code></td><td>Однострочное поле любого типа</td></tr>
+  <tr><td><code>.gr-textarea</code></td><td>Многострочное; тянется только по вертикали</td></tr>
+  <tr><td><code>.gr-select</code></td><td>Выпадающий список; стрелка своя, отбита от края поля</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Поле целиком</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="demo-name">Название проекта</label>
+      <input class="gr-input" id="demo-name" type="text" placeholder="Например, Griffincss" aria-describedby="demo-name-hint">
+      <span class="gr-hint" id="demo-name-hint">От трёх до шестидесяти символов.</span>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-mail">Почта</label>
+      <input class="gr-input" id="demo-mail" type="email" value="не-адрес" aria-invalid="true" aria-describedby="demo-mail-err">
+      <span class="gr-error" id="demo-mail-err">Адрес должен содержать символ @.</span>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-kind">Тип</label>
+      <select class="gr-select" id="demo-kind">
+        <option>Библиотека</option>
+        <option>Приложение</option>
+        <option>Документация</option>
+      </select>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-about">Описание</label>
+      <textarea class="gr-textarea" id="demo-about" placeholder="Пара предложений о проекте"></textarea>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-field"&gt;
+  &lt;label class="gr-label" for="mail"&gt;Почта&lt;/label&gt;
+  &lt;input class="gr-input" id="mail" type="email" aria-describedby="mail-hint"&gt;
+  &lt;span class="gr-hint" id="mail-hint"&gt;Пришлём подтверждение.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Стрелка у списка своя — и это единственное исключение.</strong>
+    Положение системной стрелки задаёт браузер: на
+    <code>padding-inline-end</code> она не реагирует и прижимается вплотную
+    к краю поля, а в разных браузерах ещё и выглядит по-разному. Поэтому
+    у <code>.gr-select</code> стоит <code>appearance: none</code>, а стрелка
+    нарисована двумя линейными градиентами и отбита от края на
+    <code>--gr-control-padding-x</code>. Цвет берётся из
+    <code>currentcolor</code>, поэтому она следует и теме, и состоянию
+    <code>:disabled</code> — SVG с зашитым цветом не следовал бы ни тому,
+    ни другому. Сам элемент остаётся <code>&lt;select&gt;</code>: календарь
+    у <code>&lt;input type="date"&gt;</code> и палитра у
+    <code>type="color"</code> по-прежнему системные.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <code>.gr-label</code> не заменяет <code>&lt;label for&gt;</code>, а
+    <code>.gr-hint</code> — <code>aria-describedby</code>. Класс красит,
+    связь создаёт разметка: без <code>for</code> клик по метке не переводит
+    фокус в поле, а без <code>aria-describedby</code> подсказку не услышит
+    тот, кто не видит её на экране.
+  </p>
+</div>
+
+<h2>Состояния</h2>
+
+<table>
+  <tr><th>Состояние</th><th>Селектор</th><th>Что меняется</th></tr>
+  <tr><td>Фокус с клавиатуры</td><td><code>:focus-visible</code></td><td>Акцентная граница и контур <code>--gr-focus-width</code></td></tr>
+  <tr><td>Ошибка после ввода</td><td><code>:user-invalid</code></td><td>Красная граница</td></tr>
+  <tr><td>Ошибка от сервера</td><td><code>[aria-invalid="true"]</code></td><td>То же самое</td></tr>
+  <tr><td>Недоступно</td><td><code>:disabled</code></td><td>Утопленный фон, приглушённый текст, курсор <code>not-allowed</code></td></tr>
+  <tr><td>Только чтение</td><td><code>:read-only</code></td><td>Фон поверхности; поле остаётся выделяемым и копируемым</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Почему <code>:user-invalid</code>, а не <code>:invalid</code>.</strong>
+    Пустое обязательное поле невалидно с первой миллисекунды загрузки страницы.
+    По <code>:invalid</code> форма покраснела бы целиком до того, как человек
+    успел что-то напечатать. <code>:user-invalid</code> срабатывает только
+    после того, как поле тронули и покинули.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Недоступно и только чтение</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <input class="gr-input" type="text" value="Недоступное поле" disabled>
+    <input class="gr-input" type="text" value="Только чтение" readonly>
+  </div>
+</div>
+
+<h2>Размеры</h2>
+
+<p>
+  <code>.gr-input</code>, <code>.gr-textarea</code> и <code>.gr-select</code> —
+  одна семья элементов управления: общая высота, общий кегль, общие состояния.
+  Поэтому и размер у них задаётся одной парой классов, на любом из трёх.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Высота</th></tr>
+  <tr><td><code>.gr-input-sm</code></td><td><code>--gr-control-height-sm</code></td></tr>
+  <tr><td>—</td><td><code>--gr-control-height</code></td></tr>
+  <tr><td><code>.gr-input-lg</code></td><td><code>--gr-control-height-lg</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три размера, три разных элемента</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <input class="gr-input gr-input-sm" type="text" value="gr-input-sm">
+    <select class="gr-select"><option>обычный gr-select</option></select>
+    <input class="gr-input gr-input-lg" type="text" value="gr-input-lg">
+  </div>
+</div>
+
+<h2>Группа с аддонами</h2>
+
+<p>
+  <code>.gr-input-group</code> склеивает поле с подписью или кнопкой:
+  скругления остаются на краях, соседние границы наезжают друг на друга
+  на свою толщину, а сфокусированный элемент поднимается над соседями,
+  чтобы контур фокуса не оказался наполовину закрыт.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Аддон и кнопка</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-input-group">
+      <span class="gr-input-addon">₽</span>
+      <input class="gr-input" type="number" value="1200" aria-label="Сумма">
+      <span class="gr-input-addon">в месяц</span>
+    </div>
+
+    <div class="gr-input-group">
+      <input class="gr-input" type="search" placeholder="Поиск по документации" aria-label="Поиск">
+      <button class="gr-btn gr-btn-primary">Найти</button>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-input-group"&gt;
+  &lt;span class="gr-input-addon"&gt;₽&lt;/span&gt;
+  &lt;input class="gr-input" type="number" aria-label="Сумма"&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>Флажок, радиокнопка, переключатель</h2>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Элемент не подменяется.</strong> Класс ставится на сам
+    <code>&lt;input&gt;</code>, а не на спрятанный input рядом с оформленным
+    <code>&lt;span&gt;</code>. Родная разметка сохраняет участие в форме,
+    клавиатуру и объявление состояния скринридером — всё то, что при подмене
+    приходится восстанавливать вручную и обычно восстанавливают наполовину.
+    Цвет отметки у флажка и радиокнопки задаёт одно свойство
+    <code>accent-color</code>: рисует их по-прежнему операционная система.
+  </p>
+</div>
+
+<table>
+  <tr><th>Класс</th><th>Элемент</th></tr>
+  <tr><td><code>.gr-checkbox</code></td><td><code>&lt;input type="checkbox"&gt;</code></td></tr>
+  <tr><td><code>.gr-radio</code></td><td><code>&lt;input type="radio"&gt;</code></td></tr>
+  <tr><td><code>.gr-switch</code></td><td><code>&lt;input type="checkbox"&gt;</code> в виде тумблера</td></tr>
+  <tr><td><code>.gr-choice</code></td><td><code>&lt;label&gt;</code>-обёртка: подпись в строку с элементом и кликабельна целиком</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Выбор</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <label class="gr-choice"><input class="gr-checkbox" type="checkbox" checked> Присылать письма об обновлениях</label>
+    <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> Участвовать в бета-тестировании</label>
+    <label class="gr-choice"><input class="gr-checkbox" type="checkbox" disabled> Недоступный вариант</label>
+
+    <div class="gr-flex gr-gap gr-flex-wrap">
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="demo-plan" checked> Месяц</label>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="demo-plan"> Год</label>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="demo-plan"> Навсегда</label>
+    </div>
+
+    <label class="gr-choice"><input class="gr-switch" type="checkbox" checked> Тёмная тема в приложении</label>
+    <label class="gr-choice"><input class="gr-switch" type="checkbox"> Звуковые уведомления</label>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Тумблера среди типов <code>&lt;input&gt;</code> нет, поэтому его дорожка
+    и бегунок нарисованы фоном: <code>background-image</code> с кругом
+    и <code>background-origin: content-box</code>, чтобы отступ от края
+    задавался обычным <code>padding</code>. Псевдоэлементы на
+    <code>&lt;input&gt;</code> поддерживаются не везде, а фон работает всюду.
+    Сам элемент остаётся <code>&lt;input type="checkbox"&gt;</code>.
+    Переезд бегунка снимается при <code>prefers-reduced-motion: reduce</code>;
+    цвет продолжает меняться плавно — это не движение.
+  </p>
+</div>
+
+<h2>Сегментный переключатель</h2>
+
+<p>
+  Ряд взаимоисключающих вариантов из обычной радиогруппы. Стрелки
+  <kbd>←</kbd> <kbd>→</kbd> переключают выбор — это даёт платформа,
+  скрипта не нужно. Оформляется <code>&lt;fieldset&gt;</code>, поэтому
+  у группы есть имя: <code>&lt;legend&gt;</code> или <code>aria-label</code>.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">gr-segmented</div>
+  <fieldset class="gr-segmented" aria-label="Период">
+    <label><input type="radio" name="demo-period" value="d" checked><span>День</span></label>
+    <label><input type="radio" name="demo-period" value="w"><span>Неделя</span></label>
+    <label><input type="radio" name="demo-period" value="m"><span>Месяц</span></label>
+  </fieldset>
+</div>
+
+<pre><code>&lt;fieldset class="gr-segmented" aria-label="Период"&gt;
+  &lt;label&gt;&lt;input type="radio" name="period" value="d" checked&gt;&lt;span&gt;День&lt;/span&gt;&lt;/label&gt;
+  &lt;label&gt;&lt;input type="radio" name="period" value="w"&gt;&lt;span&gt;Неделя&lt;/span&gt;&lt;/label&gt;
+&lt;/fieldset&gt;</code></pre>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Догфудинг.</strong> Переключатель темы на боковой панели этой
+    документации собран ровно на этом компоненте. Раньше он был написан
+    вручную в <code>docs/style.css</code> — потребность обнаружилась
+    в фазе 6a, раньше, чем компонент запланировали. Ровно то, ради чего
+    документация и собирается на самой библиотеке.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

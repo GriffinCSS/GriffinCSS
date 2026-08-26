@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Effects — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Effects</h1>
+  <p>Прозрачность, вписывание картинок и пропорции блока.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_effects.scss</span>
+  </div>
+</div>
+
+<h2>Прозрачность</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-opacity-0</code></td><td><code>opacity: 0</code></td></tr>
+  <tr><td><code>.gr-opacity-25</code></td><td><code>opacity: 0.25</code></td></tr>
+  <tr><td><code>.gr-opacity-50</code></td><td><code>opacity: 0.5</code></td></tr>
+  <tr><td><code>.gr-opacity-75</code></td><td><code>opacity: 0.75</code></td></tr>
+  <tr><td><code>.gr-opacity-100</code></td><td><code>opacity: 1</code></td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <code>.gr-opacity-0</code> скрывает элемент визуально, но он остаётся
+    в потоке, кликабелен и озвучивается скринридером. Чтобы убрать его
+    по-настоящему, нужен <code>.gr-hidden</code>; чтобы скрыть только визуально,
+    оставив доступным, — <code>.gr-sr-only</code>.
+  </p>
+</div>
+
+<h2>Вписывание медиа</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Поведение</th></tr>
+  <tr><td><code>.gr-object-cover</code></td><td><code>object-fit: cover</code></td><td>Заполняет рамку, лишнее обрезается — пропорции сохраняются</td></tr>
+  <tr><td><code>.gr-object-contain</code></td><td><code>object-fit: contain</code></td><td>Вписывается целиком, остаются поля</td></tr>
+  <tr><td><code>.gr-object-fill</code></td><td><code>object-fit: fill</code></td><td>Растягивается, пропорции ломаются</td></tr>
+  <tr><td><code>.gr-object-none</code></td><td><code>object-fit: none</code></td><td>Исходный размер</td></tr>
+  <tr><td><code>.gr-object-scale-down</code></td><td><code>object-fit: scale-down</code></td><td><code>contain</code>, но без увеличения</td></tr>
+</table>
+
+<p>Точка привязки кадра — <code>.gr-object-pos-{center,top,right,bottom,left}</code>. Портрет чаще всего обрезают сверху, а не по центру:</p>
+
+<pre><code>&lt;img class="gr-w-full gr-aspect-square gr-object-cover gr-object-pos-top" src="…" alt=""&gt;</code></pre>
+
+<h2>Пропорции</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-aspect-square</code></td><td><code>aspect-ratio: 1 / 1</code></td></tr>
+  <tr><td><code>.gr-aspect-video</code></td><td><code>aspect-ratio: 16 / 9</code></td></tr>
+  <tr><td><code>.gr-aspect-wide</code></td><td><code>aspect-ratio: 21 / 9</code></td></tr>
+  <tr><td><code>.gr-aspect-portrait</code></td><td><code>aspect-ratio: 3 / 4</code></td></tr>
+  <tr><td><code>.gr-aspect-auto</code></td><td><code>aspect-ratio: auto</code></td></tr>
+</table>
+
+<p>
+  Заданные пропорции резервируют место под картинку до её загрузки —
+  вёрстка не прыгает, когда изображение приходит.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Пропорции</div>
+  <div class="gr-grid-3 gr-gap">
+    <div class="gr-min-w-0 gr-aspect-square gr-bg-primary gr-radius-2 gr-flex gr-flex-center gr-flex-items-center">square</div>
+    <div class="gr-min-w-0 gr-aspect-video gr-bg-secondary gr-radius-2 gr-flex gr-flex-center gr-flex-items-center">video</div>
+    <div class="gr-min-w-0 gr-aspect-portrait gr-bg-info gr-radius-2 gr-flex gr-flex-center gr-flex-items-center">portrait</div>
+  </div>
+
+<div class="callout callout-warning">
+  <p>
+    В этом примере у блоков стоит <code>.gr-min-w-0</code> — и это не украшение.
+    Трек <code>1fr</code> не сжимается ниже min-content содержимого, а у блока
+    с <code>aspect-ratio</code> min-content выводится из его же высоты: колонка
+    раздувается и утаскивает вёрстку вбок. <code>.gr-min-w-0</code> разрывает
+    эту связь. То же самое нужно длинным словам, ссылкам без пробелов
+    и блокам <code>&lt;pre&gt;</code> внутри сетки или флекса.
+  </p>
+</div>
+</div>
+
+<pre><code>&lt;!-- обложка карточки: место под неё занято сразу --&gt;
+&lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius-3" src="…" alt=""&gt;</code></pre>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

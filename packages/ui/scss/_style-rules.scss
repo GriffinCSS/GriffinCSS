@@ -1,0 +1,75 @@
+// Griffincss UI — Структурные правила оси оформления
+// Здесь только то, что не выражается ручками: скругление, отступы, плотность
+// и цвета компонент берёт из токенов сам, и они действуют в любой сборке.
+//
+// Модуль отдельный, а не секции в модулях компонентов, по двум причинам сразу.
+// Правило проекта запрещает модулю селекторы по атрибуту, который стоит
+// на <html>: внутри @scope (.griffin) селектор неявно получает :scope в начало
+// и требует носитель атрибута внутри области. Поэтому griffincss-ui-scoped.scss
+// этот модуль не подключает — там ось действует на уровне токенов, которые
+// глобальны и объявлены вне области. Тем же приёмом обслужены @keyframes и тема.
+//
+// Правило, которое выражается ручкой, писать здесь нельзя: оно досталось бы
+// только компонентам, а ручка достаётся всей странице.
+
+@use 'griffincss-core/scss/style-config' as cfg;
+
+@if cfg.gr-style-enabled(strict) {
+  // Шапка карточки перестаёт быть подложкой и становится линией: строгий
+  // стиль разделяет пояса границей, а не заливкой.
+  [data-gr-style="strict"] .gr-card-header {
+    background-color: transparent;
+    font-weight: 500;
+  }
+
+  // Кнопка без подъёма: строгий стиль не приподнимает элементы управления
+  // над листом, он выстраивает их в одной плоскости.
+  [data-gr-style="strict"] .gr-btn {
+    box-shadow: none;
+    font-weight: 500;
+  }
+
+  // Шапка таблицы отличается начертанием, а не заливкой.
+  [data-gr-style="strict"] .gr-table th {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+}
+
+@if cfg.gr-style-enabled(compact) {
+  // Плотные ячейки с разделителями строк: журнальный стиль отвечает
+  // за объём информации, и строку от строки отделяет линия, а не воздух.
+  [data-gr-style="compact"] .gr-table th,
+  [data-gr-style="compact"] .gr-table td {
+    padding-block: calc(var(--gr-gap) * 0.35);
+    border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  [data-gr-style="compact"] .gr-card-header,
+  [data-gr-style="compact"] .gr-card-footer {
+    padding-block: calc(var(--gr-gap) * 0.5);
+  }
+
+  [data-gr-style="compact"] .gr-alert {
+    padding: calc(var(--gr-gap) * 0.6);
+  }
+
+  [data-gr-style="compact"] .gr-menu-item {
+    padding-block: calc(var(--gr-gap) * 0.3);
+  }
+}
+
+@if cfg.gr-style-enabled(airy) {
+  // Граница уступает тени: воздушный стиль отделяет карточку от фона
+  // мягким подъёмом, а не линией.
+  [data-gr-style="airy"] .gr-card {
+    border-color: transparent;
+    box-shadow: var(--gr-shadow-md);
+  }
+
+  // Отклик заметнее — это вторая половина «оживлённых анимаций»,
+  // первую даёт кривая в --gr-transition.
+  [data-gr-style="airy"] .gr-btn:active:not(:disabled, [aria-disabled="true"]) {
+    scale: 0.97;
+  }
+}

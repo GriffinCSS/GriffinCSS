@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid-утилиты — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+  /* Ряды родителя объявлены явно: subgrid берёт дорожки, а не создаёт их. */
+  .subgrid-demo { grid-template-rows: auto 1fr auto; }
+  .subgrid-demo article {
+    gap: 0.5rem;
+    text-align: start;
+  }
+
+  /* Цвет и отступы абзаца задаёт общая типографика доксайта — на цветной
+     подложке карточки от неё нужно отказаться. */
+  .subgrid-demo h3,
+  .subgrid-demo p {
+    margin: 0;
+    color: inherit;
+  }
+
+  .subgrid-demo h3 { font-size: 1rem; }
+  .subgrid-demo p { font-size: 0.875rem; }
+  .subgrid-demo footer { font-size: 0.75rem; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Grid-утилиты</h1>
+  <p>Статические CSS-классы для быстрого создания grid-раскладок без JS-рантайма. Контейнеры, адаптивные сетки, ряды равной высоты, span-утилиты и выравнивание. Data-атрибутов здесь нет — они остались только у парсера раскладок.</p>
+</div>
+
+<h2>Контейнер</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-container</code></td><td><code>max-width: var(--gr-max-width); margin-inline: auto; padding-inline: var(--gr-gap)</code></td><td>Центрированный контейнер с максимальной шириной</td></tr>
+  <tr><td><code>.gr-container-full</code></td><td><code>width: 100%; max-width: none</code></td><td>Контейнер на всю ширину</td></tr>
+  <tr><td><code>.gr-expand-root</code></td><td><code>container-type: inline-size</code></td><td>Корень расширения — см. ниже</td></tr>
+  <tr><td><code>.gr-container-expand</code></td><td><code>width</code> и <code>margin-inline</code> от <code>100cqw</code> — формула ниже</td><td>Блок во всю ширину корня, из любой вложенности</td></tr>
+  <tr><td><code>.gr-grid</code></td><td><code>display: grid; gap: var(--gr-gap)</code></td><td>Базовый grid-контейнер</td></tr>
+  <tr><td><code>.gr-grid-place-center</code></td><td><code>display: grid; place-items: center</code></td><td>Центрирование содержимого по обеим осям</td></tr>
+</table>
+
+<h2>Gap-модификаторы</h2>
+
+<p>
+  Один набор классов на все контейнеры — grid, flex и раскладки
+  <code>data-gr-layout</code>:
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение gap</th><th>До md (768px)</th><th>С md</th></tr>
+  <tr><td><code>.gr-gap-sm</code></td><td><code>var(--gr-gap-sm)</code></td><td>0.375rem</td><td>0.5rem</td></tr>
+  <tr><td><code>.gr-gap</code></td><td><code>var(--gr-gap)</code></td><td>0.75rem</td><td>1rem</td></tr>
+  <tr><td><code>.gr-gap-lg</code></td><td><code>var(--gr-gap-lg)</code></td><td>1.25rem</td><td>2rem</td></tr>
+</table>
+
+<p>
+  Отдельных вариантов с суффиксом брейкпоинта нет: значение меняют сами токены,
+  поэтому один и тот же класс даёт меньший отступ на мобильном и привычный — на десктопе.
+</p>
+
+<pre><code>&lt;div class="gr-grid gr-gap-sm"&gt;
+  &lt;div&gt;Элемент 1&lt;/div&gt;
+  &lt;div&gt;Элемент 2&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-flex gr-gap-lg"&gt;…&lt;/div&gt;
+&lt;div data-gr-layout="a3b4-c2d5" class="gr-gap"&gt;…&lt;/div&gt;</code></pre>
+
+<h2>Блок во всю ширину</h2>
+
+<p>
+  <code>.gr-container-expand</code> растягивает блок на всю ширину предка,
+  помеченного <code>.gr-expand-root</code>, — сколько бы ограниченных по ширине
+  контейнеров ни лежало между ними. Типичный случай: врезка на всю ширину
+  посреди текста в <code>.gr-container</code>.
+</p>
+
+<pre><code>.gr-expand-root {
+  container-type: inline-size;
+}
+
+.gr-container-expand {
+  width: calc(100cqw + 2 * var(--gr-expand-inset, 0px));
+  margin-inline: calc(50% - 50cqw - var(--gr-expand-inset, 0px));
+}</code></pre>
+
+<p>
+  Ширина берётся из <code>100cqw</code> — процента от корня-контейнера, а не от окна.
+  В отличие от <code>100vw</code>, полоса прокрутки в неё не входит, поэтому
+  горизонтального переполнения не возникает.
+</p>
+
+<pre><code>&lt;body class="gr-expand-root"&gt;
+  &lt;div class="gr-container"&gt;
+    &lt;p&gt;Обычный текст, ограниченный шириной контейнера.&lt;/p&gt;
+    &lt;div class="gr-container-expand"&gt;Во всю ширину окна&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+
+<p>
+  Корнем может быть любой предок, а не только <code>body</code>. На этой странице
+  корень — колонка с текстом, поэтому врезка равняется по неё и не наезжает
+  на боковую панель. В демо ниже корнем сделана сама карточка.
+</p>
+
+<div class="demo-block gr-expand-root">
+  <div class="demo-block-title">Корень — эта карточка</div>
+  <div class="gr-container" style="max-width:420px;outline:1px dashed var(--gr-color-border);">
+    <p class="gr-my-2">Родитель ограничен 420px.</p>
+    <div class="gr-container-expand expand-demo">.gr-container-expand — во всю ширину карточки</div>
+    <p class="gr-my-2">Текст снова внутри 420px.</p>
+  </div>
+</div>
+
+<h3>Паддинги корня</h3>
+
+<p>
+  По умолчанию блок занимает <em>внутреннюю</em> ширину корня, то есть
+  останавливается на его паддингах. Чтобы перекрыть и их, сообщите величину
+  через <code>--gr-expand-inset</code> — CSS не умеет читать отступы предка,
+  поэтому значение нужно назвать. Сам паддинг переменная не задаёт.
+</p>
+
+<pre><code>.content {
+  padding-inline: 3rem;
+  container-type: inline-size;  /* или класс .gr-expand-root */
+  --gr-expand-inset: 3rem;      /* повторяет паддинг */
+}</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Переменная наследуется.</strong> Как и любое CSS-свойство, <code>--gr-expand-inset</code>
+    достаётся всем потомкам — включая вложенный <code>.gr-expand-root</code>. Если внутри
+    корня с отступом 3rem появляется второй корень с другим паддингом, задайте ему
+    собственное значение (или <code>0px</code>), иначе блок вылезет за его границы ровно
+    на разницу. Именно так сделано в демо выше: карточка объявляет свои
+    <code>--gr-expand-inset: 1.5rem</code> вместо унаследованных от колонки.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Два ограничения.</strong> Ширина корня не должна зависеть от его
+    содержимого: <code>container-type</code> включает инлайн-containment, и
+    <code>inline-block</code> схлопнется в ноль. И предки между корнем и блоком
+    должны быть центрированы — формула складывает <code>50%</code> родителя
+    с <code>50cqw</code> корня. <code>.gr-container</code> с
+    <code>margin-inline: auto</code> этому удовлетворяет.
+  </p>
+</div>
+
+<h2>Адаптивная сетка (auto-fit / auto-fill)</h2>
+
+<p>
+  Создаёт адаптивную сетку без медиа-запросов — колонки автоматически переносятся при сужении экрана.
+  Идеально для карточек, галерей и списков.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Поведение</th></tr>
+  <tr><td><code>.gr-grid-sm</code> … <code>.gr-grid-xl</code></td><td><code>display: grid</code> и базовый отступ — от указанного брейкпоинта. Безусловный <code>.gr-grid</code> живёт в <a href="core-grid.html">Grid-парсере</a></td></tr>
+  <tr><td><code>.gr-grid-auto-fit</code></td><td><code>repeat(auto-fit, minmax(var(--gr-grid-min, 250px), 1fr))</code> — растягивает колонки, если их меньше чем места</td></tr>
+  <tr><td><code>.gr-grid-auto-fill</code></td><td><code>repeat(auto-fill, minmax(var(--gr-grid-min, 250px), 1fr))</code> — создаёт пустые колонки при избытке места</td></tr>
+  <tr><td><code>--gr-grid-min</code></td><td>минимальная ширина дорожки, по умолчанию <code>250px</code>. Наследуется — задаётся на блоке или на любом предке</td></tr>
+</table>
+
+<p>
+  Минимальная ширина дорожки задаётся переменной <code>--gr-grid-min</code>:
+  <code>&lt;div class="gr-grid-auto-fit" style="--gr-grid-min: 180px"&gt;</code>.
+  Переменная наследуется, поэтому её можно задать один раз на секции каталога,
+  а не на каждом блоке.
+</p>
+
+<pre><code>&lt;div class="gr-grid-auto-fit"&gt;
+  &lt;div&gt;Карточка 1&lt;/div&gt;
+  &lt;div&gt;Карточка 2&lt;/div&gt;
+  &lt;div&gt;Карточка 3&lt;/div&gt;
+  &lt;div&gt;Карточка 4&lt;/div&gt;
+  &lt;div&gt;Карточка 5&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: gr-grid-auto-fit</div>
+  <div class="gr-grid-auto-fit">
+    <div class="card-demo"><h4>Карточка 1</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Адаптируется под ширину</p></div>
+    <div class="card-demo"><h4>Карточка 2</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">При сужении — перенос</p></div>
+    <div class="card-demo"><h4>Карточка 3</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Чистый CSS Grid</p></div>
+    <div class="card-demo"><h4>Карточка 4</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Минимум кода</p></div>
+    <div class="card-demo"><h4>Карточка 5</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">auto-fit + minmax</p></div>
+  </div>
+</div>
+
+<h2>Явные сетки (1–12 колонок)</h2>
+
+<p>
+  Фиксированное число колонок. Класс самодостаточен — включает
+  <code>display: grid</code> и отступ, поэтому <code>.gr-grid</code> рядом не нужен.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Колонки</th><th>Применение</th></tr>
+  <tr><td><code>.gr-grid-1</code> … <code>.gr-grid-12</code></td><td>1–12</td><td>Всегда</td></tr>
+  <tr><td><code>.gr-grid-1-sm</code> … <code>.gr-grid-12-sm</code></td><td>1–12</td><td>От 640px</td></tr>
+  <tr><td><code>.gr-grid-1-md</code> … <code>.gr-grid-12-md</code></td><td>1–12</td><td>От 768px</td></tr>
+  <tr><td><code>.gr-grid-1-lg</code> … <code>.gr-grid-12-lg</code></td><td>1–12</td><td>От 1024px</td></tr>
+  <tr><td><code>.gr-grid-1-xl</code> … <code>.gr-grid-12-xl</code></td><td>1–12</td><td>От 1280px</td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-grid-2 gr-grid-3-md gr-grid-4-lg"&gt;
+  &lt;div&gt;На мобильных: 2 в ряд&lt;/div&gt;
+  &lt;div&gt;Планшет: 3 в ряд&lt;/div&gt;
+  &lt;div&gt;Десктоп: 4 в ряд&lt;/div&gt;
+  &lt;div&gt;Адаптивно!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: 2 → 3 → 4 колонки</div>
+  <div class="gr-grid-2 gr-grid-3-md gr-grid-4-lg">
+    <div class="card-demo"><h4>Колонка 1</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Мобильные: 2 в ряд</p></div>
+    <div class="card-demo"><h4>Колонка 2</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Планшет: 3 в ряд</p></div>
+    <div class="card-demo"><h4>Колонка 3</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Десктоп: 4 в ряд</p></div>
+    <div class="card-demo"><h4>Колонка 4</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Адаптивно!</p></div>
+  </div>
+</div>
+
+<h2>Ряды равной высоты</h2>
+
+<p>
+  По умолчанию высота ряда определяется его собственным содержимым, поэтому
+  соседние ряды получаются разными. <code>.gr-grid-rows</code> выравнивает их
+  все — по самому высокому содержимому. Число рядов указывать не нужно:
+  правило действует на каждый ряд, сколько бы их ни получилось.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-grid-rows</code></td><td><code>grid-auto-rows: 1fr</code></td><td>Все ряды равной высоты</td></tr>
+</table>
+
+<p>
+  Высоту контейнера задавать не требуется: без неё ряды выравниваются по самому
+  высокому содержимому, с ней — делят её поровну. На раскладки
+  <code>data-gr-layout</code> класс не влияет — там число рядов задано явно.
+</p>
+
+<pre><code>&lt;div class="gr-grid-3 gr-grid-rows"&gt;
+  &lt;div&gt;Короткий&lt;/div&gt;
+  &lt;div&gt;Текст подлиннее, в две строки&lt;/div&gt;
+  &lt;div&gt;Короткий&lt;/div&gt;
+  &lt;div&gt;Короткий&lt;/div&gt;
+  &lt;div&gt;Короткий&lt;/div&gt;
+  &lt;div&gt;Короткий&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Без класса: ряды разной высоты</div>
+  <div class="gr-grid-3">
+    <div class="dg-a demo-grid-item">1</div>
+    <div class="dg-b demo-grid-item">2 — содержимое подлиннее, чтобы ряд стал выше остальных</div>
+    <div class="dg-c demo-grid-item">3</div>
+    <div class="dg-d demo-grid-item">4</div>
+    <div class="dg-e demo-grid-item">5</div>
+    <div class="dg-f demo-grid-item">6</div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">С <code>.gr-grid-rows</code>: ряды равной высоты</div>
+  <div class="gr-grid-3 gr-grid-rows">
+    <div class="dg-a demo-grid-item">1</div>
+    <div class="dg-b demo-grid-item">2 — содержимое подлиннее, чтобы ряд стал выше остальных</div>
+    <div class="dg-c demo-grid-item">3</div>
+    <div class="dg-d demo-grid-item">4</div>
+    <div class="dg-e demo-grid-item">5</div>
+    <div class="dg-f demo-grid-item">6</div>
+  </div>
+</div>
+
+<h2>Column span и Row span</h2>
+
+<p>Утилиты для дочерних элементов grid-контейнера. Позволяют растягивать элемент на несколько колонок или рядов.</p>
+
+<table>
+  <tr><th>Класс</th><th>Диапазон</th><th>CSS</th></tr>
+  <tr><td><code>.gr-grid-col-span-N</code></td><td>1–12</td><td><code>grid-column: span N</code></td></tr>
+  <tr><td><code>.gr-grid-row-span-N</code></td><td>1–6</td><td><code>grid-row: span N</code></td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-grid-4"&gt;
+  &lt;div class="gr-grid-col-span-2"&gt;На 2 колонки&lt;/div&gt;
+  &lt;div&gt;Обычная&lt;/div&gt;
+  &lt;div&gt;Обычная&lt;/div&gt;
+  &lt;div class="gr-grid-col-span-4"&gt;На всю ширину&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат: span-утилиты</div>
+  <div class="gr-grid-4">
+    <div class="gr-grid-col-span-2 dg-a demo-grid-item">span 2</div>
+    <div class="dg-b demo-grid-item">1</div>
+    <div class="dg-c demo-grid-item">1</div>
+    <div class="gr-grid-col-span-4 dg-d demo-grid-item">span 4 (вся ширина)</div>
+  </div>
+</div>
+
+<h2>Subgrid — дорожки родителя</h2>
+
+<p>
+  Обычная вложенная сетка считает свои дорожки сама, и одинаковые по смыслу
+  части соседних блоков расходятся: заголовок в одной карточке занял две
+  строки, в соседней одну — подписи под ними уже не на одной линии.
+  <code>subgrid</code> снимает вопрос: вложенный элемент не заводит своих
+  дорожек, а берёт те дорожки родителя, которые попали в его область.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-subgrid</code></td><td><code>display: grid</code><br><code>grid-template-columns: subgrid</code></td><td>Колонки родителя проходят внутрь элемента</td></tr>
+  <tr><td><code>.gr-subgrid-rows</code></td><td><code>display: grid</code><br><code>grid-template-rows: subgrid</code></td><td>То же самое по рядам</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Элемент обязан занимать больше одной дорожки.</strong>
+    Subgrid перенимает те дорожки, которые попали в его собственную область:
+    область в одну колонку и даёт одну колонку, и класс визуально ничего
+    не меняет. Ставьте рядом <code>.gr-grid-col-span-N</code> или задайте
+    <code>grid-column: 1 / -1</code> своим CSS. Родитель при этом должен быть
+    grid-контейнером, а элемент — его прямым потомком: через промежуточный
+    <code>&lt;div&gt;</code> дорожки не проходят.
+  </p>
+  <p>
+    Отступ элемент наследует от родителя вместе с дорожками. Нужен свой —
+    ставится обычный <code>.gr-gap-*</code>.
+  </p>
+</div>
+
+<pre><code>&lt;div class="gr-grid-3"&gt;
+  &lt;article class="gr-subgrid-rows gr-grid-row-span-3"&gt;
+    &lt;h3&gt;Заголовок&lt;/h3&gt;
+    &lt;p&gt;Текст произвольной длины&lt;/p&gt;
+    &lt;footer&gt;Подвал&lt;/footer&gt;
+  &lt;/article&gt;
+  &lt;article class="gr-subgrid-rows gr-grid-row-span-3"&gt;…&lt;/article&gt;
+  &lt;article class="gr-subgrid-rows gr-grid-row-span-3"&gt;…&lt;/article&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три карточки: заголовки, тексты и подвалы стоят на общих линиях</div>
+  <div class="gr-grid-1 gr-grid-3-sm subgrid-demo">
+    <article class="gr-subgrid-rows gr-grid-row-span-3 dg-a demo-grid-item">
+      <h3>Короткий</h3>
+      <p>Один абзац.</p>
+      <footer>подвал</footer>
+    </article>
+    <article class="gr-subgrid-rows gr-grid-row-span-3 dg-b demo-grid-item">
+      <h3>Заголовок подлиннее, в две строки</h3>
+      <p>Текст этой карточки заметно длиннее соседних, и в обычной вложенной сетке он растянул бы только её.</p>
+      <footer>подвал</footer>
+    </article>
+    <article class="gr-subgrid-rows gr-grid-row-span-3 dg-c demo-grid-item">
+      <h3>Средний</h3>
+      <p>Два предложения. Второе короткое.</p>
+      <footer>подвал</footer>
+    </article>
+  </div>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

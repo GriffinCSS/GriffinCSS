@@ -1,0 +1,155 @@
+// Griffincss UI — Accordion
+// Раскрывающиеся разделы на <details> и <summary>. Всё поведение —
+// раскрытие, клавиатура, поиск по странице внутри свёрнутого раздела —
+// платформа даёт сама.
+//
+// Эксклюзивность (открыт только один раздел) тоже даёт платформа: общий
+// атрибут name у соседних <details>. Ни одной строки CSS на это не нужно,
+// поэтому в модуле её и нет:
+//
+//   <div class="gr-accordion">
+//     <details class="gr-accordion-item" name="faq">…</details>
+//     <details class="gr-accordion-item" name="faq">…</details>
+//   </div>
+//
+// Анимация высоты — украшение поверх работающего раздела: она включается
+// только там, где браузер умеет интерполировать auto. Без неё аккордеон
+// раскрывается мгновенно и остаётся полностью рабочим.
+
+.gr-accordion {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-color-text);
+  overflow: hidden;
+}
+
+// Разделы отбиты линией друг от друга, но не от краёв обёртки: первая
+// граница совпала бы с её собственной и дала бы двойную линию.
+.gr-accordion > .gr-accordion-item + .gr-accordion-item {
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// --- Заголовок --------------------------------------------------------------
+
+.gr-accordion-trigger {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gr-ui-gap);
+  min-block-size: var(--gr-control-height);
+  padding-block: calc(var(--gr-gap) * 0.5);
+  padding-inline: var(--gr-gap);
+  background-color: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: start;
+  list-style: none;
+  cursor: pointer;
+}
+
+.gr-accordion-trigger::-webkit-details-marker {
+  display: none;
+}
+
+@media (hover: hover) {
+  .gr-accordion-trigger:hover {
+    background-color: color-mix(in srgb, currentcolor 6%, transparent);
+  }
+}
+
+// Контур внутренний: заголовок лежит вплотную к краям обёртки, и внешний
+// срезался бы её overflow: hidden.
+.gr-accordion-trigger:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: calc(-1 * var(--gr-focus-width));
+}
+
+// Стрелка. Два линейных градиента, сложенных в «галочку», — тот же приём,
+// что у стрелки .gr-select: цвет берётся из currentcolor, поэтому она
+// следует теме, а не зашитому в картинку значению.
+// Стрелка — две квадратные плитки в ряд, в каждой по половине «галочки»
+// из линейного градиента. Плитки обязаны быть квадратными: диагональ
+// в 45° внутри вытянутого прямоугольника даёт не треугольник, а косой клин,
+// и стрелка выглядит кривой. Приём и пропорции те же, что у .gr-select.
+.gr-accordion-trigger::after {
+  --gr-accordion-arrow: 0.34rem;
+
+  content: "";
+  flex: none;
+  inline-size: calc(var(--gr-accordion-arrow) * 2);
+  block-size: var(--gr-accordion-arrow);
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position: left center, right center;
+  background-repeat: no-repeat;
+  background-size: var(--gr-accordion-arrow) var(--gr-accordion-arrow);
+  rotate: 0deg;
+  transition: rotate var(--gr-transition);
+}
+
+.gr-accordion-item[open] > .gr-accordion-trigger::after {
+  rotate: 180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-accordion-trigger::after {
+    transition-duration: 0.01ms;
+  }
+}
+
+// --- Содержимое -------------------------------------------------------------
+
+.gr-accordion-panel {
+  padding-block: 0 var(--gr-gap);
+  padding-inline: var(--gr-gap);
+  color: var(--gr-color-text-secondary);
+  line-height: var(--gr-leading-base);
+}
+
+// Плавное раскрытие. Условий два: браузер умеет анимировать высоту до auto
+// (interpolate-size) и умеет выбирать содержимое <details> селектором
+// (::details-content). Не выполнено хотя бы одно — раздел просто
+// раскрывается сразу, и это рабочее состояние, а не поломка.
+@supports (interpolate-size: allow-keywords) and selector(::details-content) {
+  .gr-accordion-item {
+    interpolate-size: allow-keywords;
+  }
+
+  .gr-accordion-item::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size var(--gr-transition),
+      content-visibility var(--gr-transition) allow-discrete;
+  }
+
+  .gr-accordion-item[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gr-accordion-item::details-content {
+      transition-duration: 0.01ms;
+    }
+  }
+}
+
+// --- Варианты ---------------------------------------------------------------
+
+// Без обёртки: разделы отбиты только линиями, без рамки вокруг и без фона.
+// Так аккордеон вписывается в готовую карточку или в колонку текста.
+.gr-accordion-flush {
+  border-inline: 0;
+  border-block-start: 0;
+  border-radius: 0;
+  background-color: transparent;
+}

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colors — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+@layer griffincss.docs {
+  .color-swatch {
+    width: 100%;
+    height: 3rem;
+    border-radius: calc(var(--gr-radius) / 2);
+    margin-bottom: 0.35rem;
+  }
+
+  .color-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+  }
+
+  .color-value {
+    font-family: var(--gr-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.6875rem;
+    color: var(--gr-color-text-muted);
+  }
+
+  /* Своя сетка, а не .gr-grid-auto-fill: у образцов цвета минимум колонки
+     90px и 140px, а у помощника он один и равен 250px. */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.625rem, 1fr));
+    gap: var(--gr-gap);
+    margin: 1rem 0;
+  }
+
+  .color-grid-accent {
+    grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+  }
+
+  .color-cell {
+    text-align: center;
+  }
+
+  .border-demo-box {
+    padding: 0.75rem 1rem;
+    border-radius: calc(var(--gr-radius) / 2);
+    border-width: 2px;
+    border-style: solid;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Colors</h1>
+  <p>HSL-цветовая система: нейтральная шкала по золотому сечению, 6 акцентных цветов на цветовом круге (шаг 72°), семантические токены. Все цвета задаются через CSS-переменные — любой оттенок можно переопределить точечно.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">scss/modules/_colors.scss</span>
+    <span class="badge">~160 классов</span>
+  </div>
+</div>
+
+<h2>Архитектура</h2>
+
+<p>
+  Цветовая система состоит из трёх уровней:
+</p>
+
+<pre><code>// 1. HSL-токены (низкоуровневые) — пользователь переопределяет hue/saturation/lightness
+--gr-hsl-gray-100: 0, 0%, 89%;
+--gr-hsl-primary:  220, 80%, 50%;
+
+// 2. Семантические токены — используют HSL-переменные через hsl()
+--gr-color-bg:      hsl(var(--gr-hsl-white));
+--gr-color-text:    hsl(var(--gr-hsl-gray-900));
+--gr-color-link:    hsl(var(--gr-hsl-primary));
+
+// 3. Утилитарные классы — ссылаются на HSL-токены
+.gr-bg-primary  { background-color: hsl(var(--gr-hsl-primary)); }
+.gr-text-danger { color: hsl(var(--gr-hsl-danger)); }</code></pre>
+
+<div class="callout callout-success">
+  <p><strong>Сила HSL:</strong> пользователь может изменить только hue акцентного цвета (например, <code>--gr-hsl-primary: 260, 80%, 50%</code> для фиолетового), и saturation с lightness останутся прежними. Или только lightness для тёмной темы: <code>--gr-hsl-gray-100: 0, 0%, 15%</code>.</p>
+</div>
+
+<h2>Нейтральная шкала (Gray)</h2>
+
+<p>
+  12 оттенков от белого до чёрного. Степени светлости распределены по золотому сечению — каждая ступень отнимает ~38% оставшейся светлоты. Это создаёт визуально гармоничные градации.
+</p>
+
+<table>
+  <tr><th>Токен</th><th>Lightness</th><th>Роль</th></tr>
+  <tr><td><code>--gr-hsl-white</code></td><td>100%</td><td>Белый</td></tr>
+  <tr><td><code>--gr-hsl-gray-50</code></td><td>96%</td><td>Светлейший фон</td></tr>
+  <tr><td><code>--gr-hsl-gray-100</code></td><td>89%</td><td>Очень светлый</td></tr>
+  <tr><td><code>--gr-hsl-gray-200</code></td><td>82%</td><td>Светлый</td></tr>
+  <tr><td><code>--gr-hsl-gray-300</code></td><td>67%</td><td>Средне-светлый</td></tr>
+  <tr><td><code>--gr-hsl-gray-400</code></td><td>50%</td><td>Средний</td></tr>
+  <tr><td><code>--gr-hsl-gray-500</code></td><td>38%</td><td>Средне-тёмный</td></tr>
+  <tr><td><code>--gr-hsl-gray-600</code></td><td>29%</td><td>Тёмный</td></tr>
+  <tr><td><code>--gr-hsl-gray-700</code></td><td>21%</td><td>Очень тёмный</td></tr>
+  <tr><td><code>--gr-hsl-gray-800</code></td><td>13%</td><td>Почти чёрный</td></tr>
+  <tr><td><code>--gr-hsl-gray-900</code></td><td>5%</td><td>Чернейший</td></tr>
+  <tr><td><code>--gr-hsl-black</code></td><td>0%</td><td>Чёрный</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Палитра</div>
+  <div class="color-grid">
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-white gr-border"></div>
+      <div class="color-label">white</div>
+      <div class="color-value">100%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-50"></div>
+      <div class="color-label">gray-50</div>
+      <div class="color-value">96%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-100"></div>
+      <div class="color-label">gray-100</div>
+      <div class="color-value">89%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-200"></div>
+      <div class="color-label">gray-200</div>
+      <div class="color-value">82%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-300"></div>
+      <div class="color-label">gray-300</div>
+      <div class="color-value">67%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-400"></div>
+      <div class="color-label">gray-400</div>
+      <div class="color-value">50%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-500"></div>
+      <div class="color-label">gray-500</div>
+      <div class="color-value">38%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-600"></div>
+      <div class="color-label">gray-600</div>
+      <div class="color-value">29%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-700"></div>
+      <div class="color-label">gray-700</div>
+      <div class="color-value">21%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-800"></div>
+      <div class="color-label">gray-800</div>
+      <div class="color-value">13%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-900"></div>
+      <div class="color-label">gray-900</div>
+      <div class="color-value">5%</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-black"></div>
+      <div class="color-label">black</div>
+      <div class="color-value">0%</div>
+    </div>
+  </div>
+</div>
+
+<h2>Акцентные цвета</h2>
+
+<p>
+  6 цветов, равномерно распределённых по цветовому кругу (360° / 5 = 72° шаг).
+  Каждый имеет <code>-light</code> (+15% lightness) и <code>-dark</code> (−15% lightness) варианты.
+</p>
+
+<table>
+  <tr><th>Токен</th><th>Hue</th><th>Saturation</th><th>Роль</th></tr>
+  <tr><td><code>--gr-hsl-primary</code></td><td>220°</td><td>80%</td><td>Основной (синий — доверие, технологии)</td></tr>
+  <tr><td><code>--gr-hsl-secondary</code></td><td>220°</td><td>50%</td><td>Вторичный (тот же тон, ниже насыщенность)</td></tr>
+  <tr><td><code>--gr-hsl-success</code></td><td>148°</td><td>70%</td><td>Успех (зелёный — рост, подтверждение)</td></tr>
+  <tr><td><code>--gr-hsl-warning</code></td><td>36°</td><td>90%</td><td>Предупреждение (оранжевый — внимание)</td></tr>
+  <tr><td><code>--gr-hsl-danger</code></td><td>4°</td><td>80%</td><td>Опасность (красный — ошибка, стоп)</td></tr>
+  <tr><td><code>--gr-hsl-info</code></td><td>292°</td><td>60%</td><td>Информация (пурпурный — нейтральная подсветка)</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Акцентная палитра (light / base / dark)</div>
+  <div class="color-grid color-grid-accent">
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-primary-light"></div>
+      <div class="color-swatch gr-bg-primary"></div>
+      <div class="color-swatch gr-bg-primary-dark"></div>
+      <div class="color-label">primary</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-secondary-light"></div>
+      <div class="color-swatch gr-bg-secondary"></div>
+      <div class="color-swatch gr-bg-secondary-dark"></div>
+      <div class="color-label">secondary</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-success-light"></div>
+      <div class="color-swatch gr-bg-success"></div>
+      <div class="color-swatch gr-bg-success-dark"></div>
+      <div class="color-label">success</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-warning-light"></div>
+      <div class="color-swatch gr-bg-warning"></div>
+      <div class="color-swatch gr-bg-warning-dark"></div>
+      <div class="color-label">warning</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-danger-light"></div>
+      <div class="color-swatch gr-bg-danger"></div>
+      <div class="color-swatch gr-bg-danger-dark"></div>
+      <div class="color-label">danger</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-info-light"></div>
+      <div class="color-swatch gr-bg-info"></div>
+      <div class="color-swatch gr-bg-info-dark"></div>
+      <div class="color-label">info</div>
+    </div>
+  </div>
+</div>
+
+<h2>Фоновые утилиты</h2>
+
+<pre><code>&lt;div class="gr-bg-primary"&gt;Синий фон&lt;/div&gt;
+&lt;div class="gr-bg-gray-100"&gt;Светло-серый фон&lt;/div&gt;
+&lt;div class="gr-bg-success-light"&gt;Светло-зелёный фон&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="color-grid">
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-primary"></div>
+      <div class="color-label">gr-bg-primary</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-100"></div>
+      <div class="color-label">gr-bg-gray-100</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-success-light"></div>
+      <div class="color-label">gr-bg-success-light</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-danger"></div>
+      <div class="color-label">gr-bg-danger</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-warning"></div>
+      <div class="color-label">gr-bg-warning</div>
+    </div>
+    <div class="color-cell">
+      <div class="color-swatch gr-bg-gray-800"></div>
+      <div class="color-label">gr-bg-gray-800</div>
+    </div>
+  </div>
+</div>
+
+<h2>Цвет текста</h2>
+
+<pre><code>&lt;p class="gr-text-primary"&gt;Синий текст&lt;/p&gt;
+&lt;p class="gr-text-gray-500"&gt;Серый текст&lt;/p&gt;
+&lt;p class="gr-text-success-dark"&gt;Тёмно-зелёный текст&lt;/p&gt;
+&lt;p class="gr-text-danger"&gt;Красный текст — ошибка&lt;/p&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="typo-demo-row">
+    <p class="gr-text-lg gr-font-semibold gr-text-primary">Основной синий текст — акцент</p>
+  </div>
+  <div class="typo-demo-row">
+    <p class="gr-text-gray-500">Второстепенный серый текст — подписи, описания</p>
+  </div>
+  <div class="typo-demo-row">
+    <p class="gr-font-semibold gr-text-success-dark">Тёмно-зелёный — успешное действие</p>
+  </div>
+  <div class="typo-demo-row">
+    <p class="gr-font-semibold gr-text-danger">Красный текст — ошибка или важное предупреждение</p>
+  </div>
+</div>
+
+<h2>Цвет рамки</h2>
+
+<pre><code>&lt;div class="gr-border-2 gr-border-primary"&gt;Синяя рамка&lt;/div&gt;
+&lt;div class="gr-border-2 gr-border-gray-300"&gt;Серая рамка&lt;/div&gt;
+&lt;div class="gr-border-2 gr-border-danger"&gt;Красная рамка&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="border-demo-box gr-border-2 gr-border-primary">
+    <span class="gr-text-primary gr-font-semibold">gr-border-primary</span> — синяя рамка
+  </div>
+  <div class="border-demo-box gr-border-2 gr-border-gray-300">
+    <span class="gr-font-semibold">gr-border-gray-300</span> — светло-серая рамка
+  </div>
+  <div class="border-demo-box gr-border-2 gr-border-danger">
+    <span class="gr-text-danger gr-font-semibold">gr-border-danger</span> — красная рамка для ошибок
+  </div>
+  <div class="border-demo-box gr-border-2 gr-border-success">
+    <span class="gr-text-success gr-font-semibold">gr-border-success</span> — зелёная рамка для успеха
+  </div>
+</div>
+
+<h2>Семантические токены</h2>
+
+<p>
+  Высокоуровневые переменные для основных ролей: фон, текст, ссылки, границы.
+  Используйте их для построения цветовой схемы сайта.
+</p>
+
+<table>
+  <tr><th>Токен</th><th>Значение</th><th>Роль</th></tr>
+  <tr><td><code>--gr-color-bg</code></td><td><code>hsl(var(--gr-hsl-white))</code></td><td>Фон страницы</td></tr>
+  <tr><td><code>--gr-color-text</code></td><td><code>hsl(var(--gr-hsl-gray-900))</code></td><td>Основной текст</td></tr>
+  <tr><td><code>--gr-color-text-secondary</code></td><td><code>hsl(var(--gr-hsl-gray-500))</code></td><td>Второстепенный текст</td></tr>
+  <tr><td><code>--gr-color-border</code></td><td><code>hsl(var(--gr-hsl-gray-200))</code></td><td>Границы</td></tr>
+  <tr><td><code>--gr-color-link</code></td><td><code>hsl(var(--gr-hsl-primary))</code></td><td>Ссылки</td></tr>
+  <tr><td><code>--gr-color-link-hover</code></td><td><code>hsl(var(--gr-hsl-primary-dark))</code></td><td>Ссылки при наведении</td></tr>
+</table>
+
+<pre><code>body {
+  background-color: var(--gr-color-bg);
+  color: var(--gr-color-text);
+}
+
+a {
+  color: var(--gr-color-link);
+}
+
+a:hover {
+  color: var(--gr-color-link-hover);
+}</code></pre>
+
+<h2>Кастомизация</h2>
+
+<p>
+  Все цвета строятся на HSL-переменных. Для тёмной темы достаточно переопределить lightness:
+</p>
+
+<pre><code>:root {
+  /* Инвертируем серую шкалу */
+  --gr-hsl-white:    0, 0%, 8%;
+  --gr-hsl-gray-50:  0, 0%, 13%;
+  --gr-hsl-gray-100: 0, 0%, 21%;
+  --gr-hsl-gray-200: 0, 0%, 29%;
+  --gr-hsl-gray-300: 0, 0%, 38%;
+  --gr-hsl-gray-400: 0, 0%, 50%;
+  --gr-hsl-gray-500: 0, 0%, 67%;
+  --gr-hsl-gray-600: 0, 0%, 82%;
+  --gr-hsl-gray-700: 0, 0%, 89%;
+  --gr-hsl-gray-800: 0, 0%, 96%;
+  --gr-hsl-gray-900: 0, 0%, 100%;
+  --gr-hsl-black:    0, 0%, 100%;
+
+  /* Делаем primary фиолетовым */
+  --gr-hsl-primary:       260, 80%, 50%;
+  --gr-hsl-primary-light: 260, 80%, 65%;
+  --gr-hsl-primary-dark:  260, 80%, 35%;
+}</code></pre>
+
+<div class="callout callout-success">
+  <p><strong>Точечная кастомизация.</strong> Не нужно переопределять все переменные. Измените только <code>--gr-hsl-primary</code> — и все классы <code>.gr-bg-primary</code>, <code>.gr-text-primary</code>, <code>.gr-border-primary</code> подхватят новый цвет автоматически.</p>
+</div>
+
+<h2>Практический пример: alert-компонент</h2>
+
+<pre><code>&lt;!-- Успех --&gt;
+&lt;div class="gr-bg-success-light gr-p-4 gr-radius-2"&gt;
+  &lt;p class="gr-text-success-dark gr-font-semibold"&gt;Операция выполнена успешно&lt;/p&gt;
+  &lt;p class="gr-text-success-dark"&gt;Данные сохранены.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Ошибка --&gt;
+&lt;div class="gr-bg-danger-light gr-p-4 gr-radius-2"&gt;
+  &lt;p class="gr-text-danger-dark gr-font-semibold"&gt;Ошибка&lt;/p&gt;
+  &lt;p class="gr-text-danger-dark"&gt;Не удалось сохранить данные.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Предупреждение --&gt;
+&lt;div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-p-4 gr-radius-2"&gt;
+  &lt;p class="gr-font-semibold"&gt;Внимание&lt;/p&gt;
+  &lt;p&gt;Срок действия подписки истекает через 3 дня.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-bg-success-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
+    <p class="gr-text-success-dark gr-font-semibold gr-m-0 gr-mb-1">Операция выполнена успешно</p>
+    <p class="gr-text-success-dark gr-m-0 gr-text-sm">Данные сохранены.</p>
+  </div>
+  <div class="gr-bg-danger-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
+    <p class="gr-text-danger-dark gr-font-semibold gr-m-0 gr-mb-1">Ошибка</p>
+    <p class="gr-text-danger-dark gr-m-0 gr-text-sm">Не удалось сохранить данные. Проверьте подключение.</p>
+  </div>
+  <div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-py-4 gr-px-5 gr-radius-2">
+    <p class="gr-font-semibold gr-m-0 gr-mb-1">Внимание</p>
+    <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Срок действия подписки истекает через 3 дня.</p>
+  </div>
+</div>
+
+<h2>SCSS-реализация</h2>
+
+<pre><code>// _colors.scss — все классы генерируются циклами @each
+
+$gr-grays: (
+  "white": var(--gr-hsl-white), gray-50: var(--gr-hsl-gray-50),
+  ... gray-900, "black"
+);
+
+$gr-accents: (
+  primary: var(--gr-hsl-primary), primary-light: ..., primary-dark: ...,
+  secondary, success, warning, danger, info (+ light/dark каждого)
+);
+
+// Фоновые утилиты
+@each $name, $hsl in $gr-grays {
+  .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
+}
+@each $name, $hsl in $gr-accents {
+  .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
+}
+
+// Аналогично для gr-text-* и gr-border-*</code></pre>
+
+<h2>Советы</h2>
+
+<div class="callout callout-success">
+  <p><strong>Семантические токены для сайта, утилиты для компонентов.</strong> <code>--gr-color-bg</code> и <code>--gr-color-text</code> — для базовых стилей страницы. <code>.gr-bg-primary</code> и <code>.gr-text-danger</code> — для отдельных элементов и состояний.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Не смешивайте с HEX/RGB.</strong> Если вы используете HSL-систему Griffincss, задавайте все цвета через <code>--gr-hsl-*</code> переменные. Смешение HSL и HEX приводит к дублированию цветов и усложняет кастомизацию.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Light/dark варианты — автоматические.</strong> <code>-light</code> = L+15%, <code>-dark</code> = L−15%. Не переопределяйте их hue или saturation — только lightness, если нужно. Для кардинальной смены оттенка меняйте базовый токен (без -light/-dark).</p>
+</div>
+
+</main>
+</div>
+
+<script src="nav.js"></script>
+</body>
+</html>

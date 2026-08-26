@@ -1,0 +1,26 @@
+// Griffincss — Interactivity
+// Курсор, приём событий указателя, выделение текста, прокрутка.
+
+$gr-cursors: (pointer, default, text, move, grab, grabbing, wait, progress, help, not-allowed);
+
+@each $gr-value in $gr-cursors {
+  .gr-cursor-#{$gr-value} { cursor: $gr-value; }
+}
+
+.gr-pointer-events-none { pointer-events: none; }
+.gr-pointer-events-auto { pointer-events: auto; }
+
+// Имя утилиты повторяет имя свойства — user-select, а не select: короткое
+// .gr-select занято элементом формы в griffincss-ui, и один корень на два
+// разных смысла вёрстальщику не помогает.
+@each $gr-value in (none, all, text, auto) {
+  .gr-user-select-#{$gr-value} { user-select: $gr-value; }
+}
+
+// Плавная прокрутка — только для тех, кто не просил уменьшить анимацию.
+// Класс объявлен всегда, иначе .gr-scroll-auto не смог бы его перебить.
+.gr-scroll-auto { scroll-behavior: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .gr-scroll-smooth { scroll-behavior: smooth; }
+}

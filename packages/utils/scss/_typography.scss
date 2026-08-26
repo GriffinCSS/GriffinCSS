@@ -1,0 +1,251 @@
+// Griffincss — Typography Utilities
+// Font sizes, weights, alignment, transform, line-height, decoration, font families
+
+@use 'sass:math';
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
+
+// Font size scale
+$gr-text-sizes: (
+  xs:   0.75rem,
+  sm:   0.875rem,
+  base: 1rem,
+  lg:   1.125rem,
+  xl:   1.25rem,
+  2xl:  1.5rem,
+  3xl:  1.875rem,
+  4xl:  2.25rem,
+  5xl:  3rem,
+  6xl:  3.75rem
+);
+
+@each $name, $size in $gr-text-sizes {
+  .gr-text-#{$name} { font-size: $size; }
+}
+
+// Относительные размеры: шаг в пикселях от текущего размера, а не от корня.
+// Нужны там, где блок должен подстраиваться под окружение, не зная, в каком
+// месте шаблона его покажут: виджет с одним и тем же содержимым в шапке
+// и в подвале, подгружаемый из БД текст.
+//
+// Шаг задан в px, а не долей em, намеренно: при родителе 16px .gr-text-rel-sm
+// даёт ровно 14px, как и базовый .gr-text-sm, — попадание в шкалу точное,
+// без округлений. Обратная сторона в том, что шаг фиксирован: при родителе
+// 32px тот же класс даст 30px, а не 28px.
+//
+// Ступени base здесь нет: класс, не меняющий размер, не нужен — его роль
+// играет отсутствие класса.
+//
+// Адаптивных вариантов у набора нет намеренно — размер здесь задаёт
+// вложенность, а не ширина окна или контейнера.
+$gr-text-rel-steps: (
+  xs:  -4px,
+  sm:  -2px,
+  lg:   2px,
+  xl:   4px,
+  2xl:  6px,
+  3xl:  8px
+);
+
+@each $gr-name, $gr-delta in $gr-text-rel-steps {
+  .gr-text-rel-#{$gr-name} {
+    // Знак разворачивается в отдельную ветку: calc(1em + -4px) валиден,
+    // но читается в devtools хуже, чем calc(1em - 4px).
+    @if $gr-delta < 0 {
+      font-size: calc(1em - #{math.abs($gr-delta)});
+    } @else {
+      font-size: calc(1em + #{$gr-delta});
+    }
+  }
+}
+
+// Font weight
+$gr-weights: (
+  "thin":       100,
+  "extralight": 200,
+  "light":      300,
+  "normal":     400,
+  "medium":     500,
+  "semibold":   600,
+  "bold":       700,
+  "extrabold":  800,
+  "black":      900
+);
+
+@each $name, $weight in $gr-weights {
+  .gr-font-#{$name} { font-weight: $weight; }
+}
+
+// Text alignment
+// left/right буквальны и остаются такими: их выбирают, когда сторона
+// действительно нужна физическая. Разворот по направлению письма даёт
+// пара start/end — в LTR она совпадает с left/right, в RTL меняется местами.
+.gr-text-left    { text-align: left; }
+.gr-text-center  { text-align: center; }
+.gr-text-right   { text-align: right; }
+.gr-text-justify { text-align: justify; }
+.gr-text-start   { text-align: start; }
+.gr-text-end     { text-align: end; }
+
+// Text transform
+.gr-uppercase  { text-transform: uppercase; }
+.gr-lowercase  { text-transform: lowercase; }
+.gr-capitalize { text-transform: capitalize; }
+
+// Line height
+$gr-leading: (
+  tight:  1.25,
+  snug:   1.375,
+  normal: 1.5,
+  relaxed: 1.625,
+  loose:  2
+);
+
+@each $name, $value in $gr-leading {
+  .gr-leading-#{$name} { line-height: $value; }
+}
+
+// Text decoration
+.gr-underline     { text-decoration: underline; }
+.gr-no-underline  { text-decoration: none; }
+.gr-line-through  { text-decoration: line-through; }
+
+// Font style
+.gr-italic     { font-style: italic; }
+.gr-not-italic { font-style: normal; }
+
+// Whitespace and wrapping
+.gr-break-words {
+  overflow-wrap: break-word;
+}
+
+.gr-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-whitespace-nowrap { white-space: nowrap; }
+.gr-whitespace-pre    { white-space: pre; }
+.gr-whitespace-normal { white-space: normal; }
+
+// Обрезка по числу строк. -webkit-box здесь не пережиток: обрезка по строкам
+// работает только внутри этой раскладки, стандартного эквивалента нет.
+// Свойство line-clamp пишется рядом с префиксным — как только поддержка
+// станет повсеместной, префиксную строку можно снять без правки классов.
+@each $gr-lines in (1, 2, 3, 4, 5, 6) {
+  .gr-line-clamp-#{$gr-lines} {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: $gr-lines;
+    line-clamp: $gr-lines;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.gr-line-clamp-none {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: none;
+  line-clamp: none;
+}
+
+// Маркеры списка. Ресет снимает их только с ul[role="list"] / ol[role="list"],
+// эти классы дают тот же результат там, где менять разметку нельзя.
+.gr-list-none {
+  // Свойство логическое, а не padding-left: маркерный отступ в RTL лежит
+  // справа, и физическая сторона снимала бы не тот отступ.
+  padding-inline-start: 0;
+  list-style: none;
+}
+
+.gr-list-disc    { list-style: disc; }
+.gr-list-decimal { list-style: decimal; }
+.gr-list-inside  { list-style-position: inside; }
+.gr-list-outside { list-style-position: outside; }
+
+// Перенос строк в заголовках и абзацах: balance выравнивает длину строк
+// в коротком тексте, pretty убирает висячие слова в длинном.
+.gr-text-balance { text-wrap: balance; }
+.gr-text-pretty  { text-wrap: pretty; }
+
+// Font families
+.gr-font-sans  { font-family: var(--gr-font-sans); }
+.gr-font-serif { font-family: var(--gr-font-serif); }
+.gr-font-mono  { font-family: var(--gr-font-mono); }
+
+// Адаптивный набор — один на оба вида запроса. Оконный вариант получает
+// суффикс брейкпоинта, контейнерный — тот же суффикс с буквой c; правила
+// описаны один раз, поэтому разойтись не могут.
+@mixin gr-typography-scale($suffix) {
+  // Font sizes responsive
+  @each $name, $size in $gr-text-sizes {
+    .gr-text-#{$name}#{$suffix} { font-size: $size; }
+  }
+
+  // Font weights responsive
+  @each $name, $weight in $gr-weights {
+    .gr-font-#{$name}#{$suffix} { font-weight: $weight; }
+  }
+
+  // Text alignment responsive
+  .gr-text-left#{$suffix}    { text-align: left; }
+  .gr-text-center#{$suffix}  { text-align: center; }
+  .gr-text-right#{$suffix}   { text-align: right; }
+  .gr-text-justify#{$suffix} { text-align: justify; }
+  .gr-text-start#{$suffix}   { text-align: start; }
+  .gr-text-end#{$suffix}     { text-align: end; }
+
+  // Text transform responsive
+  .gr-uppercase#{$suffix}  { text-transform: uppercase; }
+  .gr-lowercase#{$suffix}  { text-transform: lowercase; }
+  .gr-capitalize#{$suffix} { text-transform: capitalize; }
+
+  // Line height responsive
+  @each $name, $value in $gr-leading {
+    .gr-leading-#{$name}#{$suffix} { line-height: $value; }
+  }
+
+  // Text decoration responsive
+  .gr-underline#{$suffix}    { text-decoration: underline; }
+  .gr-no-underline#{$suffix}  { text-decoration: none; }
+  .gr-line-through#{$suffix}  { text-decoration: line-through; }
+
+  // Font style responsive
+  .gr-italic#{$suffix}     { font-style: italic; }
+  .gr-not-italic#{$suffix} { font-style: normal; }
+
+  // Whitespace responsive
+  .gr-break-words#{$suffix} {
+    overflow-wrap: break-word;
+  }
+
+  .gr-truncate#{$suffix} {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-whitespace-nowrap#{$suffix} { white-space: nowrap; }
+  .gr-whitespace-pre#{$suffix}    { white-space: pre; }
+  .gr-whitespace-normal#{$suffix} { white-space: normal; }
+
+  // Font families responsive
+  .gr-font-sans#{$suffix}  { font-family: var(--gr-font-sans); }
+  .gr-font-serif#{$suffix} { font-family: var(--gr-font-serif); }
+  .gr-font-mono#{$suffix}  { font-family: var(--gr-font-mono); }
+}
+
+// Адаптивные варианты по ширине окна
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @include gr-typography-scale('-#{$bp-name}');
+  }
+}
+
+// Контейнерные варианты — от ширины ближайшего предка с .gr-cq
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-typography-scale('-c#{$bp-name}');
+  }
+}

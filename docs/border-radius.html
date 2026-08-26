@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Border Radius — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/utils/dist/griffincss-utils.js"></script>
+<style>
+/* Слой docs: те же правила, что в style.css, — утилиты перекрывают их. */
+@layer griffincss.docs {
+  .br-demo-block { margin: 1.25rem 0; }
+  .br-demo-block .gr-radius { margin-bottom: 1.5rem; }
+
+  /* Три уровня вложенности — три ступени литеральной шкалы: образец обязан
+     выглядеть одинаково в любой теме, поэтому цвета здесь не семантические. */
+  .br-level1 { background-color: hsl(var(--gr-hsl-primary-dark)); color: hsl(var(--gr-hsl-white)); position: relative; }
+  .br-level2 { background-color: hsl(var(--gr-hsl-primary)); color: hsl(var(--gr-hsl-white)); position: relative; }
+  .br-level3 { background-color: hsl(var(--gr-hsl-primary-light)); color: hsl(var(--gr-hsl-gray-900)); position: relative; }
+
+  .br-level4 { background-color: hsl(var(--gr-hsl-primary-dark)); color: hsl(var(--gr-hsl-white)); position: relative; }
+  .br-level5 { background-color: hsl(var(--gr-hsl-primary)); color: hsl(var(--gr-hsl-white)); position: relative; }
+
+  .br-item { padding: 0.625rem 1rem; font-family: var(--gr-font-mono); font-size: 0.75rem; background-color: hsl(var(--gr-hsl-white), 0.18); }
+  .br-item-dark { background-color: hsl(var(--gr-hsl-white), 0.5); }
+  .br-annotation { font-size: 0.6875rem; opacity: 0.75; }
+}
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Border Radius</h1>
+  <p>Каскад скруглений: дочерние блоки наследуют уменьшенный радиус автоматически. Готовые классы от 0 до 4rem + pill. Зазор <code>--gr-p</code> задаётся переменной, поэтому первый уровень работает без JS. Произвольную глубину достраивает опциональный <code>griffincss-utils.js</code> — без единого замера в рантайме.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">scss/modules/_border-radius.scss</span>
+    <span class="badge">CSS + опциональный JS</span>
+  </div>
+</div>
+
+<h2>Концепция</h2>
+
+<pre><code>padding контейнера = --gr-p
+child_radius     = max(0, --gr-r − --gr-p)</code></pre>
+
+<p>
+  Зазор один на все стороны, и обе переменные ненаследуемые: значение уровня объявляется на нём самом,
+  а вниз уходит отдельная публикация — <code>--gr-r-down</code> и <code>--gr-r-gap</code>.
+</p>
+
+<table>
+  <tr><th>Переменная</th><th>Назначение</th><th>По умолчанию</th></tr>
+  <tr>
+    <td><code>--gr-r</code></td>
+    <td>border-radius контейнера</td>
+    <td><code>0px</code></td>
+  </tr>
+  <tr>
+    <td><code>--gr-p</code></td>
+    <td>Зазор между контейнером и детьми; из него выводится <code>padding</code></td>
+    <td><code>0px</code></td>
+  </tr>
+</table>
+
+<div class="callout callout-success">
+  <p><strong>Зазор — источник, padding — следствие:</strong> <code>.gr-radius</code> выводит свой <code>padding</code> из <code>--gr-p</code>, поэтому значение известно CSS и замеры в рантайме не нужны. Нужен <code>padding</code>, не равный зазору, — задайте его отдельно: собственное свойство перекроет вывод из переменной.</p>
+</div>
+
+<h2>Готовые классы</h2>
+
+<p>
+  Вместо ручного <code>style="--gr-r: 16px"</code> используйте классы — чище, короче, читаемее.
+  Шаг <strong>0.25rem</strong>, от <code>.gr-radius-0</code> до <code>.gr-radius-16</code> (0–4rem).
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Значение</th><th>При px = 16</th></tr>
+  <tr><td><code>.gr-radius-0</code></td><td>0</td><td>0px</td></tr>
+  <tr><td><code>.gr-radius-1</code></td><td>0.25rem</td><td>4px</td></tr>
+  <tr><td><code>.gr-radius-2</code></td><td>0.5rem</td><td>8px</td></tr>
+  <tr><td><code>.gr-radius-4</code></td><td>1rem</td><td>16px</td></tr>
+  <tr><td><code>.gr-radius-6</code></td><td>1.5rem</td><td>24px</td></tr>
+  <tr><td><code>.gr-radius-8</code></td><td>2rem</td><td>32px</td></tr>
+  <tr><td><code>.gr-radius-12</code></td><td>3rem</td><td>48px</td></tr>
+  <tr><td><code>.gr-radius-16</code></td><td>4rem</td><td>64px</td></tr>
+</table>
+
+<p>Каждый класс устанавливает и <code>--gr-r</code>, и <code>border-radius</code> — каскад на детей работает автоматически.</p>
+
+<pre><code>&lt;!-- Было (ручные переменные) --&gt;
+&lt;div class="gr-radius" style="--gr-r: 32px; --gr-p: 16px;"&gt;
+
+&lt;!-- Стало (готовый класс) --&gt;
+&lt;div class="gr-radius gr-radius-8" style="--gr-p: 16px;"&gt;</code></pre>
+
+<h2>Базовое использование</h2>
+
+<p>
+  <code>.gr-radius-8</code> = 32px (2rem). <code>--gr-p: 16px</code> даёт и зазор, и <code>padding: 16px</code>.
+  Ребёнок: <strong>32 − 16 = 16px</strong>.
+</p>
+
+<pre><code>&lt;div class="gr-radius gr-radius-8" style="--gr-p: 16px;"&gt;
+  &lt;div&gt;Мой радиус = 32 − 16 = 16px&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-radius gr-radius-8 br-level1" style="--gr-p: 16px;">
+    <div class="br-item" style="padding:20px 24px;">
+      Ребёнок внутри контейнера<br>
+      <span class="br-annotation">Радиус: 32−16 = 16px. Зазор из --gr-p.</span>
+    </div>
+  </div>
+  <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0">
+    <code>--gr-r</code> задан классом <code>.gr-radius-8</code>, зазор и padding — переменной <code>--gr-p</code>.
+  </p>
+</div>
+
+<h2>Многоуровневый каскад</h2>
+
+<p>
+  Каждый уровень — новый <code>.gr-radius</code>. Внутренние дети без <code>.gr-radius</code> получают радиус по формуле.
+</p>
+
+<div class="callout callout-warning">
+  <p><strong>Вложенному контейнеру радиус нужен свой.</strong> <code>--gr-r</code> зарегистрирована через <code>@property</code> как ненаследуемая, поэтому вложенный <code>.gr-radius</code> без собственного значения даёт <strong>квадрат</strong>, а не радиус предка. Это осознанное поведение: наследуйся переменная, вложенный контейнер тихо копировал бы радиус родителя один в один — картинка правдоподобная и неверная. Многоуровневый каскад без ручных значений достраивает рантайм <code>griffincss-utils.js</code>.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Осевые и односторонние отступы каскаду не годятся.</strong> <code>.gr-px-*</code>, <code>.gr-py-*</code>, <code>.gr-pt-*</code> и прочие односторонние <code>--gr-p</code> не объявляют: у асимметричного отступа нет одного значения, от которого считать радиус ребёнка. Для каскада используйте равномерный <code>.gr-p-*</code> или <code>--gr-p</code> напрямую. По той же причине <code>--gr-p</code> принимает <strong>одну</strong> длину: <code>--gr-p: 8px 20px</code> недействительно — нужен неравномерный <code>padding</code>, задайте его свойством.</p>
+</div>
+
+<pre><code>&lt;div class="gr-radius gr-radius-12" style="--gr-p: 16px;"&gt;
+  &lt;div class="gr-radius gr-radius-8" style="--gr-p: 8px;"&gt;
+    &lt;div class="gr-radius gr-radius-6" style="--gr-p: 6px;"&gt;
+      &lt;div&gt;радиус = 24 − 6 = 18px&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат: 4 уровня</div>
+  <div class="gr-radius gr-radius-12 br-level1" style="--gr-p: 16px;">
+    <div class="gr-radius gr-radius-8 br-level2" style="--gr-p: 8px;">
+      <div class="gr-radius gr-radius-6 br-level3" style="--gr-p: 6px;">
+        <div class="br-item br-item-dark" style="padding:16px 20px;">
+          Глубина 3<br>
+          <span class="br-annotation">Радиус: 24−6 = 18px (авто)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0">
+    Уровень 1 (фиол.): 48px, зазор 16 → 2 (сирен.): 48−16 = 32px, зазор 8 → 3 (светл.): 32−8 = 24px, зазор 6 → внутр. блок: 24−6 = 18px.
+    Каждая ступень выбрана по формуле: класс уровня совпадает с тем, что даёт <code>max(0, --gr-r − --gr-p)</code> предыдущего.
+  </p>
+</div>
+
+<h2>Произвольная глубина: рантайм</h2>
+
+<p>
+  Ручные значения на каждом уровне — обязанность, пока работает один статический CSS: рекуррента
+  <code>r(n) = max(0, r(n−1) − p(n−1))</code> в нём невыразима. Подключите
+  <code>griffincss-utils.js</code> — и явный радиус нужен только верхнему контейнеру,
+  остальные рантайм выведет сам.
+</p>
+
+<p>
+  Зазор он читает <strong>и из класса, и из <code>style</code></strong> — источники равноправны.
+  Классы <code>.gr-p-*</code> берутся из той же таблицы значений, из которой собран CSS, поэтому
+  <code>.gr-p-3</code> и <code>--gr-p: 12px</code> для каскада — одно и то же. Шкала отступов идёт
+  ступенями по <code>0.25rem</code>, то есть кратно 4px; всё, что между ступенями, задаётся
+  переменной. В примере ниже нечётные уровни — классы, чётные — произвольные значения.
+</p>
+
+<pre><code>&lt;script src="griffincss.js"&gt;&lt;/script&gt;
+&lt;script src="griffincss-utils.js"&gt;&lt;/script&gt;
+
+&lt;div class="gr-radius gr-radius-16 gr-p-3"&gt;             &lt;!-- 64px, зазор классом: 0.75rem --&gt;
+  &lt;div class="gr-radius" style="--gr-p: 10px;"&gt;         &lt;!-- 64−12 = 52px, зазор свой: 10px --&gt;
+    &lt;div class="gr-radius gr-p-2"&gt;                      &lt;!-- 52−10 = 42px, классом: 0.5rem --&gt;
+      &lt;div class="gr-radius" style="--gr-p: 6px;"&gt;      &lt;!-- 42−8  = 34px, своё: 6px --&gt;
+        &lt;div class="gr-radius gr-p-1"&gt;                  &lt;!-- 34−6  = 28px, классом: 0.25rem --&gt;
+          &lt;div&gt;радиус = 28 − 4 = 24px&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат: 5 уровней, радиус задан один раз</div>
+  <div class="gr-radius gr-radius-16 gr-p-3 br-level1">
+    <div class="gr-radius br-level2" style="--gr-p: 10px;">
+      <div class="gr-radius gr-p-2 br-level3">
+        <div class="gr-radius br-level4" style="--gr-p: 6px;">
+          <div class="gr-radius gr-p-1 br-level5">
+            <div class="br-item" style="padding:14px 18px;">
+              Глубина 5<br>
+              <span class="br-annotation">Радиус: 28−4 = 24px (авто)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0">
+    64px → 52 → 42 → 34 → 28 → 24. Явный радиус — только у верхнего контейнера, остальные вывел рантайм.
+    Зазоры: <code>.gr-p-3</code> → <code>--gr-p: 10px</code> → <code>.gr-p-2</code> → <code>--gr-p: 6px</code> → <code>.gr-p-1</code>.
+  </p>
+</div>
+
+<div class="callout">
+  <p><strong>Рантайм не считает — он складывает выражение.</strong> Второму уровню примера достаётся
+  <code>--gr-r: max(0px, calc(4rem - 0.75rem))</code>, третьему —
+  <code>max(0px, calc(max(0px, calc(4rem - 0.75rem)) - 10px))</code>: <code>rem</code> из класса и
+  <code>px</code> из <code>style</code> едут в одном выражении, и разрешает их CSS в <code>calc()</code>.
+  Ни <code>getComputedStyle</code>, ни forced reflow — раскладку рантайм не трогает вовсе.
+  Одинаковая форма вложенности делит один класс и одно правило.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Процентный радиус каскаду не годится.</strong> <code>--gr-r: 50%</code> формально проходит:
+  и статическая формула, и рантайм соберут <code>max(0px, calc(50% − 8px))</code>, и браузер это применит.
+  Но проценты в <code>border-radius</code> считаются от коробки <em>самого элемента</em>, а не предка,
+  поэтому у ребёнка 50% — это половина уже другой коробки, и концентричности углов не получается.
+  Для каскада задавайте радиус длиной: классом <code>.gr-radius-*</code> или <code>px</code>/<code>rem</code>.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Поток и живое дерево.</strong> Пока страница разбирается, контейнер получает радиус
+  в момент появления, а не разом на <code>DOMContentLoaded</code> — как это делает парсер раскладок.
+  После загрузки рантайм наблюдает за <code>&lt;body&gt;</code>: вставленное поддерево обрабатывается само,
+  с дебаунсом 16&nbsp;мс, а перенос поддерева к другому предку снимает прежний выведенный класс
+  и пересчитывает радиус. Ручное управление — <code>Griffincss.utils.radiusCascade(node)</code>,
+  <code>Griffincss.utils.observe(node)</code>, <code>Griffincss.utils.stop()</code>.</p>
+  <p>Выключатели на теге <code>&lt;script&gt;</code>: <code>data-stream="false"</code> — без потокового режима,
+  <code>data-observe="false"</code> — без наблюдения за живым деревом,
+  <code>data-auto="false"</code> — не запускаться вовсе. Поток видно на
+  <a href="stream.html">странице потоковой раскладки</a>.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Класс и <code>style</code> на одном контейнере — только согласованные.</strong> Если задать оба
+  и с разными значениями, победит инлайн, а в консоли появится предупреждение
+  <code>Griffincss: --gr-p задан и классом (1rem), и в style (16px) — значения расходятся</code>.
+  Осевые и односторонние классы (<code>.gr-px-*</code>, <code>.gr-py-*</code>, <code>.gr-pt-*</code>)
+  зазором не считаются вовсе — рантайм их не видит.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Без скрипта работают первый уровень и его прямые дети.</strong> С <code>data-auto="false"</code> на теге
+  <code>&lt;script&gt;</code> (или без самого скрипта) вложенные контейнеры без явного <code>--gr-r</code> становятся квадратными —
+  внешний контейнер и его непосредственные дети остаются скруглёнными в любом случае.</p>
+</div>
+
+<h2>Pill / полностью скруглённый</h2>
+
+<p>
+  <code>.gr-radius-full</code> задаёт <code>border-radius: 9999px</code> — бесконечное скругление.
+  Используется для кнопок, бейджей, аватаров и любых pill-элементов.
+</p>
+
+<pre><code>&lt;span class="gr-radius gr-radius-full" style="padding: 8px 20px;"&gt;Бейдж&lt;/span&gt;
+&lt;button class="gr-radius gr-radius-full" style="padding: 12px 32px;"&gt;Кнопка&lt;/button&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-wrap gr-flex-items-center gr-gap">
+    <span class="gr-radius gr-radius-full gr-bg-accent gr-text-on-accent gr-text-xs" style="padding: 8px 20px;">Бейдж</span>
+    <button class="gr-radius gr-radius-full gr-border-2 gr-text-accent gr-text-sm" style="padding: 10px 28px;background:transparent;border-color:var(--gr-color-accent);">Кнопка</button>
+    <span class="gr-radius gr-radius-full gr-bg-surface gr-border gr-text-ink gr-text-xs" style="padding: 10px 24px;">Pill-элемент</span>
+  </div>
+</div>
+
+<h2>Адаптивный радиус</h2>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Изменение в 0.7.0.</strong> Классов вида
+    <code>.gr-radius-4-md</code> больше нет. Полная сетка суффиксов стоила
+    68 классов при одном реальном сценарии на проект, а сам сценарий
+    решается одной переменной.
+  </p>
+</div>
+
+<p>
+  Радиус берётся из <code>--gr-r</code>, поэтому меняется он обычным
+  медиа-запросом — каскад по вложенности при этом продолжает работать:
+  дочерние блоки пересчитают свой радиус сами.
+</p>
+
+<pre><code>/* острые углы на мобильном, 16px от 768px */
+.card { --gr-r: 0; }
+
+@media (width &gt;= 768px) {
+  .card { --gr-r: 1rem; }
+}</code></pre>
+
+<pre><code>&lt;div class="gr-radius card" style="--gr-p: 16px;"&gt;
+  Адаптивный радиус
+&lt;/div&gt;</code></pre>
+
+<h2>Несколько детей в контейнере</h2>
+
+<p>
+  Каскад действует на <strong>всех</strong> прямых потомков <code>.gr-radius</code> (кроме тех, что сами <code>.gr-radius</code>).
+</p>
+
+<pre><code>&lt;div class="gr-radius gr-radius-8" style="--gr-p: 16px;"&gt;
+  &lt;header&gt;Шапка&lt;/header&gt;
+  &lt;div&gt;Контент&lt;/div&gt;
+  &lt;footer&gt;Подвал&lt;/footer&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-radius gr-radius-8 br-level1" style="--gr-p: 16px;">
+    <div class="br-item gr-mb-2">Шапка — авто 16px</div>
+    <div class="br-item gr-mb-2">Контент — авто 16px</div>
+    <div class="br-item gr-mb-0">Подвал — авто 16px</div>
+  </div>
+  <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0">
+    Три ребёнка. Радиус каждого: 32−16 = 16px. Одна настройка на всех.
+  </p>
+</div>
+
+<h2>Обнуление радиуса</h2>
+
+<p>
+  Когда <code>--gr-p ≥ --gr-r</code>, дочерний радиус обнуляется: <code>max(0, r − p)</code>.
+</p>
+
+<pre><code>&lt;div class="gr-radius gr-radius-4" style="--gr-p: 8px;"&gt;
+  &lt;div&gt;16−8 = 8px (скруглён)&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-radius gr-radius-4" style="--gr-p: 16px;"&gt;
+  &lt;div&gt;max(0, 16−16) = 0px (острые углы)&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-radius gr-radius-4" style="--gr-p: 24px;"&gt;
+  &lt;div&gt;max(0, 16−24) = 0px (острые углы)&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-lg">
+    <div class="gr-flex-1" style="min-width:160px;">
+      <p class="gr-text-xs gr-text-ink-secondary gr-mb-1"><code>p=8 &lt; r=16</code></p>
+      <div class="gr-radius gr-radius-4 br-level1" style="--gr-p: 8px;">
+        <div class="br-item gr-text-center">8px<br><span class="br-annotation">скруглён</span></div>
+      </div>
+    </div>
+    <div class="gr-flex-1" style="min-width:160px;">
+      <p class="gr-text-xs gr-text-ink-secondary gr-mb-1"><code>p=16 = r=16</code></p>
+      <div class="gr-radius gr-radius-4 br-level1" style="--gr-p: 16px;">
+        <div class="br-item gr-text-center gr-radius-0">0px<br><span class="br-annotation">острые</span></div>
+      </div>
+    </div>
+    <div class="gr-flex-1" style="min-width:160px;">
+      <p class="gr-text-xs gr-text-ink-secondary gr-mb-1"><code>p=24 > r=16</code></p>
+      <div class="gr-radius gr-radius-4 br-level1" style="--gr-p: 24px;">
+        <div class="br-item gr-text-center gr-radius-0">0px<br><span class="br-annotation">острые</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Собственный радиус у ребёнка</h2>
+
+<p>
+  <code>border-radius</code> напрямую на дочернем элементе перекрывает автоматический каскад.
+</p>
+
+<pre><code>&lt;div class="gr-radius gr-radius-8" style="--gr-p: 12px;"&gt;
+  &lt;div&gt;Авто-радиус 20px&lt;/div&gt;
+  &lt;div style="border-radius: 6px;"&gt;Свой радиус 6px&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-radius gr-radius-8 br-level1" style="--gr-p: 12px;">
+    <div class="br-item gr-mb-2">Авто-радиус 20px</div>
+    <div class="br-item gr-mb-0" style="border-radius:6px;">Свой радиус 6px (переопределён)</div>
+  </div>
+</div>
+
+<h2>Как работает</h2>
+
+<p>SCSS-модуль генерирует каскадную базу и полный набор утилитарных классов:</p>
+
+<pre><code>// Регистрация: обе переменные ненаследуемые
+@property --gr-r { syntax: "&lt;length-percentage&gt;"; inherits: false; initial-value: 0px; }
+@property --gr-p { syntax: "&lt;length-percentage&gt;"; inherits: false; initial-value: 0px; }
+
+// Каскад
+.gr-radius {
+  padding: var(--gr-p);
+  border-radius: var(--gr-r);
+
+  // публикация вниз: дети читают её, а не --gr-r/--gr-p
+  --gr-r-down: var(--gr-r);
+  --gr-r-gap: var(--gr-p);
+}
+.gr-radius > :not(.gr-radius) {
+  border-radius: max(0px, calc(var(--gr-r-down, 0px) - var(--gr-r-gap, 0px)));
+}
+
+// Готовые классы (0.25rem шаг, 0–4rem)
+.gr-radius-0  { --gr-r: 0;      border-radius: 0; }
+.gr-radius-1  { --gr-r: 0.25rem; border-radius: 0.25rem; }
+...
+.gr-radius-16 { --gr-r: 4rem;    border-radius: 4rem; }
+
+// Pill
+.gr-radius-full { --gr-r: 9999px; border-radius: 9999px; }
+
+// Адаптивные: .gr-radius-N-{sm,md,lg,xl}</code></pre>
+
+<div class="callout">
+  <p><strong>JS не участвует.</strong> До v0.7.0 рантайм обходил все <code>.gr-radius</code>, читал <code>min(padding-top, padding-left)</code> из computed-стилей и выставлял <code>--gr-p</code> инлайном — это давало forced reflow и устаревало при изменении ширины. Теперь модель перевёрнута: <code>--gr-p</code> задаёте вы, <code>padding</code> выводится из него.</p>
+</div>
+
+<h2>Практический пример: карточка</h2>
+
+<pre><code>&lt;div class="gr-radius gr-radius-5" style="--gr-p: 16px;"&gt;
+  &lt;img src="photo.jpg" alt=""&gt;
+  &lt;h3&gt;Заголовок&lt;/h3&gt;
+  &lt;p&gt;Описание карточки.&lt;/p&gt;
+  &lt;button&gt;Подробнее&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Результат</div>
+  <div class="gr-radius gr-radius-5 gr-bg-surface gr-border" style="--gr-p: 16px;max-width:380px;">
+    <div class="gr-flex gr-flex-center gr-flex-items-center gr-bg-accent gr-text-on-accent gr-text-sm" style="min-height:110px;">Изображение — авто 4px</div>
+    <h4 class="gr-mt-3 gr-mb-2 gr-text-base">Заголовок карточки</h4>
+    <p class="gr-m-0 gr-mb-3 gr-text-sm gr-text-ink-secondary">Все дети получают радиус 20−16 = 4px автоматически.</p>
+    <div class="gr-bg-accent gr-text-on-accent gr-w-fit gr-text-xs" style="padding:8px 22px;">Кнопка — авто 4px</div>
+  </div>
+</div>
+
+<h2>Советы</h2>
+
+<div class="callout callout-success">
+  <p><strong>Используйте готовые классы.</strong> <code>.gr-radius-8</code> вместо <code>style="--gr-r: 32px"</code> — чище, консистентно с остальной библиотекой и работает с адаптивными вариантами.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Не злоупотребляйте глубиной.</strong> После 2–3 уровней вложенности разница в радиусе незаметна. Для глубокой вложенности — <code>border-radius: 0</code> на внутренних элементах.</p>
+</div>
+
+</main>
+</div>
+
+<script src="nav.js"></script>
+</body>
+</html>

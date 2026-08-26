@@ -1,0 +1,19 @@
+// Griffincss — Shadows
+// Тени для передачи глубины интерфейса.
+//
+// Значения живут в токенах --gr-shadow-* (_tokens.scss ядра), поэтому
+// переопределяются пользователем без пересборки SCSS. Цвет вынесен
+// в отдельный --gr-shadow-color в формате HSL-компонент: в тёмной теме
+// (Этап 5) меняется одна переменная, а не шесть готовых теней.
+
+$gr-shadows: (xs, sm, md, lg, xl, 2xl, inner);
+
+@each $gr-name in $gr-shadows {
+  .gr-shadow-#{$gr-name} {
+    box-shadow: var(--gr-shadow-#{$gr-name});
+  }
+}
+
+.gr-shadow-none {
+  box-shadow: none;
+}

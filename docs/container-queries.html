@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Контейнерные запросы — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+  /* Площадка, ширину которой читатель тянет мышью за правый нижний угол.
+     resize работает только вместе с overflow, отличным от visible. */
+  .cq-playground {
+    inline-size: 100%;
+    min-inline-size: 11rem;
+    max-inline-size: 100%;
+    padding: 0.75rem;
+    overflow: auto;
+    resize: horizontal;
+    background-color: var(--gr-color-surface-sunken);
+    border: var(--gr-border-width) dashed var(--gr-color-border);
+  }
+
+  /* Две колонки заведомо разной ширины — одна и та же карточка в них
+     выглядит по-разному при неизменной ширине окна. */
+  .cq-pair { align-items: start; }
+
+  /* Колонки переносятся: на узком экране 15rem фиксированной ширины
+     плюс остаток строки не помещаются рядом и утащили бы страницу вбок. */
+  .cq-narrow {
+    inline-size: 15rem;
+    max-inline-size: 100%;
+  }
+
+  .cq-wide {
+    flex: 1 1 18rem;
+    min-inline-size: 0;
+  }
+
+  .cq-card {
+    padding: 0.75rem;
+    background-color: var(--gr-color-surface);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  .cq-thumb {
+    display: grid;
+    place-items: center;
+    min-block-size: 4.5rem;
+    color: var(--gr-color-on-accent);
+    background-color: hsl(var(--gr-hsl-primary));
+  }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Контейнерные запросы</h1>
+  <p>Адаптивность по ширине контейнера, а не по ширине окна. Тот же строй классов, та же шкала брейкпоинтов, разница в одну букву: <code>-md</code> смотрит на окно, <code>-cmd</code> — на ближайшего предка с <code>.gr-cq</code>.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Ядро + утилиты</span>
+    <span class="badge">packages/core/scss/_container-queries.scss</span>
+  </div>
+</div>
+
+<h2>Зачем</h2>
+
+<p>
+  Оконный брейкпоинт отвечает на вопрос «какой ширины экран», а вёрстке
+  обычно нужен другой: «сколько места досталось этому блоку». Одна и та же
+  карточка стоит и в широкой ленте, и в узкой боковой колонке — окно при этом
+  не меняется, а раскладка должна.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong><code>container-type: inline-size</code> включает инлайн-containment.</strong>
+    Ширина элемента перестаёт зависеть от его содержимого. У <code>inline-block</code>,
+    у <code>float</code>, у элемента с <code>width: fit-content</code> она схлопывается
+    в ноль, и содержимое уезжает наружу. Ставьте <code>.gr-cq</code> на блок, ширину
+    которого задаёт раскладка: на колонку сетки, на карточку, на <code>body</code>.
+  </p>
+  <p>
+    По той же причине библиотека намеренно <em>не</em> объявляет контейнером
+    <code>body</code> за вас. Иначе каждый безымянный <code>@container</code> на странице
+    разрешался бы к окну вместо того, чтобы просто не сработать, — тихий неверный
+    ответ вместо громкого отказа.
+  </p>
+</div>
+
+<h2>Объявление контейнера</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-cq</code></td><td><code>container-type: inline-size</code><br><code>container-name: var(--gr-name, none)</code></td><td>Элемент становится контейнером запроса по инлайн-оси</td></tr>
+  <tr><td><code>--gr-name</code></td><td><code>@property</code>, <code>inherits: false</code></td><td>Имя контейнера, если нужно обратиться к нему через голову ближайшего</td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-cq"&gt;
+  &lt;article class="gr-p-3 gr-p-5-cmd"&gt;…&lt;/article&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>Суффикс <code>-c&lt;брейкпоинт&gt;</code></h2>
+
+<p>
+  Шкала — та же карта <code>$gr-breakpoints</code>, что и у оконных запросов.
+  Отдельной шкалы для контейнеров нет намеренно: она удвоила бы источник правды.
+</p>
+
+<table>
+  <tr><th>Суффикс</th><th>Запрос</th><th>Читается как</th></tr>
+  <tr><td><code>-csm</code></td><td><code>@container (width &gt;= 640px)</code></td><td>от 640px ширины контейнера</td></tr>
+  <tr><td><code>-cmd</code></td><td><code>@container (width &gt;= 768px)</code></td><td>от 768px ширины контейнера</td></tr>
+  <tr><td><code>-clg</code></td><td><code>@container (width &gt;= 1024px)</code></td><td>от 1024px ширины контейнера</td></tr>
+  <tr><td><code>-cxl</code></td><td><code>@container (width &gt;= 1280px)</code></td><td>от 1280px ширины контейнера</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Шкала общая — и потому крупная.</strong> 768px ширины
+    <em>контейнера</em> — это много: карточка в трёхколоночной сетке
+    на экране 1440px имеет около 440px, в двухколоночной — около 680px.
+    Реально пересекаемый порог для блока внутри страницы — <code>-csm</code>
+    (640px); <code>-clg</code> и <code>-cxl</code> достаются разве что
+    основной колонке макета.
+  </p>
+  <p>
+    Отдельную, более мелкую шкалу для контейнеров библиотека не заводит
+    намеренно: это удвоило бы источник правды ровно там, где он был сведён
+    в одну карту. Нужен свой порог — он пишется одной строкой
+    своего CSS: <code>@container (width &gt;= 26rem) { … }</code>.
+  </p>
+</div>
+
+<h2>Какие утилиты получили контейнерные варианты</h2>
+
+<table>
+  <tr><th>Модуль</th><th>Примеры</th></tr>
+  <tr><td><a href="spacing.html">Spacing</a></td><td><code>.gr-p-4-cmd</code>, <code>.gr-px-8-clg</code>, <code>.gr-my-6-csm</code>, <code>.gr-mx-auto-cxl</code></td></tr>
+  <tr><td><a href="sizing.html">Sizing</a></td><td><code>.gr-w-full-cmd</code>, <code>.gr-w-1/2-clg</code>, <code>.gr-h-auto-csm</code></td></tr>
+  <tr><td><a href="typography.html">Typography</a></td><td><code>.gr-text-lg-csm</code>, <code>.gr-font-bold-clg</code>, <code>.gr-text-center-csm</code>, <code>.gr-truncate-cxl</code></td></tr>
+  <tr><td><a href="visibility.html">Visibility</a></td><td><code>.gr-hidden-cmd</code>, <code>.gr-block-clg</code>, <code>.gr-inline-block-csm</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Остальные модули контейнерных вариантов не получили.</strong>
+    Цвет, тень, граница, позиционирование, прозрачность и переходы от ширины
+    контейнера не зависят по смыслу, а каждый селектор — это байты в файле,
+    который скачивает каждый. Перечень модулей проверяется тестом
+    <code>packages/utils/test/utils.test.js</code>, так что расшириться молча
+    он не может.
+  </p>
+  <p>
+    Логические отступы <code>.gr-ms-*</code>, <code>.gr-me-*</code>,
+    <code>.gr-ps-*</code>, <code>.gr-pe-*</code> суффикса не имеют вовсе —
+    ни оконного, ни контейнерного. Это плата за бюджет, принятая на Этапе 13.
+  </p>
+</div>
+
+<h2>Попробуйте: потяните за правый нижний угол</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Ширина окна не меняется — меняется ширина контейнера</div>
+  <div class="cq-playground gr-cq">
+    <article class="cq-card gr-radius-2" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2">
+      <div class="gr-area-a cq-thumb gr-radius-1">16 : 9</div>
+      <div class="gr-area-b">
+        <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Карточка статьи</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mb-0">
+          Узкий контейнер — картинка сверху, текст под ней.
+          От 640px ширины <em>контейнера</em> — картинка слева,
+          текст справа, и кегль заголовка на ступень крупнее.
+        </p>
+        <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0 gr-hidden gr-block-csm">
+          Эта строка появляется только в широком контейнере
+          (<code>.gr-hidden .gr-block-csm</code>).
+        </p>
+      </div>
+    </article>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-cq"&gt;
+  &lt;article data-gr-layout="a1-b1" data-gr-layout-csm="a1b2"&gt;
+    &lt;div class="gr-area-a"&gt;…&lt;/div&gt;
+    &lt;div class="gr-area-b"&gt;
+      &lt;h3 class="gr-text-base gr-text-lg-csm"&gt;…&lt;/h3&gt;
+    &lt;/div&gt;
+  &lt;/article&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>Одна разметка, два контейнера</h2>
+
+<p>
+  Ширина окна у обеих карточек ниже одна и та же. Различает их только ширина
+  колонки, в которой они стоят.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Слева 15rem, справа — остаток строки (порог 640px, нужно широкое окно)</div>
+  <div class="gr-flex gr-flex-wrap gr-gap cq-pair">
+    <div class="cq-narrow gr-cq">
+      <article class="cq-card gr-radius-2" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2">
+        <div class="gr-area-a cq-thumb gr-radius-1">16 : 9</div>
+        <div class="gr-area-b">
+          <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Узкая колонка</h3>
+          <p class="gr-text-sm gr-text-ink-secondary gr-mb-0">Контейнер уже 640px — раскладка вертикальная.</p>
+        </div>
+      </article>
+    </div>
+    <div class="cq-wide gr-cq">
+      <article class="cq-card gr-radius-2" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2">
+        <div class="gr-area-a cq-thumb gr-radius-1">16 : 9</div>
+        <div class="gr-area-b">
+          <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Широкая колонка</h3>
+          <p class="gr-text-sm gr-text-ink-secondary gr-mb-0">От 640px контейнера — картинка слева, текст справа. Сузьте окно, и обе карточки станут вертикальными.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+
+<h2>Раскладки: <code>data-gr-layout-c&lt;брейкпоинт&gt;</code></h2>
+
+<table>
+  <tr><th>Атрибут</th><th>Когда действует</th></tr>
+  <tr><td><code>data-gr-layout</code></td><td>Базовая раскладка — ниже первого объявленного диапазона</td></tr>
+  <tr><td><code>data-gr-layout-md</code></td><td><code>@media</code>: от 768px ширины <strong>окна</strong></td></tr>
+  <tr><td><code>data-gr-layout-cmd</code></td><td><code>@container</code>: от 768px ширины <strong>контейнера</strong></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Контейнер должен быть предком, а не самим элементом.</strong>
+    <code>@container</code> ищет ближайшего предка с <code>container-type</code>
+    и никогда не спрашивает сам элемент: элемент не может измерять себя.
+    Поэтому <code>.gr-cq</code> ставится на обёртку, а <code>data-gr-layout-cmd</code> —
+    на то, что внутри неё. Рантайм не проставляет <code>.gr-cq</code> сам:
+    инлайн-containment, навешенный на чужую разметку без спроса, ломает страницу
+    молча и в неожиданном месте.
+  </p>
+</div>
+
+<p>
+  Оконная и контейнерная цепочки на одном элементе независимы — и не мешают
+  друг другу. Базовая раскладка при этом закрывается обеими сразу:
+</p>
+
+<pre><code>&lt;div data-gr-layout="a1" data-gr-layout-md="a1b1" data-gr-layout-cmd="a2b1"&gt;</code></pre>
+
+<pre><code>@media (width &lt; 768px) {
+  @container (width &lt; 768px) { .gr-l-<em>хеш</em> { /* a1 */ } }
+}
+@media (width &gt;= 768px)     { .gr-l-<em>хеш</em> { /* a1b1 */ } }
+@container (width &gt;= 768px) { .gr-l-<em>хеш</em> { /* a2b1 */ } }</code></pre>
+
+<p>
+  Оставь база открытой по одной из осей — она накрыла бы диапазон другой,
+  и какая раскладка победит, решал бы порядок правил в таблице, а не ширина.
+  Когда оба диапазона совпали, побеждает контейнерный: его правило стоит
+  в таблице позже.
+</p>
+
+<h2>Вложенные контейнеры</h2>
+
+<p>
+  Запрос без имени разрешается к <strong>ближайшему</strong> предку-контейнеру.
+  Вложили <code>.gr-cq</code> внутрь <code>.gr-cq</code> — всё внутри считается
+  от внутреннего, а внешний становится недосягаем. Это самая частая ошибка
+  с контейнерными запросами, и она не даёт ни ошибки в консоли, ни пустого стиля:
+  просто отвечает не тот элемент.
+</p>
+
+<pre><code>&lt;section class="gr-cq"&gt;              &lt;!-- внешний: 1200px --&gt;
+  &lt;div class="gr-cq"&gt;                &lt;!-- внутренний: 300px --&gt;
+    &lt;p class="gr-text-lg-csm"&gt;…&lt;/p&gt;  &lt;!-- считает 300px, а не 1200px --&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<p>
+  Чтобы обратиться к внешнему через голову внутреннего, дайте ему имя.
+  Имя приезжает свойством <code>--gr-name</code>, а не классом: имя контейнера —
+  это CSS-идентификатор, придуманный на стороне страницы, и статический файл
+  не может знать его список. Свойство общее, а не <code>--gr-cq-name</code>:
+  <code>container-name</code>, <code>anchor-name</code> и
+  <code>view-transition-name</code> берут один и тот же идентификатор,
+  и элемент вправе называться один раз на все роли.
+</p>
+
+<pre><code>&lt;section class="gr-cq" style="--gr-name: page"&gt;
+  &lt;div class="gr-cq"&gt;
+    &lt;p class="wide-only"&gt;…&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<pre><code>/* своё правило страницы */
+@container page (width &gt;= 60rem) {
+  .wide-only { display: block; }
+}</code></pre>
+
+<div class="callout">
+  <p>
+    <code>--gr-name</code> зарегистрировано через <code>@property</code>
+    с <code>inherits: false</code>. Наследуйся оно — вложенный
+    <code>.gr-cq</code> перенял бы имя предка, и запрос
+    <code>@container page</code> нашёл бы внутренний контейнер вместо внешнего.
+    Та же причина, по которой ненаследуемы <code>--gr-r</code> и <code>--gr-p</code>
+    в каскаде скруглений.
+  </p>
+</div>
+
+<h2>Из SCSS</h2>
+
+<p>Обёртка запроса — миксин <code>gr-container-media</code>:</p>
+
+<pre><code>@use 'griffincss-core/scss/container-queries' as cq;
+
+@include cq.gr-container-media(md) {
+  .my-card { padding: 2rem; }
+}
+
+// именованный контейнер
+@include cq.gr-container-media(lg, page) {
+  .my-card { padding: 3rem; }
+}</code></pre>
+
+<p>
+  Компилтайм-раскладки принимают контейнерные варианты теми же параметрами
+  <code>$csm</code> … <code>$cxl</code>. Вывод побайтово совпадает с тем, что
+  генерирует рантайм, — это проверяется в
+  <code>packages/core/test/generate.test.js</code>:
+</p>
+
+<pre><code>@use 'griffincss-core/scss/grid-parser' as p;
+
+@include p.gr-grid-layout('a1', $md: 'a1b1', $cmd: 'a2b1', $name: 'hero');</code></pre>
+
+<h2>Поддержка</h2>
+
+<p>
+  Контейнерные запросы — базовая возможность целевых браузеров с 2023 года
+  (Chrome 105+, Safari 16+, Firefox 110+). Развилки <code>@supports</code>
+  библиотека не делает: она и так требует <code>@scope</code> и
+  <code>popover</code>, которые новее, и удвоение вывода ради среды, которая
+  не поддерживается в остальном, ничего бы не купило.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

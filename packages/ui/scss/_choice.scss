@@ -1,0 +1,202 @@
+// Griffincss UI — Choice
+// Флажок, радиокнопка, переключатель и сегментный переключатель.
+//
+// Элемент не подменяется: класс ставится на сам <input>, а не на скрытый
+// input рядом с оформленным <span>. Родная разметка сохраняет и участие
+// в форме, и клавиатуру, и объявление состояния скринридером — всё то,
+// что приходится восстанавливать вручную, когда input прячут.
+//
+// Флажок и радиокнопка остаются системными: их рисует ОС, а цвет отметки
+// задаётся одним свойством accent-color. Переключателя среди типов <input>
+// нет — его дорожка и бегунок рисуются фоном, но сам элемент по-прежнему
+// <input type="checkbox">.
+
+// --- Флажок и радиокнопка ---------------------------------------------------
+
+.gr-checkbox,
+.gr-radio {
+  --gr-choice-size: 1.15em;
+
+  flex: none;
+  inline-size: var(--gr-choice-size);
+  block-size: var(--gr-choice-size);
+  margin: 0;
+  accent-color: var(--gr-color-accent);
+  cursor: pointer;
+}
+
+.gr-checkbox:focus-visible,
+.gr-radio:focus-visible,
+.gr-switch:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+.gr-checkbox:disabled,
+.gr-radio:disabled,
+.gr-switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+// --- Переключатель ----------------------------------------------------------
+
+// Бегунок — фоновое изображение, а не ::before: псевдоэлементы на <input>
+// поддерживаются не везде, а фон работает всюду. background-origin:
+// content-box отводит бегунку внутреннюю область, поэтому отступ от края
+// дорожки задаётся обычным padding.
+.gr-switch {
+  --gr-switch-track: 2.25rem;
+  --gr-switch-thumb: 1rem;
+
+  box-sizing: border-box;
+  flex: none;
+  inline-size: var(--gr-switch-track);
+  block-size: calc(var(--gr-switch-thumb) + 0.375rem);
+  margin: 0;
+  padding: 0.1875rem;
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-surface-sunken);
+  background-image: radial-gradient(circle at 50% 50%, var(--gr-color-text-secondary) 45%, transparent 46%);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: var(--gr-switch-thumb) var(--gr-switch-thumb);
+  background-origin: content-box;
+  appearance: none;
+  cursor: pointer;
+  transition:
+    background-color var(--gr-transition),
+    background-position var(--gr-transition),
+    border-color var(--gr-transition);
+}
+
+.gr-switch:checked {
+  border-color: var(--gr-color-accent);
+  background-color: var(--gr-color-accent);
+  background-image: radial-gradient(circle at 50% 50%, var(--gr-color-on-accent) 45%, transparent 46%);
+  background-position: right center;
+}
+
+// Единственное движение в модуле — переезд бегунка. Тем, кто просил
+// уменьшить анимацию, он достаётся мгновенным; цвет продолжает меняться
+// плавно, это не движение.
+@media (prefers-reduced-motion: reduce) {
+  .gr-switch {
+    transition:
+      background-color var(--gr-transition),
+      border-color var(--gr-transition);
+  }
+}
+
+// --- Сегментный переключатель -----------------------------------------------
+
+// Ряд взаимоисключающих вариантов из обычной радиогруппы. Оформляется
+// <fieldset>, поэтому у группы есть имя для скринридера (<legend> или
+// aria-label), а выбор переключается стрелками — это даёт платформа.
+//
+// Селекторы по элементам, а не по классам: разметка внутри фиксирована
+// (label > input + span), и требовать класс на каждом из трёх уровней
+// значило бы разменивать краткость на ничто.
+.gr-segmented {
+  // Внутренний радиус: скругление рамки за вычетом её толщины. Он нужен
+  // крайним сегментам ниже, чтобы их заливка легла ровно по рамке.
+  // Считается, а не задаётся: в режиме для слабовидящих --gr-border-width
+  // вырастает до 2px, и скругление обязано подвинуться следом.
+  --gr-segmented-radius: calc(var(--gr-radius) - var(--gr-border-width));
+
+  display: inline-flex;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  border-radius: var(--gr-radius);
+}
+
+.gr-segmented label {
+  display: block;
+  position: relative;
+  flex: 1;
+}
+
+// Сам input не прячется display: none и не убирается из потока навсегда —
+// он остаётся фокусируемым, иначе группа перестала бы работать с клавиатуры.
+.gr-segmented input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gr-segmented span {
+  display: block;
+  padding-block: 0.375rem;
+  padding-inline: var(--gr-ui-gap);
+  border-inline-start: var(--gr-border-width) solid var(--gr-color-border);
+  color: var(--gr-color-text-secondary);
+  font-size: 0.875rem;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--gr-transition), color var(--gr-transition);
+}
+
+// Скругление крайних сегментов задаётся явно, а не берётся из overflow:
+// hidden на обёртке. Обрезка по overflow идёт по внутреннему краю рамки,
+// но с ВНЕШНИМ радиусом, поэтому в углах между заливкой и рамкой оставался
+// зазор — фон переключателя не совпадал с его границами. Свои радиусы
+// у сегментов ложатся по рамке точно.
+.gr-segmented label:first-child span {
+  border-inline-start: 0;
+  border-start-start-radius: var(--gr-segmented-radius);
+  border-end-start-radius: var(--gr-segmented-radius);
+}
+
+.gr-segmented label:last-child span {
+  border-start-end-radius: var(--gr-segmented-radius);
+  border-end-end-radius: var(--gr-segmented-radius);
+}
+
+@media (hover: hover) {
+  .gr-segmented span:hover {
+    background-color: var(--gr-color-surface-raised);
+    color: var(--gr-color-text);
+  }
+}
+
+.gr-segmented input:checked + span {
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+}
+
+// Контур внутрь: снаружи он налез бы на соседний сегмент и на рамку
+// обёртки, а у среднего сегмента ещё и на оба сразу.
+.gr-segmented input:focus-visible + span {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: calc(-1 * var(--gr-focus-width) - 1px);
+}
+
+.gr-segmented input:disabled + span {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+// --- Строка выбора ----------------------------------------------------------
+
+// Флажок и подпись в одну строку, с общим кликом по подписи: <label>
+// целиком становится мишенью, а не одни 16 пикселей квадратика.
+.gr-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  color: var(--gr-color-text);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.gr-choice:has(:disabled) {
+  color: var(--gr-color-text-disabled);
+  cursor: not-allowed;
+}

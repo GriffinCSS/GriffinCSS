@@ -1,0 +1,60 @@
+// Griffincss — Position
+// Схема позиционирования, привязка к краям и порядок наложения.
+//
+// Адаптивные варианты есть только у самой схемы: «липнет на десктопе,
+// обычный блок на мобильном» — рабочий сценарий, а вот z-index, меняющийся
+// по ширине окна, за всё время не понадобился ни разу.
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+
+$gr-positions: (static, relative, absolute, fixed, sticky);
+
+@mixin gr-position-scale($suffix: '') {
+  @each $gr-value in $gr-positions {
+    .gr-#{$gr-value}#{$suffix} { position: $gr-value; }
+  }
+}
+
+@include gr-position-scale;
+
+// Привязка к краям
+.gr-inset-0    { inset: 0; }
+.gr-inset-auto { inset: auto; }
+
+// Оси записаны логическими свойствами: обе стороны у них равны, поэтому
+// направление письма результата не меняет, а объявлений вдвое меньше.
+.gr-inset-x-0 {
+  inset-inline: 0;
+}
+
+.gr-inset-y-0 {
+  inset-block: 0;
+}
+
+@each $gr-side in (top, right, bottom, left) {
+  .gr-#{$gr-side}-0    { #{$gr-side}: 0; }
+  .gr-#{$gr-side}-auto { #{$gr-side}: auto; }
+}
+
+// Односторонние left/right остаются физическими намеренно: кнопка «закрыть»
+// в углу окна обязана держаться угла, а не начала строки. Привязку к строке
+// даёт логическая пара start/end — в LTR она совпадает с left/right.
+@each $gr-key, $gr-side in (start: inset-inline-start, end: inset-inline-end) {
+  .gr-#{$gr-key}-0    { #{$gr-side}: 0; }
+  .gr-#{$gr-key}-auto { #{$gr-side}: auto; }
+}
+
+// Порядок наложения. Шаг 10 оставляет место для своих значений между
+// ступенями — их можно вписать, не трогая библиотеку.
+@each $gr-z in (0, 10, 20, 30, 40, 50) {
+  .gr-z-#{$gr-z} { z-index: $gr-z; }
+}
+
+.gr-z-auto { z-index: auto; }
+
+// Адаптивные варианты
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @include gr-position-scale('-#{$bp-name}');
+  }
+}

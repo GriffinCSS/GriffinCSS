@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visibility — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+  .scroll-demo-box {
+    max-inline-size: 14rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--gr-color-surface-sunken);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  /* Второй блок — тот случай, для которого обрезка и годится: фон есть,
+     рамки нет, и срезать полосе нечего, кроме скруглённого угла. */
+  .scroll-demo-plain { border-color: transparent; }
+
+  /* Третий — рамка снаружи, прокрутка внутри; внутреннему блоку остаётся
+     нижний отступ коробки, поэтому полоса не липнет к рамке. */
+  .scroll-demo-outer { padding-inline: 0; }
+  .scroll-demo-outer > p { padding-inline: 0.75rem; }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Visibility</h1>
+  <p>Управление видимостью: display, visibility, overflow по осям, доступность для скринридеров и адаптивное скрытие по брейкпоинтам.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_visibility.scss</span>
+  </div>
+</div>
+
+<h2>Display-утилиты</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-hidden</code></td><td><code>display: none</code></td><td>Полное скрытие элемента</td></tr>
+  <tr><td><code>.gr-block</code></td><td><code>display: block</code></td><td>Блочный элемент</td></tr>
+  <tr><td><code>.gr-inline</code></td><td><code>display: inline</code></td><td>Строчный элемент</td></tr>
+  <tr><td><code>.gr-inline-block</code></td><td><code>display: inline-block</code></td><td>Строчно-блочный элемент</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Изменение в 0.8.0.</strong> <code>.gr-flex-display</code>
+    и <code>.gr-grid-display</code> из этого модуля удалены. Флекс- и
+    грид-контейнер включает ядро: <code>.gr-flex</code>,
+    <code>.gr-inline-flex</code> и <code>.gr-grid</code> — вместе с адаптивными
+    вариантами <code>.gr-flex-md</code>, <code>.gr-grid-lg</code>. Имена
+    расходились только из-за запрета пересечения классов между пакетами,
+    а смысл у них был один: <code>.gr-grid</code> в ядре существовал
+    с самого начала.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Примеры display</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="tag-demo tag-a">Виден всегда</div>
+    <div class="tag-demo tag-b gr-hidden">Скрыт (display:none)</div>
+    <div class="tag-demo tag-c">Виден всегда</div>
+  </div>
+</div>
+
+<h2>Видимость без изъятия из потока</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Отличие от <code>.gr-hidden</code></th></tr>
+  <tr><td><code>.gr-invisible</code></td><td><code>visibility: hidden</code></td><td>Место под элемент сохраняется, вёрстка не сдвигается</td></tr>
+  <tr><td><code>.gr-visible</code></td><td><code>visibility: visible</code></td><td>Вернуть видимость</td></tr>
+</table>
+
+<h2>Только для скринридера</h2>
+
+<p>
+  <code>.gr-sr-only</code> убирает элемент с экрана, но оставляет его в дереве
+  доступности: текст озвучивается, хотя визуально его нет. Так подписывают
+  иконки-кнопки и поясняют ссылки «Подробнее».
+</p>
+
+<pre><code>&lt;button&gt;
+  &lt;svg aria-hidden="true"&gt;…&lt;/svg&gt;
+  &lt;span class="gr-sr-only"&gt;Закрыть диалог&lt;/span&gt;
+&lt;/button&gt;</code></pre>
+
+<p>Генерируемый CSS:</p>
+
+<pre><code>.gr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Изменение в 0.7.0.</strong> Вместо устаревшего
+    <code>clip: rect(0, 0, 0, 0)</code> используется
+    <code>clip-path: inset(50%)</code> — результат тот же, свойство
+    действующее. Послабление для <code>clip</code> убрано и из конфигурации
+    stylelint.
+  </p>
+</div>
+
+<h3>Ссылка «к содержимому»</h3>
+
+<p>
+  <code>.gr-sr-only-focusable</code> скрыт ровно до тех пор, пока его
+  не выбрали с клавиатуры: мышью его не видно, по Tab он появляется. Это
+  первая ссылка страницы, позволяющая пропустить навигацию.
+</p>
+
+<pre><code>&lt;a class="gr-sr-only-focusable" href="#main"&gt;Перейти к содержимому&lt;/a&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Нажмите Tab, поставив курсор в этот блок</div>
+  <a class="gr-sr-only-focusable tag-demo tag-a gr-inline-block" href="#main">Перейти к содержимому</a>
+</div>
+
+<p>
+  Обратная операция — <code>.gr-not-sr-only</code>: возвращает в поток элемент,
+  скрытый таким образом на узких экранах.
+</p>
+
+<h2>Overflow-утилиты</h2>
+
+<p>
+  Пять значений, каждое — по обеим осям сразу и по каждой отдельно.
+  <code>clip</code> отличается от <code>hidden</code> тем, что запрещает
+  прокрутку вообще, в том числе программную.
+</p>
+
+<table>
+  <tr><th>Обе оси</th><th>По горизонтали</th><th>По вертикали</th></tr>
+  <tr><td><code>.gr-overflow-auto</code></td><td><code>.gr-overflow-x-auto</code></td><td><code>.gr-overflow-y-auto</code></td></tr>
+  <tr><td><code>.gr-overflow-hidden</code></td><td><code>.gr-overflow-x-hidden</code></td><td><code>.gr-overflow-y-hidden</code></td></tr>
+  <tr><td><code>.gr-overflow-clip</code></td><td><code>.gr-overflow-x-clip</code></td><td><code>.gr-overflow-y-clip</code></td></tr>
+  <tr><td><code>.gr-overflow-scroll</code></td><td><code>.gr-overflow-x-scroll</code></td><td><code>.gr-overflow-y-scroll</code></td></tr>
+  <tr><td><code>.gr-overflow-visible</code></td><td><code>.gr-overflow-x-visible</code></td><td><code>.gr-overflow-y-visible</code></td></tr>
+</table>
+
+<pre><code>&lt;!-- широкая таблица прокручивается внутри себя, а не тянет страницу вбок --&gt;
+&lt;div class="gr-overflow-x-auto"&gt;
+  &lt;table&gt;…&lt;/table&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>Прокрутка внутри скруглённого блока</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-scroll-clip</code></td><td><code>clip-path: inset(0 round var(--gr-r, 0))</code></td></tr>
+</table>
+
+<p>
+  Полосу прокрутки движок рисует поверх собственного края элемента и по
+  <code>border-radius</code> не обрезает: у скруглённого блока
+  с <code>overflow: auto</code> она срезает углы, а если у блока есть рамка —
+  съедает и её нижнюю сторону. Свойство <code>overflow</code> тут бессильно:
+  оно обрезает содержимое, а не полосу самого элемента.
+</p>
+
+<p>
+  Приёма два, и выбор между ними — не вкусовой:
+</p>
+
+<table>
+  <tr><th>Что за блок</th><th>Приём</th></tr>
+  <tr><td>Фон и скругление, рамки нет</td><td><code>.gr-scroll-clip</code> — один класс, лишний узел не нужен</td></tr>
+  <tr><td>Есть рамка</td><td>Прокрутку вложить: рамка и радиус снаружи, <code>overflow</code> внутри</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три блока: как есть, с обрезкой, с вложенной прокруткой</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="gr-radius-4 gr-overflow-x-auto scroll-demo-box">
+      <p class="gr-whitespace-nowrap gr-m-0 gr-text-sm">Полоса срезала углы этого блока</p>
+    </div>
+    <div class="gr-radius-4 gr-overflow-x-auto gr-scroll-clip scroll-demo-box scroll-demo-plain">
+      <p class="gr-whitespace-nowrap gr-m-0 gr-text-sm">Здесь та же полоса обрезана по радиусу</p>
+    </div>
+    <div class="gr-radius-4 gr-overflow-hidden scroll-demo-box scroll-demo-outer">
+      <p class="gr-whitespace-nowrap gr-overflow-x-auto gr-m-0 gr-text-sm">А здесь прокрутка внутри, и рамка цела</p>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;!-- без рамки: хватает одного класса --&gt;
+&lt;div class="gr-radius-4 gr-overflow-x-auto gr-scroll-clip"&gt;…&lt;/div&gt;
+
+&lt;!-- с рамкой: рамка и радиус снаружи, прокрутка внутри --&gt;
+&lt;div class="gr-radius-4 gr-overflow-hidden gr-border"&gt;
+  &lt;p class="gr-overflow-x-auto gr-whitespace-nowrap"&gt;…&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Рамку <code>.gr-scroll-clip</code> не спасает.</strong> Полоса
+    рисуется поверх нижней границы своего элемента, и обрезка углов этого
+    не отменяет: скругление вернётся, а нижняя линия рамки так и останется
+    закрытой. Свойствами самого блока это не лечится — рамке нужен
+    отдельный узел снаружи прокрутки. Вложенность заодно обрезает полосу
+    по радиусу сама, обычным <code>overflow: hidden</code>.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Радиус берётся из <code>--gr-r</code></strong> — той самой
+    переменной, которую публикуют утилиты со значением:
+    <code>.gr-radius-4</code>, <code>.gr-radius-full</code> и остальные
+    из <a href="border-radius.html">каскада скруглений</a>. У голого
+    <code>.gr-radius</code> своего значения нет — он читает переменную,
+    а не задаёт её, поэтому в паре с обрезкой нужен класс с числом.
+    Без <code>--gr-r</code> утилита не делает ничего: фолбэк <code>0</code>
+    оставляет прямые углы прямыми, вместо того чтобы скруглить блок,
+    который скруглять не просили.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Вторая цена обрезки.</strong> <code>clip-path</code> режет всё,
+    что выходит за коробку элемента, — внешнюю тень и контур фокуса тоже.
+    Блоку с тенью нужна та же вложенность: тень на внешнем элементе,
+    прокрутка на внутреннем. Прокручиваемой области
+    с <code>tabindex="0"</code> контур фокуса возвращают отрицательным
+    <code>outline-offset</code>.
+  </p>
+</div>
+
+<h2>Адаптивное скрытие</h2>
+
+<p>
+  Классы <code>.gr-hidden-{sm,md,lg,xl}</code> скрывают элемент начиная с указанного брейкпоинта.
+  Полезно для mobile-only / desktop-only элементов.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Поведение</th></tr>
+  <tr><td><code>.gr-hidden-sm</code></td><td>Скрыт на экранах ≥ 640px</td></tr>
+  <tr><td><code>.gr-hidden-md</code></td><td>Скрыт на экранах ≥ 768px</td></tr>
+  <tr><td><code>.gr-hidden-lg</code></td><td>Скрыт на экранах ≥ 1024px</td></tr>
+  <tr><td><code>.gr-hidden-xl</code></td><td>Скрыт на экранах ≥ 1280px</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Адаптивное скрытие (измените ширину окна)</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="tag-demo tag-a gr-hidden-sm">Виден только на мобильных (&lt;640px)</div>
+    <div class="tag-demo tag-b">Виден всегда</div>
+    <div class="tag-demo tag-c gr-hidden">Скрыт всегда</div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-hidden-sm"&gt;Виден только на мобильных&lt;/div&gt;
+&lt;div class="gr-hidden-md"&gt;Скрыт на планшетах и шире&lt;/div&gt;
+&lt;div class="gr-hidden-lg"&gt;Скрыт на десктопах&lt;/div&gt;</code></pre>
+
+<h2>Адаптивные display-классы</h2>
+
+<p>
+  Кроме скрытия, доступны классы для принудительного изменения display на определённом брейкпоинте.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Применение</th></tr>
+  <tr><td><code>.gr-block-sm</code> … <code>.gr-block-xl</code></td><td><code>display: block</code> от брейкпоинта</td></tr>
+  <tr><td><code>.gr-inline-sm</code> … <code>.gr-inline-xl</code></td><td><code>display: inline</code> от брейкпоинта</td></tr>
+  <tr><td><code>.gr-inline-block-sm</code> … <code>.gr-inline-block-xl</code></td><td><code>display: inline-block</code> от брейкпоинта</td></tr>
+  <tr><td><code>.gr-flex-sm</code> … <code>.gr-grid-xl</code></td><td><code>display: flex</code> / <code>grid</code> от брейкпоинта — <a href="core-flex.html">ядро</a>, не этот модуль</td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-hidden gr-block-md"&gt;
+  Скрыт на мобильных, виден от 768px
+&lt;/div&gt;</code></pre>
+
+<h2>Практические примеры</h2>
+
+<h3>Мобильное меню</h3>
+
+<pre><code>&lt;nav&gt;
+  &lt;button class="gr-hidden-md"&gt;Меню (гамбургер)&lt;/button&gt;
+  &lt;ul class="gr-hidden gr-flex-md gr-gap"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Результат (измените ширину окна)</div>
+  <div class="gr-flex gr-flex-items-center gr-bg-surface gr-radius-2 gr-p-4">
+    <div class="gr-flex gr-flex-between gr-flex-items-center gr-w-full">
+      <strong class="gr-text-accent">Logo</strong>
+      <div class="tag-demo tag-a gr-hidden-md">☰ Меню (mobile)</div>
+      <div class="gr-hidden gr-flex-md gr-gap">
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

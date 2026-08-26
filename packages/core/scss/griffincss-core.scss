@@ -1,0 +1,34 @@
+// Griffincss Core — ядро: токены, тема, сетка, флекс и раскладки
+// Токены, grid-хелперы, парсер data-gr-layout и флекс-утилиты.
+// Ресет подключается отдельной точкой входа: griffincss-reset.css
+// Рантайм-парсер раскладок: dist/griffincss.js
+// Для компилтайм-раскладок: @use 'griffincss-core/scss/grid-parser' и @include gr-grid-layout(...)
+//
+// Весь вывод — в слое griffincss.core. Пользовательский CSS вне слоёв
+// выигрывает у библиотеки без !important, каким бы ни был порядок подключения.
+// Порядок слоёв объявлен целиком, поэтому любая сборка библиотеки задаёт его
+// одинаково — какая бы ни загрузилась первой.
+//
+// Пятый слой griffincss.style — старший из библиотечных. В нём живут только
+// токены оси оформления (griffincss-styles.css, отдельная точка входа).
+// Последним он обязан быть потому, что griffincss-ui.css и griffincss-utils.css
+// кладут собственный :root в свои слои: слой перебивает любую специфичность,
+// и ось из слоя ядра проиграла бы им молча. Пользовательский CSS вне слоёв
+// выигрывает и у него.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод пакета — в слое griffincss.core.
+@layer griffincss.core {
+  @include meta.load-css('tokens');
+  @include meta.load-css('theme');
+  @include meta.load-css('container-queries');
+  @include meta.load-css('grid-helpers');
+  @include meta.load-css('grid-parser');
+  @include meta.load-css('flex');
+
+  // Модификаторы отступа — последними: у них та же специфичность,
+  // что у .gr-grid, .gr-l-* и флекс-контейнеров, поэтому решает порядок.
+  @include meta.load-css('gap');
+}

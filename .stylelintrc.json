@@ -1,0 +1,26 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "ignoreFiles": [
+    "**/dist/**",
+    "node_modules/**",
+    "docs/**"
+  ],
+  "rules": {
+    "declaration-no-important": true,
+    "at-rule-disallowed-list": ["import"],
+    "custom-property-pattern": "^gr-",
+    "scss/dollar-variable-pattern": ["^_?gr-", { "ignore": "local" }],
+    "scss/at-mixin-pattern": "^_?gr-",
+    "scss/at-function-pattern": "^_?gr-",
+    "selector-class-pattern": null,
+    "container-name-pattern": null,
+    "layer-name-pattern": null,
+    "scss/comment-no-empty": null,
+    "media-feature-range-notation": "context",
+    "value-keyword-case": ["lower", { "ignoreProperties": ["/^--gr-font-/"] }],
+    "length-zero-no-unit": [true, { "ignoreFunctions": ["var", "calc", "min", "max", "clamp"] }],
+    "property-no-vendor-prefix": [true, { "ignoreProperties": ["/text-size-adjust/"] }],
+    "property-no-deprecated": true,
+    "declaration-block-no-redundant-longhand-properties": [true, { "ignoreShorthands": ["grid-template"] }]
+  }
+}

@@ -1,0 +1,957 @@
+/* Griffincss — оформление документации.
+ *
+ * Документация собрана на самой библиотеке. Собственных цветовых токенов
+ * здесь нет ни одного: цвета — семантические --gr-color-*, поэтому светлая
+ * и тёмная темы и режим для слабовидящих приходят сюда даром, механизмом
+ * из _theme.scss, а не отдельной параллельной шкалой.
+ *
+ * Ресет уже задал box-sizing, поля body, обнулил заголовки и абзацы
+ * и подключил страницу к --gr-color-bg / --gr-color-text — повторять нечего.
+ * Раскладку внутри страниц пишут утилиты пакетов, а не этот файл.
+ *
+ * Остаётся то, что библиотека не обязана экспортировать: корпус страницы
+ * (боковая панель, колонка текста) и компоненты примеров — карточка
+ * демонстрации, врезка, плашки.
+ *
+ * Слой. Файл подключается ПЕРЕД пакетами и объявляет порядок слоёв целиком:
+ * первое объявление в документе решает, остальные — повторы и ни на что
+ * не влияют. Слой docs стоит между griffincss.core и griffincss.ui,
+ * поэтому оформление документации перекрывает ядро, а компоненты и утилиты
+ * перекрывают оформление: .gr-mb-0 на абзаце побеждает здешнее
+ * `p { margin }` без !important и без гонки специфичностей.
+ *
+ * Ниже компонентов — намеренно. Здесь стилизованы `table`, `th`, `td`, `a`,
+ * `p`, `code`: стой docs выше, эти правила по элементу перебили бы .gr-table
+ * и .gr-nav-link на страницах, где компоненты как раз и показываются.
+ * Слои решают такой спор без оглядки на специфичность.
+ *
+ * Это же и рекомендуемый способ подключать библиотеку к своему проекту.
+ */
+
+@layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.ui, griffincss.utils, griffincss.style;
+
+@layer griffincss.docs {
+
+:root {
+  /* Единственные собственные величины: это раскладка документации,
+     а не значения библиотеки. */
+  --docs-rail: 16rem;
+  --docs-inset: 3rem;
+}
+
+/* --- страница --- */
+
+body {
+  font-family: var(--gr-font-sans);
+  accent-color: var(--gr-color-accent);
+  caret-color: var(--gr-color-accent);
+  scrollbar-color: hsl(var(--gr-hsl-ink-3)) var(--gr-color-bg);
+}
+
+::selection {
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+}
+
+:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+/* Единственное движение на странице — перекрёстное затухание цвета при смене
+   темы. Ни одного появления, ни одной анимации на прокрутке: документацию
+   читают, а не смотрят. */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .sidebar,
+  .sidebar-link,
+  .demo-block,
+  .callout,
+  .card-demo,
+  .badge,
+  code,
+  pre,
+  table:not(.gr-table) th,
+  table:not(.gr-table) td {
+    transition:
+      background-color 0.18s ease-out,
+      border-color 0.18s ease-out,
+      color 0.18s ease-out;
+  }
+}
+
+/* --- боковая панель --- */
+
+.sidebar {
+  flex: 0 0 var(--docs-rail);
+  background-color: var(--gr-color-surface);
+  border-right: var(--gr-border-width) solid var(--gr-color-border);
+  padding: 1.75rem 1.25rem 2.5rem;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.sidebar-logo {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--gr-color-text);
+}
+
+.sidebar-logo span {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: var(--gr-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--gr-color-text-muted);
+}
+
+.sidebar-logo:hover {
+  color: var(--gr-color-link);
+}
+
+/* Органы управления темой: те же две оси, что на theme.html, — документация
+   заодно и демонстрация Этапа 5. Разметку ставит nav.js, а оформление —
+   компоненты .gr-segmented и .gr-switch из griffincss-ui: здесь остался
+   только внешний отступ блока. */
+.sidebar-controls {
+  margin: 1.25rem 0 2rem;
+}
+
+/* Список разделов. На широком экране это обычная панель: <summary> скрыт,
+   details всегда открыт (атрибут ставит nav.js). На узком — сворачивается. */
+.sidebar-nav > summary {
+  display: none;
+}
+
+.sidebar-section + .sidebar-section {
+  margin-top: 1.5rem;
+}
+
+.sidebar-section-title {
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gr-color-text-muted);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.4rem;
+  border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+.sidebar-link {
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: calc(var(--gr-radius) / 2);
+  color: var(--gr-color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.sidebar-link:hover {
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-text);
+}
+
+.sidebar-link.active {
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-accent);
+  font-weight: 500;
+}
+
+/* --- колонка текста --- */
+
+.content {
+  padding: 3rem var(--docs-inset) 6rem;
+  min-width: 0;
+
+  /* Строка держится в 68ch независимо от ширины окна: колонка текста шире
+     этого не читается, а таблицы и демонстрации ниже растягиваются
+     на всю ширину сами. */
+  --docs-measure: 68ch;
+
+  /* Интерлиньяж документации плотнее не становится, а вот режим
+     для слабовидящих поднимает его выше — max() пропускает вперёд то,
+     что просил пользователь. */
+  line-height: max(1.6, var(--gr-leading-base));
+
+  /* Корень расширения: .gr-container-expand равняется по эту колонку,
+     а не по окно — иначе блок наехал бы на боковую панель.
+     --gr-expand-inset повторяет горизонтальный паддинг. */
+  container-type: inline-size;
+  --gr-expand-inset: var(--docs-inset);
+}
+
+/* Шапка страницы: имя модуля, одна фраза о нём, показания — версия, путь
+   к исходнику, размер. Заголовок держит вес сам, без градиента по тексту. */
+.hero {
+  padding-bottom: 2rem;
+  margin-bottom: 3rem;
+  border-bottom: var(--gr-border-width) solid var(--gr-color-border-strong);
+}
+
+.hero h1 {
+  font-size: 2.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin-top: 0.75rem;
+  max-width: var(--docs-measure);
+  font-size: 1.0625rem;
+  color: var(--gr-color-text-secondary);
+  text-wrap: pretty;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  margin-top: 1.25rem;
+}
+
+/* Плашка — показание прибора: моноширинная, с табличными цифрами,
+   потому что в ней путь к файлу, версия или размер. */
+.badge {
+  font-family: var(--gr-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: calc(var(--gr-radius) / 2);
+  color: var(--gr-color-text-muted);
+}
+
+.badge-accent {
+  border-color: var(--gr-color-accent);
+  color: var(--gr-color-accent);
+}
+
+/* Ритм: над заголовком воздуха больше, чем под ним, а граница раздела
+   читается иначе, чем расстояние между связанными элементами. */
+h2 {
+  margin-top: 4rem;
+  margin-bottom: 1rem;
+  padding-top: 1.75rem;
+  border-top: var(--gr-border-width) solid var(--gr-color-border);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+h2:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h4 {
+  margin-top: 1.75rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+p {
+  margin: 0.75rem 0;
+  max-width: var(--docs-measure);
+  color: var(--gr-color-text-secondary);
+  text-wrap: pretty;
+}
+
+ul, ol {
+  margin: 0.75rem 0;
+  padding-left: 1.35rem;
+  max-width: var(--docs-measure);
+  color: var(--gr-color-text-secondary);
+}
+
+li {
+  margin-bottom: 0.3rem;
+}
+
+strong {
+  color: var(--gr-color-text);
+  font-weight: 600;
+}
+
+a {
+  color: var(--gr-color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+a:hover { color: var(--gr-color-link-hover); }
+a:visited { color: var(--gr-color-link-visited); }
+
+.sidebar a,
+.sidebar-logo,
+.hero a[class] { text-decoration: none; }
+
+hr {
+  border: 0;
+  border-top: var(--gr-border-width) solid var(--gr-color-border);
+  margin: 3rem 0;
+}
+
+/* --- код --- */
+
+code, pre {
+  font-family: var(--gr-font-mono);
+  font-size: 0.8125rem;
+}
+
+code:not(pre code) {
+  padding: 0.1rem 0.3rem;
+  background-color: var(--gr-color-surface-sunken);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: calc(var(--gr-radius) / 2);
+  color: var(--gr-color-text);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Прокручивается не сам <pre>, а <code> внутри него — на случай, если
+   в примере окажется непереносимая строка. Полосу прокрутки движок рисует
+   поверх нижней границы своего элемента и по border-radius не обрезает:
+   появись она у <pre>, съела бы и рамку, и скругление нижних углов.
+   Рамка с радиусом остаются снаружи, а overflow: hidden обрезает полосу
+   внутреннего блока по этому же радиусу.
+
+   Сами примеры переносятся (см. `pre code` ниже: white-space: pre-wrap),
+   поэтому в документации полоса не появляется вовсе. Это защита от случая,
+   а не лечение видимого дефекта. */
+pre {
+  margin: 1rem 0;
+  padding: var(--gr-gap-lg);
+  background-color: var(--gr-color-surface-sunken);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  overflow: hidden;
+  line-height: 1.6;
+}
+
+pre > code {
+  display: block;
+  overflow-x: auto;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--gr-color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* --- таблицы --- */
+
+/* Справочные таблицы документации. Селекторы исключают .gr-table: у него
+   своё оформление в griffincss-ui, а здешние правила по элементам ложатся
+   поверх него в буквальном смысле — фон, заданный на td, перекрывает фон
+   строки, какой бы слой ни выиграл спор. Из-за этого демонстрации на
+   страницах компонентов подсвечивались при наведении без .gr-table-hover,
+   а полосы .gr-table-striped совпадали с фоном .demo-block. */
+table:not(.gr-table) {
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+/* Обёртку ставит nav.js вокруг каждой таблицы в тексте. Справочные таблицы
+   не сжимаются ниже своего содержимого: без обёртки узкая колонка (мобильный
+   экран или планшет с открытой боковой панелью) уезжала бы вбок целиком,
+   вместе со всей вёрсткой. Прокрутка остаётся внутри таблицы, а `width: 100%`
+   продолжает растягивать её на всю ширину там, где места хватает. */
+.table-scroll {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.table-scroll > table {
+  margin: 0;
+}
+
+table:not(.gr-table) th,
+table:not(.gr-table) td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+table:not(.gr-table) th {
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gr-color-text-muted);
+  border-bottom-color: var(--gr-color-border-strong);
+}
+
+table:not(.gr-table) td {
+  color: var(--gr-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+table:not(.gr-table) tbody tr:hover td {
+  background-color: var(--gr-color-surface-raised);
+}
+
+/* --- врезка --- */
+
+/* Полосы слева нет: вид врезки задают поверхность и рамка целиком, а вид
+   предупреждения — подпись словом. Слово переживает и чёрно-белую печать,
+   и дальтонизм, и режим высокого контраста, а цветная полоса — нет. */
+.callout {
+  margin: 1.25rem 0;
+  padding: 0.9rem 1.1rem;
+  max-width: var(--docs-measure);
+  background-color: var(--gr-color-surface);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+}
+
+.callout p {
+  margin: 0;
+  max-width: none;
+}
+
+.callout p + p {
+  margin-top: 0.6rem;
+}
+
+.callout::before {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.callout-warning,
+.callout-danger,
+.callout-success {
+  border-color: var(--gr-color-border-strong);
+}
+
+.callout-warning::before {
+  content: "внимание";
+  color: var(--gr-color-warning);
+}
+
+.callout-danger::before {
+  content: "осторожно";
+  color: var(--gr-color-danger);
+}
+
+.callout-success::before {
+  content: "приём";
+  color: var(--gr-color-success);
+}
+
+/* --- демонстрации --- */
+
+.demo-block {
+  margin: 1rem 0;
+  padding: var(--gr-gap-lg);
+  background-color: var(--gr-color-surface);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+}
+
+.demo-block-title {
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gr-color-text-muted);
+}
+
+/* Демонстрация расширения: корнем выступает сама карточка. */
+.demo-block.gr-expand-root {
+  --gr-expand-inset: var(--gr-gap-lg);
+  overflow: hidden;
+}
+
+.expand-demo {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* Плашка области грида. Цвета литеральные и темой не меняются намеренно:
+   это образец раскладки, и он обязан выглядеть одинаково в любой теме. */
+.demo-grid-item {
+  padding: 0.9rem;
+  border-radius: calc(var(--gr-radius) / 2);
+  text-align: center;
+  font-family: var(--gr-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-height: 3rem;
+  align-content: center;
+  color: hsl(var(--gr-hsl-white));
+}
+
+.dg-a { background-color: hsl(var(--gr-hsl-primary)); }
+.dg-b { background-color: hsl(var(--gr-hsl-primary-dark)); }
+.dg-c { background-color: hsl(var(--gr-hsl-secondary)); }
+.dg-d { background-color: hsl(var(--gr-hsl-secondary-dark)); }
+.dg-e { background-color: hsl(var(--gr-hsl-info-dark)); }
+.dg-f { background-color: hsl(var(--gr-hsl-gray-600)); }
+
+.flex-demo-box {
+  min-height: 8rem;
+  background-color: var(--gr-color-surface-sunken);
+  border: var(--gr-border-width) dashed var(--gr-color-border-strong);
+  border-radius: calc(var(--gr-radius) / 2);
+}
+
+.flex-demo-item {
+  padding: 0.6rem 1rem;
+  background-color: hsl(var(--gr-hsl-primary));
+  color: hsl(var(--gr-hsl-white));
+  border-radius: calc(var(--gr-radius) / 2);
+  font-family: var(--gr-font-mono);
+  font-size: 0.75rem;
+}
+
+.card-demo {
+  padding: 1.1rem;
+  background-color: var(--gr-color-surface-raised);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+}
+
+.card-demo h4 {
+  margin-top: 0;
+}
+
+.tag-demo {
+  padding: 0.35rem 0.7rem;
+  border-radius: calc(var(--gr-radius) / 2);
+  color: hsl(var(--gr-hsl-white));
+  font-family: var(--gr-font-mono);
+  font-size: 0.75rem;
+}
+
+.tag-a { background-color: hsl(var(--gr-hsl-primary)); }
+.tag-b { background-color: hsl(var(--gr-hsl-secondary)); }
+.tag-c { background-color: hsl(var(--gr-hsl-info-dark)); }
+
+/* Карточка возможности. Сетка под ними — .gr-grid-auto-fit из самой
+   библиотеки: страница, объясняющая grid-помощники, обязана быть на них
+   и собрана. Ни иконок-заглушек из юникода, ни свечения по наведению:
+   карточка ничего не делает по клику и не притворяется, что делает. */
+.feature-card {
+  padding: 1.1rem 1.25rem;
+  background-color: var(--gr-color-surface);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+}
+
+.feature-card h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.feature-card p {
+  margin: 0;
+  max-width: none;
+  font-size: 0.875rem;
+}
+
+/* --- узкий экран --- */
+
+@media (width < 48rem) {
+  .docs-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex: none;
+    width: 100%;
+    position: relative;
+    max-height: none;
+    padding: 1.25rem;
+    border-right: 0;
+    border-bottom: var(--gr-border-width) solid var(--gr-color-border-strong);
+  }
+
+  .content {
+    --docs-inset: 1.25rem;
+    padding-top: 2rem;
+  }
+
+  .sidebar-nav > summary {
+    display: block;
+    margin-top: 0.75rem;
+    padding: 0.4rem 0.7rem;
+    border: var(--gr-border-width) solid var(--gr-color-border-strong);
+    border-radius: var(--gr-radius);
+    font-family: var(--gr-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gr-color-text-secondary);
+    cursor: pointer;
+  }
+
+  .sidebar-nav[open] > summary {
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    margin-top: 3rem;
+    font-size: 1.3125rem;
+  }
+}
+
+
+/* --- блок примера --- */
+
+/* Один пример — один блок: полоса управления сверху, под ней либо превью,
+   либо код. Обёртку ставит nav.js вокруг того, что уже есть на странице:
+   смежные <pre> и .demo-block сводятся в один блок, одинокая демонстрация
+   получает код, собранный из своего DOM, одинокий блок разметки — превью.
+   Разметка 34 страниц при этом не меняется ни на строку.
+
+   Рамка и скругление переезжают сюда с .demo-block и <pre>: вложенная рамка
+   внутри рамки — два прямоугольника вместо одного, и глаз читает их как два
+   разных предмета. */
+.example {
+  margin: 1.25rem 0;
+  background-color: var(--gr-color-surface);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+}
+
+/* Скругление углов держит полоса, а не `overflow: hidden` на обёртке:
+   внутри примеров живут выпадающие меню, подсказки и блоки
+   с .gr-container-expand — обрезка по краю карточки срезала бы их. */
+.example-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.5rem;
+  background-color: var(--gr-color-surface-raised);
+  border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: calc(var(--gr-radius) - var(--gr-border-width))
+                 calc(var(--gr-radius) - var(--gr-border-width)) 0 0;
+}
+
+.example-tabs {
+  display: flex;
+  gap: 0.15rem;
+}
+
+/* Вкладка и кнопка копирования — один и тот же орган управления по размеру
+   и кеглю: полоса не должна выглядеть собранной из двух разных наборов. */
+.example-tab,
+.example-copy {
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border: var(--gr-border-width) solid transparent;
+  border-radius: calc(var(--gr-radius) / 2);
+  background: none;
+  color: var(--gr-color-text-muted);
+  cursor: pointer;
+}
+
+.example-tab:hover,
+.example-copy:hover {
+  color: var(--gr-color-text);
+  background-color: var(--gr-color-surface-sunken);
+}
+
+.example-tab[aria-selected="true"] {
+  background-color: var(--gr-color-bg);
+  border-color: var(--gr-color-border);
+  color: var(--gr-color-text);
+}
+
+/* Ширина кнопки фиксируется по самому длинному состоянию: «Скопировано»
+   длиннее «Копировать», и без этого полоса дёргалась бы при каждом нажатии. */
+.example-copy {
+  min-width: 8.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.example-copy[data-state="ok"] {
+  color: var(--gr-color-success);
+}
+
+.example-copy[data-state="fail"] {
+  color: var(--gr-color-warning);
+}
+
+/* Подпись вместо вкладок — там, где представление одно: пример на CSS
+   или на SCSS превью не имеет и притворяться не должен. */
+.example-label {
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gr-color-text-muted);
+  padding-left: 0.2rem;
+}
+
+.example-panel {
+  padding: var(--gr-gap-lg);
+}
+
+/* Внутри блока примера у <pre> и .demo-block не остаётся ни рамки, ни фона,
+   ни собственных полей: всё это теперь у обёртки. */
+.example-panel > pre,
+.example-panel > .demo-block {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.example-panel > .demo-block > .demo-block-title:first-child {
+  margin-top: 0;
+}
+
+/* --- копирование --- */
+
+/* Инлайновый код копируется по нажатию. Клавиатурного эквивалента у него
+   нет намеренно: сделать фокусируемым каждый <code> — это триста табов
+   на странице справочника, и клавиатурный обход документации становится
+   непроходимым. Эквивалент здесь родной — выделение текста и Ctrl+C,
+   а на случай, когда буфер недоступен, обработчик сам выделяет фрагмент. */
+.docs-copy {
+  cursor: pointer;
+}
+
+.docs-copy:hover {
+  border-color: var(--gr-color-accent);
+  color: var(--gr-color-accent);
+}
+
+.docs-copy[data-state="ok"] {
+  border-color: var(--gr-color-success);
+  color: var(--gr-color-success);
+}
+
+/* Сообщение для экранного диктора. Видимого отклика у инлайнового кода
+   почти нет — рамка меняет цвет на секунду, — и без живой области
+   незрячий читатель не узнал бы, что нажатие вообще что-то сделало. */
+.docs-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- оглавление страницы --- */
+
+/* Третья колонка. Появляется только там, где под неё есть место сверх
+   колонки текста: ужимать текст ради оглавления — менять полезное
+   на вспомогательное. */
+.toc {
+  display: none;
+  flex: 0 0 13rem;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 3rem 1.25rem 3rem 0;
+  font-size: 0.8125rem;
+}
+
+@media (width >= 80rem) {
+  .toc { display: block; }
+}
+
+.toc-title {
+  margin-bottom: 0.6rem;
+  font-family: var(--gr-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gr-color-text-muted);
+}
+
+/* Полоса слева — единственный носитель состояния: подсвеченная строка
+   без неё сливается со ссылкой под курсором. */
+.toc-link {
+  display: block;
+  padding: 0.2rem 0 0.2rem 0.7rem;
+  border-left: 2px solid var(--gr-color-border);
+  color: var(--gr-color-text-muted);
+  text-decoration: none;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.toc-link:hover {
+  color: var(--gr-color-text);
+  border-left-color: var(--gr-color-border-strong);
+}
+
+.toc-link[data-level="3"] {
+  padding-left: 1.4rem;
+  font-size: 0.75rem;
+}
+
+.toc-link.active {
+  color: var(--gr-color-accent);
+  border-left-color: var(--gr-color-accent);
+}
+
+/* Якорь у заголовка. Держится на месте и в покое — прыгающая по наведению
+   решётка сдвигала бы заголовок на свою ширину. */
+.heading-anchor {
+  margin-left: 0.4rem;
+  color: var(--gr-color-border-strong);
+  text-decoration: none;
+  font-weight: 400;
+  opacity: 0;
+}
+
+h2:hover > .heading-anchor,
+h3:hover > .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+.heading-anchor:hover {
+  color: var(--gr-color-accent);
+}
+
+/* --- поиск --- */
+
+.search {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--gr-font-sans);
+  font-size: 0.8125rem;
+  color: var(--gr-color-text);
+  background-color: var(--gr-color-bg);
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  border-radius: calc(var(--gr-radius) / 2);
+}
+
+.search-input::placeholder {
+  color: var(--gr-color-text-muted);
+}
+
+/* Список подсказок ложится поверх панели, а не раздвигает её: боковая
+   панель прокручивается, и раздвинутый список уводил бы разделы вниз
+   на каждом нажатии клавиши. */
+.search-results {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  max-height: 22rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background-color: var(--gr-color-surface-overlay);
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  border-radius: var(--gr-radius);
+  box-shadow: var(--gr-shadow-lg);
+}
+
+.search-results[hidden] {
+  display: none;
+}
+
+.search-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: calc(var(--gr-radius) / 2);
+  cursor: pointer;
+  color: var(--gr-color-text);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.search-item[aria-selected="true"] {
+  background-color: var(--gr-color-surface-raised);
+}
+
+.search-item mark {
+  background: none;
+  color: var(--gr-color-accent);
+  font-weight: 600;
+}
+
+.search-name {
+  font-family: var(--gr-font-mono);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.search-where {
+  margin-left: auto;
+  flex: none;
+  font-size: 0.6875rem;
+  color: var(--gr-color-text-muted);
+  white-space: nowrap;
+}
+
+.search-empty {
+  padding: 0.4rem 0.45rem;
+  font-size: 0.8125rem;
+  color: var(--gr-color-text-muted);
+}
+
+/* --- готовые блоки --- */
+
+/* Страница patterns.html показывает сегменты в натуральную величину,
+   поэтому её примеры выходят из колонки текста на всю ширину. */
+.pattern-wide {
+  max-width: none;
+}
+
+}

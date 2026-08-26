@@ -1,0 +1,50 @@
+// Griffincss — Миксины метрик
+// Только миксины, ни одного правила: подключаются из _tokens.scss (база :root)
+// и из _styles.scss (носители оси оформления).
+//
+// Причина выноса — механика var(): подстановка считается на элементе, где
+// свойство объявлено, а вниз наследуется уже готовое значение. Объяви мы
+// зазоры и тени единственный раз в :root, секция с data-gr-style переопределила
+// бы --gr-density, но унаследовала бы зазор корня и осталась бы прежней.
+// Это тот же дефект, ради которого gr-semantic-colors живёт в _theme-values.scss.
+
+// Мобильная база шкалы зазоров.
+@mixin gr-gap-scale {
+  --gr-gap: calc(0.75rem * var(--gr-density));
+  --gr-gap-sm: calc(0.375rem * var(--gr-density));
+  --gr-gap-lg: calc(1.25rem * var(--gr-density));
+}
+
+// Крупный шаг: со средних экранов.
+@mixin gr-gap-scale-lg {
+  --gr-gap: calc(1rem * var(--gr-density));
+  --gr-gap-sm: calc(0.5rem * var(--gr-density));
+  --gr-gap-lg: calc(2rem * var(--gr-density));
+}
+
+// Метрики элементов управления. Высоты в rem, а не в px: режим для
+// слабовидящих поднимает кегль корня, и контролы растут вместе со страницей.
+//
+// Внутренний зазор компонента — между иконкой и текстом, между кнопками
+// в группе. Отличается от --gr-gap: тот адаптивный и про раскладку.
+@mixin gr-control-metrics {
+  --gr-control-height: calc(2.5rem * var(--gr-density));
+  --gr-control-height-sm: calc(2rem * var(--gr-density));
+  --gr-control-height-lg: calc(3rem * var(--gr-density));
+  --gr-control-padding-x: calc(0.875rem * var(--gr-density));
+  --gr-ui-gap: calc(0.5rem * var(--gr-density));
+}
+
+// Тени. Геометрия одна на все темы и стили; плотность задаёт тема
+// (--gr-shadow-strength), высоту — стиль (--gr-elevation). Два множителя,
+// а не один: тема не может знать про стиль, а стиль не может умножить
+// значение темы на себя — это была бы циклическая ссылка, и CSS её запрещает.
+@mixin gr-shadow-set {
+  --gr-shadow-xs: 0 1px 2px hsl(var(--gr-shadow-color), calc(5% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-sm: 0 1px 3px hsl(var(--gr-shadow-color), calc(10% * var(--gr-shadow-strength) * var(--gr-elevation))), 0 1px 2px hsl(var(--gr-shadow-color), calc(6% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-md: 0 4px 6px hsl(var(--gr-shadow-color), calc(10% * var(--gr-shadow-strength) * var(--gr-elevation))), 0 2px 4px hsl(var(--gr-shadow-color), calc(6% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-lg: 0 10px 15px hsl(var(--gr-shadow-color), calc(10% * var(--gr-shadow-strength) * var(--gr-elevation))), 0 4px 6px hsl(var(--gr-shadow-color), calc(5% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-xl: 0 20px 25px hsl(var(--gr-shadow-color), calc(10% * var(--gr-shadow-strength) * var(--gr-elevation))), 0 10px 10px hsl(var(--gr-shadow-color), calc(4% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-2xl: 0 25px 50px hsl(var(--gr-shadow-color), calc(25% * var(--gr-shadow-strength) * var(--gr-elevation)));
+  --gr-shadow-inner: inset 0 2px 4px hsl(var(--gr-shadow-color), calc(6% * var(--gr-shadow-strength) * var(--gr-elevation)));
+}

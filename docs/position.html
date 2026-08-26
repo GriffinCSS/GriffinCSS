@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Position</h1>
+  <p>Схема позиционирования, привязка к краям и порядок наложения.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_position.scss</span>
+  </div>
+</div>
+
+<h2>Схема позиционирования</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-static</code></td><td><code>position: static</code></td><td>Обычный поток — значение по умолчанию</td></tr>
+  <tr><td><code>.gr-relative</code></td><td><code>position: relative</code></td><td>Система отсчёта для вложенных абсолютных элементов</td></tr>
+  <tr><td><code>.gr-absolute</code></td><td><code>position: absolute</code></td><td>Изъят из потока, считается от ближайшего позиционированного предка</td></tr>
+  <tr><td><code>.gr-fixed</code></td><td><code>position: fixed</code></td><td>Привязан к окну</td></tr>
+  <tr><td><code>.gr-sticky</code></td><td><code>position: sticky</code></td><td>Липнет к краю при прокрутке; требует хотя бы одного значения <code>top</code>/<code>bottom</code></td></tr>
+</table>
+
+<h2>Привязка к краям</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-inset-0</code></td><td><code>inset: 0</code> — растянут по всем четырём краям</td></tr>
+  <tr><td><code>.gr-inset-auto</code></td><td><code>inset: auto</code></td></tr>
+  <tr><td><code>.gr-inset-x-0</code></td><td><code>inset-inline: 0</code> — оба края строки</td></tr>
+  <tr><td><code>.gr-inset-y-0</code></td><td><code>inset-block: 0</code> — верх и низ</td></tr>
+  <tr><td><code>.gr-top-0</code>, <code>.gr-right-0</code>, <code>.gr-bottom-0</code>, <code>.gr-left-0</code></td><td>Соответствующий край — <code>0</code></td></tr>
+  <tr><td><code>.gr-top-auto</code>, <code>.gr-right-auto</code>, <code>.gr-bottom-auto</code>, <code>.gr-left-auto</code></td><td>Соответствующий край — <code>auto</code></td></tr>
+  <tr><td><code>.gr-start-0</code>, <code>.gr-end-0</code></td><td><code>inset-inline-start</code> / <code>inset-inline-end</code> — <code>0</code></td></tr>
+  <tr><td><code>.gr-start-auto</code>, <code>.gr-end-auto</code></td><td>То же — <code>auto</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong><code>left</code>/<code>right</code> здесь физические, и это
+    сделано намеренно.</strong> Кнопка «закрыть» в углу окна обязана держаться
+    угла, а не начала строки, — поэтому <code>.gr-left-0</code> остаётся
+    левым краем при любом направлении письма. Когда край должен следовать
+    за текстом, берите <code>.gr-start-0</code> и <code>.gr-end-0</code>:
+    в LTR они совпадают с <code>left</code> и <code>right</code>, в RTL
+    меняются местами. Осевые <code>.gr-inset-x-0</code> и
+    <code>.gr-inset-y-0</code> одинаковы в обоих направлениях —
+    у них обе стороны равны нулю.
+  </p>
+</div>
+
+<h2>Порядок наложения</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-z-0</code> … <code>.gr-z-50</code></td><td><code>z-index</code> с шагом 10</td></tr>
+  <tr><td><code>.gr-z-auto</code></td><td><code>z-index: auto</code></td></tr>
+</table>
+
+<p>
+  Шаг 10 оставляет место между ступенями: своё промежуточное значение
+  вписывается обычным CSS, не трогая библиотеку.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Бейдж в углу карточки</div>
+  <div class="gr-relative card-demo" style="max-width:320px;">
+    <h4>Карточка</h4>
+    <p class="gr-m-0 gr-text-ink-secondary gr-text-sm">Родитель с <code>.gr-relative</code></p>
+    <span class="tag-demo tag-a gr-absolute gr-top-0 gr-right-0 gr-m-2">−30%</span>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-relative"&gt;
+  &lt;img src="…" alt=""&gt;
+  &lt;span class="gr-absolute gr-top-0 gr-right-0 gr-m-2"&gt;−30%&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<h3>Липкая шапка</h3>
+
+<pre><code>&lt;header class="gr-sticky gr-top-0 gr-z-40 gr-bg-white gr-border-b"&gt;
+  …
+&lt;/header&gt;</code></pre>
+
+<h3>Затемнение под модальным окном</h3>
+
+<pre><code>&lt;div class="gr-fixed gr-inset-0 gr-z-50 gr-bg-black gr-opacity-50"&gt;&lt;/div&gt;</code></pre>
+
+<h2>Адаптивные варианты</h2>
+
+<p>
+  Суффикс брейкпоинта есть только у самой схемы позиционирования:
+  <code>.gr-static-md</code>, <code>.gr-relative-lg</code>,
+  <code>.gr-absolute-sm</code>, <code>.gr-fixed-xl</code>,
+  <code>.gr-sticky-md</code>. У <code>inset</code> и <code>z-index</code>
+  адаптивных вариантов нет — на практике они не нужны.
+</p>
+
+<pre><code>&lt;!-- в потоке на мобильном, липнет от 768px --&gt;
+&lt;nav class="gr-static gr-sticky-md gr-top-0"&gt;…&lt;/nav&gt;</code></pre>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

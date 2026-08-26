@@ -1,0 +1,142 @@
+// Griffincss UI — Pagination
+// Постраничная навигация. Разметка — <nav aria-label="Страницы"> со списком
+// ссылок: каждая страница обязана быть настоящей ссылкой с href, иначе она
+// не откроется в новой вкладке и не попадёт в историю.
+//
+// Текущая страница помечается aria-current="page" — тем же атрибутом, что
+// и активный пункт навигации. Кнопка «дальше» на последней странице
+// получает aria-disabled="true" и остаётся в порядке обхода: исчезнувшая
+// кнопка сбивает счёт нажатий Tab, приглушённая — нет.
+
+.gr-pagination {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Ряд на <ul>: обёртка <li> не приносит с собой ни полей, ни маркера.
+// :where() оставляет специфичность нулевой — класс на самом <li> сильнее.
+.gr-pagination > :where(li) {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-page {
+  --gr-page-size: var(--gr-control-height);
+  --gr-page-fg: var(--gr-color-text);
+
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--gr-page-size);
+  min-block-size: var(--gr-page-size);
+  padding-inline: calc(var(--gr-control-padding-x) * 0.5);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-page-fg);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gr-page:hover:not([aria-current], [aria-disabled="true"], :disabled) {
+    border-color: var(--gr-color-border-strong);
+    background-color: var(--gr-color-surface-raised);
+  }
+}
+
+.gr-page:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Текущая страница. Заливка, а не только цвет текста: в ряду одинаковых
+// цифр разница в оттенке замечается хуже, чем разница в весе пятна.
+.gr-page[aria-current] {
+  border-color: var(--gr-color-accent);
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+  font-weight: 600;
+  cursor: default;
+}
+
+.gr-page[aria-disabled="true"],
+.gr-page:disabled {
+  color: var(--gr-color-text-disabled);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+// Пропуск страниц. Не ссылка и не кнопка — знак того, что ряд прерван,
+// поэтому у него нет ни рамки, ни фона, ни курсора указателя.
+.gr-page-gap {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-inline-size: calc(var(--gr-control-height) * 0.75);
+  min-block-size: var(--gr-control-height);
+  color: var(--gr-color-text-muted);
+  user-select: none;
+}
+
+// --- Размеры и варианты -----------------------------------------------------
+
+// Компактный ряд — для подвала таблицы, где строка и без того плотная.
+.gr-pagination-compact .gr-page {
+  --gr-page-size: var(--gr-control-height-sm);
+
+  font-size: 0.875rem;
+}
+
+.gr-pagination-compact .gr-page-gap {
+  min-block-size: var(--gr-control-height-sm);
+}
+
+// Слипшийся ряд — одна лента вместо отдельных клавиш. Соседние границы
+// наезжают друг на друга на свою толщину, иначе на стыке была бы двойная
+// линия; приём тот же, что у .gr-btn-group.
+.gr-pagination-joined {
+  gap: 0;
+}
+
+.gr-pagination-joined .gr-page {
+  border-radius: 0;
+}
+
+.gr-pagination-joined > :first-child .gr-page,
+.gr-pagination-joined > .gr-page:first-child {
+  border-start-start-radius: var(--gr-radius);
+  border-end-start-radius: var(--gr-radius);
+}
+
+.gr-pagination-joined > :last-child .gr-page,
+.gr-pagination-joined > .gr-page:last-child {
+  border-start-end-radius: var(--gr-radius);
+  border-end-end-radius: var(--gr-radius);
+}
+
+.gr-pagination-joined .gr-page + .gr-page,
+.gr-pagination-joined > :where(* + *) .gr-page {
+  margin-inline-start: calc(-1 * var(--gr-border-width));
+}
+
+// Активная клавиша поднимается над соседями: иначе её граница и контур
+// фокуса оказались бы наполовину закрыты следующей.
+.gr-pagination-joined .gr-page:focus-visible,
+.gr-pagination-joined .gr-page[aria-current] {
+  position: relative;
+  z-index: 1;
+}

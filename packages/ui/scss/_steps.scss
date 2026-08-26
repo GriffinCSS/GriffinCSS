@@ -1,0 +1,193 @@
+// Griffincss UI — Steps
+// Шаги процесса: оформление заказа, мастер настройки, ход проверки.
+// Разметка — <ol>: порядок здесь значащий, и нумерованный список сообщает
+// об этом программе чтения с экрана.
+//
+//   <ol class="gr-steps">
+//     <li class="gr-step gr-step-done">
+//       <span class="gr-step-marker" aria-hidden="true">✓</span>
+//       <span class="gr-step-label">Корзина</span>
+//     </li>
+//     <li class="gr-step" aria-current="step">
+//       <span class="gr-step-marker" aria-hidden="true">2</span>
+//       <span class="gr-step-label">Доставка</span>
+//       <span class="gr-step-note">Курьером до двери</span>
+//     </li>
+//   </ol>
+//
+// Состояний три: пройденный (.gr-step-done), текущий (aria-current="step")
+// и ожидающий — он же состояние по умолчанию. Текущий находится по тому же
+// признаку, по которому его находит программа чтения с экрана; класса
+// для него нет намеренно.
+//
+// Знак в маркере кладут в разметку: галочка у пройденного шага и номер
+// у остальных — это содержимое, а не оформление. Цвет остаётся вторым
+// признаком поверх знака и позиции, а не единственным.
+
+.gr-steps {
+  --gr-step-marker-size: 2rem;
+
+  display: flex;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Обёртка списка не должна ни добавлять полей, ни перебивать классы,
+// поставленные на сам <li>: :where() держит специфичность нулевой.
+.gr-steps > :where(li) {
+  display: flex;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-step {
+  --gr-step-color: var(--gr-color-text-muted);
+  --gr-step-line: var(--gr-color-border);
+  --gr-step-marker-fg: var(--gr-color-text-muted);
+  --gr-step-marker-bg: var(--gr-color-bg);
+
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  min-inline-size: 0;
+  color: var(--gr-step-color);
+  text-align: center;
+}
+
+// Линия — хвост шага, ведущий к следующему, и залита она у пройденного:
+// «путь от этого шага дальше проделан». Принадлежность именно левому
+// (в колонке — верхнему) выбрана не ради вида, а потому, что только у него
+// длину линии считает сам CSS: низ его блока и есть верх промежутка,
+// а вот сколько текста висит под маркером ПРЕДЫДУЩЕГО шага, правило,
+// написанное на следующего, знать не может. Хвост, растущий вверх,
+// упирался бы в границу своего блока и не доставал до соседнего маркера —
+// ровно это и было видно в колонке.
+.gr-step::after {
+  content: "";
+  position: absolute;
+  inset-block-start: calc(var(--gr-step-marker-size) / 2);
+  inset-inline: 50% -50%;
+  block-size: var(--gr-border-width);
+  margin-block-start: calc(var(--gr-border-width) * -0.5);
+  background-color: var(--gr-step-line);
+}
+
+// У последнего шага линии нет: вести ей некуда. Класс .gr-step встречается
+// и на самом <li>, и на элементе внутри него — сняты оба случая.
+.gr-steps > :last-child .gr-step::after,
+.gr-steps > .gr-step:last-child::after {
+  content: none;
+}
+
+.gr-step-marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  box-sizing: border-box;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--gr-step-marker-size);
+  block-size: var(--gr-step-marker-size);
+  border: var(--gr-border-width) solid currentcolor;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-step-marker-bg);
+  color: var(--gr-step-marker-fg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gr-step-label {
+  color: var(--gr-step-color);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.gr-step-note {
+  color: var(--gr-color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+// --- Состояния --------------------------------------------------------------
+
+// Пройденный: его хвост залит акцентом — путь от него дальше проделан.
+.gr-step-done {
+  --gr-step-color: var(--gr-color-text);
+  --gr-step-line: var(--gr-color-accent);
+  --gr-step-marker-fg: var(--gr-color-accent);
+}
+
+// Текущий. Маркер залит, а не обведён: из трёх состояний это единственное,
+// которое нужно найти взглядом сразу. Хвост при этом остаётся серым —
+// он ведёт к тому, до чего ещё не дошли.
+.gr-step[aria-current] {
+  --gr-step-color: var(--gr-color-text);
+  --gr-step-marker-fg: var(--gr-color-on-accent);
+  --gr-step-marker-bg: var(--gr-color-accent);
+}
+
+.gr-step[aria-current] .gr-step-marker {
+  border-color: var(--gr-color-accent);
+}
+
+// Шаг, до которого не дошли и не дойдут: отменённый или пропущенный.
+.gr-step-disabled {
+  --gr-step-color: var(--gr-color-text-disabled);
+  --gr-step-marker-fg: var(--gr-color-text-disabled);
+}
+
+// --- Вертикальный вариант ---------------------------------------------------
+
+// Колонка: маркер слева, подпись справа. На узком экране это единственный
+// работающий вариант — горизонтальный ряд из четырёх шагов там нечитаем.
+.gr-steps-vertical {
+  flex-direction: column;
+  gap: var(--gr-gap);
+}
+
+.gr-steps-vertical > :where(li) {
+  flex: none;
+}
+
+.gr-steps-vertical .gr-step {
+  flex: none;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--gr-ui-gap);
+  text-align: start;
+}
+
+// В колонке хвост идёт вниз от маркера до маркера следующего шага. Длину
+// задают оба вылета сразу, а block-size: auto считает её из них: сколько бы
+// текста ни висело под маркером, линия дотянется — это и есть довод
+// в пользу хвоста, а не отрезка фиксированной длины.
+.gr-steps-vertical .gr-step::after {
+  inset-block: var(--gr-step-marker-size) calc(var(--gr-gap) * -1);
+  inset-inline: calc(var(--gr-step-marker-size) / 2) auto;
+  inline-size: var(--gr-border-width);
+  block-size: auto;
+  margin-block-start: 0;
+  margin-inline-start: calc(var(--gr-border-width) * -0.5);
+}
+
+// Подпись и пояснение встают в колонку: в строке они разъезжались бы
+// по базовой линии маркера.
+.gr-steps-vertical .gr-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gr-ui-gap) * 0.25);
+  padding-block-start: calc((var(--gr-step-marker-size) - 1.3em) / 2);
+}

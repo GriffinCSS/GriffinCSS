@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Готовые блоки — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Готовые блоки</h1>
+  <p>
+    Двенадцать крупных сегментов вёрстки, которые забирают в проект целиком:
+    шапка, первый экран, сетка карточек, тарифы, форма входа, лента статей,
+    панель админки, дашборд, таблица с фильтрами, вопросы и ответы, призыв
+    к действию и подвал. У каждого — вкладка «Код» и кнопка копирования.
+  </p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">12 сегментов</span>
+    <span class="badge">только классы библиотеки</span>
+    <span class="badge">ни одного литерального цвета</span>
+  </div>
+</div>
+
+<h2 id="kak-polzovatsya">Как этим пользоваться</h2>
+
+<p>
+  Каждый блок ниже собран <strong>только на классах библиотеки</strong>:
+  ни одного литерального цвета, ни одного пикселя в разметке, ни строчки
+  собственного CSS у этой страницы. Поэтому блок, перенесённый в ваш проект,
+  сразу знает про светлую и тёмную тему, про режим для слабовидящих
+  и про выбранную стратегию оформления — переключатели в боковой панели
+  действуют и на эти сегменты, попробуйте.
+</p>
+
+<p>
+  Порядок работы: вкладка <strong>«Код»</strong> → <strong>«Копировать»</strong> →
+  вставить в свою разметку → заменить тексты и ссылки. Классы
+  <code>gr-area-*</code> в панели админки и <code>data-gr-layout</code>
+  на её контейнере — единственное место, где нужен JS-рантайм; остальные
+  одиннадцать блоков работают без него.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Что нужно подключить.</strong> Все блоки требуют трёх файлов:
+    <code>griffincss-core.css</code>, <code>griffincss-ui.css</code>
+    и <code>griffincss-utils.css</code>. Панели админки нужен ещё
+    <code>griffincss.js</code>. Ни одна картинка, иконка или шрифт
+    в комплект не входят: в блоках стоят заглушки на фоновых утилитах
+    и юникодные символы — замените их на своё.
+  </p>
+</div>
+
+<h2 id="shapka-sayta">1. Шапка сайта</h2>
+
+<p>
+  Бренд, меню и действие. До 768px меню сворачивается в кнопку
+  <code>☰</code> — это <code>&lt;details&gt;</code>, без единой строки JS.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Шапка целиком — сузьте окно, чтобы увидеть кнопку меню</div>
+  <header class="gr-navbar">
+    <a class="gr-navbar-brand" href="#">Астролябия</a>
+    <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+    <nav class="gr-nav gr-nav-collapse" aria-label="Основная навигация">
+      <a class="gr-nav-link" href="#" aria-current="page">Продукт</a>
+      <a class="gr-nav-link" href="#">Тарифы</a>
+      <a class="gr-nav-link" href="#">Документация</a>
+      <a class="gr-nav-link" href="#">Блог</a>
+    </nav>
+    <a class="gr-btn gr-btn-primary gr-btn-sm" href="#">Войти</a>
+  </header>
+</div>
+
+<h2 id="pervyy-ekran">2. Первый экран</h2>
+
+<p>
+  Заголовок, одна фраза о продукте, два действия и строка доверия.
+  Ширина текста ограничена <code>gr-max-w-page</code>, а не пикселями,
+  поэтому на широком мониторе строка не растягивается до нечитаемой.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Первый экран</div>
+  <section class="gr-py-16 gr-px-4 gr-text-center gr-bg-sunken gr-radius">
+    <span class="gr-badge gr-badge-accent gr-badge-pill gr-mb-4">Версия 2.0 уже здесь</span>
+    <h2 class="gr-text-4xl gr-font-bold gr-text-balance gr-mt-0 gr-mb-4">Сетка, которая описывается одной строкой</h2>
+    <p class="gr-text-lg gr-text-ink-secondary gr-text-pretty gr-max-w-page gr-mx-auto gr-mb-8">
+      Опишите раскладку строкой <code>a3b4-c2d5</code> вместо десяти правил
+      <code>grid-template-areas</code>. Адаптивность — атрибутом, без единого медиа-запроса вручную.
+    </p>
+    <div class="gr-flex gr-flex-center gr-flex-wrap gr-gap">
+      <a class="gr-btn gr-btn-primary gr-btn-lg" href="#">Начать бесплатно</a>
+      <a class="gr-btn gr-btn-lg" href="#">Смотреть примеры</a>
+    </div>
+    <p class="gr-text-sm gr-text-ink-secondary gr-mt-8 gr-mb-0">Без карты · 14 дней · Отмена в один клик</p>
+  </section>
+</div>
+
+<h2 id="setka-kartochek">3. Сетка карточек</h2>
+
+<p>
+  <code>gr-grid-auto-fit</code> сама решает, сколько колонок поместится:
+  ни одного брейкпоинта в разметке. Карточки выравниваются по нижнему краю,
+  потому что подвал прижат <code>gr-card-footer</code>, а не отступом.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три карточки, которые сами перестроятся в одну колонку</div>
+  <div class="gr-grid-auto-fit gr-gap">
+    <article class="gr-card">
+      <div class="gr-aspect-video gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-2">Каскадные слои</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-m-0">Библиотека укладывается в свой <code>@layer</code>, поэтому ваши правила побеждают без <code>!important</code>.</p>
+      </div>
+      <div class="gr-card-footer gr-flex gr-flex-between gr-flex-items-center">
+        <span class="gr-badge">core</span>
+        <a class="gr-link" href="#">Подробнее</a>
+      </div>
+    </article>
+    <article class="gr-card">
+      <div class="gr-aspect-video gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-2">Две оси темы</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-m-0">Светлая и тёмная — одна ось, режим для слабовидящих — вторая, независимая от первой.</p>
+      </div>
+      <div class="gr-card-footer gr-flex gr-flex-between gr-flex-items-center">
+        <span class="gr-badge">theme</span>
+        <a class="gr-link" href="#">Подробнее</a>
+      </div>
+    </article>
+    <article class="gr-card">
+      <div class="gr-aspect-video gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-2">Контейнерные запросы</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-m-0">Те же брейкпоинты, но от ширины блока: карточка в узкой колонке ведёт себя как на телефоне.</p>
+      </div>
+      <div class="gr-card-footer gr-flex gr-flex-between gr-flex-items-center">
+        <span class="gr-badge">utils</span>
+        <a class="gr-link" href="#">Подробнее</a>
+      </div>
+    </article>
+  </div>
+</div>
+
+<h2 id="tarify">4. Тарифы</h2>
+
+<p>
+  Три плана, средний выделен рамкой и плашкой, а не размером: увеличенная
+  карточка ломает выравнивание цен, и глаз перестаёт их сравнивать.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три тарифа, средний выделен</div>
+  <div class="gr-grid-auto-fit gr-gap">
+    <div class="gr-card">
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-1">Свободный</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-4">Для личных проектов</p>
+        <p class="gr-text-3xl gr-font-bold gr-m-0">0 ₽</p>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-1 gr-mb-6">навсегда</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2">Все модули библиотеки</li>
+          <li class="gr-mb-2">Одна тема</li>
+          <li class="gr-mb-2">Сообщество</li>
+        </ul>
+      </div>
+      <div class="gr-card-footer">
+        <a class="gr-btn gr-btn-block" href="#">Взять</a>
+      </div>
+    </div>
+    <div class="gr-card gr-border-primary">
+      <div class="gr-card-header gr-flex gr-flex-between gr-flex-items-center">
+        <span class="gr-font-semibold">Рабочий</span>
+        <span class="gr-badge gr-badge-accent gr-badge-pill">Выбирают чаще</span>
+      </div>
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-1">Рабочий</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-4">Для команды до десяти человек</p>
+        <p class="gr-text-3xl gr-font-bold gr-m-0">1 490 ₽</p>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-1 gr-mb-6">в месяц</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2">Всё из «Свободного»</li>
+          <li class="gr-mb-2">Обе оси темы и стратегии оформления</li>
+          <li class="gr-mb-2">Поддержка за один рабочий день</li>
+        </ul>
+      </div>
+      <div class="gr-card-footer">
+        <a class="gr-btn gr-btn-primary gr-btn-block" href="#">Начать 14 дней</a>
+      </div>
+    </div>
+    <div class="gr-card">
+      <div class="gr-card-body">
+        <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-1">Корпоративный</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-4">Для крупных внедрений</p>
+        <p class="gr-text-3xl gr-font-bold gr-m-0">Договорная</p>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-1 gr-mb-6">по итогам разговора</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2">Всё из «Рабочего»</li>
+          <li class="gr-mb-2">Свои токены и сборка</li>
+          <li class="gr-mb-2">Договор и SLA</li>
+        </ul>
+      </div>
+      <div class="gr-card-footer">
+        <a class="gr-btn gr-btn-block" href="#">Написать нам</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 id="forma-vhoda">5. Форма входа</h2>
+
+<p>
+  Каждое поле — <code>gr-field</code> с подписью и подсказкой, связанной
+  через <code>aria-describedby</code>. Ошибка показана словом, а не только
+  цветом рамки.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Карточка входа</div>
+  <div class="gr-flex gr-flex-center">
+    <div class="gr-card gr-card-raised gr-w-full gr-max-w-page">
+      <div class="gr-card-body">
+        <h3 class="gr-text-xl gr-font-semibold gr-mt-0 gr-mb-1">Вход</h3>
+        <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-6">Ещё нет учётной записи? <a class="gr-link" href="#">Зарегистрируйтесь</a>.</p>
+        <form>
+          <div class="gr-field">
+            <label class="gr-label" for="p-mail">Почта</label>
+            <input class="gr-input" id="p-mail" type="email" autocomplete="email" aria-describedby="p-mail-hint">
+            <span class="gr-hint" id="p-mail-hint">Та, на которую оформлена подписка.</span>
+          </div>
+          <div class="gr-field">
+            <label class="gr-label" for="p-pass">Пароль</label>
+            <input class="gr-input" id="p-pass" type="password" autocomplete="current-password" aria-describedby="p-pass-err" aria-invalid="true">
+            <span class="gr-error" id="p-pass-err">Пароль короче восьми знаков.</span>
+          </div>
+          <label class="gr-choice gr-text-sm gr-mb-6"><input class="gr-checkbox" type="checkbox"> Запомнить на этом устройстве</label>
+          <button class="gr-btn gr-btn-primary gr-btn-block" type="submit">Войти</button>
+        </form>
+      </div>
+      <div class="gr-card-footer gr-text-center gr-text-sm">
+        <a class="gr-link gr-link-muted" href="#">Забыли пароль?</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 id="lenta-statey">6. Лента статей</h2>
+
+<p>
+  Крупная статья и две поменьше. Раскладка описана строкой
+  <code>gr-grid-12</code> со <code>span</code>-утилитами, поэтому на узком
+  экране колонки схлопываются сами.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Витрина блога</div>
+  <div class="gr-grid-1 gr-grid-12-md gr-gap">
+    <article class="gr-card gr-grid-col-span-7">
+      <div class="gr-aspect-wide gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">обложка</div>
+      <div class="gr-card-body">
+        <div class="gr-flex gr-gap-sm gr-flex-items-center gr-mb-2">
+          <span class="gr-tag">Архитектура</span>
+          <span class="gr-text-xs gr-text-ink-secondary">12 минут чтения</span>
+        </div>
+        <h3 class="gr-text-2xl gr-font-semibold gr-text-balance gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Почему каскадные слои важнее специфичности</a></h3>
+        <p class="gr-text-ink-secondary gr-line-clamp-3 gr-m-0">Спор о том, какое правило победит, решается не подсчётом единиц специфичности, а порядком слоёв — и это меняет способ писать библиотеки целиком.</p>
+      </div>
+      <div class="gr-card-footer gr-flex gr-flex-items-center gr-gap-sm">
+        <span class="gr-avatar gr-avatar-sm">МЛ</span>
+        <span class="gr-text-sm">Михаил Лазарев</span>
+        <span class="gr-text-sm gr-text-ink-secondary">· 26 августа</span>
+      </div>
+    </article>
+    <div class="gr-grid-col-span-5 gr-flex gr-flex-col gr-gap">
+      <article class="gr-card gr-flex-1">
+        <div class="gr-card-body">
+          <span class="gr-tag gr-mb-2 gr-inline-block">Рантайм</span>
+          <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Потоковая раскладка: сетка до конца загрузки</a></h3>
+          <p class="gr-text-sm gr-text-ink-secondary gr-line-clamp-2 gr-m-0">Наблюдатель парс-тайма отдаёт области детям по мере их появления в документе.</p>
+        </div>
+      </article>
+      <article class="gr-card gr-flex-1">
+        <div class="gr-card-body">
+          <span class="gr-tag gr-mb-2 gr-inline-block">Размер</span>
+          <h3 class="gr-text-lg gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Отсечение неиспользуемого: 2,5 КБ вместо 6,1</a></h3>
+          <p class="gr-text-sm gr-text-ink-secondary gr-line-clamp-2 gr-m-0">Разбор селекторов собранного файла вместо регулярного выражения по тексту.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+
+<h2 id="panel-adminki">7. Панель админки</h2>
+
+<p>
+  Единственный блок на этой странице, которому нужен
+  <code>griffincss.js</code>: раскладка описана строкой
+  <code>data-gr-layout</code>, а на широком экране меняется
+  на <code>data-gr-layout-md</code> — без единого медиа-запроса в разметке.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Каркас административной панели</div>
+  <div data-gr-layout="hdr4-nav4-main4" data-gr-layout-md="hdr4hdr4hdr4hdr4-nav1main3main3main3" class="gr-radius gr-overflow-hidden gr-border">
+    <div class="gr-area-hdr gr-navbar">
+      <span class="gr-navbar-brand">Панель</span>
+      <nav class="gr-nav" aria-label="Разделы панели">
+        <a class="gr-nav-link" href="#" aria-current="page">Обзор</a>
+        <a class="gr-nav-link" href="#">Заказы</a>
+      </nav>
+      <span class="gr-avatar gr-avatar-sm">МЛ</span>
+    </div>
+    <aside class="gr-area-nav gr-bg-sunken gr-p-4">
+      <nav class="gr-nav gr-nav-vertical" aria-label="Меню панели">
+        <a class="gr-nav-link" href="#" aria-current="page">Сводка</a>
+        <a class="gr-nav-link" href="#">Заказы</a>
+        <a class="gr-nav-link" href="#">Товары</a>
+        <a class="gr-nav-link" href="#">Клиенты</a>
+        <a class="gr-nav-link" href="#">Настройки</a>
+      </nav>
+    </aside>
+    <main class="gr-area-main gr-p-6">
+      <nav aria-label="Хлебные крошки" class="gr-mb-4">
+        <ol class="gr-breadcrumb">
+          <li><a href="#">Панель</a></li>
+          <li><span aria-current="page">Сводка</span></li>
+        </ol>
+      </nav>
+      <h3 class="gr-text-xl gr-font-semibold gr-mt-0 gr-mb-4">Сводка за неделю</h3>
+      <div class="gr-alert gr-alert-info" role="status">
+        <span class="gr-alert-icon" aria-hidden="true">i</span>
+        <div class="gr-alert-body">
+          <strong class="gr-alert-title">Отчёт готовится</strong>
+          Данные за последние сутки появятся к полуночи.
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<h2 id="dashbord">8. Дашборд со статистикой</h2>
+
+<p>
+  Четыре показателя в ряд, под ними — полосы выполнения. Числа набраны
+  <code>gr-font-mono</code>: в колонке показаний разряды обязаны стоять друг
+  под другом, а пропорциональный шрифт этого не обещает. Полоса —
+  родной <code>&lt;progress&gt;</code>, а не div со вложенным span:
+  доступность у него уже есть.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Показания и прогресс</div>
+  <div>
+    <div class="gr-grid-1 gr-grid-2-sm gr-grid-4-lg gr-gap gr-mb-6">
+      <div class="gr-card">
+        <div class="gr-card-body">
+          <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-2">Выручка</p>
+          <p class="gr-text-xl gr-font-mono gr-font-bold gr-m-0">1 284 900 ₽</p>
+          <p class="gr-text-sm gr-text-success gr-mt-2 gr-mb-0">↑ 12,4% к прошлой неделе</p>
+        </div>
+      </div>
+      <div class="gr-card">
+        <div class="gr-card-body">
+          <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-2">Заказы</p>
+          <p class="gr-text-xl gr-font-mono gr-font-bold gr-m-0">438</p>
+          <p class="gr-text-sm gr-text-success gr-mt-2 gr-mb-0">↑ 3,1%</p>
+        </div>
+      </div>
+      <div class="gr-card">
+        <div class="gr-card-body">
+          <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-2">Средний чек</p>
+          <p class="gr-text-xl gr-font-mono gr-font-bold gr-m-0">2 934 ₽</p>
+          <p class="gr-text-sm gr-text-danger gr-mt-2 gr-mb-0">↓ 1,8%</p>
+        </div>
+      </div>
+      <div class="gr-card">
+        <div class="gr-card-body">
+          <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-2">Возвраты</p>
+          <p class="gr-text-xl gr-font-mono gr-font-bold gr-m-0">7</p>
+          <p class="gr-text-sm gr-text-ink-secondary gr-mt-2 gr-mb-0">без изменений</p>
+        </div>
+      </div>
+    </div>
+    <div class="gr-card">
+      <div class="gr-card-header">План квартала</div>
+      <div class="gr-card-body">
+        <div class="gr-mb-4">
+          <div class="gr-flex gr-flex-between gr-text-sm gr-mb-1">
+            <span>Выручка</span><span class="gr-font-mono">78%</span>
+          </div>
+          <progress class="gr-progress gr-progress-success" value="78" max="100" aria-label="Выручка">78 %</progress>
+        </div>
+        <div class="gr-mb-4">
+          <div class="gr-flex gr-flex-between gr-text-sm gr-mb-1">
+            <span>Новые клиенты</span><span class="gr-font-mono">45%</span>
+          </div>
+          <progress class="gr-progress" value="45" max="100" aria-label="Новые клиенты">45 %</progress>
+        </div>
+        <div>
+          <div class="gr-flex gr-flex-between gr-text-sm gr-mb-1">
+            <span>Удержание</span><span class="gr-font-mono">23%</span>
+          </div>
+          <progress class="gr-progress gr-progress-warning" value="23" max="100" aria-label="Удержание">23 %</progress>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 id="tablica-s-filtrami">9. Таблица с фильтрами</h2>
+
+<p>
+  Панель отбора, таблица в прокручиваемой обёртке и страницы под ней.
+  <code>gr-table-wrap</code> с <code>tabindex="0"</code> — чтобы до
+  прокрутки можно было добраться с клавиатуры.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Список заказов</div>
+  <div>
+    <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-end gr-mb-4">
+      <div class="gr-field gr-mb-0 gr-flex-1">
+        <label class="gr-label" for="p-q">Поиск</label>
+        <input class="gr-input gr-input-sm" id="p-q" type="search" placeholder="Номер или клиент">
+      </div>
+      <div class="gr-field gr-mb-0">
+        <label class="gr-label" for="p-status">Статус</label>
+        <select class="gr-select gr-input-sm" id="p-status">
+          <option>Любой</option>
+          <option>Оплачен</option>
+          <option>В сборке</option>
+          <option>Отменён</option>
+        </select>
+      </div>
+      <button class="gr-btn gr-btn-sm" type="button">Сбросить</button>
+      <button class="gr-btn gr-btn-primary gr-btn-sm" type="button">Применить</button>
+    </div>
+    <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Заказы">
+      <table class="gr-table gr-table-hover gr-table-compact">
+        <thead>
+          <tr><th>Номер</th><th>Клиент</th><th>Статус</th><th>Сумма</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="gr-font-mono">A-10482</td><td>Кузнецова А.</td><td><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-font-mono gr-text-end">12 400 ₽</td></tr>
+          <tr><td class="gr-font-mono">A-10481</td><td>Орлов Д.</td><td><span class="gr-badge gr-badge-warning">В сборке</span></td><td class="gr-font-mono gr-text-end">3 950 ₽</td></tr>
+          <tr><td class="gr-font-mono">A-10480</td><td>Гаврилова Е.</td><td><span class="gr-badge gr-badge-danger">Отменён</span></td><td class="gr-font-mono gr-text-end">7 100 ₽</td></tr>
+          <tr><td class="gr-font-mono">A-10479</td><td>Северов И.</td><td><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-font-mono gr-text-end">21 800 ₽</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="gr-flex gr-flex-between gr-flex-items-center gr-flex-wrap gr-gap-sm gr-mt-4">
+      <p class="gr-text-sm gr-text-ink-secondary gr-m-0">Показаны 1–4 из 96</p>
+      <nav aria-label="Страницы">
+        <ul class="gr-pagination gr-pagination-compact">
+          <li><a class="gr-page" href="#">‹</a></li>
+          <li><a class="gr-page" href="#" aria-current="page">1</a></li>
+          <li><a class="gr-page" href="#">2</a></li>
+          <li><a class="gr-page" href="#">3</a></li>
+          <li><span class="gr-page-gap" aria-hidden="true">…</span></li>
+          <li><a class="gr-page" href="#">24</a></li>
+          <li><a class="gr-page" href="#">›</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<h2 id="voprosy-i-otvety">10. Вопросы и ответы</h2>
+
+<p>
+  Аккордеон на <code>&lt;details name="…"&gt;</code>: общее имя заставляет
+  браузер закрывать соседей сам, без JS и без управления состоянием.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Частые вопросы</div>
+  <div class="gr-accordion">
+    <details class="gr-accordion-item" name="p-faq" open>
+      <summary class="gr-accordion-trigger">Нужен ли JS, чтобы пользоваться библиотекой?</summary>
+      <div class="gr-accordion-panel">
+        <p class="gr-m-0">Нет. Без JS работают все утилитарные классы, все компоненты и статические SCSS-миксины раскладок. Рантайм нужен только для <code>data-gr-layout</code>, тем и произвольных значений в квадратных скобках.</p>
+      </div>
+    </details>
+    <details class="gr-accordion-item" name="p-faq">
+      <summary class="gr-accordion-trigger">Можно ли подключить только часть?</summary>
+      <div class="gr-accordion-panel">
+        <p class="gr-m-0">Да, пакета три, и каждый самодостаточен. Минимальный набор — <code>griffincss-core.css</code> в 24 КБ; утилиты и компоненты добавляются по желанию.</p>
+      </div>
+    </details>
+    <details class="gr-accordion-item" name="p-faq">
+      <summary class="gr-accordion-trigger">Что будет с моими стилями?</summary>
+      <div class="gr-accordion-panel">
+        <p class="gr-m-0">Ничего. Весь вывод библиотеки лежит в каскадных слоях <code>griffincss.*</code>, а безслойные правила побеждают любой слой. Ни одного <code>!important</code> в сборке нет — это проверяется на каждой сборке.</p>
+      </div>
+    </details>
+    <details class="gr-accordion-item" name="p-faq">
+      <summary class="gr-accordion-trigger">Как быть с тёмной темой?</summary>
+      <div class="gr-accordion-panel">
+        <p class="gr-m-0">Она уже есть. Цвета компонентов заданы семантическими токенами, поэтому обе темы и режим для слабовидящих приходят к вашей вёрстке даром — если вы пользуетесь классами, а не литеральными цветами.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<h2 id="prizyv-k-deystviyu">11. Призыв к действию</h2>
+
+<p>
+  Полоса на цвете акцента. Текст берёт <code>gr-text-on-accent</code>,
+  а не белый: в режиме для слабовидящих пара «фон — текст» меняется вместе,
+  и контраст сохраняется.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Полоса действия</div>
+  <section class="gr-bg-accent gr-text-on-accent gr-radius gr-p-8">
+    <div class="gr-flex gr-flex-col gr-flex-row-md gr-flex-between gr-flex-items-center gr-gap">
+      <div>
+        <h3 class="gr-text-2xl gr-font-semibold gr-text-balance gr-mt-0 gr-mb-2">Попробуйте на своём проекте</h3>
+        <p class="gr-m-0">Три файла, ноль зависимостей, четырнадцать дней без карты.</p>
+      </div>
+      <div class="gr-flex gr-gap-sm gr-flex-wrap">
+        <a class="gr-btn gr-btn-lg" href="#">Документация</a>
+        <a class="gr-btn gr-btn-lg gr-btn-secondary" href="#">Начать</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<h2 id="podval">12. Подвал сайта</h2>
+
+<p>
+  Четыре колонки на широком экране, две на планшете, одна на телефоне —
+  <code>gr-grid-1 gr-grid-2-sm gr-grid-4-lg</code>, три класса вместо двух
+  медиа-запросов. Здесь колонки заданы числом, а не
+  <code>gr-grid-auto-fit</code>: у подвала их ровно четыре по смыслу,
+  и отдавать это решение ширине экрана незачем. Нижняя строка отделена
+  границей, а не отступом: так видно, где кончается навигация
+  и начинается правовая часть.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Подвал</div>
+  <footer class="gr-bg-sunken gr-radius gr-p-8">
+    <div class="gr-grid-1 gr-grid-2-sm gr-grid-4-lg gr-gap-lg gr-mb-8">
+      <div>
+        <p class="gr-font-semibold gr-mt-0 gr-mb-2">Астролябия</p>
+        <p class="gr-text-sm gr-text-ink-secondary gr-m-0">Инструменты для тех, кто верстает руками и знает зачем.</p>
+      </div>
+      <nav aria-label="Продукт">
+        <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-3">Продукт</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Возможности</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Тарифы</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Обновления</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Разработчикам">
+        <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-3">Разработчикам</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Документация</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Исходный код</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet gr-link-external" href="#">Статус</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Компания">
+        <p class="gr-text-xs gr-uppercase gr-text-ink-secondary gr-mt-0 gr-mb-3">Компания</p>
+        <ul class="gr-list-none gr-p-0 gr-m-0 gr-text-sm">
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">О нас</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Контакты</a></li>
+          <li class="gr-mb-2"><a class="gr-link gr-link-quiet" href="#">Вакансии</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="gr-border-t gr-pt-4 gr-flex gr-flex-between gr-flex-items-center gr-flex-wrap gr-gap-sm">
+      <p class="gr-text-sm gr-text-ink-secondary gr-m-0">© 2026 Астролябия</p>
+      <div class="gr-flex gr-gap-sm gr-text-sm">
+        <a class="gr-link gr-link-muted" href="#">Условия</a>
+        <a class="gr-link gr-link-muted" href="#">Конфиденциальность</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<h2 id="chego-zdes-net">Чего здесь нет</h2>
+
+<p>
+  Ни карусели, ни выбора даты, ни таблицы с сортировкой. Это не забывчивость:
+  таким блокам нужен не «тонкий опциональный JS», а полноценный виджет
+  с управлением состоянием — другая библиотека и другая ответственность.
+  Всё, что на этой странице, работает от разметки и стилей, и ровно один
+  сегмент из двенадцати просит рантайм.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

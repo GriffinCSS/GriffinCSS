@@ -1,0 +1,298 @@
+// Griffincss — Значения оси оформления
+// Только миксины, ни одного правила: подключаются из _styles.scss.
+//
+// Стиль не знает, какая тема действует. Он перенаправляет триплет на якорь,
+// а значение якоря задаёт тема — ровно так же, как это делает режим контраста
+// в _theme-values.scss. Благодаря этому блок стиля пишется один раз
+// и работает поверх обеих тем.
+//
+// Якоря принадлежат стилям, а не всем сразу: каждый попадает в файл только
+// вместе со своим стилем. Это и есть основная экономия от $gr-styles.
+
+// --- Якоря «поверхности к краю шкалы, линии бледнее» -------------------------
+//
+// Общие для строгого и журнального стилей: журнальный отличается плотностью,
+// а не цветом.
+//
+// Светлая тема: карточка сливается с белым листом, разделяют её не заливка,
+// а линии. Тёмная: графит вместо почти-чёрного — тот же приём наоборот,
+// поверхности поднимаются от фона, оставаясь нейтральными.
+@mixin gr-anchors-lifted-light {
+  --gr-hsl-border-soft: 0, 0%, 88%;
+  --gr-hsl-border-strong-soft: 0, 0%, 70%;
+  --gr-hsl-surface-0-lifted: 0, 0%, 100%;
+  --gr-hsl-surface-1-lifted: 0, 0%, 100%;
+  --gr-hsl-surface-2-lifted: 0, 0%, 97%;
+  --gr-hsl-surface-sunken-lifted: 0, 0%, 97%;
+}
+
+@mixin gr-anchors-lifted-dark {
+  --gr-hsl-border-soft: 0, 0%, 18%;
+  --gr-hsl-border-strong-soft: 0, 0%, 34%;
+  --gr-hsl-surface-0-lifted: 0, 0%, 14%;
+  --gr-hsl-surface-1-lifted: 0, 0%, 18%;
+  --gr-hsl-surface-2-lifted: 0, 0%, 23%;
+  --gr-hsl-surface-sunken-lifted: 0, 0%, 11%;
+}
+
+// Поверхности к краю шкалы. Общие для строгого и журнального: оба уводят фон
+// к белому на светлой теме и к графиту на тёмной. Ни одного абсолютного
+// значения — только якоря, которые задаёт действующая тема.
+@mixin gr-tone-surfaces-lifted {
+  --gr-hsl-surface-0: var(--gr-hsl-surface-0-lifted);
+  --gr-hsl-surface-1: var(--gr-hsl-surface-1-lifted);
+  --gr-hsl-surface-2: var(--gr-hsl-surface-2-lifted);
+  --gr-hsl-surface-sunken: var(--gr-hsl-surface-sunken-lifted);
+  --gr-hsl-surface-overlay: var(--gr-hsl-surface-1-lifted);
+}
+
+// Бледные линии — только у строгого. Журнальный берёт свои, заметнее базовых,
+// поэтому миксин отдельный: включи он общий и перекрой линии следом, в CSS
+// осталось бы два объявления одного свойства — лишние байты и повод
+// ошибиться при чтении.
+//
+// У сильной линии свой якорь, а не var(--gr-hsl-border): var() подставил бы
+// уже сдвинутое значение, и сильная линия растворилась бы вместе со слабой.
+@mixin gr-tone-lines-soft {
+  --gr-hsl-border: var(--gr-hsl-border-soft);
+  --gr-hsl-border-strong: var(--gr-hsl-border-strong-soft);
+}
+
+// Строгий: углы почти прямые, тени намечены, отклик короткий.
+// Плотность стандартная — строгость это геометрия, а не теснота.
+@mixin gr-style-strict {
+  @include gr-tone-surfaces-lifted;
+  @include gr-tone-lines-soft;
+
+  --gr-radius: 0.125rem;
+  --gr-radius-pill: 0.25rem;
+  --gr-density: 1;
+  --gr-elevation: 0.4;
+  --gr-transition: 0.12s ease-out;
+}
+
+// --- Якоря журнального стиля -------------------------------------------------
+//
+// Поверхности он делит со строгим — светлые, к краю шкалы. А вот линии
+// и цвета у него свои, и это главное отличие: строгий уводит границы в фон,
+// журнальный, наоборот, делает их заметнее базовых. Полоса в журнальной
+// вёрстке — рабочий инструмент разбивки, а не декоративная рамка, и стиль
+// без видимых линий превращается в строгий с мелким шрифтом.
+//
+// Цвета при этом приглушены: журнальная полоса набора не соревнуется
+// за внимание с текстом, ради которого её и набрали.
+@mixin gr-anchors-press-light {
+  --gr-hsl-border-press: 0, 0%, 74%;
+  --gr-hsl-border-strong-press: 0, 0%, 42%;
+  --gr-hsl-accent-press: 220, 55%, 40%;
+  --gr-hsl-accent-press-hover: 220, 55%, 32%;
+  --gr-hsl-status-success-press: 148, 45%, 30%;
+  --gr-hsl-status-warning-press: 36, 60%, 44%;
+
+  // Заливка предупреждения — единственная, которую журнальный стиль
+  // приглушает В СВЕТЛУЮ сторону. Уведи её вниз вместе с остальными, как
+  // текстовый цвет статуса, и жёлтый станет оливковым: «внимание» держится
+  // на узнаваемости оттенка, а не на его насыщенности.
+  --gr-hsl-status-warning-surface-press: 36, 80%, 58%;
+  --gr-hsl-status-danger-press: 4, 55%, 44%;
+  --gr-hsl-status-info-press: 292, 40%, 42%;
+}
+
+@mixin gr-anchors-press-dark {
+  --gr-hsl-border-press: 0, 0%, 34%;
+  --gr-hsl-border-strong-press: 0, 0%, 58%;
+  --gr-hsl-accent-press: 220, 55%, 66%;
+  --gr-hsl-accent-press-hover: 220, 55%, 76%;
+  --gr-hsl-status-success-press: 148, 35%, 56%;
+  --gr-hsl-status-warning-press: 36, 55%, 58%;
+  --gr-hsl-status-warning-surface-press: 36, 72%, 58%;
+  --gr-hsl-status-danger-press: 4, 55%, 62%;
+  --gr-hsl-status-info-press: 292, 38%, 64%;
+}
+
+// Журнальный: максимум информации с чёткой разбивкой по блокам. Поверхности
+// от строгого, линии и цвета свои, плотность своя.
+//
+// Кегль страницы уменьшается процентом, а не rem: процент считается от того
+// кегля, который выбрал пользователь в настройках браузера, поэтому стиль
+// складывается с этой настройкой, а не отменяет её. Вся шкала задана в rem,
+// поэтому вместе с кеглем сжимаются отступы, высоты контролов и радиусы —
+// одним значением, пропорционально. По той же причине --gr-control-font-size
+// возвращается к 1rem: уменьшать его отдельно значило бы умножить дважды.
+@mixin gr-style-compact {
+  @include gr-tone-surfaces-lifted;
+
+  --gr-hsl-border: var(--gr-hsl-border-press);
+  --gr-hsl-border-strong: var(--gr-hsl-border-strong-press);
+  --gr-hsl-accent: var(--gr-hsl-accent-press);
+  --gr-hsl-accent-hover: var(--gr-hsl-accent-press-hover);
+  --gr-hsl-link: var(--gr-hsl-accent-press);
+  --gr-hsl-link-hover: var(--gr-hsl-accent-press-hover);
+  --gr-hsl-status-success: var(--gr-hsl-status-success-press);
+  --gr-hsl-status-success-surface: var(--gr-hsl-status-success-press);
+  --gr-hsl-status-warning-surface: var(--gr-hsl-status-warning-surface-press);
+  --gr-hsl-status-danger: var(--gr-hsl-status-danger-press);
+  --gr-hsl-status-danger-surface: var(--gr-hsl-status-danger-press);
+  --gr-hsl-status-info: var(--gr-hsl-status-info-press);
+  --gr-hsl-status-info-surface: var(--gr-hsl-status-info-press);
+
+  font-size: 93.75%;
+
+  --gr-radius: 0.1875rem;
+  --gr-radius-pill: 0.25rem;
+  --gr-density: 0.75;
+  --gr-elevation: 0.3;
+  --gr-transition: 0.1s ease-out;
+  --gr-leading-base: 1.3;
+  --gr-control-font-size: 1rem;
+}
+
+// --- Якоря воздушного стиля --------------------------------------------------
+//
+// Акцент теряет насыщенность, поверхности получают холодный подмес: пастель —
+// это «менее насыщенно», а не «светлее».
+//
+// --gr-hsl-on-accent-soft обязателен: пастельная заливка с белым текстом
+// проваливает контраст, поэтому у стиля своя пара «заливка + чернила».
+@mixin gr-anchors-soft-light {
+  --gr-hsl-accent-soft: 220, 65%, 62%;
+  --gr-hsl-accent-soft-hover: 220, 65%, 54%;
+  --gr-hsl-on-accent-soft: 220, 60%, 12%;
+
+  // Фон страницы остаётся чистым белым: подмешать в него оттенок можно
+  // только потемнив, то есть отказавшись от белого листа. Якорь всё равно
+  // объявляется — в тёмной теме он подкрашен, а ссылка на необъявленный
+  // якорь обнулила бы цвет целиком.
+  --gr-hsl-surface-0-tinted: 0, 0%, 100%;
+  --gr-hsl-surface-1-tinted: 220, 25%, 97%;
+  --gr-hsl-surface-2-tinted: 220, 22%, 93%;
+
+  // Утопленная поверхность — поле ввода, блок кода. Подмешана тем же
+  // оттенком: белое поле на подкрашенной карточке выглядело вырезанным
+  // из другого макета.
+  //
+  // Светлота выбрана так, чтобы порядок ступеней не поменялся. В базовой
+  // теме это surface-1 (96 %) → sunken (92 %) → surface-2 (89 %); здесь
+  // 97 → 95 → 93. Возьми мы для утопленной базовые 92 %, она провалилась бы
+  // ниже приподнятой и поменялась с ней местами.
+  --gr-hsl-surface-sunken-tinted: 220, 24%, 95%;
+
+  // Всплывающая поверхность — меню, окно, выдвижная панель, уведомление.
+  // Белый лист над подкрашенной страницей выглядел вырезанным из другого
+  // макета так же, как белое поле ввода. Подмес здесь самый слабый: при
+  // светлоте 98 % его физически почти не показать, но и ноль виден.
+  --gr-hsl-surface-overlay-tinted: 220, 30%, 98%;
+
+  // Линии подмешаны тем же оттенком, что и поверхности: нейтрально-серая
+  // граница вокруг подкрашенного фона читается как рассогласование, а не
+  // как сдержанность.
+  //
+  // Насыщенность у линий своя, и меньше, чем у поверхностей. Воспринимаемая
+  // цветность примерно пропорциональна S × (1 − |2L − 1|): у поверхности
+  // светлотой 97 % подмес почти не виден, у линии светлотой 82 % та же
+  // насыщенность видна втрое сильнее, а у сильной линии светлотой 52 % —
+  // в шестнадцать раз. Возьми мы одно значение на всех, тема перестала бы
+  // быть нейтральной и стала бы синей.
+  --gr-hsl-border-tinted: 220, 14%, 82%;
+  --gr-hsl-border-strong-tinted: 220, 6%, 52%;
+
+  // Пастельные заливки статусов и чернила на них. Трогается ЗАЛИВКА,
+  // а не текстовый цвет статуса: --gr-color-danger обязан остаться тёмным,
+  // иначе предупреждение в тексте перестанет читаться на белом.
+  //
+  // Оттенок у каждой пары свой, а не общий с акцентом: пастель приглушает
+  // насыщенность, но не отменяет узнаваемость. Зелёная кнопка остаётся
+  // зелёной, красная — красной.
+  //
+  // Светлота — посередине между базовым цветом темы и полной пастелью.
+  // Первая редакция уводила заливки к 72–78 %, и кнопки выцветали до
+  // подложки: статус переставал читаться как статус.
+  --gr-hsl-status-success-pastel: 148, 50%, 52%;
+  --gr-hsl-on-status-success-pastel: 148, 70%, 11%;
+  --gr-hsl-status-warning-pastel: 36, 84%, 63%;
+  --gr-hsl-on-status-warning-pastel: 36, 95%, 14%;
+
+  // Опасность — единственная из четырёх, кто остаётся со светлой подписью.
+  // Тёмные чернила на приглушённом красном читаются, но кнопка перестаёт
+  // выглядеть кнопкой отказа: белый текст на красном — устоявшийся знак,
+  // и ломать его ради единообразия с соседями не стоит. Заливка ради этого
+  // уходит темнее прочих: на светло-красном белый даёт 3.9:1, на этом — 5.1:1.
+  --gr-hsl-status-danger-pastel: 4, 72%, 50%;
+  --gr-hsl-on-status-danger-pastel: 0, 0%, 100%;
+  --gr-hsl-status-info-pastel: 292, 52%, 59%;
+  --gr-hsl-on-status-info-pastel: 292, 65%, 13%;
+}
+
+@mixin gr-anchors-soft-dark {
+  --gr-hsl-accent-soft: 220, 55%, 72%;
+  --gr-hsl-accent-soft-hover: 220, 55%, 80%;
+  --gr-hsl-on-accent-soft: 220, 60%, 10%;
+
+  // Фон страницы в тёмной теме подкрашен, в светлой — нет: там он чистый
+  // белый, и подмешать в него оттенок можно только потемнив, то есть
+  // отказавшись от белого листа. В тёмной такого ограничения нет.
+  --gr-hsl-surface-0-tinted: 220, 12%, 7%;
+  --gr-hsl-surface-1-tinted: 220, 12%, 14%;
+  --gr-hsl-surface-2-tinted: 220, 12%, 19%;
+
+  // 4 %, а не 7 %: утопленная обязана быть ниже фона страницы, иначе
+  // перестаёт быть утопленной. При такой темноте подмес почти не виден,
+  // поэтому насыщенность выше, чем у соседей.
+  --gr-hsl-surface-sunken-tinted: 220, 20%, 4%;
+  --gr-hsl-surface-overlay-tinted: 220, 14%, 18%;
+  --gr-hsl-border-tinted: 220, 10%, 22%;
+  --gr-hsl-border-strong-tinted: 220, 6%, 45%;
+
+  // На тёмном фоне пастель — это по-прежнему «менее насыщенно», но светлота
+  // держится в середине шкалы: заливка, поднятая к 75 %, на тёмной странице
+  // читается как подсветка, а не как элемент управления. Значения подобраны
+  // посередине между базовыми цветами темы и полной пастелью — первая
+  // редакция вышла настолько бледной, что кнопки теряли статус.
+  --gr-hsl-status-success-pastel: 148, 45%, 61%;
+  --gr-hsl-on-status-success-pastel: 148, 75%, 9%;
+  --gr-hsl-status-warning-pastel: 36, 72%, 63%;
+  --gr-hsl-on-status-warning-pastel: 36, 95%, 11%;
+  --gr-hsl-status-danger-pastel: 4, 70%, 67%;
+  --gr-hsl-on-status-danger-pastel: 4, 80%, 12%;
+  --gr-hsl-status-info-pastel: 292, 49%, 71%;
+  --gr-hsl-on-status-info-pastel: 292, 70%, 12%;
+}
+
+// Воздушный: крупные скругления, просторнее стандартного, отклик с лёгким
+// перелётом — это и есть «анимации чуть более оживлённые».
+//
+// Статусные цвета не трогаются здесь и нигде: пастельная опасность —
+// сигнал, потерявший силу сигнала.
+@mixin gr-style-airy {
+  --gr-hsl-accent: var(--gr-hsl-accent-soft);
+  --gr-hsl-accent-hover: var(--gr-hsl-accent-soft-hover);
+  --gr-hsl-on-accent: var(--gr-hsl-on-accent-soft);
+  --gr-hsl-link: var(--gr-hsl-accent-soft);
+  --gr-hsl-link-hover: var(--gr-hsl-accent-soft-hover);
+  --gr-hsl-surface-0: var(--gr-hsl-surface-0-tinted);
+  --gr-hsl-surface-1: var(--gr-hsl-surface-1-tinted);
+  --gr-hsl-surface-2: var(--gr-hsl-surface-2-tinted);
+  --gr-hsl-surface-sunken: var(--gr-hsl-surface-sunken-tinted);
+  --gr-hsl-surface-overlay: var(--gr-hsl-surface-overlay-tinted);
+  --gr-hsl-border: var(--gr-hsl-border-tinted);
+  --gr-hsl-border-strong: var(--gr-hsl-border-strong-tinted);
+
+  // Заливки статусов мягче, вместе со своими чернилами. Текстовые цвета
+  // статусов (--gr-hsl-status-success и соседи) не трогаются: сигнал в тексте
+  // обязан остаться контрастным, пастельным становится прямоугольник.
+  --gr-hsl-status-success-surface: var(--gr-hsl-status-success-pastel);
+  --gr-hsl-on-status-success: var(--gr-hsl-on-status-success-pastel);
+  --gr-hsl-status-warning-surface: var(--gr-hsl-status-warning-pastel);
+  --gr-hsl-on-status-warning: var(--gr-hsl-on-status-warning-pastel);
+  --gr-hsl-status-danger-surface: var(--gr-hsl-status-danger-pastel);
+  --gr-hsl-on-status-danger: var(--gr-hsl-on-status-danger-pastel);
+  --gr-hsl-status-info-surface: var(--gr-hsl-status-info-pastel);
+  --gr-hsl-on-status-info: var(--gr-hsl-on-status-info-pastel);
+
+  // Геометрия и движение
+  --gr-radius: 1rem;
+  --gr-density: 1.15;
+  --gr-elevation: 0.9;
+  --gr-transition: 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --gr-leading-base: 1.6;
+}

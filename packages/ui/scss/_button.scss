@@ -1,0 +1,216 @@
+// Griffincss UI — Button
+// Кнопка и её варианты. Класс ставится на любой элемент: <button>, <a>,
+// <input type="submit"> — оформление одинаковое, семантику выбирает разметка.
+//
+// Ресет опционален, поэтому компонент не рассчитывает на него: box-sizing,
+// font-family и обнуление полей задаются здесь.
+//
+// Цвета варианта живут в трёх локальных переменных — --gr-btn-bg, --gr-btn-fg,
+// --gr-btn-border. Благодаря этому правила :hover и :active написаны один раз
+// на все девять вариантов: они подмешивают к фону варианта его же цвет текста,
+// а насколько это темнее или светлее — решает действующая тема.
+
+@use 'sass:list';
+
+.gr-btn {
+  --gr-btn-height: var(--gr-control-height);
+  --gr-btn-bg: var(--gr-color-surface-raised);
+  --gr-btn-fg: var(--gr-color-text);
+  --gr-btn-border: var(--gr-color-border);
+  --gr-btn-bg-hover: color-mix(in srgb, var(--gr-btn-bg) 88%, var(--gr-btn-fg));
+  --gr-btn-bg-active: color-mix(in srgb, var(--gr-btn-bg) 76%, var(--gr-btn-fg));
+
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gr-ui-gap);
+  min-block-size: var(--gr-btn-height);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--gr-control-padding-x);
+  border: var(--gr-border-width) solid var(--gr-btn-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-btn-bg);
+  color: var(--gr-btn-fg);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    background-color var(--gr-transition),
+    border-color var(--gr-transition),
+    color var(--gr-transition);
+}
+
+// Наведение — только там, где указатель есть на самом деле: на сенсорном
+// экране :hover залипает после тапа и кнопка остаётся подсвеченной.
+@media (hover: hover) {
+  .gr-btn:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--gr-btn-bg-hover);
+  }
+}
+
+.gr-btn:active:not(:disabled, [aria-disabled="true"]) {
+  background-color: var(--gr-btn-bg-active);
+}
+
+.gr-btn:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// aria-disabled оформляется наравне с :disabled: на <a> атрибута disabled
+// не существует, а недоступная ссылка выглядеть должна так же.
+.gr-btn:disabled,
+.gr-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+// Ожидание. Кольцо загрузки приедет с модулем _spinner (волна 8c);
+// здесь — то, что видно и без него: курсор и приглушение.
+.gr-btn[aria-busy="true"] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+// --- Варианты ---------------------------------------------------------------
+
+// Заливка. Парами: цвет заливки и чернила НА ней. Общего токена чернил
+// у статусов нет намеренно — он был, и это ломалось: стоило оси оформления
+// перекрасить акцент под свою пастель, как чернила акцента уезжали
+// на зелёную и красную кнопки. Своя пара у каждого статуса позволяет стилю
+// сделать заливку светлее, а чернила — темнее, не спрашивая у соседей.
+//
+// Предупреждение больше не исключение, а обычный член этого списка: его
+// текстовый цвет в светлой теме тёмно-коричневый (иначе не читался бы
+// текстом на белом), а прямоугольник такого цвета читается как «оливковый»,
+// а не как «внимание». Ровно та же развилка теперь описана у всех четырёх.
+$gr-btn-filled: (
+  primary: (var(--gr-color-accent), var(--gr-color-on-accent)),
+  success: (var(--gr-color-success-surface), var(--gr-color-on-success)),
+  warning: (var(--gr-color-warning-surface), var(--gr-color-on-warning)),
+  danger: (var(--gr-color-danger-surface), var(--gr-color-on-danger)),
+  info: (var(--gr-color-info-surface), var(--gr-color-on-info))
+);
+
+@each $gr-name, $gr-pair in $gr-btn-filled {
+  .gr-btn-#{$gr-name} {
+    --gr-btn-bg: #{list.nth($gr-pair, 1)};
+    --gr-btn-fg: #{list.nth($gr-pair, 2)};
+    --gr-btn-border: #{list.nth($gr-pair, 1)};
+  }
+}
+
+// Контурная: акцент линией и текстом, фон появляется при наведении.
+.gr-btn-secondary {
+  --gr-btn-bg: transparent;
+  --gr-btn-fg: var(--gr-color-accent);
+  --gr-btn-border: var(--gr-color-accent);
+}
+
+// Без фона и границы. Граница остаётся объявленной прозрачной, иначе кнопка
+// прыгала бы на пиксель рядом с обычной в одном ряду.
+.gr-btn-ghost {
+  --gr-btn-bg: transparent;
+  --gr-btn-fg: var(--gr-color-text);
+  --gr-btn-border: transparent;
+}
+
+// Кнопка, выглядящая ссылкой. Подсветки фона у неё нет — меняется цвет,
+// как у настоящей ссылки.
+.gr-btn-link {
+  --gr-btn-bg: transparent;
+  --gr-btn-fg: var(--gr-color-link);
+  --gr-btn-border: transparent;
+  --gr-btn-bg-hover: transparent;
+  --gr-btn-bg-active: transparent;
+
+  padding-inline: 0;
+
+  // Линия объявлена длинными свойствами и берёт толщину у шрифта — та же
+  // линия, что у .gr-link. Сокращённое text-decoration сбросило бы
+  // text-decoration-thickness в initial, и подчёркивание кнопки-ссылки
+  // не совпадало бы с подчёркиванием настоящей ссылки рядом.
+  text-decoration-line: underline;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) {
+  .gr-btn-link:hover:not(:disabled, [aria-disabled="true"]) {
+    --gr-btn-fg: var(--gr-color-link-hover);
+  }
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+.gr-btn-sm {
+  --gr-btn-height: var(--gr-control-height-sm);
+
+  padding-inline: calc(var(--gr-control-padding-x) * 0.7);
+  font-size: 0.875rem;
+}
+
+.gr-btn-lg {
+  --gr-btn-height: var(--gr-control-height-lg);
+
+  padding-inline: calc(var(--gr-control-padding-x) * 1.4);
+  font-size: 1.125rem;
+}
+
+// --- Форма ------------------------------------------------------------------
+
+// Во всю ширину родителя. display меняется на flex: inline-flex шириной
+// в 100% всё равно оставил бы за собой строку.
+.gr-btn-block {
+  display: flex;
+  inline-size: 100%;
+}
+
+// Квадратная — под одну иконку. Ширина берётся из той же переменной,
+// что и высота, поэтому .gr-btn-icon.gr-btn-lg остаётся квадратом.
+.gr-btn-icon {
+  min-inline-size: var(--gr-btn-height);
+  padding-inline: 0;
+}
+
+// --- Группа -----------------------------------------------------------------
+
+// Слипшийся ряд. Соседние границы наезжают друг на друга на свою толщину,
+// иначе на стыке получилась бы двойная линия.
+.gr-btn-group {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.gr-btn-group > .gr-btn {
+  border-radius: 0;
+}
+
+.gr-btn-group > .gr-btn:first-child {
+  border-start-start-radius: var(--gr-radius);
+  border-end-start-radius: var(--gr-radius);
+}
+
+.gr-btn-group > .gr-btn:last-child {
+  border-start-end-radius: var(--gr-radius);
+  border-end-end-radius: var(--gr-radius);
+}
+
+.gr-btn-group > .gr-btn + .gr-btn {
+  margin-inline-start: calc(-1 * var(--gr-border-width));
+}
+
+// Активная кнопка поднимается над соседями: иначе её граница и контур фокуса
+// оказались бы наполовину закрыты следующей кнопкой ряда.
+.gr-btn-group > .gr-btn:hover,
+.gr-btn-group > .gr-btn:focus-visible {
+  position: relative;
+  z-index: 1;
+}

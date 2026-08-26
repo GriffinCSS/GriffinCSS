@@ -1,0 +1,183 @@
+// Griffincss UI — Drawer
+// Выдвижная панель — тот же <dialog>, что и модальное окно, но прижатый
+// к краю экрана. Верхний слой, фокус, Esc и инертность страницы под панелью
+// платформа даёт так же, как модалке.
+//
+// Пояса берутся у модалки: .gr-modal-header, -body, -footer работают
+// и здесь. Дублировать их незачем — панель отличается только положением
+// и размерами, а не устройством.
+//
+//   <dialog class="gr-drawer gr-drawer-end">
+//     <div class="gr-modal-header">…</div>
+//     <div class="gr-modal-body">…</div>
+//   </dialog>
+//
+// Сторона задаётся вылетами (inset), а не полями. У модального <dialog>
+// UA-стиль ставит inset: 0 и margin: auto, и при таком наборе высота auto
+// перестаёт считаться по содержимому: два заданных вылета растягивают
+// элемент, а auto-поле забирает остаток. Верхняя панель из-за этого
+// занимала ровно половину экрана и стояла полупустой. Отпущенный вылет
+// на противоположной стороне возвращает высоту содержимому.
+//
+// Размеры — в процентах, а не в 100vw: единица vw включает ширину полосы
+// прокрутки, и панель во «всю ширину» оказывалась шире видимой области,
+// уезжая правым краем под полосу.
+
+// Строение панели и её position живут в базовом правиле, а не в [open]:
+// атрибут снимается в первый кадр close(), а переход по display держит
+// панель на экране до конца анимации — всё, что осталось в [open],
+// пропадает раньше самой панели. См. подробный разбор в _modal.scss.
+.gr-drawer {
+  --gr-drawer-size: 20rem;
+
+  // Направление выезда. Объявлено здесь, а не в блоке анимации: там оно
+  // стояло бы ПОСЛЕ классов сторон с той же специфичностью и перебивало бы
+  // их значение — панель начала строки выезжала бы справа.
+  --gr-drawer-slide: 100%;
+
+  position: fixed;
+  box-sizing: border-box;
+  flex-direction: column;
+  inset-block: 0;
+  inline-size: min(var(--gr-drawer-size), 100%);
+  max-inline-size: none;
+  block-size: auto;
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--gr-color-surface-overlay);
+  color: var(--gr-color-text);
+  box-shadow: var(--gr-shadow-xl);
+  overflow: hidden;
+}
+
+.gr-drawer[open] {
+  display: flex;
+}
+
+.gr-drawer::backdrop {
+  background-color: var(--gr-overlay);
+}
+
+// --- Стороны ----------------------------------------------------------------
+
+// Начало и конец строки — не «слева» и «справа»: в разметке на арабском
+// панель конца строки выедет с левого края, и это правильное поведение.
+// Сдвиг для выезда задан в процентах от самой панели, поэтому он совпадает
+// с её шириной при любом --gr-drawer-size.
+.gr-drawer-start {
+  --gr-drawer-slide: -100%;
+
+  inset-inline: 0 auto;
+  border-inline-end: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+.gr-drawer-end {
+  --gr-drawer-slide: 100%;
+
+  inset-inline: auto 0;
+  border-inline-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// Верхняя и нижняя занимают всю ширину, а высоту берут по содержимому,
+// но не выше половины экрана: панель, закрывшая страницу целиком, — это
+// уже модальное окно.
+.gr-drawer-top,
+.gr-drawer-bottom {
+  inset-inline: 0;
+  inline-size: auto;
+  block-size: auto;
+  max-block-size: 50dvh;
+}
+
+.gr-drawer-top {
+  --gr-drawer-slide: -100%;
+
+  inset-block: 0 auto;
+  border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+.gr-drawer-bottom {
+  --gr-drawer-slide: 100%;
+
+  inset-block: auto 0;
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+.gr-drawer-sm {
+  --gr-drawer-size: 15rem;
+}
+
+.gr-drawer-lg {
+  --gr-drawer-size: 28rem;
+}
+
+// --- Появление --------------------------------------------------------------
+
+// Панель выезжает с той стороны, к которой прижата: направление задаёт
+// --gr-drawer-slide, объявленная вместе со стороной. У верхней и нижней
+// сдвиг по другой оси, поэтому translate записан двумя значениями.
+@supports (transition-behavior: allow-discrete) {
+  .gr-drawer {
+    opacity: 0;
+    translate: var(--gr-drawer-slide) 0;
+    transition:
+      opacity var(--gr-transition),
+      translate var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  .gr-drawer-top,
+  .gr-drawer-bottom {
+    translate: 0 var(--gr-drawer-slide);
+  }
+
+  .gr-drawer[open] {
+    opacity: 1;
+    translate: 0;
+  }
+
+  .gr-drawer::backdrop {
+    opacity: 0;
+    transition:
+      opacity var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  .gr-drawer[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .gr-drawer[open] {
+      opacity: 0;
+      translate: var(--gr-drawer-slide) 0;
+    }
+
+    .gr-drawer-top[open],
+    .gr-drawer-bottom[open] {
+      translate: 0 var(--gr-drawer-slide);
+    }
+
+    .gr-drawer[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-drawer {
+    translate: none;
+    transition-duration: 0.01ms;
+  }
+
+  .gr-drawer::backdrop {
+    transition-duration: 0.01ms;
+  }
+}

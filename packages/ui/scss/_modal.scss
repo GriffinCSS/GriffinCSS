@@ -1,0 +1,181 @@
+// Griffincss UI — Modal
+// Модальное окно на <dialog>. Всё, ради чего обычно пишут скрипт, платформа
+// даёт сама: верхний слой без z-index, фокус внутри окна, закрытие по Esc,
+// возврат фокуса на кнопку, инертность страницы под окном. Библиотеке
+// остаётся вид.
+//
+// Открывается окно вызовом showModal() — в разметке это одна строка:
+//
+//   <button onclick="document.getElementById('m').showModal()">Открыть</button>
+//   <dialog class="gr-modal" id="m">…</dialog>
+//
+// Закрывается без скрипта вовсе: <form method="dialog"> внутри окна или
+// атрибут formmethod="dialog" у кнопки. Именно так закрывают окна примеры
+// в документации — ни одной строки JS.
+//
+// В состоянии [open] задан ОДИН display, и это принципиально: у <dialog>
+// он none по умолчанию, поэтому безусловный display: flex показал бы окно
+// сразу, — а всё остальное обязано жить в базовом правиле. Атрибут снимается
+// в первый же кадр close(), тогда как переход по display: allow-discrete
+// держит окно на экране до конца анимации: любое свойство, оставленное
+// в [open], пропадает раньше самого окна. Так строение окна (колонка)
+// на время исчезновения превращалось в строку — пояса вставали в ряд,
+// и окно меняло размеры прямо в момент ухода.
+//
+// По той же причине position задан явно. Модальному <dialog> его даёт
+// UA-стиль (position: fixed от :modal), но в top layer окно уже не считается
+// модальным к концу перехода: containing block меняется на предка, и проценты
+// в размерах пересчитываются от него — окно теряло ширину на исчезновении.
+
+// Размеры — в процентах от окна, а не в 100vw: единица vw включает ширину
+// полосы прокрутки, поэтому окно «во всю ширину минус поля» получалось шире
+// видимой области и центрировалось со сдвигом в половину полосы.
+.gr-modal {
+  position: fixed;
+  box-sizing: border-box;
+  flex-direction: column;
+  inline-size: min(32rem, calc(100% - var(--gr-gap) * 2));
+  max-inline-size: none;
+  max-block-size: min(85dvh, calc(100% - var(--gr-gap) * 2));
+  padding: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface-overlay);
+  color: var(--gr-color-text);
+  box-shadow: var(--gr-shadow-xl);
+  overflow: hidden;
+}
+
+// Единственное, что различает открытое и закрытое окно, — показано оно или
+// нет. display остаётся здесь и только здесь: объявленный в базовом правиле,
+// он показал бы закрытое окно прямо в потоке страницы — авторский стиль
+// сильнее UA-правила dialog:not([open]) { display: none } независимо
+// от специфичности. Направление же колонки живёт в базовом правиле и потому
+// переживает закрытие.
+.gr-modal[open] {
+  display: flex;
+}
+
+// Подложка. Цвет — токен --gr-overlay: он одинаково тёмен в обеих темах,
+// потому что подложка затемняет страницу, а не перекрашивает её.
+.gr-modal::backdrop {
+  background-color: var(--gr-overlay);
+}
+
+// --- Пояса ------------------------------------------------------------------
+
+// Шапка и подвал не сжимаются и не прокручиваются: прокручивается тело.
+// Так заголовок остаётся виден, а кнопки — доступны на длинном содержимом.
+.gr-modal-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gr-ui-gap);
+  padding-block: calc(var(--gr-gap) * 0.75);
+  padding-inline: var(--gr-gap);
+  border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// Заголовок окна: на него указывает aria-labelledby у <dialog>, поэтому
+// в разметке это настоящий заголовок, а не строка текста.
+.gr-modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.gr-modal-body {
+  flex: 1 1 auto;
+  padding: var(--gr-gap);
+  line-height: var(--gr-leading-base);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gr-modal-footer {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gr-ui-gap);
+  padding-block: calc(var(--gr-gap) * 0.75);
+  padding-inline: var(--gr-gap);
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+.gr-modal-sm {
+  inline-size: min(24rem, calc(100% - var(--gr-gap) * 2));
+}
+
+.gr-modal-lg {
+  inline-size: min(48rem, calc(100% - var(--gr-gap) * 2));
+}
+
+// Во весь экран, с полями по краям. Пригодно для просмотрщика и для
+// длинной формы на узком экране.
+.gr-modal-full {
+  inline-size: calc(100% - var(--gr-gap) * 2);
+  block-size: calc(100% - var(--gr-gap) * 2);
+  max-block-size: none;
+}
+
+// --- Появление --------------------------------------------------------------
+
+// Окно проявляется и подъезжает снизу, подложка — только проявляется.
+// display и overlay переводятся через allow-discrete: без этого окно
+// возникало бы мгновенно, минуя переход.
+@supports (transition-behavior: allow-discrete) {
+  .gr-modal {
+    opacity: 0;
+    translate: 0 var(--gr-gap);
+    transition:
+      opacity var(--gr-transition),
+      translate var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  .gr-modal[open] {
+    opacity: 1;
+    translate: 0;
+  }
+
+  .gr-modal::backdrop {
+    opacity: 0;
+    transition:
+      opacity var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  .gr-modal[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .gr-modal[open] {
+      opacity: 0;
+      translate: 0 var(--gr-gap);
+    }
+
+    .gr-modal[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-modal {
+    translate: none;
+    transition-duration: 0.01ms;
+  }
+
+  .gr-modal::backdrop {
+    transition-duration: 0.01ms;
+  }
+}

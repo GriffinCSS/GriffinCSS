@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кнопки и ссылки — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Кнопки и ссылки</h1>
+  <p>Девять вариантов кнопки, три размера, группа, квадратная под иконку — и ссылка, которую ресет иначе оставил бы неотличимой от текста.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_button.scss</span>
+    <span class="badge">packages/ui/scss/_link.scss</span>
+  </div>
+</div>
+
+<p>
+  Класс ставится на любой элемент — <code>&lt;button&gt;</code>,
+  <code>&lt;a&gt;</code>, <code>&lt;input type="submit"&gt;</code>. Оформление
+  одинаковое, семантику выбирает разметка: то, что отправляет форму, —
+  кнопка; то, что ведёт на другой адрес, — ссылка.
+</p>
+
+<h2>Варианты</h2>
+
+<table>
+  <tr><th>Класс</th><th>Вид</th><th>Когда</th></tr>
+  <tr><td><code>.gr-btn</code></td><td>Поверхность с границей</td><td>Обычное действие, каких на экране много</td></tr>
+  <tr><td><code>.gr-btn-primary</code></td><td>Заливка акцентом</td><td>Главное действие экрана — одно на форму</td></tr>
+  <tr><td><code>.gr-btn-secondary</code></td><td>Контур акцентом</td><td>Действие рядом с главным: «Отмена», «Назад»</td></tr>
+  <tr><td><code>.gr-btn-success</code></td><td>Заливка зелёным</td><td>Подтверждение, публикация</td></tr>
+  <tr><td><code>.gr-btn-warning</code></td><td>Заливка янтарным</td><td>Действие с последствиями, но обратимое</td></tr>
+  <tr><td><code>.gr-btn-danger</code></td><td>Заливка красным</td><td>Необратимое: удаление, отзыв доступа</td></tr>
+  <tr><td><code>.gr-btn-info</code></td><td>Заливка пурпурным</td><td>Справка, подробности</td></tr>
+  <tr><td><code>.gr-btn-ghost</code></td><td>Без фона и границы</td><td>Панель инструментов, плотный ряд действий</td></tr>
+  <tr><td><code>.gr-btn-link</code></td><td>Выглядит ссылкой</td><td>Третьестепенное действие внутри текста</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Варианты</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <button class="gr-btn">Обычная</button>
+    <button class="gr-btn gr-btn-primary">Главная</button>
+    <button class="gr-btn gr-btn-secondary">Вторичная</button>
+    <button class="gr-btn gr-btn-success">Успех</button>
+    <button class="gr-btn gr-btn-warning">Внимание</button>
+    <button class="gr-btn gr-btn-danger">Удалить</button>
+    <button class="gr-btn gr-btn-info">Подробнее</button>
+    <button class="gr-btn gr-btn-ghost">Призрак</button>
+    <button class="gr-btn gr-btn-link">Ссылка</button>
+  </div>
+</div>
+
+<pre><code>&lt;button class="gr-btn gr-btn-primary"&gt;Сохранить&lt;/button&gt;
+&lt;button class="gr-btn gr-btn-secondary"&gt;Отмена&lt;/button&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Цвет текста на заливке — один токен на три статуса.</strong>
+    Заливка берёт <code>--gr-color-success</code> и подобные, а текст —
+    <code>--gr-color-on-accent</code>. В светлой теме статусные цвета тёмные,
+    а <code>on-accent</code> белый; в тёмной они светлеют, а <code>on-accent</code>
+    становится почти чёрным. Пара остаётся читаемой в обеих темах,
+    и второго набора правил под тёмную не требуется.
+  </p>
+  <p>
+    Предупреждение из этого правила выпадает. Чтобы
+    <code>--gr-color-warning</code> читался <em>текстом</em> на белом, он обязан
+    быть тёмно-коричневым — а прямоугольник такого цвета читается не как
+    «внимание», а как «оливковый». Поэтому у статуса есть своя пара
+    <code>--gr-color-warning-surface</code> и <code>--gr-color-on-warning</code>:
+    в обеих темах кнопка остаётся янтарной с тёмным текстом. Зелёный, красный
+    и пурпурный узнаваемы и в тёмном варианте, своей пары им не нужно.
+  </p>
+</div>
+
+<h2>Наведение и нажатие</h2>
+
+<p>
+  Вариант задаёт три переменные — <code>--gr-btn-bg</code>,
+  <code>--gr-btn-fg</code>, <code>--gr-btn-border</code>. Состояния
+  <code>:hover</code> и <code>:active</code> написаны один раз на все девять:
+  они подмешивают к фону варианта его же цвет текста через
+  <code>color-mix()</code>. Насколько это темнее или светлее, решает
+  действующая тема, а не таблица заготовленных оттенков.
+</p>
+
+<pre><code>--gr-btn-bg-hover: color-mix(in srgb, var(--gr-btn-bg) 88%, var(--gr-btn-fg));</code></pre>
+
+<div class="callout">
+  <p>
+    Подсветка живёт внутри <code>@media (hover: hover)</code>. На сенсорном
+    экране <code>:hover</code> залипает после касания — кнопка остаётся
+    подсвеченной до тех пор, пока не тронут другую.
+  </p>
+</div>
+
+<h2>Размеры</h2>
+
+<table>
+  <tr><th>Класс</th><th>Высота</th><th>Токен</th></tr>
+  <tr><td><code>.gr-btn-sm</code></td><td>2rem</td><td><code>--gr-control-height-sm</code></td></tr>
+  <tr><td><code>.gr-btn</code></td><td>2.5rem</td><td><code>--gr-control-height</code></td></tr>
+  <tr><td><code>.gr-btn-lg</code></td><td>3rem</td><td><code>--gr-control-height-lg</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Размеры</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <button class="gr-btn gr-btn-primary gr-btn-sm">Маленькая</button>
+    <button class="gr-btn gr-btn-primary">Обычная</button>
+    <button class="gr-btn gr-btn-primary gr-btn-lg">Крупная</button>
+  </div>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    Высоты заданы в <code>rem</code>, а не в пикселях. Режим для слабовидящих
+    поднимает кегль корня документа — и кнопки растут вместе со страницей,
+    без единого дополнительного правила. Включите переключатель
+    «Для слабовидящих» на боковой панели и сравните.
+  </p>
+</div>
+
+<h2>Форма</h2>
+
+<table>
+  <tr><th>Класс</th><th>Поведение</th></tr>
+  <tr><td><code>.gr-btn-block</code></td><td>Во всю ширину родителя; <code>display</code> меняется на <code>flex</code>, иначе кнопка оставила бы за собой строку</td></tr>
+  <tr><td><code>.gr-btn-icon</code></td><td>Квадратная: ширина берётся из той же переменной, что и высота, поэтому <code>.gr-btn-icon.gr-btn-lg</code> остаётся квадратом</td></tr>
+  <tr><td><code>.gr-btn-group</code></td><td>Слипшийся ряд: скругления остаются только на краях, соседние границы не удваиваются</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Иконка и группа</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <button class="gr-btn gr-btn-icon" aria-label="Настройки">⚙</button>
+    <button class="gr-btn gr-btn-icon gr-btn-primary" aria-label="Добавить">＋</button>
+    <button class="gr-btn gr-btn-icon gr-btn-lg gr-btn-ghost" aria-label="Ещё">⋯</button>
+
+    <div class="gr-btn-group">
+      <button class="gr-btn">Слева</button>
+      <button class="gr-btn">По центру</button>
+      <button class="gr-btn">Справа</button>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    У квадратной кнопки внутри только знак — подписи нет, значит нет и имени
+    для скринридера. <code>aria-label</code> обязателен: без него кнопка
+    озвучивается как «кнопка» и ничего больше.
+  </p>
+</div>
+
+<h2>Состояния</h2>
+
+<table>
+  <tr><th>Состояние</th><th>Как задаётся</th><th>Что происходит</th></tr>
+  <tr><td>Недоступна</td><td><code>disabled</code> или <code>aria-disabled="true"</code></td><td>Приглушается, курсор <code>not-allowed</code>. Атрибута <code>disabled</code> у <code>&lt;a&gt;</code> не существует — там нужен <code>aria-disabled</code></td></tr>
+  <tr><td>Занята</td><td><code>aria-busy="true"</code></td><td>Приглушается, курсор <code>progress</code></td></tr>
+  <tr><td>Фокус с клавиатуры</td><td><code>:focus-visible</code></td><td>Контур толщиной <code>--gr-focus-width</code> цветом <code>--gr-color-focus</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Состояния (пройдите по ним табом)</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <button class="gr-btn gr-btn-primary">Обычная</button>
+    <button class="gr-btn gr-btn-primary" disabled>Недоступна</button>
+    <button class="gr-btn gr-btn-primary" aria-busy="true">Сохраняется…</button>
+    <a class="gr-btn gr-btn-secondary" href="#" aria-disabled="true">Ссылка-кнопка</a>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Кольцо загрузки у <code>aria-busy</code> появится вместе с модулем
+    <code>_spinner</code> — это волна 8c. Сейчас состояние видно
+    по приглушению и курсору, и этого достаточно, чтобы кнопку не нажали дважды.
+  </p>
+</div>
+
+<h2>Ссылки</h2>
+
+<div class="callout">
+  <p>
+    Компонент нужен ровно потому, что ресет снимает с <code>&lt;a&gt;</code>
+    и цвет, и подчёркивание (<code>color: inherit; text-decoration: none</code>).
+    Это сделано намеренно — ссылка-обёртка вокруг карточки не должна красить
+    её содержимое, — но обычная ссылка в тексте без класса остаётся
+    неотличимой от текста.
+  </p>
+</div>
+
+<table>
+  <tr><th>Класс</th><th>Вид</th><th>Когда</th></tr>
+  <tr><td><code>.gr-link</code></td><td>Цвет ссылки, подчёркивание, три состояния</td><td>Ссылка в тексте — случай по умолчанию</td></tr>
+  <tr><td><code>.gr-link-muted</code></td><td>Цвет вторичного текста</td><td>Подписи, футер, служебные переходы</td></tr>
+  <tr><td><code>.gr-link-inherit</code></td><td>Цвет наследуется от окружения</td><td>Ссылка-заголовок, ссылка на цветной плашке</td></tr>
+  <tr><td><code>.gr-link-quiet</code></td><td>Подчёркивание только при наведении и фокусе</td><td>Навигация, ряд карточек — но не текст абзаца</td></tr>
+  <tr><td><code>.gr-link-external</code></td><td>Стрелка-указатель после текста</td><td>Переход на чужой сайт или в новую вкладку</td></tr>
+</table>
+
+<h3>Стиль линии</h3>
+
+<p>
+  Линия несёт смысл, которого нет у цвета, и переживает чёрно-белую печать.
+  Стиль сочетается с любым вариантом: <code>.gr-link-quiet.gr-link-dotted</code>
+  покажет точки при наведении, <code>.gr-link-muted.gr-link-dashed</code> —
+  пунктир приглушённым цветом.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Линия</th><th>Чем принято помечать</th></tr>
+  <tr><td>—</td><td>Сплошная</td><td>Обычный переход</td></tr>
+  <tr><td><code>.gr-link-dotted</code></td><td>Точками</td><td>Термин со справкой, сноска — то, что откроется рядом</td></tr>
+  <tr><td><code>.gr-link-dashed</code></td><td>Пунктиром</td><td>То же, но заметнее</td></tr>
+  <tr><td><code>.gr-link-wavy</code></td><td>Волной</td><td>Проблемное: устаревший адрес, неточный перевод</td></tr>
+  <tr><td><code>.gr-link-double</code></td><td>Двойная</td><td>Главная ссылка абзаца</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Стили линии</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <p class="gr-mb-0">Сплошная — <a class="gr-link" href="#">обычный переход</a>.</p>
+    <p class="gr-mb-0">Точками — <a class="gr-link gr-link-dotted" href="#">термин со справкой</a>.</p>
+    <p class="gr-mb-0">Пунктиром — <a class="gr-link gr-link-dashed" href="#">пояснение рядом</a>.</p>
+    <p class="gr-mb-0">Волной — <a class="gr-link gr-link-wavy" href="#">устаревший адрес</a>.</p>
+    <p class="gr-mb-0">Двойная — <a class="gr-link gr-link-double" href="#">главная ссылка абзаца</a>.</p>
+    <p class="gr-mb-0">Сочетание — <a class="gr-link gr-link-muted gr-link-dashed" href="#">приглушённая пунктиром</a>.</p>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Линия объявлена только длинными свойствами</strong> —
+    <code>text-decoration-line</code>, <code>-thickness</code>,
+    <code>-style</code>. Сокращённое <code>text-decoration</code> сбрасывает
+    все остальные длинные в исходные значения, поэтому одно
+    <code>text-decoration: underline</code> в правиле <code>:hover</code>
+    обнуляло бы толщину <code>from-font</code> из базового класса — и линия
+    у тихой ссылки переставала совпадать с линией у обычной.
+    Толщина <code>from-font</code> берётся у шрифта, поэтому остаётся
+    соразмерной кеглю и в подписи, и в заголовке. Единственное место, где
+    она уступает, — режим для слабовидящих: там линию рисует правило темы,
+    и она нарочно толще.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Ссылки</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <p class="gr-mb-0">Обычная <a class="gr-link" href="#">ссылка внутри абзаца</a> — цвет и подчёркивание.</p>
+    <p class="gr-mb-0">Приглушённая: <a class="gr-link gr-link-muted" href="#">условия использования</a>.</p>
+    <p class="gr-mb-0"><strong>Наследующая цвет:</strong> <a class="gr-link gr-link-inherit" href="#">заголовок-ссылка</a>.</p>
+    <p class="gr-mb-0">Тихая (наведите или пройдите табом): <a class="gr-link gr-link-quiet" href="#">раздел навигации</a>.</p>
+    <p class="gr-mb-0">Внешняя: <a class="gr-link gr-link-external" href="https://gitverse.ru/BarneyScott/GriffinCSS" target="_blank" rel="noopener">репозиторий<span class="gr-sr-only"> (откроется в новой вкладке)</span></a>.</p>
+  </div>
+</div>
+
+<pre><code>&lt;a class="gr-link" href="/страница"&gt;обычная ссылка&lt;/a&gt;
+
+&lt;a class="gr-link gr-link-external" href="https://пример" target="_blank" rel="noopener"&gt;
+  внешняя&lt;span class="gr-sr-only"&gt; (откроется в новой вкладке)&lt;/span&gt;
+&lt;/a&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Стрелка — признак только для глаза.</strong> Она нарисована
+    псевдоэлементом, а его нельзя пометить <code>aria-hidden</code>, и
+    скринридер прочитает её как «стрелка на северо-восток». О переходе
+    на чужой сайт или об открытии новой вкладки сообщает текст
+    в <code>.gr-sr-only</code> рядом — как в примере выше.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>У <code>.gr-link-quiet</code> есть граница применимости.</strong>
+    Снимать подчёркивание можно там, где ссылка опознаётся по положению:
+    список навигации, ряд карточек, футер. В тексте абзаца положение
+    не говорит ни о чём, и ссылка остаётся отличима только цветом — то есть
+    не отличима вовсе для дальтоника и на чёрно-белой печати.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    Режим для слабовидящих перекрывает оба «тихих» варианта: правило
+    <code>[data-gr-a11y="low-vision"] a[href]</code> из темы возвращает
+    и цвет ссылки, и подчёркивание. Оно выигрывает по специфичности,
+    потому что тема приезжает в каждую сборку и попадает в тот же слой,
+    что и компоненты. Включите переключатель на боковой панели
+    и посмотрите на тихую ссылку выше.
+  </p>
+</div>
+
+<h3>Ссылка и кнопка-ссылка — разные вещи</h3>
+
+<table>
+  <tr><th></th><th><code>.gr-link</code></th><th><code>.gr-btn-link</code></th></tr>
+  <tr><td>Элемент</td><td><code>&lt;a href&gt;</code></td><td><code>&lt;button&gt;</code></td></tr>
+  <tr><td>Что делает</td><td>Переход по адресу</td><td>Действие на текущей странице</td></tr>
+  <tr><td>Клавиша</td><td><kbd>Enter</kbd></td><td><kbd>Enter</kbd> и <kbd>Space</kbd></td></tr>
+  <tr><td>Высота</td><td>По строке текста</td><td><code>--gr-control-height</code>: выравнивается в ряду кнопок</td></tr>
+</table>
+
+<p>
+  Выбирает разметка, оформление лишь подтверждает выбор. Кнопка, ведущая
+  на другой адрес, ломает <kbd>Ctrl</kbd>+клик, среднюю кнопку мыши
+  и контекстное меню «Открыть в новой вкладке»; ссылка, выполняющая
+  действие, отправляет в историю браузера запись, по которой некуда вернуться.
+</p>
+
+<h2>Отступы — утилитами</h2>
+
+<p>
+  Своих внешних полей у кнопки нет: расстановка — дело раскладки.
+  Слой <code>griffincss.utils</code> старше <code>griffincss.ui</code>,
+  поэтому любая утилита перекрывает компонент без <code>!important</code>
+  и без гонки специфичностей.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap"&gt;
+  &lt;button class="gr-btn gr-btn-primary gr-flex-1"&gt;Сохранить&lt;/button&gt;
+  &lt;button class="gr-btn"&gt;Отмена&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

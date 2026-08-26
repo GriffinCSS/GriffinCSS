@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Стратегии оформления — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+
+<!-- Файл оси подключается последним, но порядок здесь ничего не решает:
+     весь его вывод лежит в слое griffincss.style, а слой сильнее и порядка,
+     и специфичности. Переставьте эту строку выше — картинка не изменится. -->
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<style>
+@layer griffincss.docs {
+  /* Полка образцов: компоненты кладутся рядом, чтобы разницу между стилями
+     было видно на одном экране, а не по очереди. */
+  .shelf {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gr-gap);
+    align-items: flex-start;
+  }
+
+  .shelf > * {
+    flex: 0 1 auto;
+  }
+
+  /* Островок: секция со своей осью внутри страницы. Пунктир — авторский,
+     он показывает границу островка, а не оформление библиотеки. */
+  .island {
+    padding: var(--gr-gap);
+    border: 1px dashed var(--gr-color-border-strong);
+    border-radius: var(--gr-radius);
+    background-color: var(--gr-color-bg);
+  }
+
+  .island-label {
+    display: block;
+    margin-bottom: var(--gr-gap-sm);
+    color: var(--gr-color-text-muted);
+    font-family: var(--gr-font-mono);
+    font-size: 0.75rem;
+  }
+
+  .readout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gr-gap-sm) var(--gr-gap);
+    font-family: var(--gr-font-mono);
+    font-size: 0.75rem;
+    color: var(--gr-color-text-muted);
+  }
+
+  .readout b {
+    color: var(--gr-color-text);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<h1>Стратегии оформления</h1>
+
+<p>
+  Четыре стратегии оформления переключаются одним атрибутом на корне документа.
+  Ось независима от цветовой темы и от режима для слабовидящих: любое из
+  сочетаний обязано работать. Переключатель — в боковой панели слева, он
+  действует на всех страницах документации.
+</p>
+
+<pre><code>&lt;html data-gr-theme="dark" data-gr-style="strict" data-gr-a11y="low-vision"&gt;</code></pre>
+
+<div class="readout gr-mb-4">
+  <span>стиль <b id="state-style">—</b></span>
+  <span>тема <b id="state-theme">—</b></span>
+  <span>действует <b id="state-resolved">—</b></span>
+  <span>доступность <b id="state-a11y">—</b></span>
+</div>
+
+<h2>Четыре стратегии</h2>
+
+<table>
+  <thead>
+    <tr><th>Значение</th><th>Настроение</th><th>Чем отличается</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>standard</code></td>
+      <td>Базовое</td>
+      <td>Скруглённые границы, цветные кнопки. Равносильно отсутствию атрибута</td>
+    </tr>
+    <tr>
+      <td><code>airy</code></td>
+      <td>Воздушное</td>
+      <td>Скругления крупнее, просторнее, пастельный акцент, отклик с лёгким перелётом</td>
+    </tr>
+    <tr>
+      <td><code>strict</code></td>
+      <td>Строгое</td>
+      <td>Углы почти прямые, тени до наметки, границы бледнее, фоны к краю шкалы</td>
+    </tr>
+    <tr>
+      <td><code>compact</code></td>
+      <td>Журнальное</td>
+      <td>То же, что строгое, но плотнее: меньше зазоры, ниже интерлиньяж, разделители строк в таблице</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Как это устроено</h2>
+
+<p>
+  Страница ничего не знает о действующем стиле. Ось меняет значения нескольких
+  ручек — <code class="token">--gr-radius</code>,
+  <code class="token">--gr-density</code>,
+  <code class="token">--gr-elevation</code>,
+  <code class="token">--gr-transition</code> и ещё несколько, — а компоненты
+  читают их через <code>var()</code>. Цвет при этом сдвигается не абсолютными
+  значениями, а якорями, которые задаёт действующая тема: поэтому строгий стиль
+  осветляет фоны на светлой теме и делает их графитовыми на тёмной, оставаясь
+  одним и тем же блоком правил.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Утилиты отступов ось не двигает.</strong> <code>.gr-p-6</code>
+    остаётся <code>1.5rem</code> в любом стиле: утилита — явное указание
+    автора страницы, и стилю не место в нём. Плотность действует на
+    собственные отступы компонентов и на <code class="token">--gr-gap</code>.
+  </p>
+</div>
+
+<h2>Образцы</h2>
+
+<h3>Кнопки</h3>
+
+<div class="shelf gr-mb-4">
+  <button class="gr-btn gr-btn-primary">Основная</button>
+  <button class="gr-btn gr-btn-secondary">Контурная</button>
+  <button class="gr-btn">Обычная</button>
+  <button class="gr-btn gr-btn-ghost">Без фона</button>
+  <button class="gr-btn gr-btn-danger">Опасная</button>
+  <button class="gr-btn" disabled>Недоступная</button>
+</div>
+
+<h3>Карточки</h3>
+
+<div class="shelf gr-mb-4">
+  <div class="gr-card" style="max-inline-size: 20rem">
+    <div class="gr-card-header">Шапка карточки</div>
+    <div class="gr-card-body">
+      <p class="gr-mb-0">
+        В строгом стиле шапка теряет подложку и остаётся линией, в воздушном
+        карточка отделяется тенью вместо границы.
+      </p>
+    </div>
+    <div class="gr-card-footer">Подвал</div>
+  </div>
+
+  <div class="gr-card gr-card-raised" style="max-inline-size: 20rem">
+    <div class="gr-card-body">
+      <p class="gr-mb-0">Приподнятая карточка: плотность тени задаёт стиль.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Бейджи и статусы</h3>
+
+<div class="shelf gr-mb-4">
+  <span class="gr-badge">Обычный</span>
+  <span class="gr-badge gr-badge-pill">Таблетка</span>
+  <span class="gr-badge gr-badge-outline">Контурный</span>
+  <span class="gr-badge gr-badge-success">Успех</span>
+  <span class="gr-badge gr-badge-warning">Внимание</span>
+  <span class="gr-badge gr-badge-danger">Опасность</span>
+</div>
+
+<p>
+  У каждого статуса три роли: цвет текста, цвет заливки и цвет чернил на этой
+  заливке. Стиль меняет <em>заливку</em> и чернила на ней, а текстовый цвет
+  оставляет тёмным — «опасность» в тексте на белом фоне пастельной быть
+  не может. Воздушный смягчает заливки, журнальный приглушает их, строгий
+  не трогает вовсе.
+</p>
+
+<p>
+  Красная кнопка в воздушном стиле — единственная со светлой подписью:
+  белый текст на красном устоявшийся знак отказа, и ради единообразия
+  с соседями его ломать не стоит. Заливка ради этого держится темнее прочих.
+  Жёлтая в журнальном приглушается в светлую сторону, а не в тёмную:
+  «внимание» держится на узнаваемости оттенка, и потемневший жёлтый
+  читается как оливковый.
+</p>
+
+<h3>Поле ввода</h3>
+
+<div class="gr-field gr-mb-4" style="max-inline-size: 22rem">
+  <label class="gr-label" for="demo-input">Название</label>
+  <input class="gr-input" id="demo-input" type="text" placeholder="Введите значение">
+</div>
+
+<h3>Уведомление</h3>
+
+<div class="gr-alert gr-alert-info gr-mb-4">
+  <div class="gr-alert-title">Плотность действует и здесь</div>
+  <div class="gr-alert-body">В журнальном стиле полоса уведомления заметно уже.</div>
+</div>
+
+<h3>Таблица</h3>
+
+<div class="gr-table-wrap gr-mb-4">
+  <table class="gr-table">
+    <thead>
+      <tr><th>Ручка</th><th>Стандартный</th><th>Строгий</th><th>Журнальный</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>--gr-radius</td><td>0.5rem</td><td>0.125rem</td><td>0.1875rem</td></tr>
+      <tr><td>--gr-density</td><td>1</td><td>1</td><td>0.8</td></tr>
+      <tr><td>--gr-elevation</td><td>1</td><td>0.4</td><td>0.3</td></tr>
+      <tr><td>--gr-transition</td><td>0.2s ease</td><td>0.12s ease-out</td><td>0.1s ease-out</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Стиль на любом элементе</h2>
+
+<p>
+  Атрибут работает не только на <code class="token">&lt;html&gt;</code>.
+  Островок ниже несёт собственный стиль и собственную тему — это и есть
+  проверка того, что ось пересчитывает цвета, метрики и тени на своём
+  носителе, а не наследует готовые значения страницы.
+</p>
+
+<div class="island gr-mb-4" data-gr-style="compact">
+  <span class="island-label">&lt;div data-gr-style="compact"&gt;</span>
+  <div class="shelf">
+    <button class="gr-btn gr-btn-primary">Журнальная кнопка</button>
+    <span class="gr-badge gr-badge-pill">Таблетка</span>
+  </div>
+</div>
+
+<div class="island gr-mb-4" data-gr-style="airy" data-gr-theme="dark">
+  <span class="island-label">&lt;div data-gr-style="airy" data-gr-theme="dark"&gt;</span>
+  <div class="shelf">
+    <button class="gr-btn gr-btn-primary">Воздушная кнопка</button>
+    <div class="gr-card" style="max-inline-size: 16rem">
+      <div class="gr-card-body">
+        <p class="gr-mb-0">Тёмная тема и воздушный стиль на одном островке.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="island gr-mb-4" data-gr-style="standard">
+  <span class="island-label">&lt;div data-gr-style="standard"&gt;</span>
+  <p class="gr-mb-2">
+    <code>standard</code> — валидное значение атрибута, а не только «атрибут
+    не указан». Островок возвращает геометрию и движение: скругление снова
+    <code>0.5rem</code>, плотность единичная. Но цвет он наследует от стиля
+    страницы — выберите воздушный, и подложка здесь останется подкрашенной.
+  </p>
+  <button class="gr-btn gr-btn-primary">Стандартная кнопка</button>
+</div>
+
+<div class="island gr-mb-4" data-gr-style="standard" data-gr-theme="light">
+  <span class="island-label">&lt;div data-gr-style="standard" data-gr-theme="light"&gt;</span>
+  <p class="gr-mb-2">
+    Полный сброс требует обеих осей. Это не пробел, а граница
+    ответственности: цвет задаёт тема, стиль его лишь сдвигает, и вернуть
+    затёртые значения стилю неоткуда — кроме как продублировав у себя всю
+    палитру темы.
+  </p>
+  <button class="gr-btn gr-btn-primary">Стандартная кнопка</button>
+</div>
+
+<h2>Приоритет осей</h2>
+
+<p>
+  Тема задаёт цвет, стиль — геометрию и движение, режим для слабовидящих
+  перебивает обоих. Включите тумблер «Для слабовидящих» вместе с журнальным
+  стилем: интерфейс не ужмётся, а границы станут толще. Воздушный стиль при
+  этом простора не теряет — отменяется только тот стиль, который ужимает,
+  а «крупнее и просторнее» режиму доступности не противоречит.
+</p>
+
+<h2>Подключение</h2>
+
+<p>
+  Стандартный стиль работает без единой дополнительной строки — он и есть
+  базовые значения <code>:root</code>. Три остальных приезжают отдельным
+  файлом:
+</p>
+
+<pre><code>&lt;link rel="stylesheet" href="griffincss-core.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-styles.css"&gt;</code></pre>
+
+<p>
+  Кому нужен один стиль из трёх, собирает из SCSS — состав файла и состав
+  структурных правил в компонентах задаёт один и тот же список:
+</p>
+
+<pre><code>@use 'griffincss-core/scss/style-config' with ($gr-styles: (strict));
+
+@use 'griffincss-core/scss/griffincss-styles';
+@use 'griffincss-ui';</code></pre>
+
+<p>Переключение из скрипта:</p>
+
+<pre><code>Griffincss.theme.style('strict');   // 'standard' | 'airy' | 'strict' | 'compact'
+Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA11y}</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>В scoped-сборке структурных правил нет.</strong>
+    <code>griffincss-ui-scoped.css</code> ограничен областью
+    <code>.griffin</code>, а атрибут стоит на <code class="token">&lt;html&gt;</code>:
+    внутри <code>@scope</code> селектор требует носитель атрибута в области.
+    Ось там действует на уровне токенов — скругления, плотность, тени и цвета
+    работают полностью, — но шапка карточки не превращается в линию.
+  </p>
+</div>
+
+</main>
+</div>
+
+<script src="nav.js"></script>
+<script>
+  // Показания панели: страница читает состояние всех трёх осей у рантайма
+  // и обновляется от события, а не от обработчиков — так видно и смену
+  // системной настройки, когда выбрано «Авто».
+  (function () {
+    if (!window.Griffincss || !window.Griffincss.theme) return;
+
+    var theme = window.Griffincss.theme;
+
+    function render() {
+      var state = theme.get();
+
+      document.getElementById('state-style').textContent = state.style;
+      document.getElementById('state-theme').textContent = state.theme;
+      document.getElementById('state-resolved').textContent = state.resolved;
+      document.getElementById('state-a11y').textContent = state.resolvedA11y;
+    }
+
+    document.addEventListener('griffincss:themechange', render);
+    render();
+  })();
+</script>
+
+</body>
+</html>

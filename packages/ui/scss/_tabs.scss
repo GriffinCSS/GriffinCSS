@@ -1,0 +1,166 @@
+// Griffincss UI — Tabs
+// Вкладки. Без скрипта это разметка из ссылок-якорей и подряд идущих
+// секций: страница остаётся читаемой и печатается целиком. Со скриптом
+// (griffincss-ui.js) появляются role="tablist", стрелки, Home/End
+// и roving tabindex, а неактивные панели прячутся атрибутом hidden.
+//
+// Панель скрывает платформа, не библиотека: [hidden] убирает её и с экрана,
+// и из дерева доступности. Правила display: none в модуле нет — оно бы
+// сделало панель невидимой и для программы чтения с экрана, но оставило бы
+// в порядке обхода.
+
+.gr-tabs {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+}
+
+// Ряд заголовков. Прокручивается вбок, когда вкладок больше, чем помещается:
+// перенос на вторую строку разорвал бы линию, по которой ряд читается.
+//
+// Линия под рядом нарисована внутренней тенью, а не границей. Причина
+// в том, как линия сочетается с активной вкладкой: граница ряда лежит
+// снаружи его содержимого, и чтобы линия вкладки её перекрыла, вкладку
+// пришлось бы подтягивать вниз отрицательным полем — а ряд прокручивается,
+// и всё, что вылезло за его край, обрезается. Внутренняя тень рисуется
+// в тех же пикселях, что и нижняя граница вкладки, поэтому вкладка
+// перекрывает её просто тем, что нарисована позже.
+.gr-tablist {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0;
+  padding: 0;
+  box-shadow: inset 0 calc(-1 * var(--gr-border-width)) 0 0 var(--gr-color-border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  list-style: none;
+}
+
+// Ряд на <ul>: обёртки <li> не должны ни добавлять полей, ни ломать
+// растяжение вкладки по высоте ряда.
+.gr-tablist > :where(li) {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-tab {
+  --gr-tab-fg: var(--gr-color-text-secondary);
+
+  display: inline-flex;
+  box-sizing: border-box;
+  flex: none;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  min-block-size: var(--gr-control-height);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--gr-control-padding-x);
+  border: 0;
+
+  // Линия объявлена прозрачной у всех вкладок сразу: появись она только
+  // у активной, ряд подпрыгивал бы на её толщину при переключении.
+  border-block-end: calc(var(--gr-border-width) * 2) solid transparent;
+  background-color: transparent;
+  color: var(--gr-tab-fg);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// Подсветка наведения не касается выбранной вкладки: у правила с :hover
+// специфичность заведомо выше, чем у правила состояния, и серая линия
+// подсветки гасила бы акцентную линию выбора ровно в тот момент, когда
+// на неё навели. Оба признака выбора перечислены в :not() — специфичность
+// от этого не растёт: она берётся по самому весомому аргументу.
+@media (hover: hover) {
+  .gr-tab:hover:not([aria-selected="true"], [aria-current], [aria-disabled="true"], :disabled) {
+    --gr-tab-fg: var(--gr-color-text);
+
+    border-block-end-color: var(--gr-color-border-strong);
+  }
+}
+
+// Контур смещён внутрь: у вкладки нет своих полей сверху, и внешний
+// контур срезался бы прокруткой ряда.
+.gr-tab:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: calc(-1 * var(--gr-focus-width));
+}
+
+// Активная вкладка. Три признака сразу: цвет, вес и линия — по одной линии
+// её видно и в чёрно-белой печати. aria-current — для варианта со ссылками,
+// aria-selected — для варианта со скриптом.
+.gr-tab[aria-selected="true"],
+.gr-tab[aria-current] {
+  --gr-tab-fg: var(--gr-color-accent);
+
+  border-block-end-color: var(--gr-color-accent);
+  font-weight: 600;
+}
+
+.gr-tab:disabled,
+.gr-tab[aria-disabled="true"] {
+  --gr-tab-fg: var(--gr-color-text-disabled);
+
+  cursor: not-allowed;
+}
+
+.gr-tab-panel {
+  box-sizing: border-box;
+  padding-block: var(--gr-gap);
+}
+
+// Панель получает фокус от скрипта (tabindex="0"), чтобы после стрелок
+// клавиатура оказывалась в содержимом вкладки, а не в конце страницы.
+.gr-tab-panel:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: calc(-1 * var(--gr-focus-width));
+}
+
+// --- Варианты ---------------------------------------------------------------
+
+// Клавишами: активная вкладка выделена заливкой, а не линией. Годится
+// для переключателей внутри карточки, где линия спорила бы с её границей.
+.gr-tabs-pills .gr-tablist {
+  box-shadow: none;
+}
+
+.gr-tabs-pills .gr-tab {
+  min-block-size: var(--gr-control-height-sm);
+  border-block-end: 0;
+  border-radius: var(--gr-radius);
+}
+
+@media (hover: hover) {
+  .gr-tabs-pills .gr-tab:hover:not([aria-selected="true"], [aria-current], [aria-disabled="true"], :disabled) {
+    background-color: color-mix(in srgb, currentcolor 8%, transparent);
+  }
+}
+
+.gr-tabs-pills .gr-tab[aria-selected="true"],
+.gr-tabs-pills .gr-tab[aria-current] {
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+}
+
+// Ряд во всю ширину: вкладки делят её поровну. Для двух-трёх коротких
+// заголовков — на узком экране это удобнее прокрутки.
+.gr-tabs-stretch .gr-tablist {
+  overflow-x: visible;
+}
+
+.gr-tabs-stretch .gr-tab {
+  flex: 1 1 0;
+  justify-content: center;
+  min-inline-size: 0;
+  padding-inline: calc(var(--gr-control-padding-x) * 0.5);
+  white-space: normal;
+}

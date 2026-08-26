@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Справочник ядра — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Справочник ядра</h1>
+  <p>Переменные, брейкпоинты, grid-парсер, flex- и grid-утилиты, темы и стратегии оформления — полный список того, что даёт ядро.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-core</span>
+    <span class="badge">полный список</span>
+  </div>
+</div>
+
+<h2>CSS-переменные / CSS Custom Properties</h2>
+
+<table>
+  <tr><th>Переменная</th><th>Значение</th><th>Описание</th></tr>
+  <tr><td><code>--gr-gap</code></td><td><code>0.75rem</code> → <code>1rem</code> с <code>md</code></td><td>Базовый отступ для grid/flex</td></tr>
+  <tr><td><code>--gr-gap-sm</code></td><td><code>0.375rem</code> → <code>0.5rem</code> с <code>md</code></td><td>Малый отступ</td></tr>
+  <tr><td><code>--gr-gap-lg</code></td><td><code>1.25rem</code> → <code>2rem</code> с <code>md</code></td><td>Большой отступ</td></tr>
+  <tr><td><code>--gr-max-width</code></td><td><code>1440px</code></td><td>Макс. ширина контейнера</td></tr>
+  <tr><td><code>--gr-font-sans</code></td><td><code>system-ui, -apple-system, sans-serif</code></td><td>Семейство sans-serif</td></tr>
+  <tr><td><code>--gr-font-serif</code></td><td><code>Georgia, Cambria, serif</code></td><td>Семейство serif</td></tr>
+  <tr><td><code>--gr-font-mono</code></td><td><code>SFMono-Regular, Menlo, Consolas, monospace</code></td><td>Семейство monospace</td></tr>
+  <tr><td><code>--gr-font-size-base</code></td><td><code>1rem</code></td><td>Базовый размер шрифта</td></tr>
+  <tr><td><code>--gr-hsl-gray-50</code> … <code>--gr-hsl-gray-900</code></td><td><code>0, 0%, 96%</code> … <code>0, 0%, 5%</code></td><td>HSL-токены нейтральной шкалы</td></tr>
+  <tr><td><code>--gr-hsl-primary</code> / <code>success</code> / <code>warning</code> / <code>danger</code> / <code>info</code></td><td><code>220,80%,50%</code> / …</td><td>HSL-токены акцентных цветов</td></tr>
+  <tr><td><code>--gr-hsl-surface-0</code> … <code>-2</code>, <code>--gr-hsl-surface-sunken</code>, <code>--gr-hsl-surface-overlay</code></td><td><code>0, 0%, 100%</code> …</td><td>Шкала поверхностей — её меняет тема</td></tr>
+  <tr><td><code>--gr-hsl-ink-0</code> … <code>--gr-hsl-ink-3</code></td><td><code>0, 0%, 5%</code> …</td><td>Шкала чернил — её меняет тема</td></tr>
+  <tr><td><code>--gr-color-bg</code></td><td><code>hsl(var(--gr-hsl-surface-0))</code></td><td>Цвет фона страницы</td></tr>
+  <tr><td><code>--gr-color-surface</code> / <code>-raised</code> / <code>-sunken</code></td><td><code>hsl(var(--gr-hsl-surface-*))</code></td><td>Карточка, приподнятая, утопленная поверхности</td></tr>
+  <tr><td><code>--gr-color-surface-overlay</code></td><td><code>hsl(var(--gr-hsl-surface-overlay))</code></td><td>Поверхность всплывающего слоя: меню, окно, выдвижная панель. В светлой теме белый лист, в тёмной — серый светлее фона: «выше страницы» в двух темах означает разное, одной ступенью <code>-raised</code> они не покрываются</td></tr>
+  <tr><td><code>--gr-color-text</code></td><td><code>hsl(var(--gr-hsl-ink-0))</code></td><td>Основной цвет текста</td></tr>
+  <tr><td><code>--gr-color-text-secondary</code> / <code>-muted</code> / <code>-disabled</code></td><td><code>hsl(var(--gr-hsl-ink-*))</code></td><td>Вторичный, приглушённый, неактивный текст</td></tr>
+  <tr><td><code>--gr-color-border</code> / <code>-strong</code></td><td><code>hsl(var(--gr-hsl-border*))</code></td><td>Разделитель и граница элемента управления</td></tr>
+  <tr><td><code>--gr-color-link</code> / <code>-hover</code> / <code>-visited</code></td><td><code>hsl(var(--gr-hsl-link*))</code></td><td>Цвета ссылок</td></tr>
+  <tr><td><code>--gr-color-accent</code> / <code>-hover</code> / <code>--gr-color-on-accent</code></td><td><code>hsl(var(--gr-hsl-accent*))</code></td><td>Акцент и текст на нём</td></tr>
+  <tr><td><code>--gr-color-focus</code></td><td><code>hsl(var(--gr-hsl-focus))</code></td><td>Кольцо фокуса</td></tr>
+  <tr><td><code>--gr-color-success</code> / <code>warning</code> / <code>danger</code> / <code>info</code></td><td><code>hsl(var(--gr-hsl-status-*))</code></td><td>Статусы — значения, безопасные для текста</td></tr>
+  <tr><td><code>--gr-color-warning-surface</code> / <code>--gr-color-on-warning</code></td><td><code>hsl(var(--gr-hsl-status-warning-surface))</code> / <code>hsl(var(--gr-hsl-on-status-warning))</code></td><td>Заливка предупреждения и чернила на ней: единственный статус, чей текстовый цвет нельзя использовать как фон</td></tr>
+  <tr><td><code>--gr-border-width</code></td><td><code>1px</code> → <code>2px</code> в режиме для слабовидящих</td><td>Ширина границы по умолчанию</td></tr>
+  <tr><td><code>--gr-focus-width</code></td><td><code>2px</code> → <code>3px</code> в режиме</td><td>Толщина кольца фокуса</td></tr>
+  <tr><td><code>--gr-leading-base</code></td><td><code>1.5</code> → <code>1.7</code> в режиме</td><td>Интерлиньяж <code>body</code></td></tr>
+  <tr><td><code>--gr-tracking-base</code></td><td><code>normal</code> → <code>0.02em</code> в режиме</td><td>Трекинг <code>body</code></td></tr>
+  <tr><td><code>--gr-a11y-scale</code></td><td><code>1.25</code></td><td>Во сколько раз режим увеличивает кегль</td></tr>
+  <tr><td><code>--gr-radius</code></td><td><code>0.5rem</code></td><td>Скругление</td></tr>
+  <tr><td><code>--gr-transition</code></td><td><code>0.2s ease</code></td><td>Переходы</td></tr>
+  <tr><td><code>--gr-shadow-color</code></td><td><code>0, 0%, 0%</code></td><td>HSL-компоненты цвета тени — общие для всех ступеней</td></tr>
+  <tr><td><code>--gr-shadow-strength</code></td><td><code>1</code> → <code>2.6</code> в тёмной теме</td><td>Множитель плотности тени; геометрия не меняется</td></tr>
+  <tr><td><code>--gr-shadow-xs</code> … <code>--gr-shadow-2xl</code></td><td><code>0 1px 2px …</code></td><td>Шесть ступеней тени</td></tr>
+  <tr><td><code>--gr-shadow-inner</code></td><td><code>inset 0 2px 4px …</code></td><td>Внутренняя тень</td></tr>
+  <tr><td><code>--gr-control-height</code> / <code>-sm</code> / <code>-lg</code></td><td><code>2.5rem</code> / <code>2rem</code> / <code>3rem</code></td><td>Высота кнопки и поля; в <code>rem</code>, поэтому растёт вместе с режимом для слабовидящих</td></tr>
+  <tr><td><code>--gr-control-padding-x</code></td><td><code>0.875rem</code></td><td>Горизонтальные поля элементов управления</td></tr>
+  <tr><td><code>--gr-control-font-size</code></td><td><code>1rem</code></td><td>Кегль элементов управления</td></tr>
+  <tr><td><code>--gr-ui-gap</code></td><td><code>0.5rem</code></td><td>Внутренний зазор компонента — между иконкой и текстом</td></tr>
+  <tr><td><code>--gr-overlay</code></td><td><code>hsl(var(--gr-shadow-color), 55%)</code></td><td>Подложка модалки и ящика</td></tr>
+  <tr><td><code>--gr-z-dropdown</code> / <code>-modal</code> / <code>-toast</code></td><td><code>1000</code> / <code>1100</code> / <code>1200</code></td><td>Порядок наложения попапов</td></tr>
+  <tr><td><code>--gr-bp-sm</code></td><td><code>640px</code></td><td>Брейкпоинт sm (справочно; собирается из карты <code>$gr-breakpoints</code>)</td></tr>
+  <tr><td><code>--gr-bp-md</code></td><td><code>768px</code></td><td>Брейкпоинт md</td></tr>
+  <tr><td><code>--gr-bp-lg</code></td><td><code>1024px</code></td><td>Брейкпоинт lg</td></tr>
+  <tr><td><code>--gr-bp-xl</code></td><td><code>1280px</code></td><td>Брейкпоинт xl</td></tr>
+</table>
+
+<h2>Grid-парсер / Grid Parser</h2>
+
+<p>Уникальная фича Griffincss — описание сложных сеток через компактный строковый формат в <code>data-gr-layout</code>. JS-рантайм (<code>griffincss.js</code>) автоматически обходит DOM, парсит все <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила в <code>&lt;style&gt;</code> на лету. Никакой прекомпиляции раскладок не нужно.</p>
+
+<p><strong>Формат:</strong> <code>"a3b4-c2d5"</code> где:</p>
+
+<ul>
+  <li><code>-</code> — разделитель рядов</li>
+  <li>Буквенная часть — имя grid-области (одна или несколько букв)</li>
+  <li>Цифра — количество повторений</li>
+  <li><code>_</code> — пустая ячейка (в CSS: <code>.</code>)</li>
+</ul>
+
+<p><strong>Пример / Example:</strong></p>
+
+<pre><code>&lt;!-- Подключаем CSS + JS --&gt;
+&lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
+&lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;
+
+&lt;!-- JS-рантайм автоматически распарсит и сгенерирует grid --&gt;
+&lt;div data-gr-layout="a3b4-c2d5"&gt;
+  &lt;div class="gr-area-a"&gt;A — 3 колонки&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;B — 4 колонки&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;C — 2 колонки&lt;/div&gt;
+  &lt;div class="gr-area-d"&gt;D — 5 колонок&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<p>Рантайм вешает на контейнер класс <code>.gr-l-&lt;хеш&gt;</code> и пишет правила под него — атрибуты остаются только источником данных:</p>
+
+<pre><code>.gr-l-k7gi9w {
+  display: grid;
+  grid-template-areas: "a a a b b b b" "c c d d d d d";
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(2, auto);
+}</code></pre>
+
+<p>Хеш считается по <strong>набору</strong> раскладок элемента (базовой и всех адаптивных), поэтому два контейнера с одинаковым <code>data-gr-layout</code>, но разной адаптивностью не мешают друг другу.</p>
+
+<h3>Раскладка во время загрузки страницы / Streaming layout</h3>
+
+<p>Рантайм не ждёт <code>DOMContentLoaded</code>. Если скрипт подключён синхронно в <code>&lt;head&gt;</code>, он поднимает наблюдателя парсинга и раскладывает каждый контейнер в тот момент, когда парсер его создал: <code>data-gr-layout</code> приходит вместе с открывающим тегом, то есть раньше, чем контейнер наполнится детьми. На медленной сети страница проявляется сверху вниз, а не остаётся невидимой до последнего байта.</p>
+
+<p>Дети подхватываются следующими порциями: ребёнок без <code>gr-area-*</code> получает первое свободное имя сразу, а явный класс в разметке всегда сильнее выданного рантаймом — контейнер пересчитывается, и итог совпадает с тем, что дал бы разбор целиком.</p>
+
+<pre><code>&lt;head&gt;
+  &lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
+  &lt;!-- синхронно и после CSS: так рантайм видит и брейкпоинты, и весь &lt;body&gt; --&gt;
+  &lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;
+&lt;/head&gt;</code></pre>
+
+<p>С <code>defer</code> или скриптом в конце <code>&lt;body&gt;</code> парсинг уже завершён — работает прежний путь через <code>DOMContentLoaded</code>. Отключить режим принудительно:</p>
+
+<pre><code>&lt;script src="griffincss.js" data-stream="false"&gt;&lt;/script&gt;</code></pre>
+
+<p>Посмотреть разницу вживую: <code>npm run demo:stream</code> поднимает сервер, отдающий <a href="stream.html">docs/stream.html</a> порциями с паузой; рядом — та же страница с выключенным режимом.</p>
+
+<p>Для динамически добавляемых элементов: <code>Griffincss.refresh(root?)</code>. Для наблюдения за DOM-изменениями: <code>Griffincss.observe(root?)</code> — перерисовка идёт с дебаунсом и только по указанному корню. Наблюдатель следит за добавлением узлов, но не за атрибутами: если <code>data-gr-layout</code> поменялся на уже существующем элементе, вызовите <code>refresh()</code> сами. Повторный проход безопасен — прежний класс <code>.gr-l-*</code> снимается, а выданные раньше <code>gr-area-*</code> переназначаются по новой раскладке (проставленные в разметке вручную остаются).</p>
+
+<p><strong>Дедупликация</strong>: одинаковый набор раскладок → одинаковый хеш → один класс и одно правило. Каждое имя области даёт один <code>.gr-area-*</code>. Сгенерированный CSS организован в три секции: <code>/* FOUC guard */</code>, <code>/* Grid Layouts */</code> и <code>/* Grid Areas */</code>.</p>
+
+<p><strong>Валидация</strong>: раскладка отвергается, если в ней есть счётчик без имени области (<code>3a</code>), нулевой счётчик (<code>a0b2</code>), счётчик больше 64 (<code>a99999b</code>), имя длиннее 32 символов, недопустимые символы в имени или пустой ряд (<code>a1-</code>). Такой контейнер пропускается целиком — вместо сломанного CSS в консоль уходит <code>Griffincss: …</code> с описанием ошибки, а сам блок остаётся видимым.</p>
+
+<h3>Адаптивные раскладки / Responsive layouts</h3>
+
+<p>Атрибуты <code>data-gr-layout-{sm,md,lg,xl}</code> задают раскладку для соответствующего брейкпоинта. JS-рантайм читает значения из CSS-переменных <code>--gr-bp-*</code> и генерирует <strong>непересекающиеся</strong> диапазоны в range-синтаксисе:</p>
+
+<table>
+  <tr><th>Раскладка</th><th>Диапазон</th></tr>
+  <tr><td>базовая <code>data-gr-layout</code></td><td><code>@media (width &lt; 768px)</code> — до первой адаптивной</td></tr>
+  <tr><td><code>data-gr-layout-md</code></td><td><code>@media (768px &lt;= width &lt; 1024px)</code></td></tr>
+  <tr><td><code>data-gr-layout-lg</code> (последняя)</td><td><code>@media (width &gt;= 1024px)</code></td></tr>
+</table>
+
+<p>В любой момент активна ровно одна раскладка. Арифметики <code>-1px</code> нет, поэтому щелей на дробных ширинах не возникает, а единицы измерения брейкпоинта могут быть любыми (<code>px</code>, <code>rem</code>, <code>em</code>).</p>
+
+<pre><code>&lt;div data-gr-layout="a1b1"
+     data-gr-layout-md="a3b4-c2d5"
+     data-gr-layout-lg="hdr4-main4-side2_2-ftr4"&gt;
+  &lt;!-- дочерние элементы с gr-area-* --&gt;
+&lt;/div&gt;</code></pre>
+
+<p>Брейкпоинты по умолчанию (можно переопределить через CSS-переменные):</p>
+
+<ul>
+  <li><code>sm</code>: 640px</li>
+  <li><code>md</code>: 768px</li>
+  <li><code>lg</code>: 1024px</li>
+  <li><code>xl</code>: 1280px</li>
+</ul>
+
+<h3>Защита от FOUC и работа без JS</h3>
+
+<p>До обработки рантаймом grid-контейнер выглядит как обычный поток блоков. Чтобы этот кадр не мелькал, рантайм <strong>первым же действием</strong> внедряет правило:</p>
+
+<pre><code>[data-gr-layout]:not(.gr-ready), … { opacity: 0; }
+[data-gr-layout].gr-ready, …      { opacity: 1; transition: opacity 0.3s ease; }</code></pre>
+
+<p>Ключевое: этого правила <strong>нет в статическом CSS</strong>. Если скрипт заблокирован, не загрузился или упал — правила не существует, и контент виден. Ценой становится краткий кадр без сетки, а не пустая страница.</p>
+
+<p>В потоковом режиме перехода не видно, и это ожидаемо: контейнер раскладывается в той же задаче, в которой был создан, поэтому браузер не успевает отрисовать его прозрачным. <code>opacity: 0</code> остаётся страховкой на случай, когда кадр всё же проскочил. Плавное появление сохраняется там, где раскладка приходит заметно позже защиты, — при <code>defer</code>, при скрипте в конце <code>&lt;body&gt;</code>, при <code>data-stream="false"</code>.</p>
+
+<p>Если нужно предупредить пользователя, у которого JS отключён:</p>
+
+<pre><code>&lt;noscript&gt;
+  &lt;p&gt;Для сложных раскладок нужен JavaScript. Без него блоки идут потоком —
+     содержимое остаётся доступным.&lt;/p&gt;
+&lt;/noscript&gt;</code></pre>
+
+<p>Не нужен рантайм вовсе? Сгенерируйте раскладки на этапе сборки миксином <code>gr-grid-layout()</code> — CSS получится тот же самый, JS не понадобится.</p>
+
+<h2>Grid-утилиты / Grid Utilities</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-grid</code></td><td>display: grid + gap</td></tr>
+  <tr><td><code>.gr-container</code></td><td>max-width + auto margin</td></tr>
+  <tr><td><code>.gr-container-full</code></td><td>100% width</td></tr>
+  <tr><td><code>.gr-expand-root</code></td><td><code>container-type: inline-size</code> — предок, по которому равняется расширение</td></tr>
+  <tr><td><code>.gr-container-expand</code></td><td>Блок во всю ширину корня из любой вложенности</td></tr>
+  <tr><td><code>.gr-grid-sm</code> … <code>.gr-grid-xl</code></td><td><code>display: grid</code> и базовый отступ — от брейкпоинта</td></tr>
+  <tr><td><code>.gr-grid-auto-fit</code></td><td>repeat(auto-fit, minmax(<code>--gr-grid-min</code>, 1fr)), по умолчанию 250px</td></tr>
+  <tr><td><code>.gr-grid-auto-fill</code></td><td>repeat(auto-fill, minmax(<code>--gr-grid-min</code>, 1fr)), по умолчанию 250px</td></tr>
+  <tr><td><code>.gr-grid-1</code> … <code>.gr-grid-12</code></td><td>Явные сетки на 1–12 колонок (сами включают grid и отступ)</td></tr>
+  <tr><td><code>.gr-grid-1-sm</code> … <code>.gr-grid-12-xl</code></td><td>Адаптивные сетки</td></tr>
+  <tr><td><code>.gr-grid-rows</code></td><td>Все ряды равной высоты — <code>grid-auto-rows: 1fr</code></td></tr>
+  <tr><td><code>.gr-grid-place-center</code></td><td>place-items: center</td></tr>
+  <tr><td><code>.gr-grid-col-span-1</code> … <code>.gr-grid-col-span-12</code></td><td>Column span</td></tr>
+  <tr><td><code>.gr-grid-row-span-1</code> … <code>.gr-grid-row-span-6</code></td><td>Row span</td></tr>
+  <tr><td><code>.gr-subgrid</code></td><td><code>grid-template-columns: subgrid</code> — колонки родителя проходят внутрь</td></tr>
+  <tr><td><code>.gr-subgrid-rows</code></td><td><code>grid-template-rows: subgrid</code> — то же по рядам</td></tr>
+</table>
+
+<h3>Блок во всю ширину / Full-bleed</h3>
+
+<p><code>.gr-container-expand</code> растягивает блок на всю ширину предка с классом <code>.gr-expand-root</code>, сколько бы ограниченных по ширине контейнеров ни лежало между ними:</p>
+
+<pre><code>&lt;body class="gr-expand-root"&gt;
+  &lt;div class="gr-container"&gt;
+    &lt;p&gt;Текст, ограниченный шириной контейнера.&lt;/p&gt;
+    &lt;div class="gr-container-expand"&gt;Во всю ширину окна&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+
+<p>Корнем может быть любой предок, а не только <code>body</code> — например колонка раскладки, и тогда блок не наедет на соседнюю. Ширина берётся из <code>100cqw</code>, поэтому, в отличие от <code>100vw</code>, полоса прокрутки не учитывается и горизонтального переполнения нет.</p>
+
+<p>Чтобы блок перекрыл ещё и паддинги корня, сообщите их величину переменной <code>--gr-expand-inset</code> — сам паддинг она не задаёт:</p>
+
+<pre><code>.content {
+  padding-inline: 3rem;
+  container-type: inline-size;
+  --gr-expand-inset: 3rem;
+}</code></pre>
+
+<p>Два ограничения: ширина корня не должна зависеть от его содержимого (<code>container-type</code> включает инлайн-containment, и <code>inline-block</code> схлопнется в ноль), а предки между корнем и блоком должны быть центрированы — формула складывает <code>50%</code> родителя с <code>50cqw</code> корня, и <code>.gr-container</code> с <code>margin-inline: auto</code> этому удовлетворяет. Без корня <code>cqw</code> откатывается на <code>svw</code>: блок займёт ширину окна вместе с полосой прокрутки.</p>
+
+<h2>Контейнерные запросы / Container queries</h2>
+
+<p>Оконный брейкпоинт отвечает на вопрос «какой ширины экран», а вёрстке обычно нужен другой: «сколько места досталось этому блоку». Одна и та же карточка стоит и в широкой ленте, и в узкой боковой колонке — окно при этом не меняется, а раскладка должна.</p>
+
+<table>
+  <tr><th>Класс / атрибут</th><th>Описание</th></tr>
+  <tr><td><code>.gr-cq</code></td><td><code>container-type: inline-size</code> — элемент становится контейнером запроса</td></tr>
+  <tr><td><code>--gr-name</code></td><td>Имя контейнера, если нужно обратиться к нему через голову ближайшего</td></tr>
+  <tr><td><code>-c&lt;брейкпоинт&gt;</code> у утилит</td><td><code>.gr-p-4-cmd</code>, <code>.gr-text-lg-clg</code>, <code>.gr-hidden-csm</code>, <code>.gr-w-full-cxl</code></td></tr>
+  <tr><td><code>data-gr-layout-c&lt;брейкпоинт&gt;</code></td><td>Контейнерная раскладка: <code>data-gr-layout-cmd="a1b2"</code></td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-cq"&gt;
+  &lt;article data-gr-layout="a1-b1" data-gr-layout-cmd="a1b2"
+           class="gr-p-3 gr-p-5-cmd"&gt;
+    &lt;div class="gr-area-a"&gt;…&lt;/div&gt;
+    &lt;div class="gr-area-b"&gt;&lt;h3 class="gr-text-base gr-text-lg-cmd"&gt;…&lt;/h3&gt;&lt;/div&gt;
+  &lt;/article&gt;
+&lt;/div&gt;</code></pre>
+
+<p>Контейнерные варианты есть у четырёх модулей <code>griffincss-utils</code> — отступы, размеры, типографика и видимость. Остальным (цвет, тень, граница, позиционирование, прозрачность, переходы) контейнерная адаптивность смысла не добавляет, а байты стоит.</p>
+
+<p><strong>Контейнер — это предок, а не сам элемент.</strong> <code>@container</code> ищет ближайшего предка с <code>container-type</code> и никогда не спрашивает сам элемент: элемент не может измерять себя. Поэтому <code>.gr-cq</code> ставится на обёртку, а <code>-cmd</code>-классы и <code>data-gr-layout-cmd</code> — на то, что внутри неё. Рантайм не проставляет <code>.gr-cq</code> сам: инлайн-containment, навешенный на чужую разметку, ломает страницу молча и в неожиданном месте.</p>
+
+<p><strong><code>container-type: inline-size</code> включает инлайн-containment.</strong> Ширина элемента перестаёт зависеть от содержимого: у <code>inline-block</code>, у <code>float</code>, у <code>width: fit-content</code> она схлопывается в ноль. Ставьте <code>.gr-cq</code> на блок, ширину которого задаёт раскладка. По той же причине библиотека намеренно не объявляет контейнером <code>body</code> за вас: иначе каждый безымянный <code>@container</code> на странице разрешался бы к окну вместо того, чтобы просто не сработать.</p>
+
+<p><strong>Шкала общая — и потому крупная.</strong> 768px ширины <em>контейнера</em> достигает разве что основная колонка макета; реально пересекаемый порог для блока внутри страницы — <code>-csm</code> (640px). Нужен свой порог — он пишется одной строкой своего CSS: <code>@container (width &gt;= 26rem) { … }</code>.</p>
+
+<p><strong>Имя контейнера</strong> приезжает свойством, а не классом: имя — это CSS-идентификатор, придуманный на стороне страницы, и статический файл не может знать его список. Свойство общее, а не <code>--gr-cq-name</code>: <code>container-name</code>, <code>anchor-name</code> и <code>view-transition-name</code> берут один и тот же идентификатор, и элемент вправе называться один раз на все роли. Оно ненаследуемое (<code>@property … inherits: false</code>), иначе вложенный <code>.gr-cq</code> перенял бы имя предка.</p>
+
+<pre><code>&lt;section class="gr-cq" style="--gr-name: page"&gt;
+  &lt;div class="gr-cq"&gt;…&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+
+<pre><code>@use 'griffincss-core/scss/container-queries' as cq;
+
+@include cq.gr-container-media(md)        { .my-card { padding: 2rem; } }
+@include cq.gr-container-media(lg, page)  { .my-card { padding: 3rem; } }</code></pre>
+
+<p>Компилтайм-раскладки принимают контейнерные варианты параметрами <code>$csm</code> … <code>$cxl</code>, и вывод побайтово совпадает с тем, что генерирует рантайм.</p>
+
+<h2>Отступы / Gap</h2>
+
+<p>Один набор классов на все контейнеры — grid, flex и раскладки <code>data-gr-layout</code>:</p>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-gap-sm</code></td><td><code>var(--gr-gap-sm)</code> — 0.375rem, с <code>md</code> 0.5rem</td></tr>
+  <tr><td><code>.gr-gap</code></td><td><code>var(--gr-gap)</code> — 0.75rem, с <code>md</code> 1rem</td></tr>
+  <tr><td><code>.gr-gap-lg</code></td><td><code>var(--gr-gap-lg)</code> — 1.25rem, с <code>md</code> 2rem</td></tr>
+</table>
+
+<p>Адаптивных вариантов с суффиксом брейкпоинта нет и не нужно: значение меняют сами токены, поэтому один и тот же класс даёт меньший отступ на мобильном.</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap"&gt;…&lt;/div&gt;
+&lt;div class="gr-grid gr-gap-lg"&gt;…&lt;/div&gt;
+&lt;div data-gr-layout="a3b4-c2d5" class="gr-gap-sm"&gt;…&lt;/div&gt;</code></pre>
+
+<h2>Flex-утилиты / Flex Utilities</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-flex</code></td><td>display: flex</td></tr>
+  <tr><td><code>.gr-inline-flex</code></td><td>display: inline-flex</td></tr>
+  <tr><td><code>.gr-flex-row</code> / <code>.gr-flex-col</code></td><td>flex-direction</td></tr>
+  <tr><td><code>.gr-flex-wrap</code> / <code>.gr-flex-nowrap</code></td><td>flex-wrap</td></tr>
+  <tr><td><code>.gr-flex-start</code> / <code>center</code> / <code>end</code> / <code>between</code> / <code>around</code> / <code>evenly</code></td><td>justify-content</td></tr>
+  <tr><td><code>.gr-flex-items-start</code> / <code>center</code> / <code>end</code> / <code>stretch</code> / <code>baseline</code></td><td>align-items</td></tr>
+  <tr><td><code>.gr-flex-self-start</code> / <code>center</code> / <code>end</code> / <code>stretch</code></td><td>align-self</td></tr>
+  <tr><td><code>.gr-flex-1</code></td><td>flex: 1</td></tr>
+  <tr><td><code>.gr-gap-sm</code> / <code>.gr-gap</code> / <code>.gr-gap-lg</code></td><td>Отступ — общие классы, см. «Отступы» выше</td></tr>
+</table>
+
+<p>Все flex-утилиты имеют адаптивные варианты: <code>.gr-flex-md</code>, <code>.gr-flex-center-lg</code>, и т.д.</p>
+
+<h2>Печать / Print</h2>
+
+<p>Ресет несёт блок <code>@media print</code> и приезжает только вместе с самим ресетом: <code>griffincss-reset.css</code> — отдельная точка входа.</p>
+
+<table>
+  <tr><th>Правило</th><th>Зачем</th></tr>
+  <tr><td><code>body { background: #fff; color: #000 }</code></td><td>Фоны браузер по умолчанию не печатает, и светлый текст тёмной темы исчез бы на белом листе</td></tr>
+  <tr><td><code>details::details-content { content-visibility: visible }</code></td><td>Свёрнутый <code>&lt;details&gt;</code> на бумаге — потерянный текст</td></tr>
+  <tr><td><code>h1</code>–<code>h6</code> <code>{ break-after: avoid }</code></td><td>Заголовок не остаётся один в конце страницы</td></tr>
+  <tr><td><code>blockquote, figure, img, pre, table { break-inside: avoid }</code></td><td>Не разрываются посередине</td></tr>
+  <tr><td><code>p { orphans: 3; widows: 3 }</code></td><td>Одна строка абзаца, оторванная от остальных, читается как обрывок</td></tr>
+</table>
+
+<p><strong>Тени гасятся не в ресете, а в теме — и потому во всех сборках.</strong> Слой <code>griffincss.reset</code> младший, и <code>box-shadow: none</code> оттуда проиграл бы и компоненту, и утилите <code>.gr-shadow-*</code>, а <code>!important</code> в библиотеке запрещён. На печати обнуляется множитель <code>--gr-shadow-strength</code>: семь готовых теней собраны из него, и ноль означает нулевую непрозрачность у каждой — в ядре, в компонентах и в утилитах разом, независимо от слоя и от того, подключён ли ресет. Там же останавливаются <code>.gr-animate-spin</code> и классы переходов.</p>
+
+<hr>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

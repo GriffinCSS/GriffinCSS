@@ -1,0 +1,59 @@
+// Griffincss UI — Spinner
+// Кольцо занятости. Три четверти окружности серые, одна — акцентная;
+// вращается keyframe gr-spin.
+//
+//   <span class="gr-spinner" role="status" aria-label="Загрузка"></span>
+//
+// Роль и подпись — в разметке: пустой <span> без них молчит для программы
+// чтения с экрана, и человек, который не видит кольца, не узнаёт, что
+// страница чего-то ждёт. Если рядом уже стоит видимое слово «Загрузка»,
+// кольцу достаточно aria-hidden="true".
+//
+// Диаметр и толщина заданы в em, а не в rem: кольцо внутри кнопки должно
+// быть по её кеглю, а не по корневому, — иначе в маленькой кнопке оно
+// не помещается, а в крупной теряется.
+
+.gr-spinner {
+  --gr-spinner-size: 1.5em;
+  --gr-spinner-thickness: 0.15em;
+  --gr-spinner-track: color-mix(in srgb, currentcolor 20%, transparent);
+  --gr-spinner-color: var(--gr-color-accent);
+
+  display: inline-block;
+  box-sizing: border-box;
+  inline-size: var(--gr-spinner-size);
+  block-size: var(--gr-spinner-size);
+  border: var(--gr-spinner-thickness) solid var(--gr-spinner-track);
+
+  // Акцентной оставлена одна сторона: без разрыва в кольце вращение
+  // не читалось бы вовсе — равномерный круг выглядит неподвижным.
+  border-block-start-color: var(--gr-spinner-color);
+  border-radius: var(--gr-radius-pill);
+  vertical-align: middle;
+  animation: gr-spin 0.8s linear infinite;
+}
+
+.gr-spinner-sm {
+  --gr-spinner-size: 1em;
+  --gr-spinner-thickness: 0.12em;
+}
+
+.gr-spinner-lg {
+  --gr-spinner-size: 2.5em;
+  --gr-spinner-thickness: 0.18em;
+}
+
+// Кольцо на цветной кнопке: дорожка и стрелка берут цвет её текста,
+// иначе акцентное кольцо на акцентной заливке сливается с ней.
+.gr-spinner-current {
+  --gr-spinner-color: currentcolor;
+}
+
+// Вращение по настройке уменьшенной анимации замедляется, но не снимается.
+// Остановленный индикатор занятости сообщает «зависло» — ровно обратное
+// тому, зачем он поставлен.
+@media (prefers-reduced-motion: reduce) {
+  .gr-spinner {
+    animation-duration: 2.4s;
+  }
+}

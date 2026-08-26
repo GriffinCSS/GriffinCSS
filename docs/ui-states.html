@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Состояния — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Состояния</h1>
+  <p>Три состояния экрана, в которых содержимого ещё нет, уже нет или оно только собирается: заглушка на время загрузки, ход процесса и пустое место с выходом из него.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_skeleton.scss</span>
+    <span class="badge">packages/ui/scss/_steps.scss</span>
+    <span class="badge">packages/ui/scss/_empty.scss</span>
+  </div>
+</div>
+
+<h2>Заглушка на время загрузки</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-skeleton</code></td><td>Прямоугольник на месте будущего содержимого; мерцает</td></tr>
+  <tr><td><code>.gr-skeleton-text</code></td><td>Строка текста высотой в кегль; последняя в блоке короче</td></tr>
+  <tr><td><code>.gr-skeleton-circle</code></td><td>Круг под аватар или иконку</td></tr>
+  <tr><td><code>.gr-skeleton-group</code></td><td>Коробка заглушки: свои отступы и зазоры между фигурами</td></tr>
+  <tr><td><code>.gr-skeleton-stack</code></td><td>Колонка строк внутри коробки; забирает остаток строки</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Карточка, которая ещё грузится</div>
+  <div class="gr-card" style="max-inline-size: 24rem">
+    <div class="gr-skeleton-group" aria-hidden="true">
+      <span class="gr-skeleton gr-skeleton-circle"></span>
+      <div class="gr-skeleton-stack">
+        <span class="gr-skeleton gr-skeleton-text" style="inline-size: 55%"></span>
+        <span class="gr-skeleton gr-skeleton-text"></span>
+        <span class="gr-skeleton gr-skeleton-text"></span>
+      </div>
+    </div>
+    <span class="gr-sr-only" role="status">Загружаем профиль</span>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-card"&gt;
+  &lt;div class="gr-skeleton-group" aria-hidden="true"&gt;
+    &lt;span class="gr-skeleton gr-skeleton-circle"&gt;&lt;/span&gt;
+    &lt;div class="gr-skeleton-stack"&gt;
+      &lt;span class="gr-skeleton gr-skeleton-text" style="inline-size: 55%"&gt;&lt;/span&gt;
+      &lt;span class="gr-skeleton gr-skeleton-text"&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;span class="gr-sr-only" role="status"&gt;Загружаем профиль&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Коробка встаёт вместо <code>.gr-card-body</code>.</strong>
+    У самой <code>.gr-card</code> внутренних отступов нет — их даёт тело,
+    и <code>.gr-skeleton-group</code> в этом месте и есть тело, пока
+    содержимого нет. Отступы и зазоры между фигурами она задаёт сама,
+    поэтому раскладывать заглушку утилитами не приходится, а фигуры
+    не липнут к краям: прижатые к краю, они читаются не как заглушка,
+    а как сломанная вёрстка.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Заглушке нужен <code>aria-hidden="true"</code>, а рядом — слово.</strong>
+    Пустые прямоугольники не значат ничего: в озвучке они превращаются
+    в шум или в тишину, и человек не понимает, идёт загрузка или страница
+    сломалась. Сообщение ставят текстом в <code>role="status"</code> —
+    видимым или скрытым <code>.gr-sr-only</code> из утилит.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Залито оттенком <code>currentcolor</code>, а не серым.</strong>
+    Непрозрачный цвет совпал бы с одной из подложек, на которых заглушка
+    может лежать — карточка, всплывающий слой, полосатая таблица, — и стал бы
+    невидимым. Оттенок текущего цвета текста виден на всех и следует теме
+    без единого правила под неё.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>При <code>prefers-reduced-motion</code> мерцание снимается совсем.</strong>
+    Здесь это можно: заглушка сообщает «тут будет содержимое» самим своим
+    присутствием. У кольца спиннера наоборот — оно замедляется, но
+    не останавливается, потому что замерший индикатор занятости сообщает
+    «зависло».
+  </p>
+</div>
+
+<h2>Шаги процесса</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-steps</code></td><td>Ряд шагов; разметка — <code>&lt;ol&gt;</code>, порядок здесь значащий</td></tr>
+  <tr><td><code>.gr-steps-vertical</code></td><td>Тот же ряд колонкой: маркер слева, подпись справа</td></tr>
+  <tr><td><code>.gr-step</code></td><td>Шаг; по умолчанию — ожидающий</td></tr>
+  <tr><td><code>.gr-step-done</code></td><td>Пройденный: линия от него к следующему залита</td></tr>
+  <tr><td><code>[aria-current="step"]</code></td><td>Текущий — атрибутом, а не классом</td></tr>
+  <tr><td><code>.gr-step-disabled</code></td><td>Пропущенный или отменённый</td></tr>
+  <tr><td><code>.gr-step-marker</code></td><td>Кружок со знаком: номером или галочкой</td></tr>
+  <tr><td><code>.gr-step-label</code></td><td>Название шага</td></tr>
+  <tr><td><code>.gr-step-note</code></td><td>Пояснение под названием</td></tr>
+  <tr><td><code>.gr-step-body</code></td><td>Подпись и пояснение в колонке — для вертикального ряда</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Оформление заказа</div>
+  <ol class="gr-steps">
+    <li class="gr-step gr-step-done">
+      <span class="gr-step-marker" aria-hidden="true">✓</span>
+      <span class="gr-step-label">Корзина</span>
+      <span class="gr-step-note">3 товара</span>
+    </li>
+    <li class="gr-step" aria-current="step">
+      <span class="gr-step-marker" aria-hidden="true">2</span>
+      <span class="gr-step-label">Доставка</span>
+      <span class="gr-step-note">Курьером до двери</span>
+    </li>
+    <li class="gr-step">
+      <span class="gr-step-marker" aria-hidden="true">3</span>
+      <span class="gr-step-label">Оплата</span>
+    </li>
+  </ol>
+</div>
+
+<pre><code>&lt;ol class="gr-steps"&gt;
+  &lt;li class="gr-step gr-step-done"&gt;
+    &lt;span class="gr-step-marker" aria-hidden="true"&gt;✓&lt;/span&gt;
+    &lt;span class="gr-step-label"&gt;Корзина&lt;/span&gt;
+  &lt;/li&gt;
+  &lt;li class="gr-step" aria-current="step"&gt;
+    &lt;span class="gr-step-marker" aria-hidden="true"&gt;2&lt;/span&gt;
+    &lt;span class="gr-step-label"&gt;Доставка&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Колонкой — <code>.gr-steps-vertical</code></div>
+  <ol class="gr-steps gr-steps-vertical">
+    <li class="gr-step gr-step-done">
+      <span class="gr-step-marker" aria-hidden="true">✓</span>
+      <span class="gr-step-body">
+        <span class="gr-step-label">Заявка принята</span>
+        <span class="gr-step-note">12 марта, 10:04</span>
+      </span>
+    </li>
+    <li class="gr-step" aria-current="step">
+      <span class="gr-step-marker" aria-hidden="true">2</span>
+      <span class="gr-step-body">
+        <span class="gr-step-label">Проверка документов</span>
+        <span class="gr-step-note">Обычно занимает один рабочий день</span>
+      </span>
+    </li>
+    <li class="gr-step gr-step-disabled">
+      <span class="gr-step-marker" aria-hidden="true">3</span>
+      <span class="gr-step-body">
+        <span class="gr-step-label">Выплата</span>
+        <span class="gr-step-note">Отменена по заявлению</span>
+      </span>
+    </li>
+  </ol>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Текущий шаг находится по <code>aria-current="step"</code>.</strong>
+    Это тот же признак, по которому его находит программа чтения с экрана,
+    поэтому класса для текущего шага в модуле нет намеренно: класс без
+    атрибута выделил бы шаг только зрячему.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Знак в маркере — содержимое, а не оформление.</strong> Галочку
+    у пройденного шага и номер у остальных кладут в разметку: так состояние
+    видно и в чёрно-белой печати, и при дальтонизме, где цвет маркера
+    не различается. Цвет остаётся вторым признаком поверх знака и позиции.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Линия — хвост шага, ведущий к следующему.</strong> Её рисует
+    <code>::after</code> у левого (в колонке — верхнего) шага и заливает
+    вместе с ним: у пройденного она акцентная, у текущего остаётся серой —
+    он ведёт к тому, до чего ещё не дошли. У последнего шага линии нет,
+    вести ей некуда.
+  </p>
+  <p>
+    Принадлежность выбрана не ради вида. Только у левого шага длину линии
+    считает сам CSS: низ его блока — это верх промежутка, а сколько текста
+    висит под маркером предыдущего шага, правило, написанное на следующего,
+    знать не может. В колонке хвост, растущий вверх, упирался бы в границу
+    своего блока и не доставал до соседнего маркера.
+  </p>
+</div>
+
+<h2>Пустое состояние</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-empty</code></td><td>Колонка по центру: иконка, заголовок, пояснение, действие</td></tr>
+  <tr><td><code>.gr-empty-boxed</code></td><td>То же внутри пунктирной рамки</td></tr>
+  <tr><td><code>.gr-empty-icon</code></td><td>Слот под знак; своих иконок библиотека не везёт</td></tr>
+  <tr><td><code>.gr-empty-title</code></td><td>Заголовок</td></tr>
+  <tr><td><code>.gr-empty-text</code></td><td>Пояснение; ширина ограничена 46 знаками</td></tr>
+  <tr><td><code>.gr-empty-actions</code></td><td>Ряд кнопок под пояснением</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Список без записей</div>
+  <div class="gr-empty">
+    <span class="gr-empty-icon" aria-hidden="true">📭</span>
+    <p class="gr-empty-title">Пока пусто</p>
+    <p class="gr-empty-text">Здесь появятся заказы, как только вы оформите первый. Мы сохраним историю и покажем статус доставки.</p>
+    <div class="gr-empty-actions">
+      <a class="gr-btn gr-btn-primary" href="#">В каталог</a>
+      <a class="gr-btn gr-btn-ghost" href="#">Как это работает</a>
+    </div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">В рамке — <code>.gr-empty-boxed</code></div>
+  <div class="gr-empty gr-empty-boxed">
+    <span class="gr-empty-icon" aria-hidden="true">🔍</span>
+    <p class="gr-empty-title">Ничего не нашлось</p>
+    <p class="gr-empty-text">По запросу «griffincss» совпадений нет. Попробуйте убрать фильтры или написать короче.</p>
+    <div class="gr-empty-actions">
+      <button class="gr-btn" type="button">Сбросить фильтры</button>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-empty"&gt;
+  &lt;span class="gr-empty-icon" aria-hidden="true"&gt;📭&lt;/span&gt;
+  &lt;p class="gr-empty-title"&gt;Пока пусто&lt;/p&gt;
+  &lt;p class="gr-empty-text"&gt;Здесь появятся заказы.&lt;/p&gt;
+  &lt;div class="gr-empty-actions"&gt;
+    &lt;a class="gr-btn gr-btn-primary" href="/catalog"&gt;В каталог&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Пустое состояние без действия — тупик.</strong> Человек прочитал,
+    что записей нет, и остался с этим один на один. Слот под кнопку в модуле
+    есть именно поэтому, и ставить её стоит везде, где следующий шаг вообще
+    существует: «создать первую запись», «сбросить фильтры», «перейти
+    в каталог».
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Ширина пояснения ограничена в <code>ch</code>, а не в пикселях.</strong>
+    Единица <code>ch</code> считается от кегля, поэтому ограничение
+    в 46 знаков остаётся ограничением в 46 знаков и в режиме для
+    слабовидящих, где корневой кегль вырастает до 20 px.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

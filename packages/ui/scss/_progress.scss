@@ -1,0 +1,188 @@
+// Griffincss UI — Progress
+// Полоса выполнения на <progress> и шкала на <meter>. Значение показывает
+// сам элемент — классу остаётся снять системную отрисовку и покрасить
+// дорожку и заполнение.
+//
+//   <progress class="gr-progress" value="40" max="100">40 %</progress>
+//   <meter class="gr-meter" value="0.7" low="0.3" high="0.8" optimum="1">70 %</meter>
+//
+// Текст внутри элемента — не подпись, а запасной путь для движка, который
+// <progress> не знает вовсе; видимую подпись ставят рядом.
+//
+// Вендорные псевдоэлементы объявлены КАЖДЫЙ своим правилом. Неизвестный
+// селектор в группе делает невалидной всю группу: WebKit, встретив
+// ::-moz-progress-bar рядом со своим псевдоэлементом, выбрасывает правило
+// целиком — и полоса остаётся некрашеной в обоих движках. Это условие
+// приёмки модуля, а не стилевое предпочтение.
+//
+// Каждому из них вдобавок снимается background-image. UA-стиль рисует части
+// шкалы градиентом, а он лежит ПОВЕРХ цвета фона: заданный background-color
+// оказывается под непрозрачной картинкой и не виден вовсе. Снаружи это
+// выглядело как «класс не применился» — на деле применился и был закрашен
+// системным градиентом. appearance: none этого не снимает.
+
+.gr-progress {
+  --gr-progress-fill: var(--gr-color-accent);
+  --gr-progress-track: color-mix(in srgb, currentcolor 12%, transparent);
+  --gr-progress-height: 0.5rem;
+
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--gr-progress-height);
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-progress-track);
+
+  // Дорожка — оттенок currentcolor, а не готовая поверхность: непрозрачный
+  // серый совпал бы с одной из подложек, на которых полоса может лежать,
+  // и исчез бы вместе с ней.
+  appearance: none;
+  overflow: hidden;
+}
+
+// --- Дорожка и заполнение ---------------------------------------------------
+
+.gr-progress::-webkit-progress-bar {
+  background-image: none;
+  background-color: var(--gr-progress-track);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-progress::-webkit-progress-value {
+  background-image: none;
+  background-color: var(--gr-progress-fill);
+  border-radius: var(--gr-radius-pill);
+  transition: inline-size var(--gr-transition);
+}
+
+.gr-progress::-moz-progress-bar {
+  background-image: none;
+  background-color: var(--gr-progress-fill);
+  border-radius: var(--gr-radius-pill);
+}
+
+// --- Размеры ----------------------------------------------------------------
+
+.gr-progress-sm {
+  --gr-progress-height: 0.25rem;
+}
+
+.gr-progress-lg {
+  --gr-progress-height: 0.75rem;
+}
+
+// --- Статусы ----------------------------------------------------------------
+
+// Полоса выполнения — фигура, а не текст, поэтому предупреждение красится
+// поверхностным цветом: текстовый в светлой теме тёмно-коричневый и читается
+// не как «внимание», а как грязь.
+$gr-progress-statuses: (
+  success: var(--gr-color-success),
+  warning: var(--gr-color-warning-surface),
+  danger: var(--gr-color-danger)
+);
+
+@each $gr-name, $gr-value in $gr-progress-statuses {
+  .gr-progress-#{$gr-name} {
+    --gr-progress-fill: #{$gr-value};
+  }
+}
+
+// --- Неопределённое состояние -----------------------------------------------
+
+// <progress> без атрибута value. Системную бегущую полосу забирает
+// appearance: none, поэтому её рисует фон самого элемента: отрезок в 40 %
+// ширины ездит от края до края. Псевдоэлементы при этом обнуляются —
+// иначе дорожка WebKit закрыла бы фон элемента собой.
+.gr-progress-indeterminate {
+  background-image: linear-gradient(to right, var(--gr-progress-fill) 0 100%);
+  background-repeat: no-repeat;
+  background-size: 40% 100%;
+  animation: gr-progress-slide 1.4s ease-in-out infinite alternate;
+}
+
+.gr-progress-indeterminate::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+.gr-progress-indeterminate::-webkit-progress-value {
+  background-color: transparent;
+}
+
+.gr-progress-indeterminate::-moz-progress-bar {
+  background-color: transparent;
+}
+
+// Бег — единственный признак того, что работа идёт, поэтому по настройке
+// уменьшенной анимации он замедляется, а не снимается: замершая полоса
+// сообщала бы «зависло».
+@media (prefers-reduced-motion: reduce) {
+  .gr-progress-indeterminate {
+    animation-duration: 3s;
+  }
+}
+
+// --- Шкала ------------------------------------------------------------------
+
+// <meter> — не прогресс: он показывает измеренную величину в известном
+// диапазоне (заполненность диска, оценку, запас). Цвет заливки берётся
+// у платформы: браузер сам вычисляет по low / high / optimum, попало ли
+// значение в хороший диапазон. Класс-статус разошёлся бы с этим
+// вычислением, поэтому у шкалы их и нет.
+.gr-meter {
+  --gr-meter-height: 0.75rem;
+
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--gr-meter-height);
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  appearance: none;
+  overflow: hidden;
+}
+
+.gr-meter::-webkit-meter-bar {
+  background-image: none;
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter::-webkit-meter-optimum-value {
+  background-image: none;
+  background-color: var(--gr-color-success);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter::-webkit-meter-suboptimum-value {
+  background-image: none;
+  background-color: var(--gr-color-warning-surface);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter::-webkit-meter-even-less-good-value {
+  background-image: none;
+  background-color: var(--gr-color-danger);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter:-moz-meter-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: var(--gr-color-success);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter:-moz-meter-sub-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: var(--gr-color-warning-surface);
+  border-radius: var(--gr-radius-pill);
+}
+
+.gr-meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  background-image: none;
+  background-color: var(--gr-color-danger);
+  border-radius: var(--gr-radius-pill);
+}

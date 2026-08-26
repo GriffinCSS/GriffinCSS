@@ -1,0 +1,95 @@
+// Griffincss UI — Skeleton
+// Заглушка на время загрузки: серые фигуры на месте будущего содержимого.
+//
+//   <div aria-hidden="true">
+//     <span class="gr-skeleton gr-skeleton-circle"></span>
+//     <span class="gr-skeleton gr-skeleton-text"></span>
+//   </div>
+//   <span class="gr-sr-only" role="status">Загружаем список</span>
+//
+// aria-hidden на обёртке обязателен: пустые прямоугольники не значат ничего
+// и в озвучке превращаются в шум. Сообщение о загрузке ставят рядом словом —
+// это тот же принцип, что у сообщения о статусе.
+//
+// Залито оттенком currentcolor, а не готовой поверхностью: непрозрачный
+// серый совпал бы с одной из подложек, на которых заглушка может лежать,
+// и стал бы невидимым — так уже было с полосами таблицы.
+
+.gr-skeleton {
+  display: block;
+  box-sizing: border-box;
+  min-block-size: 1em;
+  border-radius: calc(var(--gr-radius) * 0.5);
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  animation: gr-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+// Строка текста. Высота — по кеглю строки, на месте которой она стоит,
+// поэтому заглушка абзаца собирается из нескольких таких строк
+// и выглядит абзацем, а не одним серым прямоугольником.
+.gr-skeleton-text {
+  block-size: 1em;
+  min-block-size: 0;
+  border-radius: var(--gr-radius-pill);
+
+  // Поля — по половине междустрочного зазора с каждой стороны: строки
+  // заглушки встают с тем же шагом, что и настоящие.
+  margin-block: 0.25em;
+}
+
+// Последняя строка абзаца короче остальных — иначе ровный правый край
+// выдаёт, что это фигура, а не текст. Ширину переопределяют на месте,
+// когда порядок строк другой.
+.gr-skeleton-text:last-child {
+  inline-size: 60%;
+}
+
+// Круг под аватар или иконку. flex: none — чтобы в строке рядом с текстом
+// его не сжимало.
+.gr-skeleton-circle {
+  flex: none;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--gr-radius-pill);
+}
+
+// --- Готовая коробка --------------------------------------------------------
+
+// Типовая заглушка блока: круг слева, колонка строк справа. Отступы и зазоры
+// задаёт она сама и потому встаёт в карточке ВМЕСТО .gr-card-body — пока
+// содержимого нет, она и есть тело. Без неё фигуры расставляют утилитами,
+// а прижатые к краям коробки они читаются не как заглушка, а как сломанная
+// вёрстка.
+.gr-skeleton-group {
+  display: flex;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--gr-ui-gap);
+  padding: var(--gr-gap);
+}
+
+// Колонка строк: забирает остаток строки рядом с кругом. min-inline-size: 0
+// обязателен — без него flex-элемент не сжимается ниже своего содержимого
+// и строки вылезают за край на узком экране.
+.gr-skeleton-stack {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.5em;
+  min-inline-size: 0;
+}
+
+// В колонке шаг задаёт gap: собственные поля строк удвоили бы его.
+.gr-skeleton-stack .gr-skeleton-text {
+  margin-block: 0;
+}
+
+// Мерцание снимается по настройке совсем, в отличие от кольца спиннера:
+// заглушка сообщает «здесь будет содержимое» самим своим присутствием,
+// и без анимации это сообщение не теряется.
+@media (prefers-reduced-motion: reduce) {
+  .gr-skeleton {
+    animation: none;
+  }
+}

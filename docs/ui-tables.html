@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Таблицы — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Таблицы</h1>
+  <p>Таблица данных, пять вариантов оформления, прокрутка вместо выноса страницы и липкая шапка с линией, которая едет вместе с ней.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">packages/ui/scss/_table.scss</span>
+  </div>
+</div>
+
+<h2>Классы</h2>
+
+<table>
+  <tr><th>Класс</th><th>Что делает</th></tr>
+  <tr><td><code>.gr-table</code></td><td>Схлопнутые границы, отступы в ячейках, шапка приглушённым кеглем</td></tr>
+  <tr><td><code>.gr-table-striped</code></td><td>Чередование строк тела</td></tr>
+  <tr><td><code>.gr-table-bordered</code></td><td>Полная сетка: вертикальные линии и внешняя рамка</td></tr>
+  <tr><td><code>.gr-table-compact</code></td><td>Отступы вдвое меньше, кегль мельче</td></tr>
+  <tr><td><code>.gr-table-relaxed</code></td><td>Обратное компактному: воздуха больше стандартного</td></tr>
+  <tr><td><code>.gr-table-hover</code></td><td>Подсветка строки под указателем</td></tr>
+  <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой</td></tr>
+  <tr><td><code>.gr-table-sticky</code></td><td>Шапка остаётся видна при прокрутке тела</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Внутри <code>.gr-table</code> селекторы идут по элементам —
+    <code>thead</code>, <code>tbody</code>, <code>tr</code>, <code>th</code>,
+    <code>td</code>. Разметка таблицы задана стандартом, придумывать ей
+    отдельные классы не нужно: достаточно одного на самой
+    <code>&lt;table&gt;</code>.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Полосатая с подсветкой строки</div>
+  <table class="gr-table gr-table-striped gr-table-hover">
+    <caption>Размер сборок, версия 0.16.0</caption>
+    <thead>
+      <tr><th scope="col">Пакет</th><th scope="col">CSS</th><th scope="col">gzip</th><th scope="col">Классов</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>griffincss-core</td><td>24.1 КБ</td><td>3.3 КБ</td><td>207</td></tr>
+      <tr><td>griffincss-ui</td><td>66.1 КБ</td><td>9.9 КБ</td><td>193</td></tr>
+      <tr><td>griffincss-utils</td><td>105.5 КБ</td><td>14.2 КБ</td><td>2507</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>Ресет подключается отдельно</td><td>1.1 КБ</td><td>0.6 КБ</td><td>—</td></tr>
+    </tfoot>
+  </table>
+</div>
+
+<pre><code>&lt;table class="gr-table gr-table-striped gr-table-hover"&gt;
+  &lt;caption&gt;Подпись&lt;/caption&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th scope="col"&gt;Пакет&lt;/th&gt;…&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;&lt;tr&gt;&lt;td&gt;griffincss-core&lt;/td&gt;…&lt;/tr&gt;&lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <code>scope="col"</code> на заголовках — не украшение. Без него скринридер
+    не связывает ячейку со столбцом, и таблица из четырёх колонок читается
+    сплошным потоком чисел, в котором непонятно, что к чему относится.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Полосы и подсветка — полупрозрачный оттенок цвета текста,</strong>
+    а не готовый цвет поверхности. Таблица может лежать на чём угодно:
+    на странице, на карточке, на утопленной панели. Любой непрозрачный цвет
+    совпадёт с одной из этих подложек и станет невидимым — так полосы
+    и пропадали внутри блока примера на этой самой странице. Оттенок виден
+    на всех подложках и меняет направление вместе с темой сам: в светлой
+    <code>currentcolor</code> тёмный, в тёмной — светлый.
+  </p>
+  <p>
+    Подсветка при этом ложится <em>слоем поверх</em> фона строки
+    (<code>background-image</code>), а не вместо него
+    (<code>background-color</code>). У полосы и подсветки одна специфичность,
+    поэтому вторая просто заменяла бы первую — и на нечётной строке
+    полосатой таблицы разница при наведении почти не читалась бы. Слой
+    складывается с полосой, и шаг одинаков на любой строке.
+  </p>
+</div>
+
+<h2>Полная сетка и плотность</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">gr-table-bordered + gr-table-compact</div>
+  <table class="gr-table gr-table-bordered gr-table-compact">
+    <thead>
+      <tr><th scope="col">Слой</th><th scope="col">Кто в нём</th><th scope="col">Кого перекрывает</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>griffincss.reset</td><td>Ресет</td><td>никого</td></tr>
+      <tr><td>griffincss.core</td><td>Токены, раскладки, флекс</td><td>ресет</td></tr>
+      <tr><td>griffincss.ui</td><td>Компоненты</td><td>ядро и ресет</td></tr>
+      <tr><td>griffincss.utils</td><td>Утилиты</td><td>всех троих</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">gr-table-relaxed</div>
+  <table class="gr-table gr-table-relaxed">
+    <thead>
+      <tr><th scope="col">Волна</th><th scope="col">Что в ней</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>8a</td><td>Статические компоненты</td></tr>
+      <tr><td>8b</td><td>Навигация и раскрытие</td></tr>
+      <tr><td>8c</td><td>Обратная связь и состояния</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Прокрутка и липкая шапка</h2>
+
+<p>
+  Широкая таблица не сжимается ниже своего содержимого. Без обёртки вбок
+  уезжает вся страница, а не одна таблица — <code>.gr-table-wrap</code>
+  оставляет прокрутку внутри себя.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    Прокручиваемой области нужен <code>tabindex="0"</code>: без него до
+    содержимого, уехавшего вправо, нельзя добраться с клавиатуры — колесо
+    и палец есть не у всех. Вместе с ним ставится <code>role="region"</code>
+    и <code>aria-label</code>, иначе фокус попадёт в безымянный блок.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Липкая шапка внутри прокручиваемой области</div>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Токены компонентов" style="max-height: 14rem">
+    <table class="gr-table gr-table-sticky gr-table-compact">
+      <thead>
+        <tr><th scope="col">Токен</th><th scope="col">Значение</th><th scope="col">Где применяется</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>--gr-control-height</code></td><td>2.5rem</td><td>Кнопка, поле, список</td></tr>
+        <tr><td><code>--gr-control-height-sm</code></td><td>2rem</td><td>Те же в размере sm</td></tr>
+        <tr><td><code>--gr-control-height-lg</code></td><td>3rem</td><td>Те же в размере lg</td></tr>
+        <tr><td><code>--gr-control-padding-x</code></td><td>0.875rem</td><td>Горизонтальные поля элементов управления</td></tr>
+        <tr><td><code>--gr-control-font-size</code></td><td>1rem</td><td>Кегль элементов управления</td></tr>
+        <tr><td><code>--gr-ui-gap</code></td><td>0.5rem</td><td>Зазор между иконкой и текстом</td></tr>
+        <tr><td><code>--gr-overlay</code></td><td>чёрный, 55 %</td><td>Подложка модалки и ящика (волна 8b)</td></tr>
+        <tr><td><code>--gr-z-dropdown</code></td><td>1000</td><td>Попап выпадающего меню</td></tr>
+        <tr><td><code>--gr-z-modal</code></td><td>1100</td><td>Модальное окно без top layer</td></tr>
+        <tr><td><code>--gr-z-toast</code></td><td>1200</td><td>Всплывающие сообщения</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-table-wrap" tabindex="0" role="region" aria-label="Данные"&gt;
+  &lt;table class="gr-table gr-table-sticky"&gt;…&lt;/table&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    Липкой шапке обязателен собственный фон — иначе сквозь ячейки просвечивают
+    уезжающие строки. Он берётся из <code>--gr-color-bg</code>, поэтому в тёмной
+    теме и в режиме высокого контраста меняется вместе со страницей.
+  </p>
+  <p>
+    <strong>Линию под шапкой рисует внутренняя тень, а не граница.</strong>
+    При <code>border-collapse: collapse</code> границу между ячейками рисует
+    таблица, а не сама ячейка, — и с уехавшей липкой шапкой она не двигается:
+    линия оставалась на исходном месте и пропадала из виду. Тень принадлежит
+    элементу и едет вместе с ним.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

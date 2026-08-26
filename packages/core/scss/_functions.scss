@@ -1,0 +1,235 @@
+// Griffincss — SCSS Functions
+// Разбор layout-строк и утилиты сетки.
+// Правила валидации совпадают с рантаймом (src/griffincss.js).
+
+@use 'sass:string';
+@use 'sass:list';
+@use 'sass:math';
+
+// Границы валидности раскладки — те же, что в рантайме
+$gr-max-repeat: 64;
+$gr-max-name-length: 32;
+$_gr-digits: '0123456789';
+$_gr-letters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// Убирает единицы измерения из числа
+@function gr-strip-unit($value) {
+  @return math.div($value, ($value * 0 + 1));
+}
+
+// Конвертирует px в rem
+@function gr-rem($px, $base: 16) {
+  @return math.div(gr-strip-unit($px), $base) * 1rem;
+}
+
+@function _gr-is-digit($char) {
+  @return $char != '' and string.index($_gr-digits, $char) != null;
+}
+
+@function _gr-to-number($digits) {
+  $result: 0;
+
+  @for $i from 1 through string.length($digits) {
+    $digit: string.index($_gr-digits, string.slice($digits, $i, $i)) - 1;
+    $result: $result * 10 + $digit;
+  }
+
+  @return $result;
+}
+
+// Проверяет имя области; '_' превращается в пустую ячейку
+@function _gr-cell-name($name, $layout) {
+  @if $name == '_' {
+    @return '.';
+  }
+
+  @if string.length($name) > $gr-max-name-length {
+    @error 'Griffincss: area name "#{$name}" in "#{$layout}" is longer than #{$gr-max-name-length} characters';
+  }
+
+  @for $i from 1 through string.length($name) {
+    $char: string.slice($name, $i, $i);
+    $is-letter: string.index($_gr-letters, $char) != null;
+    $is-tail-underscore: $i > 1 and $char == '_';
+
+    @if not ($is-letter or $is-tail-underscore) {
+      @error 'Griffincss: invalid area name "#{$name}" in layout "#{$layout}"';
+    }
+  }
+
+  @return $name;
+}
+
+// Парсит один ряд в список ячеек: "a3b4" → ("a" "a" "a" "b" "b" "b" "b")
+@function gr-parse-segment($segment, $layout: null) {
+  $source: $segment;
+
+  // $layout — контекст для сообщения об ошибке: в нём вся раскладка целиком,
+  // тогда как $segment — только разбираемый ряд. null означает «не передан».
+  @if $layout {
+    $source: $layout;
+  }
+
+  $cells: ();
+  $name: '';
+  $i: 1;
+  $len: string.length($segment);
+
+  @while $i <= $len {
+    $char: string.slice($segment, $i, $i);
+
+    @if _gr-is-digit($char) {
+      $digits: '';
+
+      @while $i <= $len and _gr-is-digit(string.slice($segment, $i, $i)) {
+        $digits: $digits + string.slice($segment, $i, $i);
+        $i: $i + 1;
+      }
+
+      $count: _gr-to-number($digits);
+
+      @if $name == '' {
+        @error 'Griffincss: repeat count "#{$digits}" without an area name in layout "#{$source}"';
+      }
+
+      @if $count == 0 {
+        @error 'Griffincss: zero repeat count for area "#{$name}" in layout "#{$source}"';
+      }
+
+      @if $count > $gr-max-repeat {
+        @error 'Griffincss: repeat count #{$count} in layout "#{$source}" exceeds #{$gr-max-repeat}';
+      }
+
+      $cell: _gr-cell-name($name, $source);
+
+      @for $n from 1 through $count {
+        $cells: list.append($cells, $cell, space);
+      }
+
+      $name: '';
+    } @else {
+      $name: $name + $char;
+      $i: $i + 1;
+    }
+  }
+
+  @if $name != '' {
+    $cells: list.append($cells, _gr-cell-name($name, $source), space);
+  }
+
+  @if list.length($cells) == 0 {
+    @error 'Griffincss: empty row in layout "#{$source}"';
+  }
+
+  @return $cells;
+}
+
+// Разбивает layout-строку по дефисам на список рядов
+@function gr-split-rows($layout) {
+  $segments: ();
+  $current: '';
+  $i: 1;
+  $len: string.length($layout);
+
+  @while $i <= $len {
+    $char: string.slice($layout, $i, $i);
+
+    @if $char == '-' {
+      $segments: list.append($segments, $current, comma);
+      $current: '';
+    } @else {
+      $current: $current + $char;
+    }
+
+    $i: $i + 1;
+  }
+
+  @return list.append($segments, $current, comma);
+}
+
+// layout-строка → список рядов, каждый ряд — список ячеек
+@function gr-parse-layout($layout) {
+  @if not $layout or $layout == '' {
+    @error 'Griffincss: empty layout';
+  }
+
+  $grid: ();
+
+  @each $segment in gr-split-rows($layout) {
+    $grid: list.append($grid, gr-parse-segment($segment, $layout), comma);
+  }
+
+  @return $grid;
+}
+
+// Уникальные имена областей в порядке первого появления
+@function gr-area-names($grid) {
+  $names: ();
+
+  @each $row in $grid {
+    @each $cell in $row {
+      @if $cell != '.' and not list.index($names, $cell) {
+        $names: list.append($names, $cell, comma);
+      }
+    }
+  }
+
+  @return $names;
+}
+
+// Максимальное число колонок по всем рядам
+@function gr-grid-columns($grid) {
+  $max: 0;
+
+  @each $row in $grid {
+    @if list.length($row) > $max {
+      $max: list.length($row);
+    }
+  }
+
+  @if $max > 0 {
+    @return $max;
+  }
+
+  @return 1;
+}
+
+@function gr-grid-rows($grid) {
+  @return list.length($grid);
+}
+
+// Значение grid-template-areas; короткие ряды паддятся точками
+@function gr-grid-areas($grid) {
+  $cols: gr-grid-columns($grid);
+  $result: '';
+
+  @each $row in $grid {
+    $row-str: '';
+
+    @each $cell in $row {
+      @if $row-str == '' {
+        $row-str: $cell;
+      } @else {
+        $row-str: $row-str + ' ' + $cell;
+      }
+    }
+
+    @if list.length($row) < $cols {
+      @for $i from list.length($row) + 1 through $cols {
+        @if $row-str == '' {
+          $row-str: '.';
+        } @else {
+          $row-str: $row-str + ' .';
+        }
+      }
+    }
+
+    @if $result == '' {
+      $result: '"' + $row-str + '"';
+    } @else {
+      $result: $result + ' "' + $row-str + '"';
+    }
+  }
+
+  @return string.unquote($result);
+}

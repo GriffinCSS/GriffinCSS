@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Griffincss — темы</title>
+
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+
+<!-- Синхронно и до содержимого: атрибут темы ставится раньше первой
+     отрисовки, поэтому сохранённая тёмная тема не мигает светлой. -->
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+
+<style>
+  /* Страница-прибор: собственного CSS ровно столько, сколько нужно на
+     раскладку и корпус. Все цвета — семантические токены библиотеки,
+     ни одного литерального значения. */
+
+  body {
+    font-family: var(--gr-font-sans);
+    accent-color: var(--gr-color-accent);
+    caret-color: var(--gr-color-accent);
+    scrollbar-color: hsl(var(--gr-hsl-ink-3)) var(--gr-color-bg);
+  }
+
+  ::selection {
+    background-color: var(--gr-color-accent);
+    color: var(--gr-color-on-accent);
+  }
+
+  :focus-visible {
+    outline: var(--gr-focus-width) solid var(--gr-color-focus);
+    outline-offset: 2px;
+  }
+
+  /* Единственный авторский момент движения: смена темы проходит
+     перекрёстным затуханием цвета, а не рывком. Всё остальное статично. */
+  @media (prefers-reduced-motion: no-preference) {
+    body,
+    .panel,
+    .spec,
+    .card,
+    .btn,
+    .field,
+    .swatch {
+      transition:
+        background-color 0.18s ease-out,
+        border-color 0.18s ease-out,
+        color 0.18s ease-out;
+    }
+
+    .meter-fill {
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+
+  /* --- корпус прибора --- */
+
+  .panel {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--gr-color-surface);
+    border-bottom: var(--gr-border-width) solid var(--gr-color-border-strong);
+  }
+
+  .panel-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gr-gap) var(--gr-gap-lg);
+    padding-block: 0.75rem;
+  }
+
+  .mark {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--gr-color-text);
+    text-decoration: none;
+  }
+
+  .mark:hover {
+    color: var(--gr-color-link);
+  }
+
+  .mark span {
+    color: var(--gr-color-text-muted);
+    font-weight: 400;
+  }
+
+  /* Показания прибора — моноширинные и с табличными цифрами:
+     это данные, а не костюм «под технологию». */
+  .readout {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--gr-gap);
+    font-family: var(--gr-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    color: var(--gr-color-text-muted);
+  }
+
+  .readout b {
+    font-weight: 400;
+    color: var(--gr-color-text);
+  }
+
+  /* --- разделы --- */
+
+  main {
+    padding-block: 2.5rem 5rem;
+  }
+
+  section + section {
+    margin-top: 3.5rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.75rem;
+  }
+
+  h2 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gr-color-text-muted);
+    padding-bottom: 0.5rem;
+    border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  section > p {
+    margin-top: 0.75rem;
+    max-width: 68ch;
+    color: var(--gr-color-text-secondary);
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  /* Строка спецификации: образец, имя токена, замер. */
+  .spec {
+    display: grid;
+    grid-template-columns: 8rem 1fr 5.5rem 7.5rem;
+    align-items: center;
+    gap: var(--gr-gap);
+    padding-block: 0.6rem;
+    border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  .spec:first-of-type {
+    border-top: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  .swatch {
+    height: 2.25rem;
+    border: var(--gr-border-width) solid var(--gr-color-border-strong);
+    border-radius: calc(var(--gr-radius) / 2);
+  }
+
+  .token {
+    font-family: var(--gr-font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .role {
+    display: block;
+    font-family: var(--gr-font-sans);
+    font-size: 0.8125rem;
+    color: var(--gr-color-text-muted);
+  }
+
+  .num {
+    font-family: var(--gr-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    text-align: right;
+    color: var(--gr-color-text-secondary);
+  }
+
+  /* Шкала замера: полоса растёт до 21:1 — предела WCAG. */
+  .meter {
+    height: 0.375rem;
+    background-color: var(--gr-color-surface-sunken);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  /* Шкала растёт трансформацией, а не шириной: ширина заставляет браузер
+     пересчитывать раскладку на каждом кадре. */
+  .meter-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background-color: var(--gr-color-accent);
+  }
+
+  .verdict {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: var(--gr-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+  }
+
+  .verdict[data-level="AAA"],
+  .verdict[data-level="AA"] { color: var(--gr-color-success); }
+  .verdict[data-level="AA·крупный"] { color: var(--gr-color-warning); }
+  .verdict[data-level="мало"] { color: var(--gr-color-danger); }
+
+  /* --- образцы --- */
+
+  .card {
+    /* Грид-элемент не сжимается ниже min-content содержимого: без min-width
+       широкая таблица внутри карточки распирала бы всю страницу вбок. */
+    min-width: 0;
+    background-color: var(--gr-color-surface);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+    border-radius: var(--gr-radius);
+    box-shadow: var(--gr-shadow-md);
+    padding: var(--gr-gap-lg);
+  }
+
+  .btn {
+    font: inherit;
+    padding: 0.5rem 1.1rem;
+    border: var(--gr-border-width) solid transparent;
+    border-radius: var(--gr-radius);
+    background-color: var(--gr-color-accent);
+    color: var(--gr-color-on-accent);
+  }
+
+  .btn:hover { background-color: var(--gr-color-accent-hover); }
+
+  .btn-quiet {
+    background-color: transparent;
+    color: var(--gr-color-text);
+    border-color: var(--gr-color-border-strong);
+  }
+
+  .btn-quiet:hover { background-color: var(--gr-color-surface-raised); }
+
+  .btn:disabled {
+    background-color: var(--gr-color-surface-raised);
+    color: var(--gr-color-text-disabled);
+    border-color: var(--gr-color-border);
+    cursor: not-allowed;
+  }
+
+  .field {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    background-color: var(--gr-color-surface-sunken);
+    color: var(--gr-color-text);
+    border: var(--gr-border-width) solid var(--gr-color-border-strong);
+    border-radius: var(--gr-radius);
+  }
+
+  .field::placeholder { color: var(--gr-color-text-disabled); }
+
+  a { color: var(--gr-color-link); text-decoration: underline; text-underline-offset: 0.15em; }
+  a:hover { color: var(--gr-color-link-hover); }
+  a:visited { color: var(--gr-color-link-visited); }
+
+  /* Таблица уезжает вбок внутри своей обёртки, а не тащит за собой страницу. */
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; font-size: 0.9375rem; }
+
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+  }
+
+  th { color: var(--gr-color-text-muted); font-weight: 600; font-size: 0.8125rem; }
+
+  tbody tr:hover { background-color: var(--gr-color-surface-raised); }
+
+  .status-row { display: flex; flex-wrap: wrap; gap: var(--gr-gap); }
+
+  .status {
+    font-family: var(--gr-font-mono);
+    font-size: 0.8125rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--gr-radius);
+    border: var(--gr-border-width) solid currentcolor;
+  }
+
+  .shadow-row { display: flex; flex-wrap: wrap; gap: var(--gr-gap-lg); }
+
+  .shadow-chip {
+    flex: 1 1 7rem;
+    min-height: 4.5rem;
+    display: grid;
+    place-items: center;
+    background-color: var(--gr-color-surface);
+    border-radius: var(--gr-radius);
+    font-family: var(--gr-font-mono);
+    font-size: 0.75rem;
+    color: var(--gr-color-text-muted);
+  }
+
+  /* Островок с локальной темой: тот же код, другой атрибут на секции. */
+  .island {
+    background-color: var(--gr-color-bg);
+    border: var(--gr-border-width) solid var(--gr-color-border-strong);
+    border-radius: var(--gr-radius);
+    padding: var(--gr-gap-lg);
+    color: var(--gr-color-text);
+  }
+
+  pre {
+    background-color: var(--gr-color-surface-sunken);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+    border-radius: var(--gr-radius);
+    padding: var(--gr-gap);
+    overflow-x: auto;
+    font-family: var(--gr-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  @media (width < 640px) {
+    .spec { grid-template-columns: 4.5rem 1fr; }
+    .spec .num, .spec .measure { grid-column: 2; text-align: left; }
+    .readout { margin-left: 0; }
+
+    /* Диагностика системы и хранилища уходит с узкого экрана: закреплённая
+       панель на четыре строки съедала бы треть экрана ради данных,
+       которые нужны разработчику, а не читателю. */
+    .diag { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="panel">
+  <div class="gr-container panel-inner">
+    <a class="mark" href="index.html">Griffincss <span>/ темы</span></a>
+
+    <fieldset class="gr-segmented" aria-label="Цветовая тема">
+      <label>
+        <input type="radio" name="gr-theme" value="auto" checked>
+        <span>Авто</span>
+      </label>
+      <label>
+        <input type="radio" name="gr-theme" value="light">
+        <span>Светлая</span>
+      </label>
+      <label>
+        <input type="radio" name="gr-theme" value="dark">
+        <span>Тёмная</span>
+      </label>
+    </fieldset>
+
+    <label class="gr-choice">
+      <input class="gr-switch" type="checkbox" id="gr-a11y">
+      Режим для слабовидящих
+    </label>
+
+    <div class="readout">
+      <span>тема <b id="state-theme">—</b></span>
+      <span>действует <b id="state-resolved">—</b></span>
+      <span>доступность <b id="state-a11y">—</b></span>
+      <span class="diag">система <b id="state-system">—</b></span>
+      <span class="diag">хранилище <b id="state-storage">—</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="gr-container">
+
+  <section>
+    <h1>Темы</h1>
+    <h2>Что здесь происходит</h2>
+    <p>
+      Страница ничего не знает о том, какая тема включена. Она написана на
+      семантических токенах — «поверхность», «чернила», «граница», — а тема
+      меняет только их значения. Переключатель ставит один атрибут на
+      <code class="token">&lt;html&gt;</code>, и этого достаточно: цвета
+      пересчитываются каскадом, разметка не трогается.
+    </p>
+    <p>
+      Замеры контраста ниже — не подписи, а показания: скрипт читает
+      вычисленные значения токенов прямо из документа и считает коэффициент
+      по WCAG. Переключите тему — числа пересчитаются.
+    </p>
+  </section>
+
+  <section>
+    <h2>Поверхности</h2>
+    <p>Из чего сделан фон. Замер — контраст основного текста к этой поверхности.</p>
+
+    <div id="surfaces"></div>
+  </section>
+
+  <section>
+    <h2>Чернила</h2>
+    <p>Чем написан текст. Замер — контраст к фону страницы.</p>
+
+    <div id="inks"></div>
+  </section>
+
+  <section>
+    <h2>Акцент и статусы</h2>
+    <p>
+      Литеральные утилиты вроде <code class="token">.gr-bg-primary</code> темой
+      не трогаются — белое обязано остаться белым. Для цвета, живущего по теме,
+      есть эти токены.
+    </p>
+
+    <div class="status-row gr-mt-4">
+      <span class="status" style="color: var(--gr-color-accent)">accent</span>
+      <span class="status" style="color: var(--gr-color-success)">success</span>
+      <span class="status" style="color: var(--gr-color-warning)">warning</span>
+      <span class="status" style="color: var(--gr-color-danger)">danger</span>
+      <span class="status" style="color: var(--gr-color-info)">info</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Образцы</h2>
+    <p>Обычные элементы страницы. Ни одного цвета в разметке.</p>
+
+    <div class="gr-grid gr-grid-2-md gr-gap-lg gr-mt-4">
+      <div class="card">
+        <h3>Карточка</h3>
+        <p class="gr-text-ink-secondary gr-mt-2">
+          Фон — поверхность первой ступени, граница и тень идут за темой:
+          в тёмной теме плотность тени выше, геометрия та же.
+        </p>
+
+        <div class="gr-flex gr-flex-wrap gr-gap gr-mt-4">
+          <button class="btn" type="button">Действие</button>
+          <button class="btn btn-quiet" type="button">Отмена</button>
+          <button class="btn" type="button" disabled>Недоступно</button>
+        </div>
+
+        <p class="gr-mt-4">
+          <a href="#surfaces">Обычная ссылка</a> и
+          <a href="https://gitverse.ru/BarneyScott/GriffinCSS">посещённая после перехода</a>.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Форма</h3>
+
+        <p class="gr-mt-2">
+          <label class="gr-text-ink-muted gr-text-sm" for="demo-field">Поле ввода</label>
+          <input class="field gr-mt-1" id="demo-field" type="text" placeholder="Утопленная поверхность">
+        </p>
+
+        <div class="table-wrap gr-mt-4">
+        <table>
+          <thead>
+            <tr><th>Токен</th><th>Роль</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="token">--gr-color-bg</td><td>фон страницы</td></tr>
+            <tr><td class="token">--gr-color-surface</td><td>карточка</td></tr>
+            <tr><td class="token">--gr-color-border</td><td>разделитель</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="shadow-row gr-mt-6">
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-xs)">xs</div>
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-sm)">sm</div>
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-md)">md</div>
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-lg)">lg</div>
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-xl)">xl</div>
+      <div class="shadow-chip" style="box-shadow: var(--gr-shadow-2xl)">2xl</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Тема на любом элементе</h2>
+    <p>
+      Селекторы темы написаны без привязки к корню, поэтому атрибут работает
+      на любой секции. Эти два острова держат свою тему независимо от
+      переключателя наверху.
+    </p>
+
+    <div class="gr-grid gr-grid-2-md gr-gap-lg gr-mt-4">
+      <div class="island" data-gr-theme="light">
+        <h3>data-gr-theme="light"</h3>
+        <p class="gr-text-ink-secondary gr-mt-2">Светлый остров.</p>
+        <button class="btn gr-mt-4" type="button">Действие</button>
+      </div>
+
+      <div class="island" data-gr-theme="dark">
+        <h3>data-gr-theme="dark"</h3>
+        <p class="gr-text-ink-secondary gr-mt-2">Тёмный остров.</p>
+        <button class="btn gr-mt-4" type="button">Действие</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Подключение</h2>
+
+<pre>&lt;!-- CSS: тема входит в оба пакета, достаточно любого --&gt;
+&lt;link rel="stylesheet" href="griffincss-core.css"&gt;
+
+&lt;!-- JS нужен только для переключателя. Синхронно, в &lt;head&gt;:
+     атрибут ставится до первой отрисовки и страница не мигает --&gt;
+&lt;script src="griffincss-theme.js"&gt;&lt;/script&gt;
+
+Griffincss.theme.set('dark');   // 'light' | 'dark' | 'auto'
+Griffincss.theme.toggle();      // светлая ⇄ тёмная
+Griffincss.theme.a11y(true);    // true | false | 'auto'
+Griffincss.theme.get();         // {theme, resolved, a11y, resolvedA11y}
+
+document.addEventListener('griffincss:themechange', function (e) {
+  console.log(e.detail.resolved);
+});</pre>
+
+    <p class="gr-mt-4">
+      Без JS тема тоже работает: без атрибута страница следует
+      <code class="token">prefers-color-scheme</code>, а режим повышенного
+      контраста — <code class="token">prefers-contrast</code>. Скрипт нужен
+      ровно затем, чтобы дать пользователю выбор и запомнить его.
+    </p>
+  </section>
+
+</main>
+
+<script>
+  (function () {
+    'use strict';
+
+    var theme = window.Griffincss.theme;
+
+    // --- показания прибора ---
+
+    var themeInputs = document.querySelectorAll('input[name="gr-theme"]');
+    var a11yInput = document.getElementById('gr-a11y');
+
+    var cells = {
+      theme: document.getElementById('state-theme'),
+      resolved: document.getElementById('state-resolved'),
+      a11y: document.getElementById('state-a11y'),
+      system: document.getElementById('state-system'),
+      storage: document.getElementById('state-storage')
+    };
+
+    // --- замер контраста по WCAG 2.x ---
+    // Токены хранятся тройками «H, S%, L%», из них собирается sRGB.
+
+    function parseHsl(value) {
+      var parts = value.split(',').map(function (p) { return parseFloat(p); });
+      if (parts.length < 3 || parts.some(isNaN)) return null;
+      return parts;
+    }
+
+    function toRgb(hsl) {
+      var h = hsl[0];
+      var s = hsl[1] / 100;
+      var l = hsl[2] / 100;
+      var a = s * Math.min(l, 1 - l);
+
+      return [0, 8, 4].map(function (n) {
+        var k = (n + h / 30) % 12;
+        return l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+      });
+    }
+
+    function luminance(rgb) {
+      var channels = rgb.map(function (v) {
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+
+      return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    }
+
+    function ratio(a, b) {
+      var la = luminance(toRgb(a));
+      var lb = luminance(toRgb(b));
+      var hi = Math.max(la, lb);
+      var lo = Math.min(la, lb);
+
+      return (hi + 0.05) / (lo + 0.05);
+    }
+
+    function token(name) {
+      return parseHsl(getComputedStyle(document.documentElement).getPropertyValue(name));
+    }
+
+    function verdict(value) {
+      if (value >= 7) return 'AAA';
+      if (value >= 4.5) return 'AA';
+      if (value >= 3) return 'AA·крупный';
+      return 'мало';
+    }
+
+    // --- таблицы шкал ---
+
+    var SURFACES = [
+      ['--gr-hsl-surface-0', 'фон страницы'],
+      ['--gr-hsl-surface-1', 'панель, карточка'],
+      ['--gr-hsl-surface-2', 'приподнятая: кнопка, наведение'],
+      ['--gr-hsl-surface-sunken', 'утопленная: поле, код'],
+      ['--gr-hsl-surface-overlay', 'всплывающая: меню, окно, выдвижная панель']
+    ];
+
+    var INKS = [
+      ['--gr-hsl-ink-0', 'основной текст'],
+      ['--gr-hsl-ink-1', 'вторичный текст'],
+      ['--gr-hsl-ink-2', 'приглушённый, подписи'],
+      ['--gr-hsl-ink-3', 'неактивный, плейсхолдер — не для текста']
+    ];
+
+    // Строка спецификации собирается один раз, дальше только обновляется:
+    // перерисовка списка на каждом переключении сбрасывала бы анимацию шкал.
+    function buildRow(name, role, sample) {
+      var row = document.createElement('div');
+      row.className = 'spec';
+
+      row.innerHTML =
+        sample +
+        '<div><code class="token">' + name + '</code>' +
+        '<span class="role">' + role + '</span></div>' +
+        '<div class="num" data-cell="light">—</div>' +
+        '<div class="measure"><div class="meter"><span class="meter-fill"></span></div>' +
+        '<span class="verdict">—</span></div>';
+
+      return row;
+    }
+
+    function fillRows(host, rows, sampleFor) {
+      rows.forEach(function (item) {
+        host.appendChild(buildRow(item[0], item[1], sampleFor(item[0])));
+      });
+    }
+
+    var surfacesHost = document.getElementById('surfaces');
+    var inksHost = document.getElementById('inks');
+
+    fillRows(surfacesHost, SURFACES, function (name) {
+      return '<div class="swatch" style="background-color: hsl(var(' + name + '))"></div>';
+    });
+
+    fillRows(inksHost, INKS, function (name) {
+      return '<div style="color: hsl(var(' + name + '))">Ёж под ёлкой</div>';
+    });
+
+    // measure(hsl) — чем меряем строку: поверхность меряется основным текстом
+    // к ней, чернила — к фону страницы.
+    function updateRows(host, rows, measure) {
+      var cellsList = host.querySelectorAll('.spec');
+
+      rows.forEach(function (item, i) {
+        var hsl = token(item[0]);
+        var el = cellsList[i];
+        if (!hsl || !el) return;
+
+        var value = measure(hsl);
+        if (!value) return;
+
+        el.querySelector('[data-cell="light"]').textContent = 'L ' + Math.round(hsl[2]) + '%';
+        el.querySelector('.meter-fill').style.transform = 'scaleX(' + Math.min(1, value / 21).toFixed(3) + ')';
+
+        var mark = el.querySelector('.verdict');
+        mark.textContent = value.toFixed(2) + ':1 · ' + verdict(value);
+        mark.setAttribute('data-level', verdict(value));
+      });
+    }
+
+    function render() {
+      var state = theme.get();
+
+      cells.theme.textContent = state.theme;
+      cells.resolved.textContent = state.resolved;
+      cells.a11y.textContent = state.a11y + ' → ' + state.resolvedA11y;
+      cells.system.textContent =
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'тёмная' : 'светлая') +
+        ', контраст ' + (matchMedia('(prefers-contrast: more)').matches ? 'повышенный' : 'обычный');
+
+      try {
+        cells.storage.textContent =
+          (localStorage.getItem('gr-theme') || '—') + ' / ' + (localStorage.getItem('gr-a11y') || '—');
+      } catch (e) {
+        cells.storage.textContent = 'недоступно';
+      }
+
+      for (var i = 0; i < themeInputs.length; i++) {
+        themeInputs[i].checked = themeInputs[i].value === state.theme;
+      }
+
+      a11yInput.checked = state.a11y === 'low-vision';
+
+      // Поверхности меряются к основному тексту, чернила — к фону страницы.
+      var ink0 = token('--gr-hsl-ink-0');
+      var page = token('--gr-hsl-surface-0');
+
+      updateRows(surfacesHost, SURFACES, function (hsl) { return ink0 && ratio(ink0, hsl); });
+      updateRows(inksHost, INKS, function (hsl) { return page && ratio(hsl, page); });
+    }
+
+    for (var i = 0; i < themeInputs.length; i++) {
+      themeInputs[i].addEventListener('change', function () { theme.set(this.value); });
+    }
+
+    a11yInput.addEventListener('change', function () { theme.a11y(this.checked); });
+
+    // Панель обновляется от события, а не от обработчиков: так она показывает
+    // и смену системной настройки, когда выбрано «Авто».
+    document.addEventListener('griffincss:themechange', render);
+    render();
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactivity — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Interactivity</h1>
+  <p>Курсор, приём событий указателя, выделение текста и прокрутка.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_interactivity.scss</span>
+  </div>
+</div>
+
+<h2>Курсор</h2>
+
+<table>
+  <tr><th>Класс</th><th>Когда уместен</th></tr>
+  <tr><td><code>.gr-cursor-pointer</code></td><td>Элемент кликабелен, но не является <code>&lt;button&gt;</code> или <code>&lt;a&gt;</code></td></tr>
+  <tr><td><code>.gr-cursor-default</code></td><td>Вернуть обычную стрелку</td></tr>
+  <tr><td><code>.gr-cursor-text</code></td><td>Область с выделяемым текстом</td></tr>
+  <tr><td><code>.gr-cursor-move</code></td><td>Элемент можно перетаскивать</td></tr>
+  <tr><td><code>.gr-cursor-grab</code>, <code>.gr-cursor-grabbing</code></td><td>Захват до и во время перетаскивания</td></tr>
+  <tr><td><code>.gr-cursor-wait</code>, <code>.gr-cursor-progress</code></td><td>Идёт обработка</td></tr>
+  <tr><td><code>.gr-cursor-help</code></td><td>Есть подсказка</td></tr>
+  <tr><td><code>.gr-cursor-not-allowed</code></td><td>Действие недоступно</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Ресет уже ставит <code>cursor: pointer</code> всем <code>&lt;button&gt;</code>,
+    так что кнопкам этот класс не нужен.
+  </p>
+</div>
+
+<h2>События указателя</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-pointer-events-none</code></td><td><code>pointer-events: none</code> — клики проходят насквозь</td></tr>
+  <tr><td><code>.gr-pointer-events-auto</code></td><td><code>pointer-events: auto</code> — вернуть приём событий</td></tr>
+</table>
+
+<p>
+  Типичная пара: у декоративного слоя поверх контента — <code>none</code>,
+  у кнопки внутри него — <code>auto</code>.
+</p>
+
+<h2>Выделение текста</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-user-select-none</code></td><td><code>user-select: none</code> — не выделяется</td></tr>
+  <tr><td><code>.gr-user-select-all</code></td><td><code>user-select: all</code> — выделяется целиком одним кликом</td></tr>
+  <tr><td><code>.gr-user-select-text</code></td><td><code>user-select: text</code></td></tr>
+  <tr><td><code>.gr-user-select-auto</code></td><td><code>user-select: auto</code></td></tr>
+</table>
+
+<p><code>.gr-user-select-all</code> удобен на коде и токенах, которые копируют целиком:</p>
+
+<pre><code>&lt;code class="gr-user-select-all"&gt;npm i griffincss-core&lt;/code&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Попробуйте выделить</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="tag-demo tag-a gr-user-select-none gr-cursor-not-allowed">gr-user-select-none</div>
+    <div class="tag-demo tag-b gr-user-select-all gr-cursor-pointer">gr-user-select-all — клик выделяет всё</div>
+  </div>
+</div>
+
+<h2>Прокрутка</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-scroll-smooth</code></td><td><code>scroll-behavior: smooth</code></td></tr>
+  <tr><td><code>.gr-scroll-auto</code></td><td><code>scroll-behavior: auto</code></td></tr>
+</table>
+
+<div class="callout callout-success">
+  <p>
+    <code>.gr-scroll-smooth</code> объявлен внутри
+    <code>@media (prefers-reduced-motion: no-preference)</code>: у тех, кто
+    отключил анимацию в системе, прокрутка остаётся мгновенной. Ресет
+    поступает так же с <code>html</code>.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

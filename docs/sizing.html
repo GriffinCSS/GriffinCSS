@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sizing — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Sizing</h1>
+  <p>Ширина, высота и ограничители min/max. Дробные ширины, единицы вьюпорта и адаптивные варианты.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_sizing.scss</span>
+  </div>
+</div>
+
+<h2>Ширина</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-w-full</code></td><td><code>width: 100%</code></td><td>Вся ширина родителя</td></tr>
+  <tr><td><code>.gr-w-screen</code></td><td><code>width: 100svw</code></td><td>Вся ширина окна без полосы прокрутки</td></tr>
+  <tr><td><code>.gr-w-auto</code></td><td><code>width: auto</code></td><td>Ширина по умолчанию</td></tr>
+  <tr><td><code>.gr-w-fit</code></td><td><code>width: fit-content</code></td><td>По содержимому, но не шире родителя</td></tr>
+  <tr><td><code>.gr-w-min</code></td><td><code>width: min-content</code></td><td>Минимально возможная</td></tr>
+  <tr><td><code>.gr-w-max</code></td><td><code>width: max-content</code></td><td>По содержимому без переносов</td></tr>
+  <tr><td><code>.gr-w-1/2</code></td><td><code>width: 50%</code></td><td>Половина</td></tr>
+  <tr><td><code>.gr-w-1/3</code>, <code>.gr-w-2/3</code></td><td><code>33.3333%</code>, <code>66.6667%</code></td><td>Треть и две трети</td></tr>
+  <tr><td><code>.gr-w-1/4</code>, <code>.gr-w-3/4</code></td><td><code>25%</code>, <code>75%</code></td><td>Четверть и три четверти</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Слэш в дробных классах пишется в разметке как есть — <code>class="gr-w-1/2"</code>.
+    Экранирование (<code>.gr-w-1\/2</code>) нужно только внутри CSS-селектора, и его
+    берёт на себя сборка.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Дробные ширины</div>
+  <div class="gr-flex gr-flex-wrap" style="gap:0.5rem 0;">
+    <div class="tag-demo tag-a gr-w-full">gr-w-full</div>
+    <div class="tag-demo tag-b gr-w-1/2">gr-w-1/2</div>
+    <div class="tag-demo tag-c gr-w-1/2">gr-w-1/2</div>
+    <div class="tag-demo tag-a gr-w-1/3">gr-w-1/3</div>
+    <div class="tag-demo tag-b gr-w-2/3">gr-w-2/3</div>
+  </div>
+</div>
+
+<h2>Высота</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-h-full</code></td><td><code>height: 100%</code></td></tr>
+  <tr><td><code>.gr-h-screen</code></td><td><code>height: 100svh</code></td></tr>
+  <tr><td><code>.gr-h-auto</code></td><td><code>height: auto</code></td></tr>
+  <tr><td><code>.gr-h-fit</code></td><td><code>height: fit-content</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Единицы вьюпорта здесь малые — <code>svw</code> и <code>svh</code>. Они считают
+    окно так, будто панели мобильного браузера раскрыты, поэтому блок не меняет
+    высоту при прокрутке, а <code>.gr-w-screen</code> не вызывает горизонтальную
+    прокрутку из-за ширины полосы прокрутки — в отличие от <code>100vw</code>.
+  </p>
+</div>
+
+<h2>Ограничители</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th><th>Когда нужен</th></tr>
+  <tr><td><code>.gr-min-w-0</code></td><td><code>min-width: 0</code></td><td>Снимает минимум flex-элемента — без него длинный текст растягивает колонку</td></tr>
+  <tr><td><code>.gr-min-w-full</code></td><td><code>min-width: 100%</code></td><td>Не уже родителя</td></tr>
+  <tr><td><code>.gr-min-h-0</code></td><td><code>min-height: 0</code></td><td>То же для вертикали в grid и flex</td></tr>
+  <tr><td><code>.gr-min-h-full</code></td><td><code>min-height: 100%</code></td><td>Не ниже родителя</td></tr>
+  <tr><td><code>.gr-min-h-screen</code></td><td><code>min-height: 100svh</code></td><td>Экран целиком — типичная обёртка страницы</td></tr>
+  <tr><td><code>.gr-max-w-none</code></td><td><code>max-width: none</code></td><td>Снять ограничение</td></tr>
+  <tr><td><code>.gr-max-w-full</code></td><td><code>max-width: 100%</code></td><td>Не шире родителя</td></tr>
+  <tr><td><code>.gr-max-w-page</code></td><td><code>max-width: var(--gr-max-width)</code></td><td>Ширина контента, та же, что у <code>.gr-container</code></td></tr>
+  <tr><td><code>.gr-max-h-full</code></td><td><code>max-height: 100%</code></td><td>Не выше родителя</td></tr>
+  <tr><td><code>.gr-max-h-screen</code></td><td><code>max-height: 100svh</code></td><td>Не выше экрана — вместе с <code>.gr-overflow-y-auto</code> даёт прокручиваемую панель</td></tr>
+</table>
+
+<h2>Адаптивные варианты</h2>
+
+<p>
+  Суффикс брейкпоинта есть у <code>width</code> и <code>height</code>:
+  <code>.gr-w-full</code> → <code>.gr-w-full-md</code>. Ограничители
+  <code>min-*</code> и <code>max-*</code> адаптивных вариантов не имеют — они
+  задают рамку, одинаковую на всех ширинах, а меняют размер внутри неё
+  сами <code>width</code> и <code>height</code>.
+</p>
+
+<pre><code>&lt;!-- на мобильном во всю ширину, от 768px — половина --&gt;
+&lt;div class="gr-w-full gr-w-1/2-md"&gt;…&lt;/div&gt;</code></pre>
+
+<h2>Практический пример</h2>
+
+<h3>Прокручиваемая боковая панель</h3>
+
+<pre><code>&lt;aside class="gr-max-h-screen gr-overflow-y-auto gr-w-full gr-w-1/4-lg"&gt;
+  …длинный список…
+&lt;/aside&gt;</code></pre>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

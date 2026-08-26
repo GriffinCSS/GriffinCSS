@@ -1,0 +1,135 @@
+// Griffincss — Minimal CSS Reset
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+// Плавная прокрутка — только тем, кто не просил уменьшить анимацию.
+// Безусловный scroll-behavior вызывает укачивание и головокружение
+// у части пользователей.
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+// Фон и текст документа берутся из токенов темы: без этого переключатель
+// меняет цвет утилит, но не самой страницы. Фолбэки на системные Canvas /
+// CanvasText держат случай, когда ресет подключён без токенов — вместе
+// с color-scheme они дают верный результат сами по себе.
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--gr-color-bg, Canvas);
+  color: var(--gr-color-text, CanvasText);
+  line-height: var(--gr-leading-base, 1.5);
+  letter-spacing: var(--gr-tracking-base, normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+// Маркеры снимаются только со списков, размеченных как список явно.
+// Безусловный list-style: none лишает <ul> роли списка в VoiceOver, а вместе
+// с ней — озвучки «список из N элементов». Разметка сама говорит, что это
+// список-навигация: role="list" оставляет роль, но убирает оформление.
+// Обычному <ul> в тексте маркеры и отступ возвращаются.
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+[hidden] {
+  display: none;
+}
+
+// Печать. Ресет — opt-in, поэтому блок никому не навязывается: не подключили
+// griffincss-reset.css — ничего из этого на печать не поедет.
+@media print {
+  // Тема и бумага — разные среды. Фоны браузер по умолчанию не печатает,
+  // и светлый текст тёмной темы исчез бы на белом листе. Значения здесь
+  // намеренно буквальные: смысл блока в том, чтобы выйти из темы,
+  // а не сменить её на другую.
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  // Свёрнутый <details> на бумаге — потерянный текст: раскрыть его читатель
+  // уже не сможет. Браузеры прячут содержимое через content-visibility,
+  // поэтому возвращает его именно это свойство, а не display. Селектор
+  // ::details-content понимают не все — там правило просто отбрасывается
+  // как невалидное, и раздел печатается свёрнутым, как раньше.
+  details::details-content {
+    content-visibility: visible;
+  }
+
+  // Заголовок не остаётся один в конце страницы, а таблица, картинка
+  // и блок кода не разрываются посередине.
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    break-after: avoid;
+  }
+
+  blockquote,
+  figure,
+  img,
+  pre,
+  table {
+    break-inside: avoid;
+  }
+
+  // Одна строка абзаца, оторванная от остальных, читается как обрывок.
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+}

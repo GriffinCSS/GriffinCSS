@@ -1,0 +1,150 @@
+// Griffincss UI — Menu
+// Список действий: то, что видно внутри выпадающего меню, контекстного меню
+// или боковой панели. Собственного раскрытия у модуля нет — его даёт
+// .gr-dropdown; здесь только оформление списка.
+//
+// Пункт — <button> или <a>. Выбор между ними решает, что произойдёт: ссылка
+// ведёт по адресу, кнопка выполняет действие на месте. Оформление у них
+// общее, поэтому кнопке здесь возвращают то, что забрал браузер: шрифт,
+// выравнивание по началу строки и полную ширину.
+
+.gr-menu {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  min-inline-size: 11rem;
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface-overlay);
+  color: var(--gr-color-text);
+  box-shadow: var(--gr-shadow-lg);
+  list-style: none;
+}
+
+// Меню на <ul>: обёртки <li> не должны добавлять ни отступов, ни маркеров,
+// а пункт внутри — растягиваться на всю ширину строки.
+//
+// Селектор обёрнут в :where() ради нулевой специфичности: иначе правило
+// «.gr-menu > li» (0,1,1) перебивало бы .gr-menu-header и .gr-menu-sep
+// (0,1,0), поставленные на сам <li>, — заголовок группы терял отступы,
+// а разделитель превращался в линию во всю ширину без полей.
+.gr-menu > :where(li) {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-menu > :where(li) > :where(*) {
+  flex: 1 1 auto;
+}
+
+.gr-menu-item {
+  --gr-menu-fg: var(--gr-color-text);
+
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--gr-ui-gap);
+  inline-size: 100%;
+  min-block-size: var(--gr-control-height-sm);
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  border: 0;
+  background-color: transparent;
+  color: var(--gr-menu-fg);
+  font-family: inherit;
+  font-size: var(--gr-control-font-size);
+  line-height: 1.3;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gr-menu-item:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: color-mix(in srgb, currentcolor 10%, transparent);
+  }
+}
+
+// Контур внутренний: пункт лежит вплотную к краю меню, и обычный outline
+// с отступом срезался бы скруглением обёртки.
+.gr-menu-item:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: calc(-1 * var(--gr-focus-width));
+}
+
+.gr-menu-item:disabled,
+.gr-menu-item[aria-disabled="true"] {
+  --gr-menu-fg: var(--gr-color-text-disabled);
+
+  cursor: not-allowed;
+}
+
+// Выбранный пункт: aria-checked для переключателей меню, aria-current —
+// для пункта, ведущего на текущую страницу.
+.gr-menu-item[aria-checked="true"],
+.gr-menu-item[aria-current] {
+  --gr-menu-fg: var(--gr-color-accent);
+
+  background-color: color-mix(in srgb, var(--gr-color-accent) 12%, transparent);
+  font-weight: 600;
+}
+
+// Опасное действие — удаление и подобное. Красный цвет здесь не единственный
+// признак: такой пункт стоит последним, за разделителем, и назван глаголом.
+.gr-menu-danger {
+  --gr-menu-fg: var(--gr-color-danger);
+}
+
+@media (hover: hover) {
+  .gr-menu-danger:hover:not(:disabled, [aria-disabled="true"]) {
+    background-color: color-mix(in srgb, var(--gr-color-danger) 12%, transparent);
+  }
+}
+
+// --- Части меню -------------------------------------------------------------
+
+// Заголовок группы. Не кнопка и не ссылка: текст, объясняющий, что за
+// пункты идут ниже.
+.gr-menu-header {
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  color: var(--gr-color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+// Разделитель. На <hr> — собственная граница элемента снимается, линию
+// рисует border-block-start, поэтому толщина следует токену.
+.gr-menu-sep {
+  block-size: 0;
+  margin-block: calc(var(--gr-ui-gap) * 0.5);
+  margin-inline: 0;
+  border: 0;
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// Слот под иконку и под сочетание клавиш. Иконка стоит в начале строки,
+// подсказка — в конце: сдвинуть её туда достаточно одному правилу,
+// потому что пункт — flex.
+.gr-menu-icon {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  text-align: center;
+}
+
+.gr-menu-shortcut {
+  margin-inline-start: auto;
+  padding-inline-start: var(--gr-ui-gap);
+  color: var(--gr-color-text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

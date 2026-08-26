@@ -1,0 +1,38 @@
+// Griffincss Utils — утилитарные классы
+// Отступы, типографика, цвета, размеры, границы, позиционирование,
+// тени, эффекты, интерактивность и переходы.
+//
+// Надстройка над griffincss-core: токены и карта брейкпоинтов берутся оттуда
+// (peer-зависимость), поэтому источник у них один на оба пакета. Собранный
+// griffincss-utils.css при этом самодостаточен — :root входит в него целиком,
+// подключать griffincss-core.css не требуется.
+//
+// Верхний слой библиотеки: утилиты выигрывают у ресета и сетки,
+// но проигрывают пользовательскому CSS вне слоёв.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод пакета — в слое griffincss.utils.
+@layer griffincss.utils {
+  @include meta.load-css('griffincss-core/scss/tokens');
+
+  // Тема подключается и здесь, а не только в ядре: слой
+  // griffincss.utils старше griffincss.core, поэтому переопределения темы,
+  // приехавшие только с griffincss-core.css, проиграли бы базовому :root
+  // из этой сборки — независимо от специфичности селектора.
+  @include meta.load-css('griffincss-core/scss/theme');
+  @include meta.load-css('keyframes');
+  @include meta.load-css('animations');
+  @include meta.load-css('border-radius');
+  @include meta.load-css('borders');
+  @include meta.load-css('colors');
+  @include meta.load-css('effects');
+  @include meta.load-css('interactivity');
+  @include meta.load-css('position');
+  @include meta.load-css('shadows');
+  @include meta.load-css('sizing');
+  @include meta.load-css('spacing');
+  @include meta.load-css('typography');
+  @include meta.load-css('visibility');
+}

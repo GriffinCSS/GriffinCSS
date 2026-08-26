@@ -1,0 +1,231 @@
+// Griffincss — Значения тем
+// Только миксины, ни одного правила: подключаются из _tokens.scss (светлая
+// как база :root) и из _theme.scss (блоки селекторов).
+//
+// Тема меняет исключительно HSL-триплеты семантической шкалы. Резолвленные
+// --gr-color-* объявлены один раз в :root: подстановка var() считается на
+// каждом элементе заново, поэтому вложенная секция с другой темой
+// пересчитывает их сама, без дублирования.
+//
+// Литеральная палитра (--gr-hsl-gray-*, --gr-hsl-primary и прочие) темой
+// не трогается: .gr-bg-white обязан оставаться белым в любой теме.
+//
+// Якоря --gr-hsl-*-max задают «куда двигаться» контрастному режиму. Благодаря
+// им блок контраста пишется один раз и работает поверх любой темы: он ссылается
+// на якоря, а какие они — решает действующая на этом элементе тема.
+
+// Резолвленные семантические цвета. Отдельным миксином, потому что
+// подключаются не только к :root: см. комментарий в _theme.scss.
+@mixin gr-semantic-colors {
+  --gr-color-bg: hsl(var(--gr-hsl-surface-0));
+  --gr-color-surface: hsl(var(--gr-hsl-surface-1));
+  --gr-color-surface-raised: hsl(var(--gr-hsl-surface-2));
+
+  // Поверхность всплывающего слоя — меню, окна, выдвижной панели. Отдельный
+  // токен, потому что «выше страницы» в двух темах означает разное: в светлой
+  // это белый лист, самый светлый цвет шкалы, в тёмной — наоборот, серый
+  // светлее фона. Одной ступенью surface-raised обе темы не покрываются:
+  // в светлой она темнее страницы и всплывающая панель выглядит грязной.
+  --gr-color-surface-overlay: hsl(var(--gr-hsl-surface-overlay));
+  --gr-color-surface-sunken: hsl(var(--gr-hsl-surface-sunken));
+  --gr-color-text: hsl(var(--gr-hsl-ink-0));
+  --gr-color-text-secondary: hsl(var(--gr-hsl-ink-1));
+  --gr-color-text-muted: hsl(var(--gr-hsl-ink-2));
+  --gr-color-text-disabled: hsl(var(--gr-hsl-ink-3));
+  --gr-color-border: hsl(var(--gr-hsl-border));
+  --gr-color-border-strong: hsl(var(--gr-hsl-border-strong));
+  --gr-color-accent: hsl(var(--gr-hsl-accent));
+  --gr-color-accent-hover: hsl(var(--gr-hsl-accent-hover));
+  --gr-color-on-accent: hsl(var(--gr-hsl-on-accent));
+  --gr-color-link: hsl(var(--gr-hsl-link));
+  --gr-color-link-hover: hsl(var(--gr-hsl-link-hover));
+  --gr-color-link-visited: hsl(var(--gr-hsl-link-visited));
+  --gr-color-focus: hsl(var(--gr-hsl-focus));
+
+  // У каждого статуса три роли, а не одна: цвет ТЕКСТА, цвет ЗАЛИВКИ и цвет
+  // чернил НА этой заливке. В светлой теме текстовый обязан быть тёмным, иначе
+  // не читается на белом; заливка при этом может быть какой угодно светлоты,
+  // лишь бы чернила на ней читались.
+  //
+  // Раньше пара была только у предупреждения — потому что тёмно-коричневый
+  // прямоугольник читается как «оливковый», а не как «внимание». Остальные три
+  // брали заливку из текстового токена, а чернила — из --gr-color-on-accent,
+  // общего на все статусы. Эта асимметрия и ломалась, как только стиль
+  // оформления перекрашивал акцент: чернила акцента уезжали на зелёную
+  // и красную кнопки. Теперь модель одна на все четыре статуса, и базовый
+  // вид от этого не изменился — значения подобраны так, чтобы совпасть
+  // с прежними.
+  --gr-color-success: hsl(var(--gr-hsl-status-success));
+  --gr-color-success-surface: hsl(var(--gr-hsl-status-success-surface));
+  --gr-color-on-success: hsl(var(--gr-hsl-on-status-success));
+  --gr-color-warning: hsl(var(--gr-hsl-status-warning));
+  --gr-color-warning-surface: hsl(var(--gr-hsl-status-warning-surface));
+  --gr-color-on-warning: hsl(var(--gr-hsl-on-status-warning));
+  --gr-color-danger: hsl(var(--gr-hsl-status-danger));
+  --gr-color-danger-surface: hsl(var(--gr-hsl-status-danger-surface));
+  --gr-color-on-danger: hsl(var(--gr-hsl-on-status-danger));
+  --gr-color-info: hsl(var(--gr-hsl-status-info));
+  --gr-color-info-surface: hsl(var(--gr-hsl-status-info-surface));
+  --gr-color-on-info: hsl(var(--gr-hsl-on-status-info));
+}
+
+@mixin gr-theme-light {
+  color-scheme: light;
+
+  // Поверхности: страница, карточка, приподнятая, утопленная
+  --gr-hsl-surface-0: 0, 0%, 100%;
+  --gr-hsl-surface-1: 0, 0%, 96%;
+  --gr-hsl-surface-2: 0, 0%, 89%;
+  --gr-hsl-surface-sunken: 0, 0%, 92%;
+  --gr-hsl-surface-overlay: 0, 0%, 100%;
+
+  // Чернила: основной, вторичный, приглушённый, неактивный
+  --gr-hsl-ink-0: 0, 0%, 5%;
+  --gr-hsl-ink-1: 0, 0%, 29%;
+  --gr-hsl-ink-2: 0, 0%, 40%;
+  --gr-hsl-ink-3: 0, 0%, 50%;
+
+  // Линии
+  --gr-hsl-border: 0, 0%, 82%;
+  --gr-hsl-border-strong: 0, 0%, 52%;
+
+  // Акцент, ссылки, фокус
+  --gr-hsl-accent: 220, 80%, 45%;
+  --gr-hsl-accent-hover: 220, 80%, 36%;
+  --gr-hsl-on-accent: 0, 0%, 100%;
+  --gr-hsl-link: 220, 80%, 45%;
+  --gr-hsl-link-hover: 220, 80%, 36%;
+  --gr-hsl-link-visited: 292, 60%, 40%;
+  --gr-hsl-focus: 220, 90%, 45%;
+
+  // Статусы — значения, безопасные для текста
+  --gr-hsl-status-success: 148, 70%, 26%;
+  --gr-hsl-status-success-surface: 148, 70%, 26%;
+  --gr-hsl-on-status-success: 0, 0%, 100%;
+  --gr-hsl-status-warning: 36, 90%, 30%;
+  --gr-hsl-status-warning-surface: 36, 92%, 52%;
+  --gr-hsl-on-status-warning: 36, 100%, 12%;
+  --gr-hsl-status-danger: 4, 80%, 42%;
+  --gr-hsl-status-danger-surface: 4, 80%, 42%;
+  --gr-hsl-on-status-danger: 0, 0%, 100%;
+  --gr-hsl-status-info: 292, 60%, 40%;
+  --gr-hsl-status-info-surface: 292, 60%, 40%;
+  --gr-hsl-on-status-info: 0, 0%, 100%;
+
+  // Якоря контрастного режима
+  --gr-hsl-ink-max: 0, 0%, 0%;
+  --gr-hsl-ink-strong: 0, 0%, 15%;
+  --gr-hsl-ink-mid: 0, 0%, 30%;
+  --gr-hsl-surface-max: 0, 0%, 100%;
+  --gr-hsl-surface-near: 0, 0%, 96%;
+  --gr-hsl-accent-max: 220, 100%, 35%;
+  --gr-hsl-accent-max-hover: 220, 100%, 25%;
+  --gr-hsl-visited-max: 292, 80%, 30%;
+
+  // Плотность теней
+  --gr-shadow-strength: 1;
+}
+
+@mixin gr-theme-dark {
+  color-scheme: dark;
+
+  // Поверхности: страница, карточка, приподнятая, утопленная
+  --gr-hsl-surface-0: 0, 0%, 7%;
+  --gr-hsl-surface-1: 0, 0%, 11%;
+  --gr-hsl-surface-2: 0, 0%, 16%;
+  --gr-hsl-surface-sunken: 0, 0%, 4%;
+  --gr-hsl-surface-overlay: 0, 0%, 16%;
+
+  // Чернила: основной, вторичный, приглушённый, неактивный
+  --gr-hsl-ink-0: 0, 0%, 96%;
+  --gr-hsl-ink-1: 0, 0%, 78%;
+  --gr-hsl-ink-2: 0, 0%, 62%;
+  --gr-hsl-ink-3: 0, 0%, 50%;
+
+  // Линии
+  --gr-hsl-border: 0, 0%, 22%;
+  --gr-hsl-border-strong: 0, 0%, 45%;
+
+  // Акцент, ссылки, фокус
+  --gr-hsl-accent: 220, 85%, 68%;
+  --gr-hsl-accent-hover: 220, 85%, 78%;
+  --gr-hsl-on-accent: 0, 0%, 7%;
+  --gr-hsl-link: 220, 85%, 68%;
+  --gr-hsl-link-hover: 220, 85%, 78%;
+  --gr-hsl-link-visited: 292, 60%, 72%;
+  --gr-hsl-focus: 220, 90%, 70%;
+
+  // Статусы — значения, безопасные для текста
+  --gr-hsl-status-success: 148, 55%, 60%;
+  --gr-hsl-status-success-surface: 148, 55%, 60%;
+  --gr-hsl-on-status-success: 0, 0%, 7%;
+  --gr-hsl-status-warning: 36, 85%, 60%;
+  --gr-hsl-status-warning-surface: 36, 85%, 60%;
+  --gr-hsl-on-status-warning: 36, 100%, 10%;
+  --gr-hsl-status-danger: 4, 85%, 66%;
+  --gr-hsl-status-danger-surface: 4, 85%, 66%;
+  --gr-hsl-on-status-danger: 0, 0%, 7%;
+  --gr-hsl-status-info: 292, 60%, 72%;
+  --gr-hsl-status-info-surface: 292, 60%, 72%;
+  --gr-hsl-on-status-info: 0, 0%, 7%;
+
+  // Якоря контрастного режима — зеркальные светлым
+  --gr-hsl-ink-max: 0, 0%, 100%;
+  --gr-hsl-ink-strong: 0, 0%, 88%;
+  --gr-hsl-ink-mid: 0, 0%, 75%;
+  --gr-hsl-surface-max: 0, 0%, 0%;
+  --gr-hsl-surface-near: 0, 0%, 8%;
+  --gr-hsl-accent-max: 220, 100%, 80%;
+  --gr-hsl-accent-max-hover: 220, 100%, 90%;
+  --gr-hsl-visited-max: 292, 80%, 85%;
+
+  // Тень на тёмном фоне почти не видна: геометрия та же, плотность выше.
+  --gr-shadow-strength: 2.6;
+}
+
+// Контраст. Ни одного абсолютного значения — только якоря, которые задаёт
+// действующая тема. Поэтому блок пишется один раз и работает поверх любой:
+// подстановка var() считается на элементе, где стоит атрибут, а якоря туда
+// приходят по наследованию от темы.
+@mixin gr-a11y-contrast {
+  // Поверхности уходят к краю шкалы
+  --gr-hsl-surface-0: var(--gr-hsl-surface-max);
+  --gr-hsl-surface-1: var(--gr-hsl-surface-max);
+  --gr-hsl-surface-2: var(--gr-hsl-surface-near);
+  --gr-hsl-surface-sunken: var(--gr-hsl-surface-near);
+  --gr-hsl-surface-overlay: var(--gr-hsl-surface-max);
+
+  // Чернила — к противоположному краю
+  --gr-hsl-ink-0: var(--gr-hsl-ink-max);
+  --gr-hsl-ink-1: var(--gr-hsl-ink-max);
+  --gr-hsl-ink-2: var(--gr-hsl-ink-strong);
+  --gr-hsl-ink-3: var(--gr-hsl-ink-mid);
+
+  // Линии видимы, а не намечены
+  --gr-hsl-border: var(--gr-hsl-ink-mid);
+  --gr-hsl-border-strong: var(--gr-hsl-ink-max);
+
+  // Акцент и ссылки — до 7:1
+  --gr-hsl-accent: var(--gr-hsl-accent-max);
+  --gr-hsl-accent-hover: var(--gr-hsl-accent-max-hover);
+  --gr-hsl-link: var(--gr-hsl-accent-max);
+  --gr-hsl-link-hover: var(--gr-hsl-accent-max-hover);
+  --gr-hsl-link-visited: var(--gr-hsl-visited-max);
+  --gr-hsl-focus: var(--gr-hsl-ink-max);
+
+  // Толщины
+  --gr-border-width: 2px;
+  --gr-focus-width: 3px;
+}
+
+// Типографика режима для слабовидящих. Масштаб — в процентах от родителя,
+// а не в rem или px: процент считается от кегля, который пользователь выбрал
+// в настройках браузера, поэтому режим складывается с этой настройкой,
+// а не отменяет её. Вся шкала спейсинга и кегли заданы в rem, поэтому
+// страница растёт целиком и пропорционально.
+@mixin gr-a11y-typography {
+  font-size: calc(100% * var(--gr-a11y-scale, 1.25));
+
+  --gr-leading-base: 1.7;
+  --gr-tracking-base: 0.02em;
+}

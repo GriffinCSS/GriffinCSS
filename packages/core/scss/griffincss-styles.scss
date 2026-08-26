@@ -1,0 +1,22 @@
+// Griffincss Styles — стратегии оформления
+// Три нестандартных стиля оси data-gr-style: airy, strict, compact.
+// Стандартный стиль отдельного файла не требует — он и есть базовые
+// значения :root из griffincss-core.css.
+//
+// Подключается в дополнение к любой сборке библиотеки:
+//   <link rel="stylesheet" href="griffincss-core.css">
+//   <link rel="stylesheet" href="griffincss-styles.css">
+//
+// Состав файла настраивается списком:
+//   @use 'griffincss-core/scss/style-config' with ($gr-styles: (strict));
+//
+// Слой griffincss.style — последний, старший из библиотечных. Иначе никак:
+// griffincss-ui.css и griffincss-utils.css кладут собственный :root в свои
+// слои, а слой перебивает любую специфичность.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+@layer griffincss.style {
+  @include meta.load-css('styles');
+}

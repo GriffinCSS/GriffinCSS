@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.log
+
+# карты кода рантаймов: собираются terser, в репозиторий не идут
+packages/*/dist/*.js.map

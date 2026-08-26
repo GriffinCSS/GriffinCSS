@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Слои поверх страницы — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Слои поверх страницы</h1>
+  <p>Выпадающая панель, меню, модальное окно, выдвижная панель и подсказка. Верхний слой, фокус, Esc и закрытие по клику мимо — всё от платформы.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">griffincss-ui</span>
+    <span class="badge">_dropdown.scss</span>
+    <span class="badge">_menu.scss</span>
+    <span class="badge">_modal.scss</span>
+    <span class="badge">_drawer.scss</span>
+    <span class="badge">_tooltip.scss</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Ни один из пяти модулей не требует библиотечного JS.</strong>
+    <code>&lt;details&gt;</code> раскрывает панель, <code>&lt;dialog&gt;</code>
+    держит фокус внутри окна и закрывается по <kbd>Esc</kbd>, Popover API
+    закрывает панель по клику мимо, а подсказка появляется по
+    <code>:hover</code> и <code>:focus-within</code> чистым CSS. Скрипт нужен
+    ровно на одно: вызвать <code>showModal()</code> — это одна строка
+    в разметке.
+  </p>
+  <p>
+    Единственное исключение — закрытие окна щелчком по подложке: этого
+    <code>&lt;dialog&gt;</code> не умеет, и его добавляет опциональный
+    <code>griffincss-ui.js</code>. Он подключён на этой странице, включается
+    атрибутом на самом окне и весит 0,8 КБ gzip без комментариев (файл
+    не минифицируется — как и рантайм ядра).
+  </p>
+</div>
+
+<h2>Выпадающая панель и меню</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-dropdown</code></td><td>Обёртка: <code>&lt;div&gt;</code> с попапом или сам <code>&lt;details&gt;</code></td></tr>
+  <tr><td><code>.gr-dropdown-panel</code></td><td>Панель; внутрь кладут <code>.gr-menu</code> или что угодно ещё</td></tr>
+  <tr><td><code>.gr-dropdown-end</code> / <code>-up</code></td><td>Раскрытие к концу строки и вверх</td></tr>
+  <tr><td><code>.gr-dropdown-hover</code></td><td>Раскрытие по наведению; с клавиатуры и на сенсорном экране — по фокусу</td></tr>
+  <tr><td><code>.gr-menu</code></td><td>Список действий: поверхность, рамка, тень</td></tr>
+  <tr><td><code>.gr-menu-item</code></td><td>Пункт — <code>&lt;button&gt;</code> или <code>&lt;a&gt;</code></td></tr>
+  <tr><td><code>.gr-menu-header</code> / <code>.gr-menu-sep</code></td><td>Заголовок группы и разделитель на <code>&lt;hr&gt;</code></td></tr>
+  <tr><td><code>.gr-menu-danger</code></td><td>Опасное действие</td></tr>
+  <tr><td><code>.gr-menu-icon</code> / <code>.gr-menu-shortcut</code></td><td>Слоты под иконку и сочетание клавиш</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">На <code>&lt;details&gt;</code> — работает везде</div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <details class="gr-dropdown">
+      <summary class="gr-btn">Действия</summary>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><div class="gr-menu-header">Документ</div></li>
+          <li><button class="gr-menu-item" type="button"><span class="gr-menu-icon" aria-hidden="true">✎</span>Переименовать<span class="gr-menu-shortcut">F2</span></button></li>
+          <li><button class="gr-menu-item" type="button"><span class="gr-menu-icon" aria-hidden="true">⧉</span>Дублировать<span class="gr-menu-shortcut">Ctrl D</span></button></li>
+          <li><hr class="gr-menu-sep"></li>
+          <li><button class="gr-menu-item gr-menu-danger" type="button"><span class="gr-menu-icon" aria-hidden="true">✕</span>Удалить</button></li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="gr-dropdown gr-dropdown-end">
+      <summary class="gr-btn gr-btn-secondary">К концу строки</summary>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><a class="gr-menu-item" href="#" aria-current="page">Открытый</a></li>
+          <li><a class="gr-menu-item" href="#">Обычный</a></li>
+          <li><span class="gr-menu-item" aria-disabled="true">Недоступный</span></li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<pre><code>&lt;details class="gr-dropdown"&gt;
+  &lt;summary class="gr-btn"&gt;Действия&lt;/summary&gt;
+  &lt;div class="gr-dropdown-panel"&gt;
+    &lt;ul class="gr-menu"&gt;
+      &lt;li&gt;&lt;button class="gr-menu-item" type="button"&gt;Переименовать&lt;/button&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;hr class="gr-menu-sep"&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;button class="gr-menu-item gr-menu-danger" type="button"&gt;Удалить&lt;/button&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/details&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">На Popover API — закрывается по <kbd>Esc</kbd> и по клику мимо</div>
+  <div class="gr-dropdown">
+    <button class="gr-btn gr-btn-primary" type="button" popovertarget="menu-popover">Экспорт</button>
+    <div class="gr-dropdown-panel" id="menu-popover" popover>
+      <ul class="gr-menu">
+        <li><button class="gr-menu-item" type="button">PDF</button></li>
+        <li><button class="gr-menu-item" type="button">CSV</button></li>
+        <li><button class="gr-menu-item" type="button" aria-checked="true">PNG</button></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-dropdown"&gt;
+  &lt;button class="gr-btn" type="button" popovertarget="m"&gt;Экспорт&lt;/button&gt;
+  &lt;div class="gr-dropdown-panel" id="m" popover&gt;
+    &lt;ul class="gr-menu"&gt;…&lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">По наведению — <code>.gr-dropdown-hover</code></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <div class="gr-dropdown gr-dropdown-hover">
+      <button class="gr-btn gr-btn-ghost" type="button" aria-haspopup="true">Продукты ▾</button>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><a class="gr-menu-item" href="#">Ядро</a></li>
+          <li><a class="gr-menu-item" href="#">Компоненты</a></li>
+          <li><a class="gr-menu-item" href="#">Утилиты</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="gr-dropdown gr-dropdown-hover gr-dropdown-end">
+      <button class="gr-btn gr-btn-ghost" type="button" aria-haspopup="true">Сообщество ▾</button>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><a class="gr-menu-item" href="#">Обсуждения</a></li>
+          <li><a class="gr-menu-item" href="#">Сообщить об ошибке</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-dropdown gr-dropdown-hover"&gt;
+  &lt;button class="gr-btn gr-btn-ghost" type="button" aria-haspopup="true"&gt;Продукты&lt;/button&gt;
+  &lt;div class="gr-dropdown-panel"&gt;
+    &lt;ul class="gr-menu"&gt;…&lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    Панель держится, пока указатель на обёртке, и уходит с четвертьсекундной
+    задержкой — соскользнувший мимо курсор не захлопывает меню мгновенно.
+    Зазор между кнопкой и панелью перекрыт невидимым мостиком, иначе
+    наведение прерывалось бы на полпути. Ни одной строки JS: показ —
+    <code>:hover</code>, а на сенсорном экране и с клавиатуры —
+    <code>:focus-within</code>, поэтому кнопка обязана быть
+    <code>&lt;button&gt;</code>.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Наведение годится для навигации, а не для действий.</strong>
+    Состояние такого меню разметкой не сообщается: <code>aria-expanded</code>
+    без скрипта не обновить, поэтому кнопке ставят
+    <code>aria-haspopup="true"</code> и не ставят <code>aria-expanded</code> —
+    промолчать лучше, чем солгать об открытости. Закрытия по <kbd>Esc</kbd>
+    платформа здесь тоже не даёт: наведение для браузера не «открытое
+    состояние». Меню с «Удалить» и «Выйти» делают на
+    <code>&lt;details&gt;</code> или на попапе, где состояние настоящее.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Два пути, и оба чего-то стоят.</strong> <code>&lt;details&gt;</code>
+    работает в любом браузере, но не знает ни <kbd>Esc</kbd>, ни клика мимо —
+    закрывать панель придётся тем же нажатием на заголовок. Панель с атрибутом
+    <code>popover</code> получает и то, и другое от браузера даром, но уходит
+    в верхний слой, где положение считается от окна, а не от обёртки: привязать
+    её к кнопке умеет только CSS anchor positioning. Там, где его нет, панель
+    раскрывается листом у нижнего края экрана — положение не то, зато меню
+    доступно и закрывается штатно. Ни один из путей не оставляет пользователя
+    с неработающей кнопкой.
+  </p>
+</div>
+
+<h2>Модальное окно</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-modal</code></td><td>Окно на <code>&lt;dialog&gt;</code></td></tr>
+  <tr><td><code>.gr-modal-header</code> / <code>-title</code></td><td>Шапка и заголовок, на который указывает <code>aria-labelledby</code></td></tr>
+  <tr><td><code>.gr-modal-body</code></td><td>Тело; прокручивается только оно</td></tr>
+  <tr><td><code>.gr-modal-footer</code></td><td>Подвал с кнопками</td></tr>
+  <tr><td><code>.gr-modal-sm</code> / <code>-lg</code> / <code>-full</code></td><td>Размеры</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Окно с длинным телом: прокручивается тело, шапка и подвал стоят</div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <button class="gr-btn gr-btn-primary" type="button" data-open="demo-modal">Открыть окно</button>
+    <button class="gr-btn" type="button" data-open="demo-modal-sm">Подтверждение</button>
+  </div>
+</div>
+
+<dialog class="gr-modal" id="demo-modal" aria-labelledby="demo-modal-title" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <h2 class="gr-modal-title" id="demo-modal-title">Условия использования</h2>
+    <form method="dialog">
+      <button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button>
+    </form>
+  </div>
+  <div class="gr-modal-body">
+    <p>Библиотека распространяется по лицензии MIT. Это значит, что её можно использовать в коммерческих проектах, изменять и распространять — при сохранении уведомления об авторских правах.</p>
+    <p>Компоненты собраны на токенах ядра: ни одного литерального цвета и ни одной литеральной высоты. Поэтому тёмная тема и режим для слабовидящих доходят до них тем же механизмом, что и до остальной страницы.</p>
+    <p>Открытое окно удерживает фокус внутри себя, закрывается по <kbd>Esc</kbd> и возвращает фокус на кнопку, которая его вызвала. Ни одна из этих трёх вещей не написана в библиотеке — всё делает <code>&lt;dialog&gt;</code>.</p>
+    <p>Страница под окном становится инертной: щелчок мимо не попадает по ссылкам, а <kbd>Tab</kbd> не уводит в разметку за подложкой.</p>
+    <p>Подложка красится токеном <code>--gr-overlay</code>. Он одинаково тёмен в обеих темах, потому что подложка затемняет страницу, а не перекрашивает её.</p>
+  </div>
+  <div class="gr-modal-footer">
+    <form method="dialog" class="gr-flex gr-gap">
+      <button class="gr-btn" type="submit">Отмена</button>
+      <button class="gr-btn gr-btn-primary" type="submit">Согласен</button>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="gr-modal gr-modal-sm" id="demo-modal-sm" aria-labelledby="demo-modal-sm-title">
+  <div class="gr-modal-header">
+    <h2 class="gr-modal-title" id="demo-modal-sm-title">Удалить черновик?</h2>
+  </div>
+  <div class="gr-modal-body">
+    <p class="gr-mb-0">Действие необратимо: восстановить черновик после удаления нельзя.</p>
+  </div>
+  <div class="gr-modal-footer">
+    <form method="dialog" class="gr-flex gr-gap">
+      <button class="gr-btn" type="submit">Отмена</button>
+      <button class="gr-btn gr-btn-danger" type="submit">Удалить</button>
+    </form>
+  </div>
+</dialog>
+
+<pre><code>&lt;button type="button" onclick="m.showModal()"&gt;Открыть&lt;/button&gt;
+
+&lt;dialog class="gr-modal" id="m" aria-labelledby="m-title"&gt;
+  &lt;div class="gr-modal-header"&gt;
+    &lt;h2 class="gr-modal-title" id="m-title"&gt;Заголовок&lt;/h2&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-modal-body"&gt;…&lt;/div&gt;
+  &lt;div class="gr-modal-footer"&gt;
+    &lt;form method="dialog"&gt;&lt;button class="gr-btn"&gt;Закрыть&lt;/button&gt;&lt;/form&gt;
+  &lt;/div&gt;
+&lt;/dialog&gt;</code></pre>
+
+<h3>Закрытие щелчком по подложке</h3>
+
+<p>
+  Единственное, чего <code>&lt;dialog&gt;</code> не умеет сам. Включается
+  атрибутом на самом окне — не глобальной настройкой:
+</p>
+
+<pre><code>&lt;dialog class="gr-modal" data-gr-overlay-close&gt;…&lt;/dialog&gt;
+
+&lt;script src="griffincss-ui/dist/griffincss-ui.js"&gt;&lt;/script&gt;</code></pre>
+
+<table>
+  <tr><th>Что</th><th>Как</th></tr>
+  <tr><td><code>data-gr-overlay-close</code></td><td>Атрибут на <code>&lt;dialog&gt;</code>: окно или панель закрывается щелчком мимо</td></tr>
+  <tr><td><code>dialog.returnValue</code></td><td>После такого закрытия равно <code>"overlay"</code> — обработчик отличит щелчок мимо от кнопки «Сохранить»</td></tr>
+  <tr><td><code>Griffincss.ui.start()</code> / <code>.destroy()</code></td><td>Ручной запуск и снятие обработчиков; автостарт отключается <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    Оба демонстрационных окна выше и три из четырёх выдвижных панелей
+    помечены этим атрибутом — щёлкните мимо, окно закроется. Рантайм вешает
+    <em>один</em> делегированный обработчик на документ: окна появляются
+    и исчезают вместе с разметкой, и переподписываться на каждое не нужно.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Атрибут — решение автора, а не умолчание.</strong> У окна
+    с наполовину заполненной формой случайный щелчок мимо стоит потерянных
+    данных, поэтому поведение включается там, где оно уместно: у просмотрщика
+    картинки, у меню на телефоне, у окна с одной кнопкой «Понятно».
+  </p>
+  <p>
+    Выделение текста, начатое внутри окна и законченное за его краем, окном
+    не считается щелчком по подложке — рантайм сверяет обе половины щелчка.
+    Не закрывают окно и клавиатурный <kbd>Enter</kbd> на кнопке, и щелчок
+    по неотрисованному окну.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Закрытие вообще без скрипта.</strong> Кнопка внутри
+    <code>&lt;form method="dialog"&gt;</code> закрывает окно сама — это поведение
+    формы, а не обработчик. Именно так закрываются оба окна на этой странице:
+    ни одной строки JS на закрытие не написано, скрипт вызывает только
+    <code>showModal()</code>.
+  </p>
+</div>
+
+<h2>Выдвижная панель</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-drawer</code></td><td>Тот же <code>&lt;dialog&gt;</code>, прижатый к краю экрана</td></tr>
+  <tr><td><code>.gr-drawer-start</code> / <code>-end</code></td><td>К началу и к концу строки</td></tr>
+  <tr><td><code>.gr-drawer-top</code> / <code>-bottom</code></td><td>Сверху и снизу; высота по содержимому, но не больше половины экрана</td></tr>
+  <tr><td><code>.gr-drawer-sm</code> / <code>-lg</code></td><td>Ширина: <code>15rem</code> / <code>28rem</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Четыре стороны. Пояса — те же, что у модалки</div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <button class="gr-btn" type="button" data-open="drawer-start">Слева</button>
+    <button class="gr-btn" type="button" data-open="drawer-end">Справа</button>
+    <button class="gr-btn" type="button" data-open="drawer-top">Сверху</button>
+    <button class="gr-btn" type="button" data-open="drawer-bottom">Снизу</button>
+  </div>
+</div>
+
+<dialog class="gr-drawer gr-drawer-start" id="drawer-start" aria-label="Разделы" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Разделы</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <nav class="gr-nav gr-nav-vertical">
+      <a class="gr-nav-link" href="#" aria-current="page">Обзор</a>
+      <a class="gr-nav-link" href="#">Компоненты</a>
+      <a class="gr-nav-link" href="#">Утилиты</a>
+    </nav>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-end" id="drawer-end" aria-label="Фильтры" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Фильтры</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <p class="gr-mb-0">Панель конца строки: в разметке справа налево она выедет с левого края — стороны заданы логическими свойствами.</p>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-top" id="drawer-top" aria-label="Уведомление">
+  <div class="gr-modal-body">
+    <p class="gr-mb-0">Верхняя панель: высота по содержимому, но не больше половины экрана.</p>
+    <form method="dialog" class="gr-mt"><button class="gr-btn" type="submit">Закрыть</button></form>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-bottom" id="drawer-bottom" aria-label="Действия" data-gr-overlay-close>
+  <div class="gr-modal-body">
+    <p class="gr-mb-0">Нижняя панель — привычный на телефоне лист действий.</p>
+    <form method="dialog" class="gr-mt"><button class="gr-btn" type="submit">Закрыть</button></form>
+  </div>
+</dialog>
+
+<pre><code>&lt;dialog class="gr-drawer gr-drawer-end" aria-label="Фильтры"&gt;
+  &lt;div class="gr-modal-header"&gt;…&lt;/div&gt;
+  &lt;div class="gr-modal-body"&gt;…&lt;/div&gt;
+&lt;/dialog&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    Пояса панель не заводит свои: <code>.gr-modal-header</code>,
+    <code>-body</code> и <code>-footer</code> работают и здесь. Дублировать их
+    незачем — от модалки панель отличается положением и размерами,
+    а не устройством.
+  </p>
+</div>
+
+<h2>Подсказка</h2>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-tooltip-anchor</code></td><td>Обёртка вокруг элемента и подсказки</td></tr>
+  <tr><td><code>.gr-tooltip</code></td><td>Сама подсказка; по умолчанию сверху</td></tr>
+  <tr><td><code>.gr-tooltip-bottom</code> / <code>-start</code> / <code>-end</code></td><td>Другая сторона</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Наведите указатель или дойдите до кнопки клавишей <kbd>Tab</kbd></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <span class="gr-tooltip-anchor">
+      <button class="gr-btn" type="button" aria-describedby="tip-save">Сохранить</button>
+      <span class="gr-tooltip" id="tip-save" role="tooltip">Ctrl + S</span>
+    </span>
+
+    <span class="gr-tooltip-anchor">
+      <button class="gr-btn" type="button" aria-describedby="tip-bottom">Снизу</button>
+      <span class="gr-tooltip gr-tooltip-bottom" id="tip-bottom" role="tooltip">Подсказка под элементом</span>
+    </span>
+
+    <span class="gr-tooltip-anchor">
+      <button class="gr-btn" type="button" aria-describedby="tip-end">Сбоку</button>
+      <span class="gr-tooltip gr-tooltip-end" id="tip-end" role="tooltip">К концу строки</span>
+    </span>
+  </div>
+</div>
+
+<pre><code>&lt;span class="gr-tooltip-anchor"&gt;
+  &lt;button class="gr-btn" type="button" aria-describedby="t1"&gt;Сохранить&lt;/button&gt;
+  &lt;span class="gr-tooltip" id="t1" role="tooltip"&gt;Ctrl + S&lt;/span&gt;
+&lt;/span&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong><code>aria-describedby</code> обязателен.</strong> Без него подсказку
+    получит только тот, кто её видит: программе чтения с экрана достанется
+    кнопка «Сохранить» без единого слова о сочетании клавиш. И прячется
+    подсказка не <code>display: none</code>, а прозрачностью с
+    <code>visibility</code>: убранная через <code>display</code>, она исчезла бы
+    из дерева доступности вместе со связью, на которую ссылается кнопка.
+  </p>
+</div>
+
+</main>
+</div>
+
+<script>
+// Единственная строка JS на всей странице: <dialog> открывается только
+// вызовом showModal(). Закрываются окна и панели сами — формой
+// с method="dialog" внутри.
+document.addEventListener('click', function (event) {
+  var trigger = event.target.closest('[data-open]');
+  if (!trigger) return;
+
+  var dialog = document.getElementById(trigger.getAttribute('data-open'));
+  if (dialog) dialog.showModal();
+});
+</script>
+
+  <script src="nav.js"></script>
+</body>
+</html>

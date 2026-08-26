@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transitions — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Transitions</h1>
+  <p>Плавные переходы, их длительность и индикатор загрузки.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_animations.scss</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Полноценной библиотеки анимаций в Griffincss нет и не планируется:
+    fade, slide и pulse — задача уровня приложения, а не фреймворка раскладки.
+    Модуль даёт переходы, их длительность и один keyframe —
+    <code>gr-spin</code>, потому что индикатор загрузки нужен почти везде.
+  </p>
+</div>
+
+<h2>Переходы</h2>
+
+<table>
+  <tr><th>Класс</th><th>Что анимируется</th></tr>
+  <tr><td><code>.gr-transition</code></td><td>Все свойства (<code>all</code>)</td></tr>
+  <tr><td><code>.gr-transition-colors</code></td><td><code>color</code>, <code>background-color</code>, <code>border-color</code>, <code>fill</code>, <code>stroke</code></td></tr>
+  <tr><td><code>.gr-transition-opacity</code></td><td><code>opacity</code></td></tr>
+  <tr><td><code>.gr-transition-transform</code></td><td><code>transform</code></td></tr>
+  <tr><td><code>.gr-transition-shadow</code></td><td><code>box-shadow</code></td></tr>
+  <tr><td><code>.gr-transition-none</code></td><td>Ничего — переход снят</td></tr>
+</table>
+
+<p>
+  Длительность и функция сглаживания берутся из токена
+  <code>--gr-transition</code> (по умолчанию <code>0.2s ease</code>).
+  <code>.gr-transition-colors</code> предпочтительнее <code>.gr-transition</code>:
+  браузеру не приходится следить за всеми свойствами разом.
+</p>
+
+<h2>Длительность</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-duration-75</code> … <code>.gr-duration-1000</code></td><td><code>transition-duration</code>: 75, 100, 150, 200, 300, 500, 700, 1000&nbsp;мс</td></tr>
+</table>
+
+<p>Класс длительности ставится рядом с классом перехода и перебивает только время:</p>
+
+<pre><code>&lt;a class="gr-transition-colors gr-duration-150" href="#"&gt;Ссылка&lt;/a&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Наведите курсор</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="tag-demo tag-a gr-transition gr-duration-150 gr-cursor-pointer" style="--x:0;" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform=''">gr-duration-150</div>
+    <div class="tag-demo tag-b gr-transition gr-duration-500 gr-cursor-pointer" onmouseover="this.style.transform='translateY(-6px)'" onmouseout="this.style.transform=''">gr-duration-500</div>
+  </div>
+</div>
+
+<h2>Индикатор загрузки</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-animate-spin</code></td><td><code>animation: gr-spin 1s linear infinite</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Утилита крутит то, что ей дали</div>
+  <div class="gr-flex gr-flex-items-center gr-gap" style="font-size:1.5rem">
+    <span class="gr-animate-spin gr-inline-block" aria-hidden="true">↻</span>
+    <span class="gr-animate-spin gr-inline-block" aria-hidden="true">⚙</span>
+    <span class="gr-animate-spin gr-inline-block" aria-hidden="true">✳</span>
+  </div>
+</div>
+
+<pre><code>&lt;span class="gr-animate-spin gr-inline-block"&gt;↻&lt;/span&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Кольцо загрузки собирать руками не нужно.</strong>
+    <code>.gr-animate-spin</code> — это только движение: она вращает любой
+    элемент, который ей дали, — знак, иконку, картинку. Готовое кольцо
+    с рамкой, тремя размерами и подписью для скринридера — это
+    <code>.gr-spinner</code> из <code>griffincss-ui</code>, см.
+    <a href="ui-feedback.html">«Сообщения»</a>. Дубля тут нет:
+    одна вещь — анимация без формы, другая — фигура вместе с ней.
+  </p>
+  <p>
+    Обе крутит один и тот же keyframe <code>gr-spin</code>, объявленный
+    в каждом пакете одинаково: пакеты независимы, а определения обязаны
+    совпадать посимвольно — иначе картинка зависела бы от того, какой файл
+    подключён. Совпадение сторожит тест.
+  </p>
+</div>
+
+<p>
+  Имя keyframe префиксовано — <code>gr-spin</code>, столкнуться с анимацией
+  проекта оно не может. Само правило <code>@keyframes</code> вынесено
+  в отдельный файл: в сборке с <code>@scope</code> оно обязано находиться
+  вне области видимости, иначе не работает.
+</p>
+
+<h2>Уважение к настройкам системы</h2>
+
+<div class="callout callout-success">
+  <p>
+    При <code>prefers-reduced-motion: reduce</code> все переходы модуля
+    сжимаются до <code>0.01ms</code>, а вращение замедляется до 3&nbsp;секунд.
+    Движение не убирается полностью намеренно: обработчики, завязанные
+    на событие окончания перехода, продолжают срабатывать.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

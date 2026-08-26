@@ -1,0 +1,61 @@
+// Griffincss UI — версия, ограниченная областью .griffin
+// Компоненты действуют только внутри элементов с классом .griffin,
+// что позволяет подключать библиотеку в чужую разметку без конфликтов.
+// Токены (из griffincss-core) объявляются вне @scope: :root должен
+// остаться глобальным.
+//
+// Слой тот же, что и у обычной сборки, — griffincss.ui.
+//
+// Требует поддержки CSS @scope (Chrome 118+, Safari 17.4+, Firefox 128+).
+//
+// Структурных правил оси оформления здесь нет: внутри @scope селектор
+// [data-gr-style="…"] неявно получает :scope в начало и требует носитель
+// атрибута в области, а он стоит на <html>. Ось при этом действует на уровне
+// токенов — они объявлены вне области и работают в этой сборке полностью.
+//
+// Компоненты, живущие в верхнем слое, — модальное окно, выдвижная панель
+// и попап дропдауна — областью не ограничены только визуально: узел
+// остаётся в DOM внутри .griffin, поэтому @scope до него достаёт.
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод пакета — в слое griffincss.ui.
+@layer griffincss.ui {
+  @include meta.load-css('griffincss-core/scss/tokens');
+
+  // Тема — тоже вне @scope: атрибут data-gr-theme стоит на <html>,
+  // то есть заведомо снаружи области .griffin.
+  @include meta.load-css('griffincss-core/scss/theme');
+
+  // @keyframes внутри @scope недействительны — подключаются вне области.
+  @include meta.load-css('keyframes');
+
+  @scope (.griffin) {
+    @include meta.load-css('accordion');
+    @include meta.load-css('alert');
+    @include meta.load-css('avatar');
+    @include meta.load-css('badge');
+    @include meta.load-css('breadcrumb');
+    @include meta.load-css('button');
+    @include meta.load-css('card');
+    @include meta.load-css('choice');
+    @include meta.load-css('drawer');
+    @include meta.load-css('dropdown');
+    @include meta.load-css('empty');
+    @include meta.load-css('form');
+    @include meta.load-css('link');
+    @include meta.load-css('menu');
+    @include meta.load-css('modal');
+    @include meta.load-css('nav');
+    @include meta.load-css('pagination');
+    @include meta.load-css('progress');
+    @include meta.load-css('skeleton');
+    @include meta.load-css('spinner');
+    @include meta.load-css('steps');
+    @include meta.load-css('table');
+    @include meta.load-css('tabs');
+    @include meta.load-css('toast');
+    @include meta.load-css('tooltip');
+  }
+}

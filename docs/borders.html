@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borders — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Borders</h1>
+  <p>Границы: ширина, стороны, стиль. Цвет берётся из модуля Colors, скругления — из Border Radius.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Опциональный модуль</span>
+    <span class="badge">packages/utils/scss/_borders.scss</span>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    До версии 0.7.0 класс <code>.gr-border-primary</code> задавал только
+    <code>border-color</code> — граница оставалась невидимой, потому что её
+    ширина и стиль нигде не назначались. Этот модуль закрывает пробел:
+    <code>.gr-border</code> даёт видимую границу сам по себе, а класс цвета
+    подключается поверх.
+  </p>
+</div>
+
+<h2>Ширина</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-border</code></td><td><code>border: 1px solid var(--gr-color-border)</code></td></tr>
+  <tr><td><code>.gr-border-0</code></td><td><code>border: 0</code></td></tr>
+  <tr><td><code>.gr-border-2</code></td><td><code>border: 2px solid var(--gr-color-border)</code></td></tr>
+  <tr><td><code>.gr-border-4</code></td><td><code>border: 4px solid var(--gr-color-border)</code></td></tr>
+  <tr><td><code>.gr-border-8</code></td><td><code>border: 8px solid var(--gr-color-border)</code></td></tr>
+</table>
+
+<p>
+  Каждый класс ширины самодостаточен: задаёт и стиль, и цвет по умолчанию.
+  Поэтому <code>.gr-border-2</code> виден без каких-либо дополнительных классов.
+</p>
+
+<h2>Стороны и оси</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-border-t</code></td><td><code>border-top: 1px solid …</code></td></tr>
+  <tr><td><code>.gr-border-r</code></td><td><code>border-right: 1px solid …</code></td></tr>
+  <tr><td><code>.gr-border-b</code></td><td><code>border-bottom: 1px solid …</code></td></tr>
+  <tr><td><code>.gr-border-l</code></td><td><code>border-left: 1px solid …</code></td></tr>
+  <tr><td><code>.gr-border-s</code></td><td><code>border-inline-start: 1px solid …</code> — начало строки</td></tr>
+  <tr><td><code>.gr-border-e</code></td><td><code>border-inline-end: 1px solid …</code> — конец строки</td></tr>
+  <tr><td><code>.gr-border-x</code></td><td><code>border-inline</code> — обе стороны строки</td></tr>
+  <tr><td><code>.gr-border-y</code></td><td><code>border-block</code> — сверху и снизу</td></tr>
+  <tr><td><code>.gr-border-{t,r,b,l,s,e,x,y}-{0,2,4,8}</code></td><td>Та же сторона или ось заданной ширины: <code>.gr-border-l-4</code>, <code>.gr-border-s-4</code>, <code>.gr-border-y-2</code>, <code>.gr-border-t-0</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong><code>s</code> и <code>e</code> — логические стороны.</strong>
+    В LTR они совпадают с <code>l</code> и <code>r</code>, в RTL меняются
+    местами: полоска цитаты <code>.gr-border-s-4</code> в арабском тексте
+    окажется справа, там же, где начинается строка. Физические
+    <code>l</code> и <code>r</code> оставлены для случаев, где сторона
+    выбрана буквально. Осевые <code>x</code> и <code>y</code> одинаковы
+    в обоих направлениях — у них обе стороны получают одно значение.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    Ширину у стороны задаёт отдельный класс — <code>.gr-border-l-4</code>,
+    а не пара <code>.gr-border-l</code> + <code>.gr-border-4</code>. Класс
+    ширины пишет сокращённое свойство <code>border</code> и вместе с ним
+    сбрасывает все четыре стороны, поэтому такая пара даёт рамку целиком,
+    а не толстую линию слева.
+  </p>
+</div>
+
+<h2>Стиль</h2>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-border-solid</code></td><td><code>border-style: solid</code></td></tr>
+  <tr><td><code>.gr-border-dashed</code></td><td><code>border-style: dashed</code></td></tr>
+  <tr><td><code>.gr-border-dotted</code></td><td><code>border-style: dotted</code></td></tr>
+  <tr><td><code>.gr-border-double</code></td><td><code>border-style: double</code></td></tr>
+  <tr><td><code>.gr-border-none</code></td><td><code>border-style: none</code></td></tr>
+</table>
+
+<p>
+  Класс стиля применяется поверх класса ширины и меняет только стиль:
+  <code>class="gr-border-2 gr-border-dashed"</code>.
+</p>
+
+<h2>Цвет</h2>
+
+<p>
+  Цвет живёт в модуле <a href="colors.html">Colors</a> — те же имена, что
+  у фона и текста: <code>.gr-border-primary</code>, <code>.gr-border-danger</code>,
+  <code>.gr-border-gray-300</code> и остальные. Модуль цветов подключается
+  в сборке после этого, поэтому его <code>border-color</code> всегда побеждает.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Комбинации</div>
+  <div class="gr-flex gr-flex-wrap gr-gap">
+    <div class="gr-border gr-p-4 gr-radius-2">gr-border</div>
+    <div class="gr-border-2 gr-border-primary gr-p-4 gr-radius-2">gr-border-2 gr-border-primary</div>
+    <div class="gr-border-2 gr-border-dashed gr-border-success gr-p-4 gr-radius-2">gr-border-dashed gr-border-success</div>
+    <div class="gr-border-l-4 gr-border-danger gr-p-4">gr-border-l-4 gr-border-danger</div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-border gr-radius-2 gr-p-4"&gt;Обычная рамка&lt;/div&gt;
+&lt;div class="gr-border-2 gr-border-primary"&gt;Акцентная рамка в 2px&lt;/div&gt;
+&lt;div class="gr-border-2 gr-border-dashed gr-border-success"&gt;Пунктир&lt;/div&gt;
+&lt;blockquote class="gr-border-l-4 gr-border-danger gr-pl-4"&gt;Цитата&lt;/blockquote&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    Адаптивных вариантов у границ нет: рамка, появляющаяся только на десктопе, —
+    редкий случай, и делается он одним своим правилом, а не 30 классами
+    в каждой сборке.
+  </p>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+// Griffincss — Grid Helpers
+// Utility classes for common grid patterns
+
+@use 'breakpoints' as bp;
+
+// Контейнер
+.gr-container {
+  max-width: var(--gr-max-width);
+  margin-inline: auto;
+  padding-inline: var(--gr-gap);
+}
+
+.gr-container-full {
+  width: 100%;
+  max-width: none;
+}
+
+// Корень расширения: предок, по ширине которого равняется .gr-container-expand.
+// Ставится на любой элемент — body, колонку раскладки, карточку.
+// container-type включает инлайн-containment, поэтому ширина корня не должна
+// зависеть от содержимого: у inline-block она схлопнется в ноль.
+.gr-expand-root {
+  container-type: inline-size;
+}
+
+// Блок во всю ширину корня — независимо от того, в скольких ограниченных
+// по ширине контейнерах он лежит. 50% родителя и 50cqw корня гасят друг друга,
+// поэтому предки между корнем и блоком должны быть центрированы:
+// .gr-container с margin-inline: auto этому удовлетворяет.
+//
+// --gr-expand-inset сообщает горизонтальный паддинг корня, если нужно перекрыть
+// и его; сам паддинг переменная не задаёт. Без корня cqw падает на svw —
+// блок займёт ширину окна вместе со скроллбаром и вызовет прокрутку.
+.gr-container-expand {
+  width: calc(100cqw + 2 * var(--gr-expand-inset, 0px));
+  margin-inline: calc(50% - 50cqw - var(--gr-expand-inset, 0px));
+}
+
+// Авто-подгонка / заполнение
+// Минимальная ширина дорожки — ручка --gr-grid-min, устроенная как
+// --gr-expand-inset выше: значение живёт в var() с запасным, а не в :root.
+// Причина та же — нужно оно двум классам, а блок :root входит во все
+// артефакты всех трёх пакетов, и токен ради двух правил там не окупается.
+//
+//   <div class="gr-grid-auto-fit" style="--gr-grid-min: 180px">
+//
+// Свойство наследуется, поэтому ручку можно задать и на предке: одна
+// секция каталога настраивается одним объявлением, а не по блоку.
+.gr-grid-auto-fit {
+  display: grid;
+  gap: var(--gr-gap);
+  grid-template-columns: repeat(auto-fit, minmax(var(--gr-grid-min, 250px), 1fr));
+}
+
+.gr-grid-auto-fill {
+  display: grid;
+  gap: var(--gr-gap);
+  grid-template-columns: repeat(auto-fill, minmax(var(--gr-grid-min, 250px), 1fr));
+}
+
+// Явные сетки. Класс самодостаточен: сам включает grid и отступ,
+// поэтому дописывать .gr-grid рядом не нужно.
+@for $cols from 1 through 12 {
+  .gr-grid-#{$cols} {
+    display: grid;
+    gap: var(--gr-gap);
+    grid-template-columns: repeat(#{$cols}, 1fr);
+  }
+}
+
+// Адаптивные явные сетки (применяются от указанного брейкпоинта)
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    // Адаптивная пара к .gr-grid из _grid-parser.scss: тот же display
+    // и тот же отступ, но от брейкпоинта. До 0.8.0 роль играли
+    // .gr-grid-display-* из griffincss-utils — дубль, разошедшийся с ядром
+    // только из-за запрета пересечения классов между пакетами.
+    .gr-grid-#{$bp-name} {
+      display: grid;
+      gap: var(--gr-gap);
+    }
+
+    @for $cols from 1 through 12 {
+      .gr-grid-#{$cols}-#{$bp-name} {
+        display: grid;
+        gap: var(--gr-gap);
+        grid-template-columns: repeat(#{$cols}, 1fr);
+      }
+    }
+  }
+}
+
+// Вложенная сетка на дорожках родителя. Элемент остаётся grid-контейнером
+// для своих детей, но собственных дорожек не заводит: он берёт те дорожки
+// родителя, которые попали в его область.
+//
+// Отсюда единственное условие: элемент обязан занимать больше одной дорожки —
+// `grid-column: span 3` или `grid-column: 1 / -1`. Область в одну дорожку
+// и даёт одну дорожку, и subgrid визуально ничего не меняет.
+// Родитель при этом должен быть grid-контейнером, а элемент — его прямым
+// потомком; через уровень разметки дорожки не проходят.
+//
+// Зачем: выровнять внутренние части соседних блоков по общим линиям.
+// Без subgrid каждая карточка считает дорожки сама, и её заголовок стоит
+// на своей высоте — соседние карточки расходятся тем сильнее, чем длиннее
+// заголовок у одной из них.
+//
+// Отступ наследуется от родителя вместе с дорожками; чтобы задать свой,
+// достаточно обычного .gr-gap-*.
+.gr-subgrid {
+  display: grid;
+  grid-template-columns: subgrid;
+}
+
+// Вторая ось того же приёма — и на практике более частая: именно по рядам
+// выравниваются шапка, тело и подвал карточек, стоящих в одной строке сетки.
+// Классы независимы, а нужны обе оси — ставятся оба.
+.gr-subgrid-rows {
+  display: grid;
+  grid-template-rows: subgrid;
+}
+
+// Ряды равной высоты — все, сколько бы их ни получилось: считать нечего,
+// grid-auto-rows задаёт размер каждому неявному ряду. В контейнере
+// с неопределённой высотой fr-ряды выравниваются по самому высокому
+// содержимому, с заданной — делят её поровну.
+// На раскладки data-gr-layout не влияет: там ряды заданы явно.
+.gr-grid-rows {
+  grid-auto-rows: 1fr;
+}
+
+// Выравнивание
+.gr-grid-place-center {
+  display: grid;
+  place-items: center;
+}
+
+// Column span для дочерних элементов
+@for $i from 1 through 12 {
+  .gr-grid-col-span-#{$i} {
+    grid-column: span #{$i};
+  }
+}
+
+// Row span для дочерних элементов
+@for $i from 1 through 6 {
+  .gr-grid-row-span-#{$i} {
+    grid-row: span #{$i};
+  }
+}

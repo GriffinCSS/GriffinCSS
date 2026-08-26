@@ -1,0 +1,47 @@
+# Гейт проекта в CI: линт SCSS, сборка и тесты.
+# Ровно то же, что `npm run check` локально, — ничего сверх.
+#
+# Синтаксис площадки: https://gitverse.ru/docs/cicd/docs/workflow
+# Каталог и формат:   https://gitverse.ru/docs/cicd/quick-start
+name: Проверка
+
+on:
+  push:
+    branches:
+      - main
+  # На GitVerse триггер pull_request поддержан частично: из типов работают
+  # opened, edited, closed, reopened и synchronize. Нужны первый, второй
+  # и последний — открытие ветки и каждый новый коммит в неё.
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+jobs:
+  check:
+    name: npm run check
+    runs-on: ubuntu-latest
+    strategy:
+      # Обе версии договариваются до конца: красная 22 не должна прятать
+      # результат 24 и наоборот.
+      fail-fast: false
+      matrix:
+        # Node 20 снят с поддержки 30.04.2026 и, сверх того, не умеет
+        # glob-шаблоны в `node --test` — проверено на v20.20.2.
+        # 22 — действующая LTS (до 30.04.2027), 24 — следующая (до 30.04.2028).
+        node-version: ['22', '24']
+    steps:
+      - name: Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      - name: Ставим Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Ставим зависимости
+        run: npm ci
+
+      - name: Гейт
+        run: npm run check

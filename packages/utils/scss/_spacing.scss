@@ -1,0 +1,125 @@
+// Griffincss — Spacing Utilities
+// Внешние и внутренние отступы. Шаг шкалы — 0.25rem.
+//
+// Шкала разрежена намеренно: мелкий шаг нужен только у малых значений,
+// дальше идут секционные отступы 2.5rem, 3rem и 4rem. Промежуточные величины
+// задаются своим CSS — генерировать 17 ступеней ради трёх используемых незачем.
+//
+// Адаптивность — суффиксом брейкпоинта: .gr-p-4-md. Префиксная форма
+// .gr-md\:p-4 удалена в v0.7.0; в библиотеке остался один синтаксис.
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
+
+$gr-spacing-base: 0.25rem !default;
+$gr-spacing-steps: (0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16) !default;
+
+// Один и тот же набор правил выводится дважды: без суффикса и внутри
+// каждого медиа-запроса. Миксин держит оба вывода в одном определении —
+// разойтись они не могут.
+@mixin gr-spacing-scale($suffix: '') {
+  @each $i in $gr-spacing-steps {
+    $val: $i * $gr-spacing-base;
+
+    .gr-m-#{$i}#{$suffix}  { margin: $val; }
+
+    .gr-p-#{$i}#{$suffix} {
+      // Зазор — источник, padding — следствие. Тогда спор .gr-p-* и
+      // .gr-radius за padding перестаёт что-либо значить: обе стороны
+      // приходят к одному значению. Только равномерный отступ:
+      // у осевых и односторонних зазор для каскада не определён.
+      --gr-p: #{$val};
+
+      padding: var(--gr-p);
+    }
+
+
+    .gr-mt-#{$i}#{$suffix} { margin-top: $val; }
+    .gr-mr-#{$i}#{$suffix} { margin-right: $val; }
+    .gr-mb-#{$i}#{$suffix} { margin-bottom: $val; }
+    .gr-ml-#{$i}#{$suffix} { margin-left: $val; }
+
+    .gr-pt-#{$i}#{$suffix} { padding-top: $val; }
+    .gr-pr-#{$i}#{$suffix} { padding-right: $val; }
+    .gr-pb-#{$i}#{$suffix} { padding-bottom: $val; }
+    .gr-pl-#{$i}#{$suffix} { padding-left: $val; }
+
+    // Логические односторонние отступы: start — начало строки, end — конец.
+    // В LTR совпадают с left/right, в RTL меняются местами сами, без правил
+    // на [dir] и :dir().
+    //
+    // Адаптивных вариантов у них нет намеренно. Полный набор — 12 ступеней
+    // на четырёх свойствах и пяти брейкпоинтах, 240 селекторов и +1086 Б
+    // gzip; переход mx/px на одно свойство компенсирует из них 123 Б.
+    // Ступени сохранены все до одной — класс заменяется на логический
+    // один-в-один, — а платой за это стал отказ от суффикса брейкпоинта:
+    // так прирост держится в 240 Б gzip, а raw-размер файла даже падает.
+    @if $suffix == '' {
+      .gr-ms-#{$i} { margin-inline-start: $val; }
+      .gr-me-#{$i} { margin-inline-end: $val; }
+
+      .gr-ps-#{$i} { padding-inline-start: $val; }
+      .gr-pe-#{$i} { padding-inline-end: $val; }
+    }
+
+    // Осевые — одно логическое свойство вместо пары физических: в LTR
+    // результат тот же, в RTL корректный, а объявлений вдвое меньше.
+    .gr-mx-#{$i}#{$suffix} { margin-inline: $val; }
+
+    .gr-my-#{$i}#{$suffix} {
+      margin-top: $val;
+      margin-bottom: $val;
+    }
+
+    .gr-px-#{$i}#{$suffix} { padding-inline: $val; }
+
+    .gr-py-#{$i}#{$suffix} {
+      padding-top: $val;
+      padding-bottom: $val;
+    }
+  }
+
+  // Авто-отступы: центрирование и прижатие к краю
+  .gr-mx-auto#{$suffix} {
+    margin-inline: auto;
+  }
+
+  .gr-ml-auto#{$suffix} {
+    margin-left: auto;
+  }
+
+  .gr-mr-auto#{$suffix} {
+    margin-right: auto;
+  }
+
+  // Прижатие к краю строки, а не к стороне экрана: в RTL .gr-ms-auto
+  // отодвигает элемент вправо, .gr-me-auto — влево. Суффикса брейкпоинта
+  // нет по той же причине, что и у остальных логических классов.
+  @if $suffix == '' {
+    .gr-ms-auto {
+      margin-inline-start: auto;
+    }
+
+    .gr-me-auto {
+      margin-inline-end: auto;
+    }
+  }
+}
+
+@include gr-spacing-scale;
+
+// Адаптивные варианты
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @include gr-spacing-scale('-#{$bp-name}');
+  }
+}
+
+// Контейнерные варианты: тот же набор правил, но шириной меряется ближайший
+// предок с .gr-cq, а не окно. Суффикс отличается одной буквой — .gr-p-4-cmd
+// против .gr-p-4-md, — потому что синтаксис адаптивности в библиотеке один.
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-spacing-scale('-c#{$bp-name}');
+  }
+}

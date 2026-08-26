@@ -1,0 +1,75 @@
+// Griffincss — Sizing
+// Ширина, высота и ограничители min/max.
+//
+// Дробные ширины записываются в разметке как есть: class="gr-w-1/2".
+// Слэш экранируется только в CSS-селекторе — писать его в HTML не нужно.
+//
+// Единицы вьюпорта — малые (svw/svh): они не учитывают исчезающие панели
+// мобильных браузеров, поэтому блок не «прыгает» при прокрутке, а .gr-w-screen
+// не вызывает горизонтальную прокрутку из-за ширины полосы прокрутки.
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
+
+$gr-widths: (
+  full:   100%,
+  screen: 100svw,
+  auto:   auto,
+  fit:    fit-content,
+  min:    min-content,
+  max:    max-content,
+  "1\\/2": 50%,
+  "1\\/3": 33.3333%,
+  "2\\/3": 66.6667%,
+  "1\\/4": 25%,
+  "3\\/4": 75%
+) !default;
+
+// Высот меньше: 100% у блока без заданной высоты родителя не значит ничего,
+// поэтому дробных вариантов здесь нет — их роль играет grid.
+$gr-heights: (
+  full:   100%,
+  screen: 100svh,
+  auto:   auto,
+  fit:    fit-content
+) !default;
+
+@mixin gr-sizing-scale($suffix: '') {
+  @each $gr-name, $gr-value in $gr-widths {
+    .gr-w-#{$gr-name}#{$suffix} { width: $gr-value; }
+  }
+
+  @each $gr-name, $gr-value in $gr-heights {
+    .gr-h-#{$gr-name}#{$suffix} { height: $gr-value; }
+  }
+}
+
+@include gr-sizing-scale;
+
+// Ограничители. Адаптивных вариантов не имеют: min/max по смыслу задают
+// рамку, одинаковую на всех ширинах, — меняют её обычно сами width/height.
+.gr-min-w-0    { min-width: 0; }
+.gr-min-w-full { min-width: 100%; }
+.gr-min-h-0    { min-height: 0; }
+.gr-min-h-full { min-height: 100%; }
+.gr-min-h-screen { min-height: 100svh; }
+
+.gr-max-w-none   { max-width: none; }
+.gr-max-w-full   { max-width: 100%; }
+.gr-max-w-page   { max-width: var(--gr-max-width); }
+.gr-max-h-full   { max-height: 100%; }
+.gr-max-h-screen { max-height: 100svh; }
+
+// Адаптивные варианты — только у width и height
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @include gr-sizing-scale('-#{$bp-name}');
+  }
+}
+
+// Контейнерные варианты — от ширины ближайшего предка с .gr-cq
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-sizing-scale('-c#{$bp-name}');
+  }
+}

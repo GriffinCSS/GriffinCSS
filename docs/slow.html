@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Griffincss — Slow Load Test</title>
+  <style>
+    /* Оформление на средствах библиотеки: ни одного литерального цвета
+       в интерфейсе страницы — только семантические токены, поэтому обе темы
+       приходят даром. Слой docs объявлен до пакетов и стоит перед
+       griffincss.utils: любая утилита перекрывает здешние правила. */
+    @layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.utils;
+
+    @layer griffincss.docs {
+      body {
+        font-family: var(--gr-font-sans);
+        max-width: var(--gr-max-width);
+        margin-inline: auto;
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      h2 {
+        margin-top: 2.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: var(--gr-border-width) solid var(--gr-color-border);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--gr-color-text-muted);
+      }
+
+      p { color: var(--gr-color-text-secondary); max-width: 68ch; }
+
+      .demo-code {
+        padding: 0.1rem 0.35rem;
+        background-color: var(--gr-color-surface-sunken);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+      }
+
+      /* Статусная панель. Состояние обозначено словом и цветом текста,
+         а не заливкой во всю ширину: заливка «внимание» жёлтым читается
+         как авария, а здесь всего лишь ожидание. */
+      #status {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        font-family: var(--gr-font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.8125rem;
+        background-color: var(--gr-color-surface-raised);
+        border-bottom: var(--gr-border-width) solid currentcolor;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        #status { transition: color 0.4s ease-out; }
+      }
+
+      #status.waiting { color: var(--gr-color-warning); }
+      #status.ready   { color: var(--gr-color-success); }
+
+      /* Надпись «grid скрыт» на месте контейнеров */
+      .placeholder-note {
+        padding: 1rem;
+        border: 2px dashed var(--gr-color-border-strong);
+        border-radius: var(--gr-radius);
+        text-align: center;
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: var(--gr-color-text-muted);
+      }
+
+      /* Обычный контент — виден всегда */
+      .always-visible {
+        margin: 1rem 0;
+        padding: 1rem;
+        background-color: var(--gr-color-surface-raised);
+        border: var(--gr-border-width) solid var(--gr-color-border-strong);
+        border-radius: var(--gr-radius);
+      }
+
+      [data-gr-layout] > * {
+        min-height: 3.75rem;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      /* Плашки областей — литеральная шкала: образец раскладки обязан
+         выглядеть одинаково в любой теме. Цвет текста живёт здесь же,
+         а не на контейнере: те же плашки показывают и flex-раскладку. */
+      .area-a,
+      .area-b,
+      .area-c,
+      .area-d {
+        border-radius: calc(var(--gr-radius) / 2);
+        font-family: var(--gr-font-mono);
+        font-size: 0.8125rem;
+        color: hsl(var(--gr-hsl-white));
+      }
+
+      .area-a { background-color: hsl(var(--gr-hsl-primary)); }
+      .area-b { background-color: hsl(var(--gr-hsl-primary-dark)); }
+      .area-c { background-color: hsl(var(--gr-hsl-secondary)); }
+      .area-d { background-color: hsl(var(--gr-hsl-secondary-dark)); }
+
+      /* Карточка — грид-элемент, но не плашка: центрирование по обеим осям
+         из правила выше склеило бы заголовок и текст в одну строку. */
+      [data-gr-layout] > .card {
+        display: block;
+        text-align: left;
+      }
+
+      .card {
+        padding: 1.25rem;
+        background-color: var(--gr-color-surface);
+        border: var(--gr-border-width) solid var(--gr-color-border);
+        border-radius: var(--gr-radius);
+        box-shadow: var(--gr-shadow-sm);
+      }
+
+      .card h4 { margin-bottom: 0.35rem; font-size: 1rem; font-weight: 600; }
+      .card p  { margin: 0; font-size: 0.875rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+  <link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+  <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+  <!-- data-auto="false" отключает автоинициализацию -->
+  <script src="../packages/core/dist/griffincss-theme.js"></script>
+  <script src="../packages/core/dist/griffincss.js" data-auto="false"></script>
+</head>
+<body>
+<!-- Возврат в документацию: страница открывается по ссылке из боковой панели,
+     а собственной панели у стенда нет — без этой строки читатель оказывался
+     в тупике и уходил кнопкой «назад». -->
+<p class="gr-p-4 gr-m-0 gr-text-sm"><a href="index.html">← Документация Griffincss</a></p>
+
+
+<div id="status" class="waiting">
+  Loading… JS-рантайм ещё не отработал. Контент виден — просто ещё не разложен в сетку.
+  Через 3 сек. JS инициализирует гриды.
+</div>
+
+<h1 class="gr-mt-16">Slow Load Test</h1>
+<p class="gr-mb-8">
+  Страница имитирует медленную загрузку JS.
+  <span class="demo-code">data-auto="false"</span> на теге script отключает
+  автоинициализацию. Через 3 секунды <span class="demo-code">Griffincss.init()</span>
+  вызывается вручную — гриды раскладываются.
+</p>
+
+<p class="gr-mb-8">
+  С v0.7.0 <strong>FOUC-защиты в статическом CSS нет</strong>: правило
+  <span class="demo-code">opacity: 0</span> ставит сам рантайм при загрузке.
+  Если скрипт заблокирован или не выполнился, правила нет — и контент остаётся читаемым,
+  пусть и без сетки. При <span class="demo-code">data-auto="false"</span> защита появляется
+  только вместе с вызовом <span class="demo-code">init()</span>, поэтому до него блоки видны.
+</p>
+
+<p class="gr-mb-8">
+  Плавного проявления здесь не будет, и это не сбой. Правило
+  <span class="demo-code">opacity: 0</span> и класс
+  <span class="demo-code">.gr-ready</span> появляются внутри одного вызова
+  <span class="demo-code">init()</span>, то есть в одном кадре — состояние
+  «прозрачно» браузер ни разу не отрисовывает, и переходу не от чего
+  стартовать. Плавное появление видно там, где защита стоит с загрузки
+  скрипта, а раскладка приходит секундами позже:
+  <a href="stream-off.html">stream-off.html</a>.
+</p>
+
+<!-- Обычный контент — виден всегда, не зависит от JS -->
+<div class="always-visible">
+  Этот блок с классом <span class="demo-code">.gr-flex</span> виден всегда —
+  он не зависит от <span class="demo-code">data-gr-layout</span>.
+  CSS-утилиты (flex, spacing, visibility) работают без JS.
+</div>
+
+<div class="gr-flex gr-flex-wrap gr-gap gr-my-4">
+  <div class="area-a gr-py-2 gr-px-4">Flex-элемент 1</div>
+  <div class="area-b gr-py-2 gr-px-4">Flex-элемент 2</div>
+  <div class="area-c gr-py-2 gr-px-4">Flex-элемент 3</div>
+</div>
+
+<!-- Grid-контейнер: до вызова Griffincss.init() виден, но не разложен -->
+<h2>Grid-контейнер 1 — буквенная раскладка</h2>
+<p class="placeholder-note" id="note1">
+  Здесь будет <span class="demo-code">data-gr-layout="a3b4-c2d5"</span>.
+  Сейчас блоки идут потоком — сетки ещё нет.
+</p>
+<div data-gr-layout="a3b4-c2d5" class="gr-mb-4">
+  <div class="gr-area-a area-a">A (3 колонки)</div>
+  <div class="gr-area-b area-b">B (4 колонки)</div>
+  <div class="gr-area-c area-c">C (2 колонки)</div>
+  <div class="gr-area-d area-d">D (5 колонок)</div>
+</div>
+
+<!-- Второй grid-контейнер с авто-присвоением -->
+<h2>Grid-контейнер 2 — карточки (авто-присвоение)</h2>
+<p class="placeholder-note" id="note2">
+  Здесь будет <span class="demo-code">data-gr-layout="a2b2c2-a2d2e2"</span>
+  с авто-присвоением классов. Сейчас блоки идут потоком.
+</p>
+<div data-gr-layout="a2b2c2-a2d2e2">
+  <div class="card gr-bg-accent gr-text-on-accent">A (2×2)</div>
+  <div class="card"><h4>Карточка B</h4><p>Ряд 1</p></div>
+  <div class="card"><h4>Карточка C</h4><p>Ряд 1</p></div>
+  <div class="card"><h4>Карточка D</h4><p>Ряд 2</p></div>
+  <div class="card"><h4>Карточка E</h4><p>Ряд 2</p></div>
+</div>
+
+<script>
+  // Убираем placeholder-надписи и запускаем инициализацию через 3 секунды
+  setTimeout(function() {
+    Griffincss.init();
+
+    // Обновляем статус
+    var status = document.getElementById('status');
+    status.textContent = 'JS-рантайм отработал. Grid-контейнеры разложены в сетку.';
+    status.className = 'ready';
+
+    // Убираем placeholder-надписи
+    var notes = document.querySelectorAll('.placeholder-note');
+    for (var i = 0; i < notes.length; i++) {
+      notes[i].style.display = 'none';
+    }
+
+    console.log('Griffincss initialized after 3s delay');
+  }, 3000);
+</script>
+
+</body>
+</html>

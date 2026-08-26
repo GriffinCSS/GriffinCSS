@@ -1,0 +1,30 @@
+// Griffincss — Конфигурация оси оформления
+// Единственная точка настройки состава оси, общая для ядра и компонентов:
+// griffincss-ui peer-зависит от ядра и читает список отсюда, поэтому двум
+// спискам разойтись негде.
+//
+//   @use 'griffincss-core/scss/style-config' with ($gr-styles: (strict));
+//
+// Пустой список — ось выключена целиком: ни блоков токенов в
+// griffincss-styles.css, ни структурных правил в griffincss-ui.css.
+//
+// standard в список не входит: в ядре ему нечего объявлять — стандартный
+// стиль и есть базовые значения :root, а в компонентах — базовое правило
+// модуля. Значением атрибута он при этом остаётся, см. _styles.scss.
+
+@use 'sass:list';
+
+$gr-known-styles: (airy, strict, compact);
+$gr-styles: $gr-known-styles !default;
+
+@each $gr-name in $gr-styles {
+  @if not list.index($gr-known-styles, $gr-name) {
+    @error 'Griffincss: неизвестный стиль «#{$gr-name}». Допустимы: #{$gr-known-styles}.';
+  }
+}
+
+// Заказан ли стиль. Гейт для блоков в _styles.scss и для структурных
+// правил в griffincss-ui.
+@function gr-style-enabled($gr-name) {
+  @return list.index($gr-styles, $gr-name) != null;
+}
