@@ -131,6 +131,96 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Модуль отвечает на вопрос «как двигаться», а «когда» задаёт кто-то
+  другой: атрибут, класс из JS, своё <code>:hover</code>-правило.
+  Рецепты ниже — три ходовые задачи движения, собранные с кнопками ui,
+  прозрачностью и событиями указателя.
+</p>
+
+<h3>Кнопка в состоянии отправки</h3>
+
+<p>
+  Форма ушла на сервер — кнопка показывает процесс: внутрь встаёт
+  вращающийся знак <code>.gr-animate-spin .gr-inline-block</code>
+  (или готовое кольцо <code>.gr-spinner .gr-spinner-current</code> из ui —
+  оно наследует цвет текста кнопки), а сама кнопка получает
+  <code>disabled</code>. Флекс кнопки уже выравнивает знак с текстом;
+  зазор — <code>.gr-gap-sm</code> не нужен, хватает пробела.
+</p>
+
+<pre><code>&lt;button class="gr-btn gr-btn-primary" disabled&gt;
+  &lt;span class="gr-animate-spin gr-inline-block" aria-hidden="true"&gt;↻&lt;/span&gt;
+  Сохраняем…
+&lt;/button&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Знак крутит <code>.gr-animate-spin</code>, недоступность — атрибут <code>disabled</code></div>
+  <div class="gr-flex gr-flex-wrap gr-gap-sm">
+    <button class="gr-btn gr-btn-primary" disabled>
+      <span class="gr-animate-spin gr-inline-block" aria-hidden="true">↻</span>
+      Сохраняем…
+    </button>
+    <button class="gr-btn gr-btn-secondary" disabled>
+      <span class="gr-spinner gr-spinner-sm gr-spinner-current" aria-hidden="true"></span>
+      Загружаем…
+    </button>
+  </div>
+</div>
+
+<h3>Плавная реакция на наведение</h3>
+
+<p>
+  Ховер-правило пишется в CSS приложения — а вот плавность его срабатывания
+  даёт разметка: <code>.gr-transition-colors .gr-duration-150</code>
+  на элементе, и смена фона из вашего <code>:hover</code> перестаёт
+  «мигать». Тот же принцип с тенью: <code>.gr-transition-shadow</code>
+  под своё правило подъёма — токен <code>--gr-transition</code> держит
+  сглаживание единым по всему интерфейсу.
+</p>
+
+<pre><code>/* CSS приложения */
+.menu-item:hover { background-color: var(--gr-color-surface); }
+
+&lt;!-- разметка: переход из утилит --&gt;
+&lt;a class="menu-item gr-transition-colors gr-duration-150 gr-p-2 gr-radius-2" href="#"&gt;Пункт меню&lt;/a&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Наведите: фон меняет своё CSS-правило, плавность — <code>.gr-transition-colors</code></div>
+  <nav class="gr-flex gr-flex-col gr-gap-sm" style="max-width:280px">
+    <a class="gr-p-2 gr-radius-2 gr-no-underline gr-text-ink gr-transition-colors gr-duration-150" href="#" onclick="return false" onmouseover="this.style.backgroundColor='var(--gr-color-surface-sunken)'" onmouseout="this.style.backgroundColor=''">Обзор</a>
+    <a class="gr-p-2 gr-radius-2 gr-no-underline gr-text-ink gr-transition-colors gr-duration-500" href="#" onclick="return false" onmouseover="this.style.backgroundColor='var(--gr-color-surface-sunken)'" onmouseout="this.style.backgroundColor=''">Отчёты — нарочно медленный (500 мс)</a>
+  </nav>
+</div>
+
+<h3>Появление и скрытие без keyframes</h3>
+
+<p>
+  Тост, подсказка, панель фильтров: атрибуты видимости переключает JS,
+  а движение целиком собирается из утилит. Скрытое состояние — пара
+  <code>.gr-opacity-0 .gr-pointer-events-none</code> (невидимое не должно
+  ловить клики), видимое — снятые JS-ом эти же классы;
+  <code>.gr-transition-opacity .gr-duration-300</code> превращает
+  переключение в плавное растворение. В отличие от <code>.gr-hidden</code>
+  элемент остаётся в потоке — вёрстка не дёргается. Готовый тост со
+  временем жизни и регионами — <a href="ui-feedback.html"><code>.gr-toast</code></a>.
+</p>
+
+<pre><code>&lt;div id="hint" class="gr-alert gr-alert-info gr-transition-opacity gr-duration-300
+                     gr-opacity-0 gr-pointer-events-none"&gt;Скопировано!&lt;/div&gt;
+
+&lt;script&gt;
+  hint.classList.remove('gr-opacity-0', 'gr-pointer-events-none'); // показать
+&lt;/script&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Показ — снятие <code>.gr-opacity-0</code>, движение — <code>.gr-transition-opacity</code></div>
+  <div class="gr-flex gr-flex-items-center gr-gap">
+    <button class="gr-btn gr-btn-primary gr-btn-sm" type="button"
+      onclick="const h=this.nextElementSibling; h.classList.toggle('gr-opacity-0'); h.classList.toggle('gr-pointer-events-none')">Показать / скрыть</button>
+    <span class="gr-badge gr-badge-success gr-transition-opacity gr-duration-300 gr-opacity-0 gr-pointer-events-none">Скопировано!</span>
+  </div>
+</div>
+
 </main>
 </div>
 

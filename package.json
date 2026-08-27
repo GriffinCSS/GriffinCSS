@@ -1,6 +1,6 @@
 {
   "name": "griffincss",
-  "version": "0.17.0",
+  "version": "0.19.0",
   "private": true,
   "description": "Монорепозиторий Griffincss: ядро griffincss-core, утилиты griffincss-utils и компоненты griffincss-ui",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
@@ -20,11 +20,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run sync && npm run build:core && npm run build:ui && npm run build:utils && npm run build:docs-index",
+    "build": "npm run sync && npm run build:core && npm run build:ui && npm run build:utils && npm run build:bundle && npm run build:docs-index",
     "build:core": "npm run build --workspace griffincss-core",
     "build:ui": "npm run build --workspace griffincss-ui",
     "build:utils": "npm run build --workspace griffincss-utils",
+    "build:bundle": "node scripts/build-bundle.mjs",
     "build:docs-index": "node scripts/build-docs-index.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
     "sync": "npm run sync-breakpoints && npm run sync-rule-table",
     "sync-breakpoints": "node scripts/sync-breakpoints.mjs",
     "sync-rule-table": "node scripts/sync-rule-table.mjs",

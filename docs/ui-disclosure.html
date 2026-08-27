@@ -232,6 +232,114 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Раскрытие экономит вертикаль там, где содержимого больше, чем внимания:
+  фильтры каталога, разделы карточки товара. Оба рецепта работают
+  без JS — аккордеон целиком, вкладки — как якорные ссылки.
+</p>
+
+<h3>Фильтры каталога сворачиваемыми группами</h3>
+
+<p>
+  Сайдбар каталога: группы «Цвет», «Размер», «Цена» — аккордеон
+  <code>.gr-accordion-flush</code> без рамки, внутри панелей — стопки
+  флажков <code>.gr-choice</code>. Ходовые группы открыты сразу
+  (<code>open</code>), редкие — свёрнуты; общий <code>name</code> здесь
+  не ставится: фильтруют по нескольким группам одновременно.
+</p>
+
+<pre><code>&lt;div class="gr-accordion gr-accordion-flush"&gt;
+  &lt;details class="gr-accordion-item" open&gt;
+    &lt;summary class="gr-accordion-trigger"&gt;Цвет&lt;/summary&gt;
+    &lt;div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm"&gt;
+      &lt;label class="gr-choice"&gt;&lt;input class="gr-checkbox" type="checkbox" checked&gt; Синий&lt;/label&gt;
+      &lt;label class="gr-choice"&gt;&lt;input class="gr-checkbox" type="checkbox"&gt; Зелёный&lt;/label&gt;
+    &lt;/div&gt;
+  &lt;/details&gt;
+  &lt;details class="gr-accordion-item"&gt;
+    &lt;summary class="gr-accordion-trigger"&gt;Размер&lt;/summary&gt;
+    &lt;div class="gr-accordion-panel"&gt;…&lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Группы независимы: без общего <code>name</code></div>
+  <div class="gr-accordion gr-accordion-flush" style="max-width: 20rem">
+    <details class="gr-accordion-item" open>
+      <summary class="gr-accordion-trigger">Цвет</summary>
+      <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox" checked> Синий</label>
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> Зелёный</label>
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> Терракотовый</label>
+      </div>
+    </details>
+    <details class="gr-accordion-item">
+      <summary class="gr-accordion-trigger">Размер</summary>
+      <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> S</label>
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> M</label>
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> L</label>
+      </div>
+    </details>
+    <details class="gr-accordion-item">
+      <summary class="gr-accordion-trigger">Цена</summary>
+      <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> До 5 000 ₽</label>
+        <label class="gr-choice"><input class="gr-checkbox" type="checkbox"> 5–15 тыс. ₽</label>
+      </div>
+    </details>
+  </div>
+</div>
+
+<h3>Карточка товара: описание, характеристики, отзывы</h3>
+
+<p>
+  Разделы карточки товара — вкладки <code>data-gr-tabs</code>: якорные
+  ссылки в ряду, панели — секции. В панели характеристик живёт компактная
+  таблица <a href="ui-tables.html"><code>.gr-table-compact</code></a>,
+  во вкладке отзывов — счётчик в заголовке <code>.gr-badge-count</code>.
+  Без скрипта всё это — обычная страница с оглавлением из якорей.
+</p>
+
+<pre><code>&lt;div class="gr-tabs" data-gr-tabs&gt;
+  &lt;nav class="gr-tablist" aria-label="Разделы товара"&gt;
+    &lt;a class="gr-tab" href="#prod-desc" aria-current="page"&gt;Описание&lt;/a&gt;
+    &lt;a class="gr-tab" href="#prod-specs"&gt;Характеристики&lt;/a&gt;
+    &lt;a class="gr-tab" href="#prod-reviews"&gt;Отзывы &lt;span class="gr-badge gr-badge-count"&gt;7&lt;/span&gt;&lt;/a&gt;
+  &lt;/nav&gt;
+  &lt;section class="gr-tab-panel" id="prod-desc"&gt;…&lt;/section&gt;
+  &lt;section class="gr-tab-panel" id="prod-specs"&gt;
+    &lt;table class="gr-table gr-table-compact"&gt;…&lt;/table&gt;
+  &lt;/section&gt;
+  &lt;section class="gr-tab-panel" id="prod-reviews"&gt;…&lt;/section&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Вкладки рабочие: характеристики — таблицей, отзывы — со счётчиком</div>
+  <div class="gr-tabs" data-gr-tabs>
+    <nav class="gr-tablist" aria-label="Разделы товара">
+      <a class="gr-tab" href="#demo-prod-desc" aria-current="page">Описание</a>
+      <a class="gr-tab" href="#demo-prod-specs">Характеристики</a>
+      <a class="gr-tab" href="#demo-prod-reviews">Отзывы <span class="gr-badge gr-badge-count">7</span></a>
+    </nav>
+    <section class="gr-tab-panel" id="demo-prod-desc">
+      <p class="gr-mb-0 gr-text-sm gr-text-ink-secondary">Кресло из ротанга с каркасом из бука. Съёмные подушки, чехлы стираются при 30°.</p>
+    </section>
+    <section class="gr-tab-panel" id="demo-prod-specs">
+      <table class="gr-table gr-table-compact">
+        <tbody>
+          <tr><td>Ширина</td><td class="gr-text-end">62 см</td></tr>
+          <tr><td>Высота</td><td class="gr-text-end">84 см</td></tr>
+          <tr><td>Материал</td><td class="gr-text-end">ротанг, бук</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="gr-tab-panel" id="demo-prod-reviews">
+      <p class="gr-mb-0 gr-text-sm gr-text-ink-secondary">«Собрали за десять минут, сидеть мягко» — и ещё шесть отзывов.</p>
+    </section>
+  </div>
+</div>
+
 </main>
 </div>
 

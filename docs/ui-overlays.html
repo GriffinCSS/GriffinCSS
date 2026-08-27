@@ -439,6 +439,125 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Слои собираются из уже показанных частей: меню — из дропдауна
+  и аватара, корзина — из панели и медиа-объектов. Оба рецепта живые.
+</p>
+
+<h3>Меню пользователя в шапке</h3>
+
+<p>
+  По клику на аватар — панель к концу строки: шапка-группа с именем
+  и почтой (<code>.gr-menu-header</code> двумя строками), пункты,
+  разделитель и «Выйти» в <code>.gr-menu-danger</code>. Всё
+  на <code>&lt;details&gt;</code> — здесь есть опасное действие, поэтому
+  раскрытие по наведению не годится: нужно настоящее состояние.
+</p>
+
+<pre><code>&lt;details class="gr-dropdown gr-dropdown-end"&gt;
+  &lt;summary class="gr-btn gr-btn-ghost gr-btn-icon" aria-label="Меню пользователя"&gt;
+    &lt;span class="gr-avatar gr-avatar-sm"&gt;АК&lt;/span&gt;
+  &lt;/summary&gt;
+  &lt;div class="gr-dropdown-panel"&gt;
+    &lt;ul class="gr-menu"&gt;
+      &lt;li&gt;&lt;div class="gr-menu-header"&gt;Анна Ковалёва&lt;br&gt;
+        &lt;span class="gr-text-xs gr-text-ink-secondary gr-font-normal"&gt;anna@example.ru&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a class="gr-menu-item" href="/profile"&gt;Профиль&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a class="gr-menu-item" href="/settings"&gt;Настройки&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;hr class="gr-menu-sep"&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;button class="gr-menu-item gr-menu-danger" type="button"&gt;Выйти&lt;/button&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/details&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Кликните по аватару: группа-шапка, пункты, опасный «Выйти»</div>
+  <div class="gr-flex gr-flex-end">
+    <details class="gr-dropdown gr-dropdown-end">
+      <summary class="gr-btn gr-btn-ghost gr-btn-icon" aria-label="Меню пользователя"><span class="gr-avatar gr-avatar-sm">АК</span></summary>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><div class="gr-menu-header">Анна Ковалёва<br><span class="gr-text-xs gr-text-ink-secondary gr-font-normal">anna@example.ru</span></div></li>
+          <li><a class="gr-menu-item" href="#" onclick="return false">Профиль</a></li>
+          <li><a class="gr-menu-item" href="#" onclick="return false">Настройки</a></li>
+          <li><hr class="gr-menu-sep"></li>
+          <li><button class="gr-menu-item gr-menu-danger" type="button">Выйти</button></li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<h3>Корзина в выдвижной панели</h3>
+
+<p>
+  «Товар добавлен» — и справа выезжает корзина: <code>.gr-drawer
+  .gr-drawer-end</code>. Внутри позиции — медиа-объекты со стопкой
+  «название + цена» и кнопкой-крестиком, в подвале —
+  <code>.gr-flex-between</code> с итогом и кнопка оформления
+  на всю ширину. Контекст страницы не теряется — панель поверх,
+  щелчок мимо закрывает её (<code>data-gr-overlay-close</code>).
+</p>
+
+<pre><code>&lt;dialog class="gr-drawer gr-drawer-end" id="cart" aria-label="Корзина" data-gr-overlay-close&gt;
+  &lt;div class="gr-modal-header"&gt;
+    &lt;strong&gt;Корзина&lt;/strong&gt;
+    &lt;form method="dialog"&gt;&lt;button class="gr-btn gr-btn-ghost gr-btn-icon" aria-label="Закрыть"&gt;✕&lt;/button&gt;&lt;/form&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-modal-body gr-flex gr-flex-col gr-gap"&gt;
+    &lt;div class="gr-flex gr-gap-sm gr-flex-items-start"&gt;
+      &lt;span class="gr-avatar gr-avatar-square"&gt;🪑&lt;/span&gt;
+      &lt;div class="gr-min-w-0 gr-flex-1"&gt;
+        &lt;p class="gr-m-0 gr-text-sm gr-font-medium"&gt;Кресло «Дюна»&lt;/p&gt;
+        &lt;p class="gr-m-0 gr-text-xs gr-text-ink-secondary"&gt;1 × 12 400 ₽&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm"&gt;✕&lt;span class="gr-sr-only"&gt;Убрать&lt;/span&gt;&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-modal-footer gr-flex gr-flex-col gr-gap-sm"&gt;
+    &lt;div class="gr-flex gr-flex-between gr-w-full"&gt;
+      &lt;span&gt;Итого&lt;/span&gt;&lt;span class="gr-font-bold"&gt;18 300 ₽&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;button class="gr-btn gr-btn-primary gr-btn-block"&gt;Оформить заказ&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/dialog&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Живой пример: позиции — медиа-объекты, итог — в подвале</div>
+  <button class="gr-btn gr-btn-primary" type="button" data-open="demo-cart">Открыть корзину</button>
+</div>
+
+<dialog class="gr-drawer gr-drawer-end" id="demo-cart" aria-label="Корзина" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Корзина</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-gap-sm gr-flex-items-start">
+      <span class="gr-avatar gr-avatar-square">🪑</span>
+      <div class="gr-min-w-0 gr-flex-1">
+        <p class="gr-m-0 gr-text-sm gr-font-medium">Кресло «Дюна»</p>
+        <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">1 × 12 400 ₽</p>
+      </div>
+      <button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm" type="button">✕<span class="gr-sr-only">Убрать из корзины</span></button>
+    </div>
+    <div class="gr-flex gr-gap-sm gr-flex-items-start">
+      <span class="gr-avatar gr-avatar-square">💡</span>
+      <div class="gr-min-w-0 gr-flex-1">
+        <p class="gr-m-0 gr-text-sm gr-font-medium">Торшер «Свет»</p>
+        <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">1 × 5 900 ₽</p>
+      </div>
+      <button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm" type="button">✕<span class="gr-sr-only">Убрать из корзины</span></button>
+    </div>
+  </div>
+  <div class="gr-modal-footer gr-flex gr-flex-col gr-gap-sm">
+    <div class="gr-flex gr-flex-between gr-w-full">
+      <span>Итого</span><span class="gr-font-bold">18 300 ₽</span>
+    </div>
+    <button class="gr-btn gr-btn-primary gr-btn-block" type="button">Оформить заказ</button>
+  </div>
+</dialog>
+
 </main>
 </div>
 

@@ -1,0 +1,74 @@
+# Публикация документации на GitVerse Pages.
+#
+# Этот файл существует только в публичном репозитории — он не копируется
+# из приватного, а создаётся при сборке.
+#
+# Источник публикации в «Настройки → Страницы» должен быть «Воркфлоу»:
+# при источнике «Ветка» площадка соберёт репозиторий сама, генератором
+# Jekyll, и публикация отсюда не сработает.
+#
+# Синтаксис площадки: https://gitverse.ru/docs/pages/docs/from-workflow
+name: Публикация Pages
+
+on:
+  push:
+    branches:
+      - main
+  # Ручной запуск нужен на случай, когда выкладку пересобирают без правок:
+  # например, после включения источника публикации в настройках.
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      - name: Ставим Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # npm ci не нужен: packages/*/dist лежит в репозитории, а у сборки
+      # сайта ноль зависимостей. Ставить их пришлось бы ради одной команды.
+      - name: Собираем _site
+        run: node scripts/build-pages.mjs
+
+      # Владелец экшенов — actions, а не gitverse: в документации площадки
+      # (раздел «Публикация через workflow») в примерах стоит
+      # gitverse/upload-pages-artifact, но такого репозитория нет, и раннер
+      # падает с «Repository not found». Настоящие лежат рядом с checkout
+      # и setup-node: gitverse.ru/actions/upload-pages-artifact и
+      # gitverse.ru/actions/deploy-pages.
+      #
+      # retention-days не трогаем: у экшена по умолчанию сутки, и площадка
+      # просит не увеличивать срок без нужды — артефакты идут в общий лимит.
+      - name: Загружаем артефакт
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: _site
+          # Вход зовётся name, хотя на другой стороне он artifact_name.
+          name: gitverse-pages
+
+  deploy:
+    name: deploy-pages
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Go нужен самому deploy-pages: это go-экшен (runs.using: go), и без
+      # тулчейна шаг падает. В документации площадки этого нет — видно
+      # только в workflow, который она генерирует сама при включении Pages.
+      - name: Ставим Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.23'
+
+      # Токен не передаётся: у экшена он по умолчанию берётся из токена
+      # площадки. Имя артефакта задано явно с обеих сторон, чтобы шаги
+      # не держались на совпадении умолчаний.
+      - name: Публикуем сайт
+        uses: actions/deploy-pages@v1
+        with:
+          artifact_name: gitverse-pages

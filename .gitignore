@@ -4,3 +4,9 @@ node_modules/
 
 # карты кода рантаймов: собираются terser, в репозиторий не идут
 packages/*/dist/*.js.map
+
+# сайт документации для Pages: собирается scripts/build-pages.mjs
+_site/
+
+# техническая библиотека примеров для документации: не публикуется
+.examples-library/

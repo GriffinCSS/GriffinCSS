@@ -285,6 +285,117 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Состояния сильны, когда повторяют форму будущего содержимого и стоят
+  на своих местах в потоке. Два рецепта ниже: заглушка, которая копирует
+  сетку каталога, и шаги, ведущие форму анкеты.
+</p>
+
+<h3>Скелетон повторяет будущую сетку</h3>
+
+<p>
+  Заглушка обязана занимать ровно те клетки, куда приедут карточки, —
+  иначе загрузка закончится прыжком вёрстки. Сетка та же, что у каталога
+  (<code>.gr-grid-1 .gr-grid-3-md .gr-gap</code>), внутри каждой карточки —
+  обложка <code>.gr-skeleton</code> с тем же <code>.gr-aspect-video</code>,
+  что будет у фото, и строки в <code>.gr-skeleton-group</code>. Слово
+  для скринридера — одно на весь список, а сами заглушки скрыты от него
+  целиком.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-md gr-gap" aria-hidden="true"&gt;
+  &lt;div class="gr-card"&gt;
+    &lt;span class="gr-skeleton gr-w-full gr-aspect-video"&gt;&lt;/span&gt;
+    &lt;div class="gr-skeleton-group"&gt;
+      &lt;div class="gr-skeleton-stack"&gt;
+        &lt;span class="gr-skeleton gr-skeleton-text" style="inline-size: 70%"&gt;&lt;/span&gt;
+        &lt;span class="gr-skeleton gr-skeleton-text"&gt;&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  …ещё две такие же…
+&lt;/div&gt;
+&lt;span class="gr-sr-only" role="status"&gt;Загружаем каталог&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Клетки и пропорции — как у будущих карточек: загрузка закончится без прыжка</div>
+  <div class="gr-grid-1 gr-grid-3-md gr-gap" aria-hidden="true">
+    <div class="gr-card">
+      <span class="gr-skeleton gr-w-full gr-aspect-video"></span>
+      <div class="gr-skeleton-group">
+        <div class="gr-skeleton-stack">
+          <span class="gr-skeleton gr-skeleton-text" style="inline-size: 70%"></span>
+          <span class="gr-skeleton gr-skeleton-text"></span>
+        </div>
+      </div>
+    </div>
+    <div class="gr-card">
+      <span class="gr-skeleton gr-w-full gr-aspect-video"></span>
+      <div class="gr-skeleton-group">
+        <div class="gr-skeleton-stack">
+          <span class="gr-skeleton gr-skeleton-text" style="inline-size: 55%"></span>
+          <span class="gr-skeleton gr-skeleton-text"></span>
+        </div>
+      </div>
+    </div>
+    <div class="gr-card">
+      <span class="gr-skeleton gr-w-full gr-aspect-video"></span>
+      <div class="gr-skeleton-group">
+        <div class="gr-skeleton-stack">
+          <span class="gr-skeleton gr-skeleton-text" style="inline-size: 80%"></span>
+          <span class="gr-skeleton gr-skeleton-text"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="gr-sr-only" role="status">Загружаем каталог</span>
+</div>
+
+<h3>Анкета с шагами и парой «Назад / Далее»</h3>
+
+<p>
+  Многошаговая форма: сверху ряд <code>.gr-steps</code> показывает, где
+  человек находится, ниже — поля текущего шага, внизу — пара кнопок,
+  разведённая <code>.gr-flex-between</code>: «Назад» тихая, «Далее»
+  основная. Пройденное — <code>.gr-step-done</code> с галочкой, текущее —
+  <code>aria-current="step"</code>: и глазам, и скринридеру.
+</p>
+
+<pre><code>&lt;ol class="gr-steps gr-mb-6"&gt;
+  &lt;li class="gr-step gr-step-done"&gt;&lt;span class="gr-step-marker" aria-hidden="true"&gt;✓&lt;/span&gt;&lt;span class="gr-step-label"&gt;Контакты&lt;/span&gt;&lt;/li&gt;
+  &lt;li class="gr-step" aria-current="step"&gt;&lt;span class="gr-step-marker" aria-hidden="true"&gt;2&lt;/span&gt;&lt;span class="gr-step-label"&gt;Компания&lt;/span&gt;&lt;/li&gt;
+  &lt;li class="gr-step"&gt;&lt;span class="gr-step-marker" aria-hidden="true"&gt;3&lt;/span&gt;&lt;span class="gr-step-label"&gt;Тариф&lt;/span&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class="gr-field gr-mb-6"&gt;
+  &lt;label class="gr-label" for="company"&gt;Название компании&lt;/label&gt;
+  &lt;input class="gr-input" id="company" type="text"&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-flex gr-flex-between"&gt;
+  &lt;button class="gr-btn gr-btn-ghost"&gt;← Назад&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-primary"&gt;Далее&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Шаги ведут, кнопки разведены по краям</div>
+  <div style="max-width: 30rem">
+    <ol class="gr-steps gr-mb-6">
+      <li class="gr-step gr-step-done"><span class="gr-step-marker" aria-hidden="true">✓</span><span class="gr-step-label">Контакты</span></li>
+      <li class="gr-step" aria-current="step"><span class="gr-step-marker" aria-hidden="true">2</span><span class="gr-step-label">Компания</span></li>
+      <li class="gr-step"><span class="gr-step-marker" aria-hidden="true">3</span><span class="gr-step-label">Тариф</span></li>
+    </ol>
+    <div class="gr-field gr-mb-6">
+      <label class="gr-label" for="states-demo-company">Название компании</label>
+      <input class="gr-input" id="states-demo-company" type="text" placeholder="ООО «Грифон»">
+    </div>
+    <div class="gr-flex gr-flex-between">
+      <button class="gr-btn gr-btn-ghost" type="button">← Назад</button>
+      <button class="gr-btn gr-btn-primary" type="button">Далее</button>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 

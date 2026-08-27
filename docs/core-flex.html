@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/utils/dist/griffincss-utils.js"></script>
 </head>
 <body>
 
@@ -210,7 +211,14 @@
   </div>
 </div>
 
-<h2>Практические примеры</h2>
+<h2>Примеры использования</h2>
+
+<p>
+  Флекс — рабочая лошадка одномерных раскладок: всё, что выстраивается
+  в ряд или колонку, собирается из него и токена <code>.gr-gap-*</code>.
+  Рецепты ниже — от шапки до скролл-ленты; двумерные сетки и именованные
+  области — территория <a href="core-grid.html">грида</a>.
+</p>
 
 <h3>Шапка с навигацией</h3>
 
@@ -255,6 +263,97 @@
     <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 1</h4></div>
     <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 2</h4></div>
     <div class="card-demo gr-flex-1" style="min-width:180px;"><h4>Карточка 3</h4></div>
+  </div>
+</div>
+
+<h3>Идеальное центрирование</h3>
+
+<p>
+  Пустое состояние, сплэш, содержимое модалки — один блок точно по центру
+  обеих осей. Флексом это пара <code>.gr-flex-center
+  .gr-flex-items-center</code>; когда центрируется ровно один элемент,
+  то же самое короче делает <code>.gr-grid-place-center</code>
+  из <a href="core-grid.html">грида</a>. Флекс-вариант выигрывает, когда
+  в центре стоит стопка: спиннер, подпись и кнопка складываются
+  в <code>.gr-flex-col</code> с зазором.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-center gr-flex-items-center gr-min-h-screen"&gt;
+  &lt;div class="gr-flex gr-flex-col gr-flex-items-center gr-gap-sm"&gt;
+    &lt;span class="gr-spinner gr-spinner-lg"&gt;&lt;/span&gt;
+    &lt;p class="gr-m-0 gr-text-ink-secondary"&gt;Загружаем проекты…&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Центр обеих осей + стопка <code>.gr-flex-col</code> внутри (в демо высота ограничена)</div>
+  <div class="gr-flex gr-flex-center gr-flex-items-center gr-bg-surface gr-radius-2" style="min-height:200px">
+    <div class="gr-flex gr-flex-col gr-flex-items-center gr-gap-sm">
+      <span class="gr-spinner gr-spinner-lg" aria-hidden="true"></span>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Загружаем проекты…</p>
+    </div>
+  </div>
+</div>
+
+<h3>Выравнивание по базовой линии</h3>
+
+<p>
+  Цена «2900 ₽ /мес» и шапка секции с ссылкой «Все →» — случаи, где
+  элементы разного кегля должны стоять на одной строчной линии, а не
+  по центру блока: центр у разных кеглей «пляшет».
+  <code>.gr-flex-items-baseline</code> сажает всех на базовую линию текста,
+  <code>.gr-flex-between</code> разводит заголовок и ссылку по краям.
+</p>
+
+<pre><code>&lt;!-- цена --&gt;
+&lt;p class="gr-flex gr-flex-items-baseline gr-gap-sm"&gt;
+  &lt;span class="gr-text-4xl gr-font-extrabold"&gt;2900 ₽&lt;/span&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary"&gt;/мес&lt;/span&gt;
+&lt;/p&gt;
+
+&lt;!-- шапка секции --&gt;
+&lt;div class="gr-flex gr-flex-between gr-flex-items-baseline"&gt;
+  &lt;h2&gt;Новинки&lt;/h2&gt;
+  &lt;a href="#"&gt;Все →&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Разные кегли — одна базовая линия</div>
+  <p class="gr-m-0 gr-mb-4 gr-flex gr-flex-items-baseline gr-gap-sm">
+    <span class="gr-text-4xl gr-font-extrabold">2900 ₽</span>
+    <span class="gr-text-sm gr-text-ink-secondary">/мес</span>
+  </p>
+  <div class="gr-flex gr-flex-between gr-flex-items-baseline gr-border-t gr-pt-4">
+    <h4 class="gr-m-0 gr-text-xl">Новинки</h4>
+    <a class="gr-text-sm" href="#" onclick="return false">Все →</a>
+  </div>
+</div>
+
+<h3>Горизонтальная скролл-лента</h3>
+
+<p>
+  Мобильный ряд категорий или карточек «с этим покупают»: ряд не
+  переносится (<code>.gr-flex-nowrap</code>) и прокручивается пальцем —
+  <code>.gr-overflow-x-auto</code> на контейнере. Карточкам нельзя
+  сжиматься; класса «flex-none» в ядре нет, и он не нужен — флекс
+  не сжимает элемент ниже его минимума, поэтому ширину ленты держит
+  <code>.gr-min-w-[160px]</code> произвольным значением. Прищёлкивание
+  к краю (scroll-snap) в утилитах не живёт — при желании это две строки
+  своего CSS поверх той же разметки.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-nowrap gr-gap gr-overflow-x-auto gr-pb-2"&gt;
+  &lt;div class="gr-min-w-[160px]"&gt;Карточка&lt;/div&gt;
+  &lt;div class="gr-min-w-[160px]"&gt;Карточка&lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Лента прокручивается по горизонтали, ряд не переносится</div>
+  <div class="gr-flex gr-flex-nowrap gr-gap gr-overflow-x-auto gr-pb-2">
+    <div class="card-demo gr-min-w-[160px]"><h4>Кроссовки</h4></div>
+    <div class="card-demo gr-min-w-[160px]"><h4>Куртки</h4></div>
+    <div class="card-demo gr-min-w-[160px]"><h4>Рюкзаки</h4></div>
+    <div class="card-demo gr-min-w-[160px]"><h4>Кепки</h4></div>
+    <div class="card-demo gr-min-w-[160px]"><h4>Очки</h4></div>
+    <div class="card-demo gr-min-w-[160px]"><h4>Часы</h4></div>
   </div>
 </div>
 

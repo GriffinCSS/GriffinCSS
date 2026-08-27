@@ -328,6 +328,114 @@
   <code>data-gr-layout</code>.</p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Строка раскладки сильнее всего там, где флексом пришлось бы городить
+  вложенные обёртки: каркасы страниц, зигзаги, журнальные сетки. Три
+  рецепта ниже — классика, записанная одним атрибутом на контейнер.
+</p>
+
+<h3>Holy grail: каркас с боковыми колонками</h3>
+
+<p>
+  Классика документаций и порталов: шапка, навигация слева, контент,
+  оглавление справа, футер. Вся геометрия — одна строка
+  <code>hdr6-nav1main4toc1-ftr6</code>. Мобильная версия ещё короче:
+  в базовом <code>hdr1-main1-ftr1</code> областей <code>nav</code>
+  и <code>toc</code> просто нет — и рантайм скрывает эти элементы сам,
+  без единого <code>.gr-hidden</code>: скрытие отсутствующих областей
+  встроено в правила раскладки.
+</p>
+
+<pre><code>&lt;div data-gr-layout="hdr1-main1-ftr1"
+     data-gr-layout-lg="hdr6-nav1main4toc1-ftr6"&gt;
+  &lt;header class="gr-area-hdr"&gt;Шапка&lt;/header&gt;
+  &lt;nav class="gr-area-nav"&gt;Навигация&lt;/nav&gt;
+  &lt;main class="gr-area-main"&gt;Контент&lt;/main&gt;
+  &lt;aside class="gr-area-toc"&gt;Оглавление&lt;/aside&gt;
+  &lt;footer class="gr-area-ftr"&gt;Футер&lt;/footer&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">До 1024px навигация и оглавление скрыты автоматически (сузьте окно)</div>
+  <div data-gr-layout="hdr1-main1-ftr1" data-gr-layout-lg="hdr6-nav1main4toc1-ftr6">
+    <div class="gr-area-hdr dg-a demo-grid-item">Шапка</div>
+    <div class="gr-area-nav dg-c demo-grid-item">Навигация</div>
+    <div class="gr-area-main dg-b demo-grid-item">Контент</div>
+    <div class="gr-area-toc dg-c demo-grid-item">Оглавление</div>
+    <div class="gr-area-ftr dg-d demo-grid-item">Футер</div>
+  </div>
+</div>
+
+<h3>Split-секции с зигзагом</h3>
+
+<p>
+  Лендинговый «зигзаг» текст-картинка: у первой секции раскладка
+  <code>txt1img1</code>, у следующей — <code>img1txt1</code>. Сторона
+  меняется перестановкой букв в строке — не нужны ни order-классы,
+  ни зеркальная разметка. На мобильном обе секции складываются
+  в одинаковый столбик <code>txt1-img1</code>: текст всегда сверху,
+  какой бы ни была десктопная сторона.
+</p>
+
+<pre><code>&lt;section data-gr-layout="txt1-img1" data-gr-layout-md="txt1img1"&gt;
+  &lt;div class="gr-area-txt"&gt;Текст&lt;/div&gt;
+  &lt;div class="gr-area-img"&gt;Картинка&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;section data-gr-layout="txt1-img1" data-gr-layout-md="img1txt1"&gt;
+  &lt;div class="gr-area-txt"&gt;Текст&lt;/div&gt;
+  &lt;div class="gr-area-img"&gt;Картинка&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Сторона картинки — перестановка букв в строке раскладки</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div data-gr-layout="txt1-img1" data-gr-layout-md="txt1img1">
+      <div class="gr-area-txt card-demo gr-text-left">
+        <h4 class="gr-m-0 gr-mb-1">Быстрый старт</h4>
+        <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">Текст слева, картинка справа.</p>
+      </div>
+      <div class="gr-area-img dg-b demo-grid-item">Картинка</div>
+    </div>
+    <div data-gr-layout="txt1-img1" data-gr-layout-md="img1txt1">
+      <div class="gr-area-txt card-demo gr-text-left">
+        <h4 class="gr-m-0 gr-mb-1">Гибкие темы</h4>
+        <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">А здесь стороны поменялись — <code>img1txt1</code>.</p>
+      </div>
+      <div class="gr-area-img dg-b demo-grid-item">Картинка</div>
+    </div>
+  </div>
+</div>
+
+<h3>Бенто-сетка дашборда</h3>
+
+<p>
+  Журнальная раскладка из клеток разного размера: три KPI-плитки в ряд,
+  под ними широкий график на два ряда и колонка списка рядом. Прямоугольник
+  графика описывается повторением области в соседних рядах —
+  <code>big2list1-big2list1</code>, — а на мобильном всё это одной базовой
+  строкой складывается в стопку.
+</p>
+
+<pre><code>&lt;div data-gr-layout="a1-b1-c1-big1-list1"
+     data-gr-layout-md="a1b1c1-big2list1-big2list1"&gt;
+  &lt;div class="gr-area-a"&gt;Выручка&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;Заказы&lt;/div&gt;
+  &lt;div class="gr-area-c"&gt;Конверсия&lt;/div&gt;
+  &lt;div class="gr-area-big"&gt;График&lt;/div&gt;
+  &lt;div class="gr-area-list"&gt;Последние события&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Клетки разного размера — одна строка: <code>a1b1c1-big2list1-big2list1</code></div>
+  <div data-gr-layout="a1-b1-c1-big1-list1" data-gr-layout-md="a1b1c1-big2list1-big2list1">
+    <div class="gr-area-a dg-a demo-grid-item">Выручка<br><strong>1,2 млн ₽</strong></div>
+    <div class="gr-area-b dg-a demo-grid-item">Заказы<br><strong>318</strong></div>
+    <div class="gr-area-c dg-a demo-grid-item">Конверсия<br><strong>3,4 %</strong></div>
+    <div class="gr-area-big dg-b demo-grid-item">График — 2 колонки × 2 ряда</div>
+    <div class="gr-area-list dg-c demo-grid-item">Последние события</div>
+  </div>
+</div>
+
 </main>
 </div>
 

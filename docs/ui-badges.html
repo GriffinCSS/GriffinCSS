@@ -192,6 +192,96 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Плашки, точки и аватары — приправа, а не блюдо: они живут в таблицах,
+  меню и заголовках. Часть сценариев уже разобрана по соседству — статус
+  в <a href="ui-tables.html">строке таблицы</a>, метка
+  на <a href="ui-cards.html">фото товара</a>, счётчик
+  <a href="arbitrary-values.html">за углом кнопки</a>. Здесь — ещё три.
+</p>
+
+<h3>Счётчики в боковом меню</h3>
+
+<p>
+  Пункт навигации со счётчиком непрочитанного: подпись слева, число
+  справа — <code>.gr-flex .gr-flex-between</code> на пункте
+  и <code>.gr-badge-count</code> с цветом по смыслу: опасный —
+  для требующего реакции, акцентный — для просто нового. Ряд пунктов —
+  знакомая стопка <code>.gr-flex-col .gr-gap-sm</code>.
+</p>
+
+<pre><code>&lt;nav class="gr-flex gr-flex-col gr-gap-sm"&gt;
+  &lt;a class="gr-flex gr-flex-between gr-flex-items-center gr-p-2 gr-radius-2 gr-no-underline" href="#"&gt;
+    Входящие &lt;span class="gr-badge gr-badge-count gr-badge-danger"&gt;12&lt;/span&gt;
+  &lt;/a&gt;
+  &lt;a class="gr-flex gr-flex-between gr-flex-items-center gr-p-2 gr-radius-2 gr-no-underline" href="#"&gt;
+    Черновики &lt;span class="gr-badge gr-badge-count"&gt;3&lt;/span&gt;
+  &lt;/a&gt;
+&lt;/nav&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Число дожато вправо <code>.gr-flex-between</code>, цвет — по срочности</div>
+  <nav class="gr-flex gr-flex-col gr-gap-sm" style="max-width:260px">
+    <a class="gr-flex gr-flex-between gr-flex-items-center gr-p-2 gr-radius-2 gr-no-underline gr-text-ink" href="#" onclick="return false">Входящие <span class="gr-badge gr-badge-count gr-badge-danger">12</span></a>
+    <a class="gr-flex gr-flex-between gr-flex-items-center gr-p-2 gr-radius-2 gr-no-underline gr-text-ink" href="#" onclick="return false">Упоминания <span class="gr-badge gr-badge-count gr-badge-accent">4</span></a>
+    <a class="gr-flex gr-flex-between gr-flex-items-center gr-p-2 gr-radius-2 gr-no-underline gr-text-ink" href="#" onclick="return false">Черновики <span class="gr-badge gr-badge-count">3</span></a>
+  </nav>
+</div>
+
+<h3>Активные фильтры каталога</h3>
+
+<p>
+  Выбранные фильтры — снимаемые теги в ряд с переносом
+  (<code>.gr-flex-wrap .gr-gap-sm</code>); крестики рабочие, их убирает
+  делегированный обработчик по <code>data-gr-dismiss</code>. Рядом —
+  тихая кнопка «Сбросить всё» на <code>.gr-btn-link</code>: действие
+  на странице, значит кнопка, а не ссылка.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center"&gt;
+  &lt;span class="gr-tag"&gt;Цвет: синий
+    &lt;button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать фильтр цвета"&gt;×&lt;/button&gt;
+  &lt;/span&gt;
+  &lt;span class="gr-tag"&gt;До 15 000 ₽
+    &lt;button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать фильтр цены"&gt;×&lt;/button&gt;
+  &lt;/span&gt;
+  &lt;button class="gr-btn gr-btn-link gr-btn-sm"&gt;Сбросить всё&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Крестики рабочие — попробуйте снять фильтр</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center">
+    <span class="gr-tag">Цвет: синий
+      <button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать фильтр цвета">×</button>
+    </span>
+    <span class="gr-tag">До 15 000 ₽
+      <button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать фильтр цены">×</button>
+    </span>
+    <span class="gr-tag">В наличии
+      <button class="gr-tag-remove" type="button" data-gr-dismiss aria-label="Убрать фильтр наличия">×</button>
+    </span>
+    <button class="gr-btn gr-btn-link gr-btn-sm" type="button">Сбросить всё</button>
+  </div>
+</div>
+
+<h3>«Beta» в заголовке: кегль наследуется сам</h3>
+
+<p>
+  Пометка версии или тарифа рядом с названием. Здесь окупается
+  <code>em</code>-кегль плашки: в крупном заголовке она крупная,
+  в подписи — мелкая, и это один и тот же класс без модификаторов
+  размера. Приподнимать её к верху строки не нужно — базовая линия
+  и так общая.
+</p>
+
+<pre><code>&lt;h2&gt;Отчёты &lt;span class="gr-badge gr-badge-accent"&gt;Beta&lt;/span&gt;&lt;/h2&gt;
+&lt;p class="gr-text-sm"&gt;Раздел «Отчёты» &lt;span class="gr-badge gr-badge-accent"&gt;Beta&lt;/span&gt; открыт всем.&lt;/p&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Один класс, два кегля: плашка меряет себя в <code>em</code></div>
+  <h3 class="gr-m-0 gr-mb-2 gr-text-2xl">Отчёты <span class="gr-badge gr-badge-accent">Beta</span></h3>
+  <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Раздел «Отчёты» <span class="gr-badge gr-badge-accent">Beta</span> открыт всем пользователям.</p>
+</div>
+
 </main>
 </div>
 

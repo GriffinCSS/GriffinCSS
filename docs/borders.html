@@ -141,6 +141,165 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Граница почти никогда не приходит одна: карточке нужны скругление
+  и поля, разделителю — правильные соседи, выделенной рамке — цвет
+  из палитры. Рецепты ниже собирают ходовые задачи из бордеров вместе
+  со скруглениями, тенями, цветами и флексом ядра.
+</p>
+
+<h3>Карточка из трёх утилит</h3>
+
+<p>
+  Фундамент любой библиотеки: панель, отделённая от фона. Собирается
+  триадой <code>.gr-border .gr-radius-4 .gr-p-4</code>; мягкости добавляет
+  <code>.gr-shadow-sm</code> из <a href="shadows.html">теней</a> — современный
+  стиль как раз «едва заметный бордер + лёгкая тень». Для повседневной
+  работы есть готовый <a href="ui-cards.html"><code>.gr-card</code></a>
+  с шапкой, футером и ховером из коробки — руками карточку собирают,
+  когда нужен нестандартный вид.
+</p>
+
+<pre><code>&lt;div class="gr-border gr-radius-4 gr-p-4 gr-shadow-sm"&gt;
+  &lt;h3 class="gr-mb-2"&gt;Тариф «Старт»&lt;/h3&gt;
+  &lt;p class="gr-m-0 gr-text-ink-secondary"&gt;Бордер, радиус, поля — три класса.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Панель — <code>.gr-border .gr-radius-4 .gr-p-4</code> + <code>.gr-shadow-sm</code></div>
+  <div class="gr-grid-1 gr-grid-2-md gr-gap">
+    <div class="gr-border gr-radius-4 gr-p-4 gr-shadow-sm">
+      <h4 class="gr-m-0 gr-mb-2">Тариф «Старт»</h4>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Бордер, радиус, поля — три класса.</p>
+    </div>
+    <div class="gr-border gr-radius-4 gr-p-4 gr-shadow-sm">
+      <h4 class="gr-m-0 gr-mb-2">Тариф «Команда»</h4>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Та же триада — стиль единый по всей сетке.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Разделители: список и «или» в форме</h3>
+
+<p>
+  Пункты списка настроек разделяет <code>.gr-border-b</code> на каждом,
+  кроме последнего — ему <code>.gr-border-b-0</code>: селекторов
+  «кроме последнего» у утилит нет, честнее снять границу явно.
+  Разделитель с текстом «или» — флекс из трёх частей: две линии
+  <code>.gr-border-t .gr-flex-1</code> растягиваются по бокам, текст
+  между ними, вертикальный центр держит <code>.gr-flex-items-center</code>.
+</p>
+
+<pre><code>&lt;!-- список --&gt;
+&lt;div&gt;
+  &lt;div class="gr-border-b gr-py-3"&gt;Профиль&lt;/div&gt;
+  &lt;div class="gr-border-b gr-py-3"&gt;Уведомления&lt;/div&gt;
+  &lt;div class="gr-border-b-0 gr-py-3"&gt;Безопасность&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- «или» --&gt;
+&lt;div class="gr-flex gr-flex-items-center gr-gap"&gt;
+  &lt;span class="gr-border-t gr-flex-1"&gt;&lt;/span&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary"&gt;или&lt;/span&gt;
+  &lt;span class="gr-border-t gr-flex-1"&gt;&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Линии между пунктами и разделитель с текстом</div>
+  <div class="gr-mb-6" style="max-width:380px">
+    <div class="gr-border-b gr-py-3">Профиль</div>
+    <div class="gr-border-b gr-py-3">Уведомления</div>
+    <div class="gr-border-b-0 gr-py-3">Безопасность</div>
+  </div>
+  <div class="gr-flex gr-flex-items-center gr-gap" style="max-width:380px">
+    <span class="gr-border-t gr-flex-1"></span>
+    <span class="gr-text-sm gr-text-ink-secondary">или</span>
+    <span class="gr-border-t gr-flex-1"></span>
+  </div>
+</div>
+
+<h3>Цветная кромка: категория и выделение</h3>
+
+<p>
+  Толстая линия одной стороны кодирует смысл: канбан-задача несёт цвет
+  колонки на логической кромке <code>.gr-border-s-4</code>, featured-тариф
+  выделяется верхней полосой <code>.gr-border-t-4 .gr-border-primary</code>.
+  Кромка — отдельный класс стороны, поэтому спокойно живёт поверх триады
+  карточки из первого рецепта.
+</p>
+
+<pre><code>&lt;div class="gr-border gr-radius-2 gr-p-3 gr-border-s-4 gr-border-warning"&gt;
+  Согласовать макет — «в работе»
+&lt;/div&gt;
+
+&lt;div class="gr-border gr-radius-4 gr-p-4 gr-border-t-4 gr-border-primary"&gt;
+  Тариф «Про» — рекомендуем
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Смысловая кромка: <code>.gr-border-s-4</code> у задач, <code>.gr-border-t-4</code> у тарифа</div>
+  <div class="gr-flex gr-flex-col gr-gap-sm gr-mb-6" style="max-width:380px">
+    <div class="gr-border gr-radius-2 gr-p-3 gr-border-s-4 gr-border-warning gr-text-sm">Согласовать макет — «в работе»</div>
+    <div class="gr-border gr-radius-2 gr-p-3 gr-border-s-4 gr-border-success gr-text-sm">Собрать релиз — «готово»</div>
+  </div>
+  <div class="gr-border gr-radius-4 gr-p-4 gr-border-t-4 gr-border-primary" style="max-width:380px">
+    <h4 class="gr-m-0 gr-mb-1">Тариф «Про»</h4>
+    <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Верхняя полоса — «рекомендуем».</p>
+  </div>
+</div>
+
+<h3>Выбранный вариант: рамка без прыжков</h3>
+
+<p>
+  Карточки выбора тарифа или способа оплаты: выбранная — с рамкой
+  2px цвета бренда. Чтобы при выборе вёрстка не дёргалась, толщина
+  у всех карточек одинаковая с самого начала — <code>.gr-border-2</code>,
+  а различает их только цвет: у спокойных — приглушённый
+  <code>.gr-border-subtle</code>, у выбранной — <code>.gr-border-primary</code>
+  плюс галочка цветом.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-2-sm gr-gap"&gt;
+  &lt;div class="gr-border-2 gr-border-subtle gr-radius-4 gr-p-4"&gt;Оплата картой&lt;/div&gt;
+  &lt;div class="gr-border-2 gr-border-primary gr-radius-4 gr-p-4"&gt;
+    По счёту &lt;span class="gr-text-primary gr-font-bold"&gt;✓&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Толщина одна у всех — меняется только цвет рамки</div>
+  <div class="gr-grid-1 gr-grid-2-sm gr-gap">
+    <div class="gr-border-2 gr-border-subtle gr-radius-4 gr-p-4">
+      <p class="gr-m-0 gr-font-semibold">Оплата картой</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Комиссия 0 %</p>
+    </div>
+    <div class="gr-border-2 gr-border-primary gr-radius-4 gr-p-4">
+      <p class="gr-m-0 gr-font-semibold gr-flex gr-flex-between">По счёту <span class="gr-text-primary gr-font-bold">✓</span></p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Для юридических лиц</p>
+    </div>
+  </div>
+</div>
+
+<h3>Dropzone: пунктирная зона загрузки</h3>
+
+<p>
+  Область «перетащите файлы»: пунктир <code>.gr-border-2
+  .gr-border-dashed</code>, просторные поля <code>.gr-p-8</code>
+  и текст по центру — <code>.gr-text-center</code>. Подсветка
+  при перетаскивании — смена цвета рамки классом из JS:
+  <code>.gr-border-primary</code> добавился — зона «ожила».
+</p>
+
+<pre><code>&lt;div class="gr-border-2 gr-border-dashed gr-radius-4 gr-p-8 gr-text-center"&gt;
+  &lt;p class="gr-m-0 gr-font-semibold"&gt;Перетащите файлы сюда&lt;/p&gt;
+  &lt;p class="gr-m-0 gr-mt-1 gr-text-sm gr-text-ink-secondary"&gt;или выберите на диске&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Пунктир + просторные поля + центр</div>
+  <div class="gr-border-2 gr-border-dashed gr-radius-4 gr-p-8 gr-text-center">
+    <p class="gr-m-0 gr-font-semibold">Перетащите файлы сюда</p>
+    <p class="gr-m-0 gr-mt-1 gr-text-sm gr-text-ink-secondary">или <a href="#" onclick="return false">выберите на диске</a></p>
+  </div>
+</div>
+
 </main>
 </div>
 

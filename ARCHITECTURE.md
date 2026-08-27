@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.17.0
+- **Version:** 0.19.0
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -20,6 +20,7 @@ npm run build          # sync (runtime breakpoint fallbacks) + all three package
 npm run build:core     # griffincss-core only
 npm run build:ui       # griffincss-ui only
 npm run build:utils    # griffincss-utils only
+npm run build:pages    # docs site for GitVerse Pages into _site/
 npm run watch          # all three packages, single sass --watch process
 npm run sync           # sync-breakpoints (check; -- --fix rewrites the runtime block)
 npm run lint           # stylelint over packages/*/scss
@@ -157,7 +158,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.17.0)
+### JS Runtime Key Features (v0.19.0)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
@@ -250,6 +251,7 @@ ls -la packages/*/dist/
 | `scripts/sync-rule-table.mjs` | Keeps the utils runtime rule table equal to the SCSS scales |
 | `scripts/build-docs-index.mjs` | Builds `docs/search-index.js` — the static search index: pages, section headings with their anchors, and every class and token declared in `dist/*.css`. A name is bound to the page that *talks* about it (mentions inside `<code>`/`<pre>`, ranked by how much of the name's family that page covers), not to the page that merely uses it in its own markup. Ships as a `<script>` assignment to `window.GR_DOCS_INDEX`, not JSON: `fetch` over `file://` is blocked, and `docs/nav.js` injects the tag itself. Runs as part of `npm run build`; `check-dist.mjs` compares the file against a fresh render |
 | `scripts/check-links.mjs` | Crawls every `href`/`src` in `docs/*.html`, in `docs/nav.js` and every Markdown link in `README.md`, checking both the target file and the `#anchor`. Anchors generated at runtime come from the search index. Links inside `<pre>` and inside `.demo-block` are sample markup and are skipped. Part of `npm test` |
+| `scripts/build-pages.mjs` | Builds `_site/` — the documentation site published by GitVerse Pages. The published directory becomes the site root, so the tree is rearranged rather than copied one to one: `docs/` moves to the root, `packages/*/dist/` lands under it, and `../packages/` in the markup is rewritten to `packages/`. `docs/design/*.md` and `*.js.map` stay behind. Refuses to finish without `index.html`, with a `packages/…` reference that resolves to nothing, or with any `../` left in the output. Zero dependencies on purpose: the Pages workflow runs it without `npm ci`, since `packages/*/dist` is committed |
 | `scripts/purge.mjs` | Purges unused rules from a built stylesheet: parses it into a tree, keeps a selector only when every class in it appears in the markup. `:root`, layer order, `@property` and class-free selectors always survive; an emptied `@media` does not. `--safelist` covers classes assembled at runtime (`'gr-mt-' + n`), and the report is printed unconditionally |
 | `packages/core/package.json` | `griffincss-core` metadata and build scripts |
 | `packages/core/scss/griffincss-core.scss` | Core package entry |

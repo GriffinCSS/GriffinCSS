@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { buildIndexSource } from './build-docs-index.mjs';
+import { BUNDLE, bundleContent } from './build-bundle.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -35,6 +36,10 @@ const RUNTIMES = [
 // и превысить его, не давая взамен виджетов, — значит проиграть сравнение,
 // ради которого библиотека и минифицируется.
 const JS_BUDGET = 10 * 1024;
+
+// Бандл жмётся одним словарём и обязан быть заметно легче суммы четырёх:
+// перестанет — значит, склейка сломалась и смысла в ней больше нет.
+const BUNDLE_BUDGET = 9 * 1024;
 
 // Порядок каскадных слоёв: объявляется целиком в каждой сборке,
 // поэтому итог не зависит от того, какой файл подключён первым.
@@ -419,6 +424,31 @@ if (jsWeight > JS_BUDGET) {
   );
 }
 
+// 16. Бандл griffincss-all.js: свежесть и бюджет.
+//     Свежесть — байт-в-байт против конкатенации текущих рантаймов
+//     той же функцией, которой бандл собирается: пересобрали рантайм,
+//     забыли npm run build целиком — бандл молча отстал бы.
+let bundleWeight = 0;
+
+try {
+  const actual = read(BUNDLE);
+
+  if (actual !== bundleContent(root)) {
+    fail(BUNDLE, 'бандл отстал от рантаймов — пересоберите: npm run build:bundle');
+  }
+
+  bundleWeight = gzipOf(BUNDLE);
+
+  if (bundleWeight > BUNDLE_BUDGET) {
+    fail(
+      BUNDLE,
+      `бандл весит ${bundleWeight} Б gzip при бюджете ${BUNDLE_BUDGET} Б — превышение на ${bundleWeight - BUNDLE_BUDGET} Б`,
+    );
+  }
+} catch (e) {
+  fail(BUNDLE, 'бандл не собран — npm run build:bundle');
+}
+
 // --- итог -------------------------------------------------------------------
 
 if (problems.length > 0) {
@@ -434,4 +464,5 @@ console.log(`  core   ${size(CORE)} (${coreClasses.size} классов) + ре�
 console.log(`  ui     ${size(UI)} (${uiClasses.size} классов) + scoped ${size(UI_SCOPED)}`);
 console.log(`  utils  ${size(UTILS)} (${utilsClasses.size} классов) + scoped ${size(UTILS_SCOPED)}`);
 console.log(`  js     ${(jsWeight / 1024).toFixed(1)} КБ gzip на ${RUNTIMES.length} рантайма (бюджет ${JS_BUDGET / 1024} КБ)`);
+console.log(`  бандл  ${(bundleWeight / 1024).toFixed(1)} КБ gzip одним файлом (бюджет ${BUNDLE_BUDGET / 1024} КБ)`);
 console.log(`  брейкпоинты: ${[...breakpoints].join(', ')}`);

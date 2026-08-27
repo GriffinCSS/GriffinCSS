@@ -437,7 +437,33 @@ child_radius     = max(0, --gr-r − --gr-p)</code></pre>
   <p><strong>JS не участвует.</strong> До v0.7.0 рантайм обходил все <code>.gr-radius</code>, читал <code>min(padding-top, padding-left)</code> из computed-стилей и выставлял <code>--gr-p</code> инлайном — это давало forced reflow и устаревало при изменении ширины. Теперь модель перевёрнута: <code>--gr-p</code> задаёте вы, <code>padding</code> выводится из него.</p>
 </div>
 
-<h2>Практический пример: карточка</h2>
+<h2>Советы</h2>
+
+<div class="callout callout-success">
+  <p><strong>Используйте готовые классы.</strong> <code>.gr-radius-8</code> вместо <code>style="--gr-r: 32px"</code> — чище, консистентно с остальной библиотекой и работает с адаптивными вариантами.</p>
+</div>
+
+<div class="callout">
+  <p><strong>Не злоупотребляйте глубиной.</strong> После 2–3 уровней вложенности разница в радиусе незаметна. Для глубокой вложенности — <code>border-radius: 0</code> на внутренних элементах.</p>
+</div>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Скругление задаёт характер интерфейса, а каскад избавляет от арифметики
+  вложенных радиусов. Рецепты ниже — три самых частых применения: карточка
+  с медиа, капсульные элементы и склеенные группы, где радиус живёт только
+  на внешних углах.
+</p>
+
+<h3>Карточка с каскадом</h3>
+
+<p>
+  Классика: карточка с изображением, текстом и кнопкой. Один раз задаётся
+  радиус и внутреннее поле (<code>.gr-radius-5</code> +
+  <code>--gr-p: 16px</code>) — картинка и кнопка получают согласованный
+  внутренний радиус сами, без вычислений «20 минус 16».
+</p>
 
 <pre><code>&lt;div class="gr-radius gr-radius-5" style="--gr-p: 16px;"&gt;
   &lt;img src="photo.jpg" alt=""&gt;
@@ -447,7 +473,7 @@ child_radius     = max(0, --gr-r − --gr-p)</code></pre>
 &lt;/div&gt;</code></pre>
 
 <div class="demo-block br-demo-block">
-  <div class="demo-block-title">Результат</div>
+  <div class="demo-block-title">Дети скруглены каскадом: 20−16 = 4px</div>
   <div class="gr-radius gr-radius-5 gr-bg-surface gr-border" style="--gr-p: 16px;max-width:380px;">
     <div class="gr-flex gr-flex-center gr-flex-items-center gr-bg-accent gr-text-on-accent gr-text-sm" style="min-height:110px;">Изображение — авто 4px</div>
     <h4 class="gr-mt-3 gr-mb-2 gr-text-base">Заголовок карточки</h4>
@@ -456,14 +482,52 @@ child_radius     = max(0, --gr-r − --gr-p)</code></pre>
   </div>
 </div>
 
-<h2>Советы</h2>
+<h3>Сегмент-контрол: капсула в капсуле</h3>
 
-<div class="callout callout-success">
-  <p><strong>Используйте готовые классы.</strong> <code>.gr-radius-8</code> вместо <code>style="--gr-r: 32px"</code> — чище, консистентно с остальной библиотекой и работает с адаптивными вариантами.</p>
+<p>
+  Переключатель периодов или вкладок-фильтров — две вложенные капсулы:
+  серая подложка <code>.gr-radius-full .gr-bg-sunken .gr-p-1</code>
+  и активный сегмент — тоже <code>.gr-radius-full</code>, но на поверхности
+  и с тенью <code>.gr-shadow-sm</code>. Ряд сегментов держит флекс
+  с <code>.gr-gap-sm</code>; капсуле-подложке не нужен каскад — у полного
+  скругления внутренний радиус всё равно «до упора».
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-w-fit gr-gap-sm gr-radius-full gr-bg-sunken gr-p-1"&gt;
+  &lt;button class="gr-btn gr-btn-sm gr-radius-full gr-bg-surface gr-shadow-sm"&gt;Месяц&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-sm gr-btn-ghost gr-radius-full"&gt;Год&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Активный сегмент — капсула на подложке-капсуле</div>
+  <div class="gr-flex gr-w-fit gr-gap-sm gr-radius-full gr-bg-sunken gr-p-1">
+    <button class="gr-btn gr-btn-sm gr-radius-full gr-bg-surface gr-shadow-sm" type="button" aria-pressed="true">Месяц</button>
+    <button class="gr-btn gr-btn-sm gr-btn-ghost gr-radius-full" type="button">Год</button>
+    <button class="gr-btn gr-btn-sm gr-btn-ghost gr-radius-full" type="button">Всё время</button>
+  </div>
 </div>
 
-<div class="callout">
-  <p><strong>Не злоупотребляйте глубиной.</strong> После 2–3 уровней вложенности разница в радиусе незаметна. Для глубокой вложенности — <code>border-radius: 0</code> на внутренних элементах.</p>
+<h3>Склеенные группы: радиус только снаружи</h3>
+
+<p>
+  Поле с кнопкой «Найти» или ряд слитых кнопок — задача «скругление
+  на внешних углах, между элементами — общий бордер». Руками это возня
+  с <code>:first-child</code>/<code>:last-child</code>; в ui она уже
+  проделана — <a href="ui-forms.html"><code>.gr-input-group</code></a>
+  и <a href="ui-buttons.html"><code>.gr-btn-group</code></a> склеивают
+  содержимое сами. Радиус группы при этом остаётся на токене, так что
+  капсульный вариант — просто <code>.gr-radius-full</code> сверху.
+</p>
+
+<pre><code>&lt;div class="gr-input-group"&gt;
+  &lt;input class="gr-input" type="search" placeholder="Поиск" aria-label="Поиск"&gt;
+  &lt;button class="gr-btn gr-btn-primary"&gt;Найти&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block br-demo-block">
+  <div class="demo-block-title">Группа скруглена как единое целое</div>
+  <div class="gr-input-group" style="max-width:380px">
+    <input class="gr-input" type="search" placeholder="Поиск по документации" aria-label="Поиск по документации">
+    <button class="gr-btn gr-btn-primary" type="button">Найти</button>
+  </div>
 </div>
 
 </main>

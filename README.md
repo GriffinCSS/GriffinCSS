@@ -49,7 +49,7 @@ properties. JS-рантайм не требует сборки и не имее�
 
 ## Установка / Installation
 
-> **Текущая версия `0.17.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.19.0`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -76,15 +76,25 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.17.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.17.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.17.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.17.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.19.0/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.19.0/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
 явно: без него CDN отдаст последнюю, и обновление приедет к пользователям
 незамеченным.
+
+Если нужны все четыре рантайма, вместо четырёх тегов `<script>` есть
+бандл — те же файлы одним, но на ~15 % легче: склейка жмётся одним
+gzip-словарём вместо четырёх независимых.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss-all.js"></script>
+```
+
+Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
 
 ### Из исходников
 
@@ -104,6 +114,7 @@ npm run build
 | `packages/core/dist/griffincss-styles.css` | Стратегии оформления `data-gr-style` (airy, strict, compact) — opt-in файл |
 | `packages/core/dist/griffincss.js` | Рантайм-парсер раскладок |
 | `packages/core/dist/griffincss-theme.js` | Рантайм переключателя темы — подключается отдельно и по желанию |
+| `packages/core/dist/griffincss-all.js` | Бандл: все четыре рантайма одним файлом, на ~15 % легче суммы — для страниц, где нужны все |
 | `packages/ui/dist/griffincss-ui.css` | Компоненты интерфейса |
 | `packages/ui/dist/griffincss-ui-scoped.css` | То же, обёрнутое в `@scope (.griffin)` |
 | `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты, клавиатура вкладок и события `griffincss:*` |

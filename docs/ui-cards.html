@@ -179,6 +179,162 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Карточка — сборочная площадка всей библиотеки: обложка из Effects,
+  бейдж из Position, обрезка анонса из Typography, прижатая кнопка
+  из Flex. Три рецепта ниже — три самых тиражируемых вида карточек.
+</p>
+
+<h3>Карточка блога: всё вместе</h3>
+
+<p>
+  Обложка <code>.gr-card-media .gr-aspect-video .gr-object-cover</code>,
+  рубрика-надзаголовок, заголовок-ссылка (растянутая — карточка кликается
+  целиком), анонс на две строки <code>.gr-line-clamp-2</code>
+  и метастрока с <code>.gr-avatar-sm</code>. В сетке такие карточки
+  остаются одной высоты: клампы держат текст, грид — ряды.
+</p>
+
+<pre><code>&lt;article class="gr-card gr-card-interactive"&gt;
+  &lt;img class="gr-card-media gr-aspect-video gr-object-cover" src="cover.jpg" alt=""&gt;
+  &lt;div class="gr-card-body"&gt;
+    &lt;span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent"&gt;Дизайн&lt;/span&gt;
+    &lt;h3 class="gr-text-xl gr-leading-tight gr-mt-2 gr-mb-2"&gt;&lt;a href="/post"&gt;Как типографика влияет на восприятие&lt;/a&gt;&lt;/h3&gt;
+    &lt;p class="gr-line-clamp-2 gr-text-sm gr-text-ink-secondary gr-mb-3"&gt;Анонс…&lt;/p&gt;
+    &lt;footer class="gr-flex gr-flex-items-center gr-gap-sm gr-text-xs gr-text-ink-secondary"&gt;
+      &lt;span class="gr-avatar gr-avatar-sm"&gt;ИП&lt;/span&gt; Иван Петров · 5 мин
+    &lt;/footer&gt;
+  &lt;/div&gt;
+&lt;/article&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Обложка + рубрика + кламп + метастрока; кликается целиком</div>
+  <article class="gr-card gr-card-interactive" style="max-width:380px">
+    <img class="gr-card-media gr-aspect-video gr-object-cover" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20225'%20width='400'%20height='225'%3E%3Crect%20width='400'%20height='225'%20fill='%23546a8a'/%3E%3Ccircle%20cx='320'%20cy='60'%20r='30'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20225l130-100%20110%2080%2070-50%2090%2070z'%20fill='%233c4f6b'/%3E%3C/svg%3E">
+    <div class="gr-card-body">
+      <span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent">Дизайн</span>
+      <h3 class="gr-text-xl gr-leading-tight gr-mt-2 gr-mb-2"><a href="#" onclick="return false">Как типографика влияет на восприятие</a></h3>
+      <p class="gr-line-clamp-2 gr-text-sm gr-text-ink-secondary gr-mb-3">Правильно подобранный шрифт и интервал улучшают читаемость и удержание внимания — этот хвост уже спрятан за многоточием.</p>
+      <footer class="gr-flex gr-flex-items-center gr-gap-sm gr-text-xs gr-text-ink-secondary">
+        <span class="gr-avatar gr-avatar-sm">ИП</span> Иван Петров · 5 мин
+      </footer>
+    </div>
+  </article>
+</div>
+
+<h3>Карточка товара</h3>
+
+<p>
+  Квадратное фото, бейдж скидки в углу — <code>.gr-absolute .gr-top-0
+  .gr-right-0</code> внутри карточки (она уже <code>relative</code>
+  не всегда — интерактивной делать не будем, кнопка своя, поэтому
+  обёртке фото — <code>.gr-relative</code>). Цена — пара «старая
+  зачёркнутая тише + новая жирнее»: <code>.gr-line-through
+  .gr-text-ink-muted</code> рядом с <code>.gr-font-bold</code>.
+  Кнопка прижата к низу приёмом <code>.gr-flex-col</code> +
+  <code>.gr-flex-1</code> — карточки в ряду равняются сами.
+</p>
+
+<pre><code>&lt;article class="gr-card"&gt;
+  &lt;div class="gr-relative"&gt;
+    &lt;img class="gr-card-media gr-aspect-square gr-object-cover" src="chair.jpg" alt="Кресло «Дюна»"&gt;
+    &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2"&gt;−30%&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-card-body gr-flex gr-flex-col"&gt;
+    &lt;h3 class="gr-text-base gr-mb-1"&gt;Кресло «Дюна»&lt;/h3&gt;
+    &lt;p class="gr-flex-1 gr-mb-3"&gt;
+      &lt;span class="gr-line-through gr-text-ink-muted gr-me-2"&gt;17 700 ₽&lt;/span&gt;
+      &lt;span class="gr-font-bold"&gt;12 400 ₽&lt;/span&gt;
+    &lt;/p&gt;
+    &lt;button class="gr-btn gr-btn-primary gr-btn-block"&gt;В корзину&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/article&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Бейдж — слой Position, цена — пара из Typography, низ — Flex</div>
+  <div class="gr-grid-2 gr-grid-3-md gr-gap">
+    <article class="gr-card">
+      <div class="gr-relative">
+        <img class="gr-card-media gr-aspect-square gr-object-cover" alt="Кресло «Дюна»" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3C/svg%3E">
+        <span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2">−30%</span>
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col">
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Кресло «Дюна»</h4>
+        <p class="gr-m-0 gr-flex-1 gr-mb-3 gr-text-sm"><span class="gr-line-through gr-text-ink-muted gr-me-2">17 700 ₽</span><span class="gr-font-bold">12 400 ₽</span></p>
+        <button class="gr-btn gr-btn-primary gr-btn-block gr-btn-sm" type="button">В корзину</button>
+      </div>
+    </article>
+    <article class="gr-card">
+      <div class="gr-relative">
+        <img class="gr-card-media gr-aspect-square gr-object-cover" alt="Торшер «Свет»" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23e3e6ec'/%3E%3Crect%20x='130'%20y='60'%20width='8'%20height='110'%20fill='%23707a8c'/%3E%3Cpath%20d='M105%2060h58l-12-30h-34z'%20fill='%23546a8a'/%3E%3Crect%20x='108'%20y='168'%20width='52'%20height='8'%20rx='4'%20fill='%23707a8c'/%3E%3C/svg%3E">
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col">
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Торшер «Свет» с длинным названием</h4>
+        <p class="gr-m-0 gr-flex-1 gr-mb-3 gr-text-sm"><span class="gr-font-bold">5 900 ₽</span></p>
+        <button class="gr-btn gr-btn-primary gr-btn-block gr-btn-sm" type="button">В корзину</button>
+      </div>
+    </article>
+    <article class="gr-card">
+      <div class="gr-relative">
+        <img class="gr-card-media gr-aspect-square gr-object-cover" alt="Полка «Норд»" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23e9e4da'/%3E%3Crect%20x='60'%20y='70'%20width='160'%20height='10'%20rx='3'%20fill='%23927a56'/%3E%3Crect%20x='60'%20y='120'%20width='160'%20height='10'%20rx='3'%20fill='%23927a56'/%3E%3Crect%20x='80'%20y='90'%20width='14'%20height='30'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='84'%20width='10'%20height='36'%20fill='%23546a8a'/%3E%3C/svg%3E">
+        <span class="gr-badge gr-absolute gr-top-0 gr-right-0 gr-m-2">New</span>
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col gr-flex-1">
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Полка «Норд»</h4>
+        <p class="gr-m-0 gr-flex-1 gr-mb-3 gr-text-sm"><span class="gr-font-bold">3 200 ₽</span></p>
+        <button class="gr-btn gr-btn-primary gr-btn-block gr-btn-sm" type="button">В корзину</button>
+      </div>
+    </article>
+  </div>
+</div>
+
+<h3>Сетка фич с иконками</h3>
+
+<p>
+  Feature-секция лендинга: иконка в цветном скруглённом квадрате
+  (<code>.gr-avatar .gr-avatar-square</code> — готовый квадрат из ui,
+  символ вместо инициалов), заголовок и две строки описания. Ряд держит
+  <code>.gr-grid-1 .gr-grid-3-md</code>; плоский вариант карточки —
+  <code>.gr-card-flat</code> — не спорит со спокойным фоном секции.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-md gr-gap"&gt;
+  &lt;article class="gr-card gr-card-flat"&gt;
+    &lt;div class="gr-card-body"&gt;
+      &lt;span class="gr-avatar gr-avatar-square gr-mb-3"&gt;⚡&lt;/span&gt;
+      &lt;h3 class="gr-text-base gr-mb-1"&gt;Мгновенный старт&lt;/h3&gt;
+      &lt;p class="gr-text-sm gr-text-ink-secondary gr-mb-0"&gt;Подключите два файла — и вёрстка собирается из классов.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/article&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Иконка — <code>.gr-avatar-square</code>, карточка — <code>.gr-card-flat</code></div>
+  <div class="gr-grid-1 gr-grid-3-md gr-gap">
+    <article class="gr-card gr-card-flat">
+      <div class="gr-card-body">
+        <span class="gr-avatar gr-avatar-square gr-mb-3">⚡</span>
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Мгновенный старт</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Подключите два файла — и вёрстка собирается из классов.</p>
+      </div>
+    </article>
+    <article class="gr-card gr-card-flat">
+      <div class="gr-card-body">
+        <span class="gr-avatar gr-avatar-square gr-mb-3">🌓</span>
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Темы из коробки</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Светлая, тёмная и режим для слабовидящих — на токенах.</p>
+      </div>
+    </article>
+    <article class="gr-card gr-card-flat">
+      <div class="gr-card-body">
+        <span class="gr-avatar gr-avatar-square gr-mb-3">📦</span>
+        <h4 class="gr-m-0 gr-text-base gr-mb-1">Модули на выбор</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Ядро, утилиты и компоненты подключаются независимо.</p>
+      </div>
+    </article>
+  </div>
+</div>
+
 </main>
 </div>
 

@@ -1,6 +1,6 @@
 {
   "name": "griffincss-ui",
-  "version": "0.17.0",
+  "version": "0.19.0",
   "description": "Griffincss UI — компоненты интерфейса: кнопки, поля, карточки, таблицы, статусы; на токенах ядра, с обеими темами и режимом для слабовидящих",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
@@ -31,7 +31,7 @@
     "src/"
   ],
   "peerDependencies": {
-    "griffincss-core": "^0.17.0"
+    "griffincss-core": "^0.19.0"
   },
   "keywords": [
     "css",
@@ -48,6 +48,6 @@
     "build": "npm run build:css && npm run build:scoped && npm run build:js",
     "build:css": "sass scss/griffincss-ui.scss dist/griffincss-ui.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:scoped": "sass scss/griffincss-ui-scoped.scss dist/griffincss-ui-scoped.css --load-path=../../node_modules --style=compressed --no-source-map",
-    "build:js": "terser src/griffincss-ui.js -c passes=3 -m --comments false --format \"preamble='/*! Griffincss UI | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-ui.js.map'\" -o dist/griffincss-ui.js"
+    "build:js": "terser src/griffincss-ui.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss UI | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-ui.js.map'\" -o dist/griffincss-ui.js"
   }
 }

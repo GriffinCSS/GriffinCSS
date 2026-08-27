@@ -392,42 +392,6 @@ a:hover {
   <p><strong>Точечная кастомизация.</strong> Не нужно переопределять все переменные. Измените только <code>--gr-hsl-primary</code> — и все классы <code>.gr-bg-primary</code>, <code>.gr-text-primary</code>, <code>.gr-border-primary</code> подхватят новый цвет автоматически.</p>
 </div>
 
-<h2>Практический пример: alert-компонент</h2>
-
-<pre><code>&lt;!-- Успех --&gt;
-&lt;div class="gr-bg-success-light gr-p-4 gr-radius-2"&gt;
-  &lt;p class="gr-text-success-dark gr-font-semibold"&gt;Операция выполнена успешно&lt;/p&gt;
-  &lt;p class="gr-text-success-dark"&gt;Данные сохранены.&lt;/p&gt;
-&lt;/div&gt;
-
-&lt;!-- Ошибка --&gt;
-&lt;div class="gr-bg-danger-light gr-p-4 gr-radius-2"&gt;
-  &lt;p class="gr-text-danger-dark gr-font-semibold"&gt;Ошибка&lt;/p&gt;
-  &lt;p class="gr-text-danger-dark"&gt;Не удалось сохранить данные.&lt;/p&gt;
-&lt;/div&gt;
-
-&lt;!-- Предупреждение --&gt;
-&lt;div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-p-4 gr-radius-2"&gt;
-  &lt;p class="gr-font-semibold"&gt;Внимание&lt;/p&gt;
-  &lt;p&gt;Срок действия подписки истекает через 3 дня.&lt;/p&gt;
-&lt;/div&gt;</code></pre>
-
-<div class="demo-block">
-  <div class="demo-block-title">Результат</div>
-  <div class="gr-bg-success-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
-    <p class="gr-text-success-dark gr-font-semibold gr-m-0 gr-mb-1">Операция выполнена успешно</p>
-    <p class="gr-text-success-dark gr-m-0 gr-text-sm">Данные сохранены.</p>
-  </div>
-  <div class="gr-bg-danger-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
-    <p class="gr-text-danger-dark gr-font-semibold gr-m-0 gr-mb-1">Ошибка</p>
-    <p class="gr-text-danger-dark gr-m-0 gr-text-sm">Не удалось сохранить данные. Проверьте подключение.</p>
-  </div>
-  <div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-py-4 gr-px-5 gr-radius-2">
-    <p class="gr-font-semibold gr-m-0 gr-mb-1">Внимание</p>
-    <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Срок действия подписки истекает через 3 дня.</p>
-  </div>
-</div>
-
 <h2>SCSS-реализация</h2>
 
 <pre><code>// _colors.scss — все классы генерируются циклами @each
@@ -464,6 +428,166 @@ $gr-accents: (
 
 <div class="callout callout-warning">
   <p><strong>Light/dark варианты — автоматические.</strong> <code>-light</code> = L+15%, <code>-dark</code> = L−15%. Не переопределяйте их hue или saturation — только lightness, если нужно. Для кардинальной смены оттенка меняйте базовый токен (без -light/-dark).</p>
+</div>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Цвет в интерфейсе — почти всегда пара или тройка согласованных утилит:
+  бледный фон со своим тёмным текстом, точка со своей подписью, насыщенная
+  секция со своей инверсией. Рецепты ниже показывают эти связки вместе
+  с отступами, бордерами и компонентами ui — и то, как токены сами
+  перекрашивают собранное при смене темы.
+</p>
+
+<h3>Статусные пары: бледный фон + тёмный текст</h3>
+
+<p>
+  Правило одного оттенка: подложка — <code>-light</code>-ступень цвета,
+  текст на ней — <code>-dark</code>-ступень того же цвета. Контраст
+  обеспечен разницей светлоты в 30%, а оттенок остаётся один, поэтому блок
+  выглядит цельным. Так собирается уведомление любой семантики — success,
+  danger, warning, info. Для повседневной работы то же самое в готовом виде
+  умеет <a href="ui-feedback.html"><code>.gr-alert-*</code></a> из ui —
+  здесь показана механика, на которой он стоит.
+</p>
+
+<pre><code>&lt;div class="gr-bg-success-light gr-p-4 gr-radius-2"&gt;
+  &lt;p class="gr-text-success-dark gr-font-semibold gr-m-0"&gt;Операция выполнена&lt;/p&gt;
+  &lt;p class="gr-text-success-dark gr-m-0"&gt;Данные сохранены.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-p-4 gr-radius-2"&gt;
+  &lt;p class="gr-text-warning-dark gr-font-semibold gr-m-0"&gt;Внимание&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Один оттенок, две ступени светлоты: <code>-light</code> под <code>-dark</code></div>
+  <div class="gr-bg-success-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
+    <p class="gr-text-success-dark gr-font-semibold gr-m-0 gr-mb-1">Операция выполнена успешно</p>
+    <p class="gr-text-success-dark gr-m-0 gr-text-sm">Данные сохранены.</p>
+  </div>
+  <div class="gr-bg-danger-light gr-py-4 gr-px-5 gr-radius-2 gr-mb-3">
+    <p class="gr-text-danger-dark gr-font-semibold gr-m-0 gr-mb-1">Ошибка</p>
+    <p class="gr-text-danger-dark gr-m-0 gr-text-sm">Не удалось сохранить данные. Проверьте подключение.</p>
+  </div>
+  <div class="gr-bg-warning-light gr-border-2 gr-border-warning gr-py-4 gr-px-5 gr-radius-2">
+    <p class="gr-text-warning-dark gr-font-semibold gr-m-0 gr-mb-1">Внимание</p>
+    <p class="gr-text-warning-dark gr-m-0 gr-text-sm">Срок действия подписки истекает через 3 дня.</p>
+  </div>
+</div>
+
+<h3>Статусные точки: цвет + подпись</h3>
+
+<p>
+  Состояние в таблице или списке маркирует цветная точка
+  <code>.gr-dot-*</code> из ui рядом с текстом — флекс с мелким зазором
+  выравнивает их по центру строки. На аватаре та же точка становится
+  индикатором «онлайн» через позиционирование: <code>.gr-absolute
+  .gr-bottom-0 .gr-right-0</code> в правом нижнем углу родителя
+  с <code>.gr-relative</code> — цвет здесь работает вместе
+  с <a href="position.html">Position</a>.
+</p>
+
+<pre><code>&lt;!-- строка статуса --&gt;
+&lt;span class="gr-flex gr-flex-items-center gr-gap-sm"&gt;
+  &lt;span class="gr-dot gr-dot-success"&gt;&lt;/span&gt; Активен
+&lt;/span&gt;
+
+&lt;!-- индикатор на аватаре --&gt;
+&lt;span class="gr-relative gr-w-fit"&gt;
+  &lt;span class="gr-avatar"&gt;АК&lt;/span&gt;
+  &lt;span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-right-0"&gt;&lt;/span&gt;
+&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Точка в строке — флекс; точка на аватаре — <code>.gr-absolute</code> в углу</div>
+  <div class="gr-flex gr-flex-wrap gr-gap gr-flex-items-center">
+    <span class="gr-flex gr-flex-items-center gr-gap-sm"><span class="gr-dot gr-dot-success"></span> Активен</span>
+    <span class="gr-flex gr-flex-items-center gr-gap-sm"><span class="gr-dot gr-dot-warning"></span> Ожидает</span>
+    <span class="gr-flex gr-flex-items-center gr-gap-sm"><span class="gr-dot gr-dot-danger"></span> Ошибка</span>
+    <span class="gr-relative gr-w-fit">
+      <span class="gr-avatar">АК</span>
+      <span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-right-0"></span>
+    </span>
+  </div>
+</div>
+
+<h3>Акцентная CTA-полоса</h3>
+
+<p>
+  Секция на насыщенном брендовом фоне: <code>.gr-bg-primary</code> +
+  <code>.gr-text-white</code> на контейнере — цвет текста наследуется всем
+  содержимым. Второстепенная строка приглушается не серым (на синем он
+  грязнит), а прозрачностью: <code>.gr-opacity-75</code>. Кнопка
+  инвертируется той же парой наоборот — <code>.gr-bg-white
+  .gr-text-primary</code>.
+</p>
+
+<pre><code>&lt;section class="gr-bg-primary gr-text-white gr-py-8 gr-px-4 gr-radius-2 gr-text-center"&gt;
+  &lt;h2 class="gr-mb-2"&gt;Готовы начать?&lt;/h2&gt;
+  &lt;p class="gr-opacity-75 gr-mb-6"&gt;Бесплатно до пяти проектов.&lt;/p&gt;
+  &lt;button class="gr-btn gr-bg-white gr-text-primary gr-font-semibold"&gt;Создать аккаунт&lt;/button&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Инверсия парой: фон ↔ текст; второстепенное — прозрачностью</div>
+  <div class="gr-bg-primary gr-text-white gr-py-8 gr-px-4 gr-radius-2 gr-text-center">
+    <h4 class="gr-m-0 gr-text-2xl gr-mb-2">Готовы начать?</h4>
+    <p class="gr-m-0 gr-opacity-75 gr-mb-6">Бесплатно до пяти проектов, без карты.</p>
+    <button class="gr-btn gr-bg-white gr-text-primary gr-font-semibold" type="button">Создать аккаунт</button>
+  </div>
+</div>
+
+<h3>Тёмный островок: инверсия темой, а не классами</h3>
+
+<p>
+  Когда инвертировать нужно не пару цветов, а всё сразу — карточку
+  с текстом, бордерами и кнопками, — перекрашивание вручную не масштабируется.
+  Правильный инструмент — атрибут <code>data-gr-theme="dark"</code>
+  на секции: все семантические токены внутри переключаются на тёмные
+  значения, и любой элемент на токенах перекрашивается сам. Это та же
+  механика, что у тёмной темы всей страницы, — подробности
+  на странице <a href="theme.html">Темы</a>.
+</p>
+
+<pre><code>&lt;div class="gr-card gr-p-6" data-gr-theme="dark"&gt;
+  &lt;h3&gt;Тёмный островок&lt;/h3&gt;
+  &lt;p&gt;Фон, текст и бордеры взяли тёмные значения токенов — классы не менялись.&lt;/p&gt;
+  &lt;button class="gr-btn gr-btn-primary"&gt;Кнопка как кнопка&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Островок <code>data-gr-theme="dark"</code>: перекраска приходит из токенов</div>
+  <div class="gr-card gr-p-6" data-gr-theme="dark">
+    <h4 class="gr-m-0 gr-mb-2">Тёмный островок</h4>
+    <p class="gr-m-0 gr-mb-4 gr-text-sm gr-text-ink-secondary">Фон, текст и бордеры взяли тёмные значения токенов — классы не менялись.</p>
+    <button class="gr-btn gr-btn-primary" type="button">Кнопка как кнопка</button>
+  </div>
+</div>
+
+<h3>Выбранный пункт меню: тонировка + маркер</h3>
+
+<p>
+  Активный пункт сайдбара или фильтра собирается из трёх слоёв: нейтральная
+  подложка <code>.gr-bg-gray-100</code>, цветной текст
+  <code>.gr-text-primary .gr-font-semibold</code> и цветной маркер слева —
+  <code>.gr-border-s-4 .gr-border-primary</code>. Ховер-вариантов у утилит
+  нет намеренно: наведение — дело компонентов
+  (<a href="ui-nav.html"><code>.gr-nav</code></a>) или одной строки своего
+  CSS, а утилиты размечают состояния, которыми управляет разметка, —
+  как <code>aria-current</code> здесь.
+</p>
+
+<pre><code>&lt;nav class="gr-flex gr-flex-col gr-gap-sm"&gt;
+  &lt;a class="gr-p-2 gr-radius-2 gr-text-ink-secondary gr-no-underline" href="#"&gt;Обзор&lt;/a&gt;
+  &lt;a class="gr-p-2 gr-radius-2 gr-bg-gray-100 gr-text-primary gr-font-semibold
+            gr-border-s-4 gr-border-primary gr-no-underline" aria-current="page" href="#"&gt;Отчёты&lt;/a&gt;
+  &lt;a class="gr-p-2 gr-radius-2 gr-text-ink-secondary gr-no-underline" href="#"&gt;Настройки&lt;/a&gt;
+&lt;/nav&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Активный пункт: подложка + цвет текста + <code>.gr-border-s-4</code></div>
+  <nav class="gr-flex gr-flex-col gr-gap-sm" style="max-width:280px">
+    <a class="gr-p-2 gr-radius-2 gr-text-ink-secondary gr-no-underline" href="#" onclick="return false">Обзор</a>
+    <a class="gr-p-2 gr-radius-2 gr-bg-gray-100 gr-text-primary gr-font-semibold gr-border-s-4 gr-border-primary gr-no-underline" aria-current="page" href="#" onclick="return false">Отчёты</a>
+    <a class="gr-p-2 gr-radius-2 gr-text-ink-secondary gr-no-underline" href="#" onclick="return false">Настройки</a>
+  </nav>
 </div>
 
 </main>

@@ -296,18 +296,38 @@
   Скрыт на мобильных, виден от 768px
 &lt;/div&gt;</code></pre>
 
-<h2>Практические примеры</h2>
+<h2>Примеры использования</h2>
+
+<p>
+  Видимость — это всегда «что и для кого»: элемент прячется от узкого
+  экрана, но не от широкого; от глаз, но не от скринридера; от экрана,
+  но не от принтера. Рецепты ниже — четыре самых частых расклада.
+</p>
 
 <h3>Мобильное меню</h3>
 
 <pre><code>&lt;nav&gt;
   &lt;button class="gr-hidden-md"&gt;Меню (гамбургер)&lt;/button&gt;
-  &lt;ul class="gr-hidden gr-flex-md gr-gap"&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="#"&gt;Contact&lt;/a&gt;&lt;/li&gt;
-  &lt;/ul&gt;
+  &lt;div class="gr-hidden gr-block-md"&gt;
+    &lt;ul role="list" class="gr-flex gr-gap"&gt;
+      &lt;li&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
 &lt;/nav&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Пара «скрыть + показать» собирается из классов этого модуля.</strong>
+    <code>.gr-flex-md</code> и <code>.gr-grid-md</code> живут в ядре, а слой
+    утилит объявлен позже ядра — рядом с <code>.gr-hidden</code> они
+    проигрывают, и элемент остаётся скрытым на любой ширине. Поэтому
+    флекс-ряд, появляющийся от брейкпоинта, оборачивается: снаружи —
+    <code>.gr-hidden .gr-block-md</code>, внутри — обычный
+    <code>.gr-flex .gr-gap</code>.
+  </p>
+</div>
 
 <div class="demo-block">
   <div class="demo-block-title">Результат (измените ширину окна)</div>
@@ -315,14 +335,87 @@
     <div class="gr-flex gr-flex-between gr-flex-items-center gr-w-full">
       <strong class="gr-text-accent">Logo</strong>
       <div class="tag-demo tag-a gr-hidden-md">☰ Меню (mobile)</div>
-      <div class="gr-hidden gr-flex-md gr-gap">
-        <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
-        <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
-        <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
+      <div class="gr-hidden gr-block-md">
+        <div class="gr-flex gr-gap">
+          <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
+          <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
+          <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<h3>Второстепенное — только широкому экрану</h3>
+
+<p>
+  Боковая колонка «Сейчас читают», декоративная иллюстрация, подробности
+  в строке заказа — то, без чего мобильный экран обойдётся. Пара
+  <code>.gr-hidden .gr-block-lg</code> (или <code>.gr-flex-lg</code>,
+  если блок — флекс) прячет элемент через <code>display</code>: до 1024px
+  он не занимает места вовсе, а не оставляет дыру, как оставила бы
+  <code>.gr-invisible</code>. Основной контент при этом один для всех
+  экранов — скрывается только дополнение.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap"&gt;
+  &lt;article class="gr-flex-1 gr-min-w-0"&gt;Статья — видна всем&lt;/article&gt;
+  &lt;aside class="gr-hidden gr-block-lg gr-w-1/4"&gt;Сейчас читают — только от 1024px&lt;/aside&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Колонка исчезает из потока до 1024px (сузьте окно)</div>
+  <div class="gr-flex gr-gap">
+    <div class="card-demo gr-flex-1 gr-min-w-0">
+      <h4>Статья</h4>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Видна на любой ширине и занимает всё освободившееся место.</p>
+    </div>
+    <aside class="card-demo gr-hidden gr-block-lg gr-w-1/4">
+      <h4>Сейчас читают</h4>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Только от 1024px.</p>
+    </aside>
+  </div>
+</div>
+
+<h3>Кнопки-иконки с невидимой подписью</h3>
+
+<p>
+  Панель действий из одних пиктограмм экономит место, но кнопка без
+  текста нема для скринридера. Подпись кладётся внутрь кнопки
+  с <code>.gr-sr-only</code>: глазами её нет, в дереве доступности —
+  есть. Сами кнопки — <code>.gr-btn .gr-btn-icon .gr-btn-ghost</code>
+  из ui, ряд собирает флекс с мелким зазором.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap-sm"&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-btn-ghost"&gt;✎&lt;span class="gr-sr-only"&gt;Редактировать&lt;/span&gt;&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-btn-ghost"&gt;⧉&lt;span class="gr-sr-only"&gt;Дублировать&lt;/span&gt;&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-btn-ghost gr-text-danger"&gt;✕&lt;span class="gr-sr-only"&gt;Удалить&lt;/span&gt;&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Иконки — глазам, <code>.gr-sr-only</code>-подписи — скринридеру</div>
+  <div class="gr-flex gr-gap-sm">
+    <button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Редактировать</span></button>
+    <button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">⧉<span class="gr-sr-only">Дублировать</span></button>
+    <button class="gr-btn gr-btn-icon gr-btn-ghost gr-text-danger" type="button">✕<span class="gr-sr-only">Удалить</span></button>
+  </div>
+</div>
+
+<h3>Скрыть при печати</h3>
+
+<p>
+  Страница заказа или статья на печати не нуждается в навигации, кнопках
+  и баннерах. Печатных утилит вроде <code>.gr-print-hidden</code>
+  в библиотеке нет намеренно — сценарий редкий и решается одним своим
+  правилом поверх любого класса или контейнера. Тени при печати библиотека
+  уже глушит сама — токены <code>--gr-shadow-*</code> обнуляются темой.
+</p>
+
+<pre><code>@media print {
+  .no-print { display: none; }
+}
+
+&lt;nav class="no-print"&gt;…&lt;/nav&gt;
+&lt;button class="gr-btn gr-btn-primary no-print"&gt;Оплатить&lt;/button&gt;</code></pre>
 
 </main>
 </div>

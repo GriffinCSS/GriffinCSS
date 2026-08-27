@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/utils/dist/griffincss-utils.js"></script>
 </head>
 <body>
 
@@ -112,13 +113,185 @@
 <pre><code>&lt;!-- на мобильном во всю ширину, от 768px — половина --&gt;
 &lt;div class="gr-w-full gr-w-1/2-md"&gt;…&lt;/div&gt;</code></pre>
 
-<h2>Практический пример</h2>
+<h2>Примеры использования</h2>
 
-<h3>Прокручиваемая боковая панель</h3>
+<p>
+  Размеры почти никогда не работают в одиночку: ширина сочетается
+  с авто-полями спейсинга, высота — с флекс-колонками ядра, ограничители —
+  с прокруткой. Числовой шкалы ширин и высот в модуле нет намеренно:
+  ходовые размеры дают ключевые слова и дроби, фиксированные пиксели —
+  <a href="arbitrary-values.html">произвольные значения</a>, а рецепты ниже
+  показывают, как из этого собираются целые экраны.
+</p>
 
-<pre><code>&lt;aside class="gr-max-h-screen gr-overflow-y-auto gr-w-full gr-w-1/4-lg"&gt;
-  …длинный список…
-&lt;/aside&gt;</code></pre>
+<h3>Экран входа: во всю высоту, карточка по центру</h3>
+
+<p>
+  Страницы логина, 404 и сплэш-экраны устроены одинаково: обёртке —
+  <code>.gr-min-h-screen</code>, чтобы она занимала экран даже с коротким
+  содержимым, и <code>.gr-grid-place-center</code> из ядра — центр по обеим
+  осям одним классом. Карточке формы — пара «резиновость + предел»:
+  <code>.gr-w-full</code> тянет её на узком экране,
+  <code>.gr-max-w-[380px]</code> останавливает на широком.
+</p>
+
+<pre><code>&lt;div class="gr-min-h-screen gr-grid-place-center gr-p-4"&gt;
+  &lt;form class="gr-w-full gr-max-w-[380px] gr-card gr-p-6"&gt;
+    &lt;h1 class="gr-text-xl gr-mb-4"&gt;Вход&lt;/h1&gt;
+    &lt;div class="gr-field gr-mb-4"&gt;
+      &lt;label class="gr-label" for="login"&gt;Почта&lt;/label&gt;
+      &lt;input class="gr-input" id="login" type="email"&gt;
+    &lt;/div&gt;
+    &lt;button class="gr-btn gr-btn-primary gr-btn-block"&gt;Войти&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Центр экрана — <code>.gr-min-h-screen .gr-grid-place-center</code> (в демо высота ограничена)</div>
+  <div class="gr-h-[300px] gr-grid-place-center gr-p-4 gr-bg-surface gr-radius-2">
+    <form class="gr-w-full gr-max-w-[380px] gr-card gr-p-6" onsubmit="return false">
+      <h4 class="gr-m-0 gr-text-xl gr-mb-4">Вход</h4>
+      <div class="gr-field gr-mb-4">
+        <label class="gr-label" for="sizing-demo-login">Почта</label>
+        <input class="gr-input" id="sizing-demo-login" type="email">
+      </div>
+      <button class="gr-btn gr-btn-primary gr-btn-block" type="submit">Войти</button>
+    </form>
+  </div>
+</div>
+
+<h3>Каркас страницы с прижатым футером</h3>
+
+<p>
+  Классическая проблема: на короткой странице футер всплывает к середине
+  экрана. Решение — три класса на каркасе: обёртке
+  <code>.gr-min-h-screen .gr-flex .gr-flex-col</code>, основному блоку —
+  <code>.gr-flex-1</code>, который забирает всю свободную высоту и утапливает
+  футер к низу окна. Ширину контента внутри держит пара
+  <code>.gr-max-w-page .gr-mx-auto</code> — тот же предел, что
+  у <code>.gr-container</code> ядра, но собранный из утилит.
+</p>
+
+<pre><code>&lt;body class="gr-min-h-screen gr-flex gr-flex-col"&gt;
+  &lt;header&gt;…&lt;/header&gt;
+  &lt;main class="gr-flex-1 gr-w-full gr-max-w-page gr-mx-auto gr-px-4"&gt;
+    Короткий контент — а футер всё равно внизу.
+  &lt;/main&gt;
+  &lt;footer&gt;…&lt;/footer&gt;
+&lt;/body&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Футер прижат: свободную высоту съедает <code>.gr-flex-1</code> у main</div>
+  <div class="gr-h-[240px] gr-flex gr-flex-col gr-bg-surface gr-radius-2">
+    <div class="gr-px-4 gr-py-2 gr-font-semibold">Шапка</div>
+    <div class="gr-flex-1 gr-px-4 gr-py-2 gr-text-sm gr-text-ink-secondary">Короткий контент — а футер всё равно внизу.</div>
+    <div class="gr-px-4 gr-py-2 gr-bg-sunken gr-text-sm">Футер</div>
+  </div>
+</div>
+
+<h3>Панель со своей прокруткой рядом с контентом</h3>
+
+<p>
+  Двухколонник «список + содержимое»: на мобильном панель лежит над
+  контентом (<code>.gr-w-full</code>), от 1024px встаёт слева в четверть
+  ширины (<code>.gr-w-1/4-lg</code> плюс <code>.gr-flex-row-lg</code>
+  на родителе). Длинный список не растягивает страницу: ограничитель
+  <code>.gr-max-h-screen</code> с <code>.gr-overflow-y-auto</code> даёт
+  панели собственную прокрутку. Контенту — знакомая по флексу пара
+  <code>.gr-flex-1 .gr-min-w-0</code>: занять остаток и не распираться
+  содержимым.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-flex-row-lg gr-gap"&gt;
+  &lt;aside class="gr-w-full gr-w-1/4-lg gr-max-h-screen gr-overflow-y-auto"&gt;
+    …длинный список…
+  &lt;/aside&gt;
+  &lt;main class="gr-flex-1 gr-min-w-0"&gt;…содержимое…&lt;/main&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Панель — <code>.gr-w-1/4-lg</code> + свой скролл, контент — <code>.gr-flex-1 .gr-min-w-0</code></div>
+  <div class="gr-flex gr-flex-col gr-flex-row-lg gr-gap">
+    <aside class="gr-w-full gr-w-1/4-lg gr-max-h-[160px] gr-overflow-y-auto gr-bg-surface gr-radius-2 gr-p-2 gr-text-sm">
+      <p class="gr-m-0 gr-p-1">Глава 1</p>
+      <p class="gr-m-0 gr-p-1">Глава 2</p>
+      <p class="gr-m-0 gr-p-1">Глава 3</p>
+      <p class="gr-m-0 gr-p-1">Глава 4</p>
+      <p class="gr-m-0 gr-p-1">Глава 5</p>
+      <p class="gr-m-0 gr-p-1">Глава 6</p>
+      <p class="gr-m-0 gr-p-1">Глава 7</p>
+      <p class="gr-m-0 gr-p-1">Глава 8</p>
+    </aside>
+    <div class="gr-flex-1 gr-min-w-0 card-demo">
+      <h4>Содержимое</h4>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Список слева прокручивается сам — страница остаётся на месте. В демо предел высоты уменьшен до <code>.gr-max-h-[160px]</code>.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Ширина по содержимому</h3>
+
+<p>
+  Три ключевых слова закрывают задачи «блок размером с содержимое».
+  <code>.gr-w-fit</code> — самый ходовой: блочный элемент ужимается
+  до содержимого, и его можно центрировать через <code>.gr-mx-auto</code> —
+  так делается CTA-кнопка посреди секции. <code>.gr-w-max</code> запрещает
+  переносы — ширина по самой длинной строке; <code>.gr-w-min</code> наоборот
+  сжимает до самого длинного слова. Та же <code>.gr-w-fit</code> уже
+  встречалась на странице <a href="position.html">Position</a> — там она
+  зауживает родителя до картинки, чтобы бейджи вставали по её углам.
+</p>
+
+<pre><code>&lt;div class="gr-w-fit gr-mx-auto"&gt;
+  &lt;button class="gr-btn gr-btn-primary gr-btn-lg"&gt;Попробовать бесплатно&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Сравнение <code>fit</code> / <code>max</code> / <code>min</code> и центрирование через <code>.gr-mx-auto</code></div>
+  <div class="gr-flex gr-flex-col gr-gap-sm">
+    <div class="tag-demo tag-a gr-w-fit">.gr-w-fit — по содержимому</div>
+    <div class="tag-demo tag-b gr-w-max">.gr-w-max — без переносов</div>
+    <div class="tag-demo tag-c gr-w-min">.gr-w-min — по слову</div>
+    <div class="gr-w-fit gr-mx-auto">
+      <button class="gr-btn gr-btn-primary" type="button">CTA по центру: .gr-w-fit + .gr-mx-auto</button>
+    </div>
+  </div>
+</div>
+
+<h3>Фиксированные квадраты: иконки и аватары</h3>
+
+<p>
+  Числовой шкалы <code>.gr-w-10</code>/<code>.gr-h-10</code> в библиотеке
+  нет намеренно: ходовые фиксированные размеры уже зашиты в компоненты ui —
+  <code>.gr-avatar-xs…-xl</code>, <code>.gr-btn-icon</code>, — а разовый
+  квадрат собирается парой произвольных значений
+  <code>.gr-w-[48px] .gr-h-[48px]</code>. Центр содержимого внутри квадрата —
+  всё тот же <code>.gr-grid-place-center</code>. Во флекс-ряду фиксированной
+  фигуре полезен сосед-текст с <code>.gr-min-w-0</code> — иначе длинная
+  строка сожмёт квадрат.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap-sm gr-flex-items-center"&gt;
+  &lt;span class="gr-w-[48px] gr-h-[48px] gr-radius-2 gr-bg-primary gr-text-white gr-grid-place-center"&gt;⚡&lt;/span&gt;
+  &lt;div class="gr-min-w-0"&gt;
+    &lt;p class="gr-m-0 gr-font-semibold"&gt;Мгновенный старт&lt;/p&gt;
+    &lt;p class="gr-m-0 gr-text-sm gr-text-ink-secondary"&gt;Иконка не сожмётся и не растянется.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Квадрат — произвольные <code>.gr-w-[48px] .gr-h-[48px]</code>, готовые размеры — <code>.gr-avatar-*</code></div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-gap-sm gr-flex-items-center">
+      <span class="gr-w-[48px] gr-h-[48px] gr-radius-2 gr-bg-primary gr-text-white gr-grid-place-center">⚡</span>
+      <div class="gr-min-w-0">
+        <p class="gr-m-0 gr-font-semibold">Мгновенный старт</p>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Иконка не сожмётся и не растянется.</p>
+      </div>
+    </div>
+    <div class="gr-flex gr-gap-sm gr-flex-items-center">
+      <span class="gr-avatar gr-avatar-sm">SM</span>
+      <span class="gr-avatar">MD</span>
+      <span class="gr-avatar gr-avatar-lg">LG</span>
+      <span class="gr-avatar gr-avatar-xl">XL</span>
+    </div>
+  </div>
+</div>
 
 </main>
 </div>

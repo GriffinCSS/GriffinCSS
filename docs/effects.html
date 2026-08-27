@@ -104,6 +104,139 @@
 <pre><code>&lt;!-- обложка карточки: место под неё занято сразу --&gt;
 &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius-3" src="…" alt=""&gt;</code></pre>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Три свойства модуля — пропорции, вписывание и прозрачность — почти всегда
+  работают троицей и в связке с позиционированием: рамка держит формат,
+  <code>cover</code> кадрирует, прозрачность строит слои. Рецепты ниже —
+  ходовые медиа-задачи, где эта троица закрывает всё.
+</p>
+
+<h3>Ровная сетка превью из разнокалиберных фото</h3>
+
+<p>
+  Товары, блог, портфолио: исходные фотографии приходят любых пропорций,
+  а сетка обязана быть ровной. Каждой картинке — тройка
+  <code>.gr-w-full .gr-aspect-square .gr-object-cover</code>: рамка
+  становится квадратной, снимок заполняет её с кадрированием по центру.
+  Портретам, где важно лицо, кадр смещается точкой привязки
+  <code>.gr-object-pos-top</code>. Бонус тот же, что у одиночной обложки:
+  место занято до загрузки, сетка не прыгает.
+</p>
+
+<pre><code>&lt;div class="gr-grid-2 gr-grid-4-md gr-gap"&gt;
+  &lt;img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" src="wide.jpg" alt="…"&gt;
+  &lt;img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" src="tall.jpg" alt="…"&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Исходники разных пропорций — формат один: <code>.gr-aspect-square .gr-object-cover</code></div>
+  <div class="gr-grid-2 gr-grid-4-md gr-gap">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" alt="Горизонтальный исходник 400×240" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%23b06a4e'/%3E%3Ccircle%20cx='320'%20cy='60'%20r='36'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20240l140-120%20120%20100%2060-50%2080%2070z'%20fill='%2394553d'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" alt="Вертикальный исходник 200×320" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20320'%20width='200'%20height='320'%3E%3Crect%20width='200'%20height='320'%20fill='%235b7a5e'/%3E%3Ccircle%20cx='60'%20cy='60'%20r='28'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20320l80-140%2060%2060%2060-80v160z'%20fill='%233e5741'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" alt="Широкий исходник 400×160" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20160'%20width='400'%20height='160'%3E%3Crect%20width='400'%20height='160'%20fill='%23546a8a'/%3E%3Ccircle%20cx='90'%20cy='50'%20r='24'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20160l120-70%20110%2050%2070-40%20100%2060z'%20fill='%233c4f6b'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" alt="Квадратный исходник 300×300" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23927a56'/%3E%3Ccircle%20cx='220'%20cy='80'%20r='34'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20300l100-130%2090%2080%2050-60%2060%2070z'%20fill='%236d5a3e'/%3E%3C/svg%3E">
+  </div>
+</div>
+
+<h3>Видео-превью с кнопкой Play</h3>
+
+<p>
+  Обложка «Как это работает»: рамку держит <code>.gr-aspect-video</code>,
+  кадр — <code>.gr-object-cover</code>, а всё поверх — слоями
+  из <a href="position.html">Position</a>. Кнопка Play — слой
+  <code>.gr-absolute .gr-inset-0 .gr-grid-place-center</code> с белой
+  капсулой; длительность — бейдж в правом нижнем углу:
+  <code>.gr-absolute .gr-bottom-0 .gr-right-0</code> на чёрном фоне
+  с <code>.gr-opacity-75</code>. Настоящий встраиваемый ролик держится
+  той же рамкой: <code>iframe</code> с <code>.gr-w-full .gr-h-full</code>
+  внутри блока <code>.gr-aspect-video</code>.
+</p>
+
+<pre><code>&lt;div class="gr-relative gr-radius-3 gr-overflow-hidden"&gt;
+  &lt;img class="gr-w-full gr-aspect-video gr-object-cover" src="cover.jpg" alt="Демо продукта"&gt;
+  &lt;div class="gr-absolute gr-inset-0 gr-grid-place-center"&gt;
+    &lt;button class="gr-btn gr-bg-white gr-text-primary gr-radius-full gr-shadow-lg"&gt;▶ Смотреть&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;span class="gr-absolute gr-bottom-0 gr-right-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs"&gt;2:47&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Рамка — <code>.gr-aspect-video</code>, кнопка и бейдж — слои Position</div>
+  <div class="gr-relative gr-radius-3 gr-overflow-hidden" style="max-width:480px">
+    <img class="gr-w-full gr-aspect-video gr-object-cover" alt="Обложка видео" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%232e3d55'/%3E%3Ccircle%20cx='320'%20cy='60'%20r='36'%20fill='%23f7f2e8'%20opacity='.6'/%3E%3Cpath%20d='M0%20240l140-120%20120%20100%2060-50%2080%2070z'%20fill='%23202c40'/%3E%3C/svg%3E">
+    <div class="gr-absolute gr-inset-0 gr-grid-place-center">
+      <button class="gr-btn gr-bg-white gr-text-primary gr-radius-full gr-shadow-lg" type="button">▶ Смотреть</button>
+    </div>
+    <span class="gr-absolute gr-bottom-0 gr-right-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs">2:47</span>
+  </div>
+</div>
+
+<h3>Секция на фоновом фото с затемнением</h3>
+
+<p>
+  Hero или баннер поверх фотографии — трёхслойный сэндвич на знакомых
+  слоях: фото <code>.gr-absolute .gr-inset-0 .gr-w-full .gr-h-full
+  .gr-object-cover</code>, над ним затемнение — тот же слой
+  с <code>.gr-bg-black .gr-opacity-50</code>, и сверху обычный контент
+  с <code>.gr-relative</code> (позиционированный элемент встаёт над
+  непозиционированными соседями без единого z-index)
+  и <code>.gr-text-white</code>. Без затемняющего слоя белый текст
+  на светлых участках фото пропадает — прозрачность здесь
+  не украшение, а читаемость.
+</p>
+
+<pre><code>&lt;section class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8 gr-text-center"&gt;
+  &lt;img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover" src="hero.jpg" alt=""&gt;
+  &lt;div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-50"&gt;&lt;/div&gt;
+  &lt;div class="gr-relative gr-text-white"&gt;
+    &lt;h2 class="gr-mb-2"&gt;Горы ждут&lt;/h2&gt;
+    &lt;p class="gr-opacity-75 gr-mb-4"&gt;Туры выходного дня от 12 000 ₽&lt;/p&gt;
+    &lt;button class="gr-btn gr-bg-white gr-text-primary"&gt;Выбрать тур&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Фото → затемнение <code>.gr-opacity-50</code> → контент с <code>.gr-relative</code></div>
+  <div class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8 gr-text-center">
+    <img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%237d97b8'/%3E%3Cpath%20d='M0%20240l120-140%2090%20100%2080-120%20110%20160z'%20fill='%23516b8c'/%3E%3Ccircle%20cx='330'%20cy='50'%20r='28'%20fill='%23f7f2e8'/%3E%3C/svg%3E">
+    <div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-50"></div>
+    <div class="gr-relative gr-text-white">
+      <h4 class="gr-m-0 gr-text-2xl gr-mb-2">Горы ждут</h4>
+      <p class="gr-m-0 gr-opacity-75 gr-mb-4">Туры выходного дня от 12 000 ₽</p>
+      <button class="gr-btn gr-bg-white gr-text-primary" type="button">Выбрать тур</button>
+    </div>
+  </div>
+</div>
+
+<h3>Приглушённые логотипы</h3>
+
+<p>
+  Секция «Нам доверяют»: логотипы клиентов не должны спорить с брендом
+  страницы, поэтому весь ряд приглушается <code>.gr-opacity-50</code>.
+  Ряд — знакомый кластер <code>.gr-flex .gr-flex-wrap .gr-gap-lg
+  .gr-flex-items-center</code>. Возврат цвета по ховеру — переход
+  <code>.gr-transition-opacity</code> из модуля
+  <a href="animations.html">Animations</a> плюс одна строка своего CSS
+  на <code>:hover</code>; ч/б-версии логотипов (grayscale) утилитами
+  не делаются — это тоже свой CSS.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap-lg gr-flex-items-center gr-flex-center"&gt;
+  &lt;img class="gr-opacity-50 gr-transition-opacity" src="logo-a.svg" alt="Компания А"&gt;
+  &lt;img class="gr-opacity-50 gr-transition-opacity" src="logo-b.svg" alt="Компания Б"&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Ряд логотипов на <code>.gr-opacity-50</code> — тише страницы</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-lg gr-flex-items-center gr-flex-center gr-py-4">
+    <span class="gr-opacity-50 gr-text-xl gr-font-black">ACME</span>
+    <span class="gr-opacity-50 gr-text-xl gr-font-black gr-italic">vertex</span>
+    <span class="gr-opacity-50 gr-text-xl gr-font-black">NORD</span>
+    <span class="gr-opacity-50 gr-text-xl gr-font-black gr-font-serif">Olive&amp;Co</span>
+    <span class="gr-opacity-50 gr-text-xl gr-font-black">Δelta</span>
+  </div>
+</div>
+
 </main>
 </div>
 

@@ -385,6 +385,134 @@
   </div>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Утилиты этой страницы — строительный набор для «обычных» сеток: каталога,
+  футера, витрины фич. Рецепты ниже показывают, как контейнер, auto-fit,
+  спаны и gap-токены складываются в готовые блоки — и когда вместо них
+  пора переходить на строку раскладки <a href="core-grid.html">Grid-парсера</a>.
+</p>
+
+<h3>Каталог без медиазапросов</h3>
+
+<p>
+  Витрина товаров, которая сама решает, сколько карточек влезает в ряд:
+  <code>.gr-grid-auto-fit</code> с минимумом дорожки
+  <code>--gr-grid-min: 180px</code>. Переменная наследуется — она задана
+  один раз на секции, а не на каждой сетке. Пара <code>.gr-grid-rows</code>
+  выравнивает ряды, чтобы короткая карточка не рвала кладку,
+  а зазор — токен <code>.gr-gap</code>, единый с остальной страницей.
+</p>
+
+<pre><code>&lt;section style="--gr-grid-min: 180px"&gt;
+  &lt;div class="gr-grid-auto-fit gr-grid-rows"&gt;
+    &lt;article class="gr-card gr-p-4"&gt;Товар&lt;/article&gt;
+    &lt;article class="gr-card gr-p-4"&gt;Товар&lt;/article&gt;
+    …
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Число колонок выбирает сетка: сузьте окно</div>
+  <div style="--gr-grid-min: 180px">
+    <div class="gr-grid-auto-fit gr-grid-rows">
+      <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Кресло «Дюна»</p><p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">12 400 ₽</p></article>
+      <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Торшер «Свет» с длинным названием в две строки</p><p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">5 900 ₽</p></article>
+      <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Стол «Дуб»</p><p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">21 000 ₽</p></article>
+      <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Полка «Норд»</p><p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">3 200 ₽</p></article>
+    </div>
+  </div>
+</div>
+
+<h3>Футер: бренд и колонки ссылок</h3>
+
+<p>
+  Верх футера — сетка <code>.gr-grid-2 .gr-grid-5-md</code>, где колонка
+  бренда шире остальных за счёт <code>.gr-grid-col-span-2</code>,
+  а три колонки ссылок — обычные ячейки со стопками
+  <code>.gr-flex-col .gr-gap-sm</code>. Нижняя строка «© и соцсети» —
+  флекс <code>.gr-flex-between</code> с <code>.gr-flex-wrap</code>
+  и разделителем <code>.gr-border-t</code>.
+</p>
+
+<pre><code>&lt;footer class="gr-py-8"&gt;
+  &lt;div class="gr-grid-2 gr-grid-5-md gr-gap-lg"&gt;
+    &lt;div class="gr-grid-col-span-2"&gt;
+      &lt;p class="gr-font-bold"&gt;Griffin&lt;/p&gt;
+      &lt;p class="gr-text-sm gr-text-ink-secondary"&gt;Модульная CSS-библиотека.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;nav class="gr-flex gr-flex-col gr-gap-sm"&gt;…Продукт…&lt;/nav&gt;
+    &lt;nav class="gr-flex gr-flex-col gr-gap-sm"&gt;…Компания…&lt;/nav&gt;
+    &lt;nav class="gr-flex gr-flex-col gr-gap-sm"&gt;…Помощь…&lt;/nav&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-flex gr-flex-wrap gr-flex-between gr-gap gr-border-t gr-mt-8 gr-pt-4"&gt;
+    &lt;span class="gr-text-sm gr-text-ink-secondary"&gt;© 2026 Griffin&lt;/span&gt;
+    &lt;span class="gr-text-sm"&gt;Телеграм · GitVerse&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Бренд шире ссылок на <code>.gr-grid-col-span-2</code></div>
+  <div class="gr-py-4">
+    <div class="gr-grid-2 gr-grid-5-md gr-gap-lg">
+      <div class="gr-grid-col-span-2">
+        <p class="gr-m-0 gr-font-bold">Griffin</p>
+        <p class="gr-m-0 gr-mt-1 gr-text-sm gr-text-ink-secondary">Модульная CSS-библиотека: подключаете только нужное.</p>
+      </div>
+      <nav class="gr-flex gr-flex-col gr-gap-sm gr-text-sm">
+        <span class="gr-font-semibold">Продукт</span>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">Возможности</a>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">Цены</a>
+      </nav>
+      <nav class="gr-flex gr-flex-col gr-gap-sm gr-text-sm">
+        <span class="gr-font-semibold">Компания</span>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">О нас</a>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">Блог</a>
+      </nav>
+      <nav class="gr-flex gr-flex-col gr-gap-sm gr-text-sm">
+        <span class="gr-font-semibold">Помощь</span>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">Документация</a>
+        <a class="gr-text-ink-secondary" href="#" onclick="return false">Контакты</a>
+      </nav>
+    </div>
+    <div class="gr-flex gr-flex-wrap gr-flex-between gr-gap gr-border-t gr-mt-8 gr-pt-4 gr-text-sm">
+      <span class="gr-text-ink-secondary">© 2026 Griffin</span>
+      <span><a href="#" onclick="return false">Телеграм</a> · <a href="#" onclick="return false">GitVerse</a></span>
+    </div>
+  </div>
+</div>
+
+<h3>Витрина фич с крупной картой</h3>
+
+<p>
+  Bento-облегчённо: в сетке <code>.gr-grid-2 .gr-grid-3-md</code> главная
+  фича забирает две колонки и два ряда — <code>.gr-grid-col-span-2
+  .gr-grid-row-span-2</code>, остальные заполняют клетки вокруг.
+  На мобильном спан по колонкам упирается в ширину сетки и складывается
+  сам. Когда клеток и исключений становится много, честнее перейти
+  на строку раскладки <code>data-gr-layout</code> — она делает то же
+  самое декларативно.
+</p>
+
+<pre><code>&lt;div class="gr-grid-2 gr-grid-3-md gr-gap"&gt;
+  &lt;article class="gr-grid-col-span-2 gr-grid-row-span-2 gr-card gr-p-6"&gt;Главная фича&lt;/article&gt;
+  &lt;article class="gr-card gr-p-4"&gt;Фича&lt;/article&gt;
+  &lt;article class="gr-card gr-p-4"&gt;Фича&lt;/article&gt;
+  &lt;article class="gr-card gr-p-4"&gt;Фича&lt;/article&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Главная клетка — <code>span-2</code> по обеим осям</div>
+  <div class="gr-grid-2 gr-grid-3-md gr-gap">
+    <article class="gr-grid-col-span-2 gr-grid-row-span-2 gr-card gr-p-6">
+      <p class="gr-m-0 gr-font-bold">Грид-парсер</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-sm gr-text-ink-secondary">Раскладка страницы одной строкой в атрибуте — главная фича занимает клетку 2×2.</p>
+    </article>
+    <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Темы</p></article>
+    <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Контейнерные запросы</p></article>
+    <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Произвольные значения</p></article>
+    <article class="gr-card gr-p-4"><p class="gr-m-0 gr-font-semibold gr-text-sm">Логические свойства</p></article>
+  </div>
+</div>
+
 </main>
 </div>
 

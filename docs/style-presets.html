@@ -333,6 +333,68 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Ось стилей — инструмент двух ситуаций: разные продукты на одной сборке
+  и разные зоны одной страницы. Оба рецепта ниже работают вживую.
+</p>
+
+<h3>Промо-врезка, которая дышит иначе</h3>
+
+<p>
+  Приложение живёт в строгом стиле, а маркетинговой врезке — подписке,
+  анонсу тарифа — хочется воздуха. Атрибут на самой врезке решает это без
+  вторых версий компонентов: <code>data-gr-style="airy"</code>, и те же
+  кнопка, поле и бейдж внутри становятся мягче — крупнее скругления,
+  пастельный акцент, отклик с перелётом. Разметка не отличается ни классом.
+</p>
+
+<pre><code>&lt;aside data-gr-style="airy" class="gr-card gr-p-6"&gt;
+  &lt;span class="gr-badge gr-badge-pill"&gt;Новое&lt;/span&gt;
+  &lt;h3&gt;Дайджест раз в неделю&lt;/h3&gt;
+  &lt;div class="gr-input-group"&gt;
+    &lt;input class="gr-input" type="email" placeholder="Почта" aria-label="Почта"&gt;
+    &lt;button class="gr-btn gr-btn-primary"&gt;Подписаться&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/aside&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Врезка <code>data-gr-style="airy"</code> — та же разметка, другой характер</div>
+  <aside data-gr-style="airy" class="gr-card gr-p-6" style="max-inline-size: 24rem">
+    <span class="gr-badge gr-badge-pill">Новое</span>
+    <h3 class="gr-mt-2 gr-mb-3">Дайджест раз в неделю</h3>
+    <div class="gr-input-group">
+      <input class="gr-input" type="email" placeholder="Почта" aria-label="Почта">
+      <button class="gr-btn gr-btn-primary" type="button">Подписаться</button>
+    </div>
+  </aside>
+</div>
+
+<h3>Плотность — на выбор пользователя</h3>
+
+<p>
+  Таблично-ориентированные интерфейсы часто дают переключатель
+  «просторно / компактно». Ось стилей делает его двумя строками:
+  журнальный стиль и есть «компактно» — плотнее зазоры, ниже интерлиньяж,
+  разделители в таблицах. Кнопка ниже переключает всю эту страницу —
+  панель показаний наверху отреагирует тоже.
+</p>
+
+<pre><code>&lt;button id="density" type="button"&gt;Компактно&lt;/button&gt;
+
+&lt;script&gt;
+  density.addEventListener('click', function () {
+    var next = Griffincss.theme.get().style === 'compact' ? 'standard' : 'compact';
+    Griffincss.theme.style(next);
+    density.textContent = next === 'compact' ? 'Просторно' : 'Компактно';
+  });
+&lt;/script&gt;</code></pre>
+
+<p class="gr-mb-4">
+  <button class="gr-btn" type="button" id="demo-density">Компактно</button>
+  <span class="gr-text-ink-secondary gr-ms-2">— рабочая кнопка: журнальный стиль ⇄ стандартный.</span>
+</p>
+
 </main>
 </div>
 
@@ -357,6 +419,19 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
 
     document.addEventListener('griffincss:themechange', render);
     render();
+
+    // Рецепт «Плотность — на выбор пользователя»: рабочая кнопка.
+    var density = document.getElementById('demo-density');
+    if (density) {
+      function densityLabel() {
+        density.textContent = theme.get().style === 'compact' ? 'Просторно' : 'Компактно';
+      }
+      density.addEventListener('click', function () {
+        theme.style(theme.get().style === 'compact' ? 'standard' : 'compact');
+      });
+      document.addEventListener('griffincss:themechange', densityLabel);
+      densityLabel();
+    }
   })();
 </script>
 

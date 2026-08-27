@@ -182,6 +182,98 @@
     в таблицу стилей своё правило.</li>
 </ul>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Произвольные значения раскрывают возможности, которых у шкал не бывает
+  в принципе: отрицательные смещения, <code>calc()</code>, единицы
+  <code>ch</code> и точные пиксели макета. Рецепты ниже — три задачи,
+  которые без скобок не решаются вовсе.
+</p>
+
+<h3>Счётчик за углом кнопки</h3>
+
+<p>
+  Шкала привязки к краям знает только <code>0</code> и <code>auto</code> —
+  наружу за край она не выходит. Отрицательные смещения
+  <code>.gr-top-[-0.5rem] .gr-right-[-0.5rem]</code> выносят бейдж-счётчик
+  наполовину за угол кнопки — как у иконки уведомлений. Родителю —
+  <code>.gr-relative .gr-w-fit</code>. Остальные выносы за край — колонка
+  целиком снаружи, ярлык на ребре — разобраны в «Выносе за край»
+  на странице <a href="position.html">Position</a>.
+</p>
+
+<pre><code>&lt;span class="gr-relative gr-w-fit gr-inline-block"&gt;
+  &lt;button class="gr-btn gr-btn-secondary"&gt;Уведомления&lt;/button&gt;
+  &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]"&gt;3&lt;/span&gt;
+&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">За край выводят отрицательные <code>.gr-top-[…]</code>/<code>.gr-right-[…]</code></div>
+  <span class="gr-relative gr-w-fit gr-inline-block">
+    <button class="gr-btn gr-btn-secondary" type="button">Уведомления</button>
+    <span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]">3</span>
+  </span>
+</div>
+
+<h3>Рабочая область «экран минус шапка»</h3>
+
+<p>
+  Чат, редактор, карта: под фиксированной шапкой область должна занять
+  ровно остаток экрана и прокручиваться внутри себя.
+  <code>.gr-h-[calc(100svh-56px)]</code> считает это прямо в классе —
+  <code>calc()</code> пишется без пробелов, иначе атрибут <code>class</code>
+  разрежет его на части. В связке — <code>.gr-overflow-y-auto</code>
+  для внутренней прокрутки.
+</p>
+
+<pre><code>&lt;header style="height:56px"&gt;…&lt;/header&gt;
+&lt;main class="gr-h-[calc(100svh-56px)] gr-overflow-y-auto"&gt;
+  …лента чата со своим скроллом…
+&lt;/main&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">В демо тот же приём в миниатюре: <code>calc(12rem-40px)</code> при обёртке 12rem</div>
+  <div class="gr-h-[12rem] gr-border gr-radius-2 gr-overflow-hidden">
+    <div class="gr-h-[40px] gr-flex gr-flex-items-center gr-px-4 gr-bg-surface gr-border-b gr-font-semibold gr-text-sm">Шапка — 40px</div>
+    <div class="gr-h-[calc(12rem-40px)] gr-overflow-y-auto gr-px-4 gr-py-2 gr-text-sm gr-text-ink-secondary">
+      <p class="gr-m-0 gr-mb-2">Область получила ровно остаток высоты и прокручивается сама.</p>
+      <p class="gr-m-0 gr-mb-2">Сообщение 2</p>
+      <p class="gr-m-0 gr-mb-2">Сообщение 3</p>
+      <p class="gr-m-0 gr-mb-2">Сообщение 4</p>
+      <p class="gr-m-0 gr-mb-2">Сообщение 5</p>
+      <p class="gr-m-0">Сообщение 6</p>
+    </div>
+  </div>
+</div>
+
+<h3>Панель точной ширины из макета</h3>
+
+<p>
+  Дробные ширины хороши, пока панель может дышать; сайдбар из макета —
+  это ровно 280px на любом экране. <code>.gr-w-[280px]</code> фиксирует
+  панель, сосед забирает остальное знакомой парой <code>.gr-flex-1
+  .gr-min-w-0</code>. Если 280px повторяется в проекте много раз —
+  это уже не произвольное значение, а своя переменная (см. «Когда лучше
+  не надо»).
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap"&gt;
+  &lt;aside class="gr-w-[280px]"&gt;Панель из макета&lt;/aside&gt;
+  &lt;main class="gr-flex-1 gr-min-w-0"&gt;Контент&lt;/main&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Панель — ровно 280px, остаток — <code>.gr-flex-1</code></div>
+  <div class="gr-flex gr-gap">
+    <aside class="gr-w-[280px] card-demo gr-hidden gr-block-sm">
+      <h4>Панель</h4>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">280px из макета (на телефоне скрыта).</p>
+    </aside>
+    <div class="gr-flex-1 gr-min-w-0 card-demo">
+      <h4>Контент</h4>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Занимает всё остальное.</p>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 

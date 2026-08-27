@@ -85,6 +85,121 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Тень — язык глубины: чем «выше» элемент над страницей, тем крупнее его
+  тень. Рецепты ниже показывают, как ступени шкалы распределяются по слоям
+  интерфейса и как тень работает в паре с бордерами, скруглениями
+  и позиционированием.
+</p>
+
+<h3>Слои интерфейса: одна шкала на все этажи</h3>
+
+<p>
+  Правило простое: покоящееся — <code>sm</code>, всплывающее —
+  <code>lg</code>, модальное — <code>2xl</code>. Карточка списка лежит
+  почти на странице, выпадающее меню висит над ней, диалог — над всем
+  окном. Когда каждая ступень закреплена за своим этажом, глубина
+  читается без легенды — и меняется одним токеном
+  <code>--gr-shadow-strength</code>, а не правкой всех теней по одной.
+</p>
+
+<pre><code>&lt;div class="gr-card gr-shadow-sm"&gt;Карточка списка&lt;/div&gt;
+&lt;ul class="gr-radius-2 gr-shadow-lg"&gt;Выпадающее меню&lt;/ul&gt;
+&lt;dialog class="gr-radius-4 gr-shadow-2xl"&gt;Диалог&lt;/dialog&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Покой — <code>sm</code>, всплытие — <code>lg</code>, модальность — <code>2xl</code></div>
+  <div class="gr-grid-1 gr-grid-3-md gr-gap-lg gr-p-4">
+    <div class="gr-bg-surface gr-radius-2 gr-p-4 gr-shadow-sm">
+      <p class="gr-m-0 gr-font-semibold gr-text-sm">Карточка</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">.gr-shadow-sm — лежит на странице</p>
+    </div>
+    <div class="gr-bg-surface gr-radius-2 gr-p-4 gr-shadow-lg">
+      <p class="gr-m-0 gr-font-semibold gr-text-sm">Дропдаун</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">.gr-shadow-lg — висит над контентом</p>
+    </div>
+    <div class="gr-bg-surface gr-radius-2 gr-p-4 gr-shadow-2xl">
+      <p class="gr-m-0 gr-font-semibold gr-text-sm">Диалог</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">.gr-shadow-2xl — поверх всего окна</p>
+    </div>
+  </div>
+</div>
+
+<h3>Тень-«блюдце» под скриншотом</h3>
+
+<p>
+  Маркетинговый приём: большой скриншот продукта в hero отрывается
+  от страницы крупной мягкой тенью. Достаточно пары
+  <code>.gr-radius-4 .gr-shadow-2xl</code> на картинке — и блок выглядит
+  «поднятым», без единой строки своего CSS. Центрирует его знакомая пара
+  <code>.gr-w-fit .gr-mx-auto</code>.
+</p>
+
+<pre><code>&lt;div class="gr-w-fit gr-mx-auto"&gt;
+  &lt;img class="gr-radius-4 gr-shadow-2xl" src="screenshot.png" alt="Экран приложения"&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Скриншот поднимает <code>.gr-shadow-2xl</code></div>
+  <div class="gr-w-fit gr-mx-auto gr-py-4">
+    <div class="gr-radius-4 gr-shadow-2xl gr-bg-surface gr-border gr-p-4" style="width:min(420px, 100%)">
+      <div class="gr-flex gr-gap-sm gr-mb-3">
+        <span class="gr-dot gr-dot-danger"></span><span class="gr-dot gr-dot-warning"></span><span class="gr-dot gr-dot-success"></span>
+      </div>
+      <div class="gr-bg-sunken gr-radius-2 gr-p-3 gr-text-sm gr-text-ink-secondary">Условный экран приложения</div>
+    </div>
+  </div>
+</div>
+
+<h3>Вдавленные поверхности</h3>
+
+<p>
+  Обратная сторона глубины: то, что «утоплено» в страницу. Трек
+  прогресс-бара, поле поиска на цветной панели, колодец со статистикой —
+  их делает пара «чуть темнее фон + тень внутрь»:
+  <code>.gr-bg-sunken .gr-shadow-inner</code>. Выпуклое и вдавленное
+  на одном экране усиливают друг друга — сравните колодец с карточкой
+  рядом.
+</p>
+
+<pre><code>&lt;div class="gr-bg-sunken gr-shadow-inner gr-radius-2 gr-p-4"&gt;
+  Вдавленный колодец
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Вниз — <code>.gr-shadow-inner</code>, вверх — <code>.gr-shadow-md</code></div>
+  <div class="gr-grid-1 gr-grid-2-sm gr-gap">
+    <div class="gr-bg-sunken gr-shadow-inner gr-radius-2 gr-p-4">
+      <p class="gr-m-0 gr-text-sm gr-font-semibold">Вдавленный колодец</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">.gr-bg-sunken + .gr-shadow-inner</p>
+    </div>
+    <div class="gr-bg-surface gr-shadow-md gr-radius-2 gr-p-4">
+      <p class="gr-m-0 gr-text-sm gr-font-semibold">Выпуклая карточка</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">.gr-bg-surface + .gr-shadow-md</p>
+    </div>
+  </div>
+</div>
+
+<h3>Подъём по ховеру — честно про границы модуля</h3>
+
+<p>
+  Классический «hover lift» — тень на ступень выше при наведении —
+  ховер-вариантами утилит не собирается: их в библиотеке нет намеренно.
+  У готового <a href="ui-cards.html"><code>.gr-card-interactive</code></a>
+  подъём есть из коробки; для своего элемента это три строки CSS
+  на токенах — геометрия и цвет тени останутся согласованными с темой:
+</p>
+
+<pre><code>.promo-card { transition: box-shadow 0.15s ease; }
+.promo-card:hover { box-shadow: var(--gr-shadow-lg); }</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Готовый подъём: <code>.gr-card .gr-card-interactive</code> (наведите курсор)</div>
+  <div class="gr-card gr-card-interactive gr-p-4" style="max-width:380px">
+    <p class="gr-m-0 gr-font-semibold">Интерактивная карточка</p>
+    <p class="gr-m-0 gr-mt-1 gr-text-sm gr-text-ink-secondary">Ховер уже внутри компонента — утилитам он не нужен.</p>
+  </div>
+</div>
+
 </main>
 </div>
 

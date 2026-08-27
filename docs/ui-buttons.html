@@ -344,6 +344,91 @@
   &lt;button class="gr-btn"&gt;Отмена&lt;/button&gt;
 &lt;/div&gt;</code></pre>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Кнопка почти всегда стоит в компании: пара CTA в hero, ряд действий
+  формы, слитая группа-переключатель. Рецепты ниже — три самые частые
+  компании и роли в них; состояние загрузки разобрано
+  на странице <a href="animations.html">Transitions</a>.
+</p>
+
+<h3>Пара CTA: главная и вторая</h3>
+
+<p>
+  Первый экран продаёт одно действие — залитая <code>.gr-btn-primary</code>,
+  а второй даёт запасной выход — тихая <code>.gr-btn-ghost</code>
+  со стрелкой. Иерархия строится контрастом заливки, а не размером: обе
+  кнопки <code>.gr-btn-lg</code> и стоят в одном флекс-ряду. На мобильном
+  ряд складывается и кнопки растягиваются: <code>.gr-flex-col
+  .gr-flex-row-sm</code> на контейнере, <code>.gr-w-full .gr-w-auto-sm</code>
+  на кнопках.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-flex-row-sm gr-gap-sm gr-flex-center"&gt;
+  &lt;button class="gr-btn gr-btn-primary gr-btn-lg gr-w-full gr-w-auto-sm"&gt;Попробовать бесплатно&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-ghost gr-btn-lg gr-w-full gr-w-auto-sm"&gt;Как это работает →&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Иерархию задаёт заливка; на узком экране — столбик во всю ширину</div>
+  <div class="gr-flex gr-flex-col gr-flex-row-sm gr-gap-sm gr-flex-center gr-py-4">
+    <button class="gr-btn gr-btn-primary gr-btn-lg gr-w-full gr-w-auto-sm" type="button">Попробовать бесплатно</button>
+    <button class="gr-btn gr-btn-ghost gr-btn-lg gr-w-full gr-w-auto-sm" type="button">Как это работает →</button>
+  </div>
+</div>
+
+<h3>Кнопка с иконкой и ряд действий</h3>
+
+<p>
+  Иконка уточняет глагол: «⬇ Скачать», «+ Добавить». Кнопка уже
+  выравнивает содержимое по центру — иконке хватает быть первым символом
+  или <code>span</code>-ом внутри. В ряду действий формы у каждой кнопки
+  своя роль: опасное действие уводится влево и в <code>.gr-btn-ghost
+  .gr-text-danger</code>, пара «Отмена / Сохранить» дожимается вправо
+  через <code>.gr-ml-auto</code> — приём авто-маржина
+  из <a href="spacing.html">Spacing</a>.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center"&gt;
+  &lt;button class="gr-btn gr-btn-ghost gr-text-danger"&gt;Удалить черновик&lt;/button&gt;
+  &lt;button class="gr-btn gr-ml-auto"&gt;Отмена&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-primary"&gt;⬇ Сохранить&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Роли в ряду: опасное — влево и тихим, основное — вправо и залитым</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center">
+    <button class="gr-btn gr-btn-ghost gr-text-danger" type="button">Удалить черновик</button>
+    <button class="gr-btn gr-ml-auto" type="button">Отмена</button>
+    <button class="gr-btn gr-btn-primary" type="button">⬇ Сохранить</button>
+  </div>
+</div>
+
+<h3>Группа-переключатель вида</h3>
+
+<p>
+  «Список / сетка», «День / Неделя / Месяц» — слитая группа
+  <code>.gr-btn-group</code>: скругления только на внешних углах, границы
+  не удваиваются. Активный сегмент отмечается и стилем
+  (<code>.gr-btn-primary</code>), и семантикой — <code>aria-pressed="true"</code>:
+  скринридеру заливка не видна. Капсульный вариант той же задачи —
+  сегмент-контрол — разобран на странице
+  <a href="border-radius.html">Border Radius</a>.
+</p>
+
+<pre><code>&lt;div class="gr-btn-group" role="group" aria-label="Вид списка"&gt;
+  &lt;button class="gr-btn gr-btn-primary" aria-pressed="true"&gt;Список&lt;/button&gt;
+  &lt;button class="gr-btn" aria-pressed="false"&gt;Сетка&lt;/button&gt;
+  &lt;button class="gr-btn" aria-pressed="false"&gt;Канбан&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Слитая группа: активный сегмент залит и помечен <code>aria-pressed</code></div>
+  <div class="gr-btn-group" role="group" aria-label="Вид списка">
+    <button class="gr-btn gr-btn-primary" type="button" aria-pressed="true">Список</button>
+    <button class="gr-btn" type="button" aria-pressed="false">Сетка</button>
+    <button class="gr-btn" type="button" aria-pressed="false">Канбан</button>
+  </div>
+</div>
+
 </main>
 </div>
 

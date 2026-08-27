@@ -357,6 +357,101 @@
   не поддерживается в остальном, ничего бы не купило.
 </p>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Контейнерные варианты пишутся один раз — а дальше виджет носит свою
+  адаптивность с собой, в какую бы клетку шаблона его ни поставили.
+  Два рецепта ниже — карточка, меняющая раскладку и словоохотливость
+  по месту, и KPI-плитка, меняющая плотность.
+</p>
+
+<h3>Карточка товара для любой клетки</h3>
+
+<p>
+  Одна разметка на все места шаблона: в узкой клетке карточка вертикальна
+  и немногословна, в широкой — раскладывается картинкой влево
+  (<code>data-gr-layout-csm</code>), укрупняет заголовок
+  (<code>.gr-text-lg-csm</code>) и показывает описание, которого в узкой
+  версии нет вовсе: <code>.gr-hidden .gr-block-csm</code> — скрытие тоже
+  меряется контейнером. Обёртка-клетка получает <code>.gr-cq</code>,
+  сама карточка — нет: элемент не может измерять себя.
+</p>
+
+<pre><code>&lt;div class="gr-cq"&gt;&lt;!-- клетка шаблона любой ширины --&gt;
+  &lt;article class="gr-card gr-p-4" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2"&gt;
+    &lt;img class="gr-area-a gr-w-full gr-aspect-video gr-object-cover gr-radius-1" src="…" alt=""&gt;
+    &lt;div class="gr-area-b"&gt;
+      &lt;h3 class="gr-text-base gr-text-lg-csm"&gt;Кресло «Дюна»&lt;/h3&gt;
+      &lt;p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary"&gt;
+        Описание видно только в широкой клетке.
+      &lt;/p&gt;
+      &lt;p class="gr-font-bold"&gt;12 400 ₽&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/article&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Клетки разной ширины — карточка одна (порог 640px контейнера, нужно широкое окно)</div>
+  <div class="gr-flex gr-flex-col gr-gap cq-pair">
+    <div class="cq-narrow gr-cq">
+      <article class="cq-card gr-radius-2" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2">
+        <div class="gr-area-a cq-thumb gr-radius-1">Фото</div>
+        <div class="gr-area-b">
+          <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Кресло «Дюна»</h3>
+          <p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
+          <p class="gr-font-bold gr-mb-0">12 400 ₽</p>
+        </div>
+      </article>
+    </div>
+    <div class="gr-w-full gr-cq">
+      <article class="cq-card gr-radius-2" data-gr-layout="a1-b1" data-gr-layout-csm="a1b2">
+        <div class="gr-area-a cq-thumb gr-radius-1">Фото</div>
+        <div class="gr-area-b">
+          <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Кресло «Дюна»</h3>
+          <p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
+          <p class="gr-font-bold gr-mb-0">12 400 ₽</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+
+<h3>KPI-плитка: плотность по ширине места</h3>
+
+<p>
+  Виджет статистики живёт и в тесном сайдбаре, и в широкой клетке
+  дашборда. Контейнерные варианты спейсинга и типографики подстраивают
+  плотность: в узком месте — <code>.gr-p-3</code> и обычный кегль числа,
+  от 640px контейнера — просторный <code>.gr-p-6-csm</code>, крупное
+  число <code>.gr-text-4xl-csm</code> и центрирование
+  <code>.gr-text-center-csm</code>. Медиазапросами такое не решается:
+  ширина окна одна, а клетки — разные.
+</p>
+
+<pre><code>&lt;div class="gr-cq"&gt;
+  &lt;div class="gr-card gr-p-3 gr-p-6-csm gr-text-center-csm"&gt;
+    &lt;p class="gr-text-xs gr-uppercase gr-text-ink-secondary"&gt;Выручка&lt;/p&gt;
+    &lt;p class="gr-text-2xl gr-text-4xl-csm gr-font-extrabold"&gt;1,2 млн ₽&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Одна плитка: сверху узкое место, ниже — широкое (порог 640px, нужно широкое окно)</div>
+  <div class="gr-flex gr-flex-col gr-gap cq-pair">
+    <div class="cq-narrow gr-cq">
+      <div class="gr-card gr-p-3 gr-p-6-csm gr-text-center-csm">
+        <p class="gr-m-0 gr-text-xs gr-uppercase gr-text-ink-secondary">Выручка</p>
+        <p class="gr-m-0 gr-mt-1 gr-text-2xl gr-text-4xl-csm gr-font-extrabold gr-text-primary">1,2 млн ₽</p>
+      </div>
+    </div>
+    <div class="gr-w-full gr-cq">
+      <div class="gr-card gr-p-3 gr-p-6-csm gr-text-center-csm">
+        <p class="gr-m-0 gr-text-xs gr-uppercase gr-text-ink-secondary">Выручка</p>
+        <p class="gr-m-0 gr-mt-1 gr-text-2xl gr-text-4xl-csm gr-font-extrabold gr-text-primary">1,2 млн ₽</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 

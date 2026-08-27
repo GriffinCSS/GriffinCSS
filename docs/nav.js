@@ -160,7 +160,7 @@
     ? window.Griffincss.theme.get()
     : { theme: 'auto', a11y: false, style: 'standard' };
 
-  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.17.0</span></a>';
+  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.19.0</span></a>';
 
   html += '<div class="sidebar-controls">';
   html += '<fieldset class="gr-segmented gr-w-full" aria-label="Цветовая тема">';
@@ -569,16 +569,52 @@
   // бы прямо на странице документации, а каркас документа в неё не вставить.
   var BLOCKED_ROOT = /^<\s*(!|\?|link|meta|script|style|html|head|body|title)\b/i;
 
+  // Разметка, которая не остаётся в границах демонстрации: fixed-элемент
+  // накрывает саму страницу документации (пример затемнения на position.html
+  // перекрывал оверлеем весь доксайт), а закрытые <dialog> — модальные окна
+  // и выдвижные панели — без вызова показать нечего.
+  var ESCAPING = /\bgr-(fixed|modal|drawer|toast-region)\b|<\s*dialog\b/i;
+
+  // Превью заслуживает пример, в котором есть что показать: видимый текст
+  // (многоточия-заполнители не в счёт), орган управления или картинка
+  // с настоящим адресом. Пустая рамка вместо результата — хуже, чем один код.
+  var RENDERABLE = 'input, select, textarea, button, progress, meter, svg, canvas, video, iframe, audio';
+
+  var hasRenderable = function (text) {
+    var probe = document.createElement('template');
+
+    probe.innerHTML = text;
+
+    var root = probe.content;
+
+    if (!root) return true;
+    if (root.textContent.replace(/[\s….]+/g, '')) return true;
+    if (root.querySelector(RENDERABLE)) return true;
+
+    var imgs = root.querySelectorAll('img');
+
+    for (var i = 0; i < imgs.length; i++) {
+      var src = imgs[i].getAttribute('src') || '';
+
+      if (src && src.indexOf('…') === -1) return true;
+    }
+
+    return false;
+  };
+
   var previewable = function (text) {
     var t = text.trim();
 
     if (t.charAt(0) !== '<') return false;
     if (BLOCKED_ROOT.test(t)) return false;
     if (/<\s*script|\son[a-z]+\s*=|javascript:/i.test(t)) return false;
+    if (ESCAPING.test(t)) return false;
 
     // Оживляется то, где есть что показать библиотекой. Фрагмент чужой
     // разметки без единого класса gr- превью не даёт, а место занимает.
-    return /\bgr-|data-gr-/.test(t);
+    if (!/\bgr-|data-gr-/.test(t)) return false;
+
+    return hasRenderable(t);
   };
 
   // --- блок примера ---------------------------------------------------------
@@ -916,8 +952,10 @@
     // Заголовки внутри примеров — часть примера, а не разделы страницы.
     // Карточка тарифа со своим <h3> не должна появляться в оглавлении,
     // а якорь `#`, приписанный к ней, уехал бы в скопированный код.
+    // <dialog> — тоже пример: заголовок закрытого окна невидим, и ссылка
+    // оглавления на него никуда не приводила бы.
     for (h = 0; h < all.length; h++) {
-      if (all[h].closest('.example, .demo-block, .callout')) continue;
+      if (all[h].closest('.example, .demo-block, .callout, dialog')) continue;
 
       headings.push(all[h]);
     }

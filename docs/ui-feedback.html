@@ -433,6 +433,90 @@
   у верхних углов тост приезжает сверху, у нижних снизу.
 </p>
 
+<h2>Примеры использования</h2>
+
+<p>
+  У обратной связи два вопроса: «каким компонентом сказать» и «на сколько
+  оставить». Два рецепта ниже отвечают на оба: выбор между алертом
+  и тостом и живая полоса загрузки с отменой.
+</p>
+
+<h3>Алерт или тост: правило выбора</h3>
+
+<p>
+  Ошибка валидации остаётся <em>алертом</em> в потоке страницы: к ней
+  возвращаются взглядом, пока правят поля, и она стоит рядом с причиной.
+  Подтверждение успеха уходит <em>тостом</em>: перечитывать его незачем,
+  а страница уже показывает результат. Обратное — тост об ошибке формы
+  или вечный алерт «Сохранено» — заставляет либо запоминать исчезнувшее,
+  либо закрывать очевидное. Кнопка в демо рабочая.
+</p>
+
+<pre><code>&lt;!-- осталась на странице: к ней вернутся --&gt;
+&lt;div class="gr-alert gr-alert-danger" role="alert"&gt;
+  &lt;div class="gr-alert-title"&gt;Форма не отправлена&lt;/div&gt;
+  &lt;div class="gr-alert-body"&gt;Заполните почту и телефон.&lt;/div&gt;
+&lt;/div&gt;
+
+// мимолётное подтверждение
+Griffincss.ui.toast('Черновик сохранён', { status: 'success', title: 'Готово' });</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Ошибка стоит в потоке, успех — пролетает тостом</div>
+  <div class="gr-alert gr-alert-danger gr-mb-4" role="alert">
+    <div class="gr-alert-title">Форма не отправлена</div>
+    <div class="gr-alert-body">Заполните почту и телефон — поля подсвечены.</div>
+  </div>
+  <button class="gr-btn gr-btn-primary" type="button" onclick="Griffincss.ui.toast('Черновик сохранён', { status: 'success', title: 'Готово', icon: '✓' })">Сохранить черновик</button>
+</div>
+
+<h3>Загрузка файла: полоса, процент, отмена</h3>
+
+<p>
+  Строка загрузки — медиа-объект: имя файла с <code>.gr-truncate</code>
+  (длинные имена не распирают строку), процент <code>.gr-text-ink-secondary</code>
+  напротив через <code>.gr-flex-between</code>, под ними —
+  <code>&lt;progress class="gr-progress"&gt;</code> на всю ширину и рядом
+  кнопка-крестик. Пока доля неизвестна, полоса живёт
+  в <code>.gr-progress-indeterminate</code>; проценты появляются вместе
+  с первыми байтами.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-gap-sm" style="max-width: 26rem"&gt;
+  &lt;div class="gr-flex gr-flex-between gr-gap-sm gr-text-sm"&gt;
+    &lt;span class="gr-truncate"&gt;annual-report-2026-final-v3.pdf&lt;/span&gt;
+    &lt;span class="gr-text-ink-secondary"&gt;64 %&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-flex gr-flex-items-center gr-gap-sm"&gt;
+    &lt;progress class="gr-progress gr-flex-1" value="64" max="100"&gt;64 %&lt;/progress&gt;
+    &lt;button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm"&gt;✕&lt;span class="gr-sr-only"&gt;Отменить загрузку&lt;/span&gt;&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Имя — <code>.gr-truncate</code>, полоса — <code>.gr-flex-1</code>, отмена — кнопка-иконка</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div>
+      <div class="gr-flex gr-flex-between gr-gap-sm gr-text-sm gr-mb-1">
+        <span class="gr-truncate">annual-report-2026-final-v3-really-final.pdf</span>
+        <span class="gr-text-ink-secondary">64 %</span>
+      </div>
+      <div class="gr-flex gr-flex-items-center gr-gap-sm">
+        <progress class="gr-progress gr-flex-1" value="64" max="100">64 %</progress>
+        <button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm" type="button">✕<span class="gr-sr-only">Отменить загрузку</span></button>
+      </div>
+    </div>
+    <div>
+      <div class="gr-flex gr-flex-between gr-gap-sm gr-text-sm gr-mb-1">
+        <span class="gr-truncate">фото-со-встречи.zip</span>
+        <span class="gr-text-ink-secondary">ожидание…</span>
+      </div>
+      <div class="gr-flex gr-flex-items-center gr-gap-sm">
+        <progress class="gr-progress gr-progress-indeterminate gr-flex-1" max="100">Загружается</progress>
+        <button class="gr-btn gr-btn-icon gr-btn-ghost gr-btn-sm" type="button">✕<span class="gr-sr-only">Отменить загрузку</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 

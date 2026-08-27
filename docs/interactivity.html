@@ -103,6 +103,123 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Модуль маленький, но его классы решают заметную долю «почему не
+  кликается» и «почему выделилось»: слои, крадущие клики, случайные
+  выделения при быстрых нажатиях, недоступные состояния. Рецепты ниже —
+  в связке со слоями Position, прозрачностью и компонентами ui.
+</p>
+
+<h3>Вся карточка — одна ссылка</h3>
+
+<p>
+  Карточка новости должна кликаться целиком, но оборачивать всю вёрстку
+  в <code>&lt;a&gt;</code> — ломать семантику и вложенные ссылки.
+  Приём «растянутая ссылка»: ссылка остаётся на заголовке, а её зону клика
+  расширяет пустой слой <code>.gr-absolute .gr-inset-0</code> внутри
+  карточки с <code>.gr-relative</code>. Слой лежит в самой ссылке, поэтому
+  курсор и фокус ведут себя как у настоящей ссылки — классы курсора
+  не нужны; они пригодятся, когда кликабельность вешает JS
+  на не-интерактивный элемент.
+</p>
+
+<pre><code>&lt;article class="gr-card gr-card-interactive gr-p-4 gr-relative"&gt;
+  &lt;h3&gt;&lt;a class="gr-no-underline" href="/news/42"&gt;
+    Заголовок новости
+    &lt;span class="gr-absolute gr-inset-0"&gt;&lt;/span&gt;
+  &lt;/a&gt;&lt;/h3&gt;
+  &lt;p&gt;Анонс…&lt;/p&gt;
+&lt;/article&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Зону клика растягивает слой <code>.gr-absolute .gr-inset-0</code> внутри ссылки</div>
+  <article class="gr-card gr-card-interactive gr-p-4 gr-relative" style="max-width:380px">
+    <h4 class="gr-m-0 gr-mb-2"><a class="gr-no-underline" href="#" onclick="return false">Заголовок новости<span class="gr-absolute gr-inset-0"></span></a></h4>
+    <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Анонс: наведите куда угодно — курсор ссылки по всей карточке.</p>
+  </article>
+</div>
+
+<h3>Декоративный слой, не крадущий клики</h3>
+
+<p>
+  Градиент-затемнение поверх галереи, «стеклянная» шапка, блоб на фоне —
+  декоративный слой ложится поверх интерактивного контента и молча
+  перехватывает все клики. Лечится парой из таблицы выше: слою —
+  <code>.gr-pointer-events-none</code>, и клики проваливаются к карточкам
+  под ним; если внутри слоя всё же есть кнопка, ей возвращает жизнь
+  <code>.gr-pointer-events-auto</code>. Та же пара уже работала
+  в «Размещении по девяти точкам» на странице
+  <a href="position.html">Position</a>.
+</p>
+
+<pre><code>&lt;div class="gr-relative"&gt;
+  &lt;div class="gr-grid-2 gr-gap"&gt;…кликабельные карточки…&lt;/div&gt;
+  &lt;div class="gr-absolute gr-inset-0 gr-flex gr-flex-items-end gr-flex-center gr-pointer-events-none"&gt;
+    &lt;button class="gr-btn gr-btn-primary gr-pointer-events-auto gr-mb-4"&gt;Показать все&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Слою — <code>none</code>, кнопке внутри — <code>auto</code>: работает и то и другое</div>
+  <div class="gr-relative">
+    <div class="gr-grid-2 gr-gap">
+      <button class="card-demo gr-text-left" type="button" onclick="this.classList.toggle('gr-bg-surface')">Карточка — кликните</button>
+      <button class="card-demo gr-text-left" type="button" onclick="this.classList.toggle('gr-bg-surface')">Карточка — кликните</button>
+    </div>
+    <div class="gr-absolute gr-inset-0 gr-flex gr-flex-items-end gr-flex-center gr-pointer-events-none">
+      <button class="gr-btn gr-btn-primary gr-btn-sm gr-pointer-events-auto" type="button" onclick="return false">Показать все</button>
+    </div>
+  </div>
+</div>
+
+<h3>Счётчик без случайных выделений</h3>
+
+<p>
+  Кнопки «−/+» у количества товара кликают быстро и по нескольку раз —
+  без защиты двойной клик выделяет цифру между ними синим. Обёртке
+  счётчика — <code>.gr-user-select-none</code>: контролы перестают
+  выделяться. Это правило для контролов, не для контента: сам текст
+  страницы выделяемым быть обязан.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-items-center gr-gap-sm gr-user-select-none"&gt;
+  &lt;button class="gr-btn gr-btn-icon"&gt;−&lt;/button&gt;
+  &lt;span class="gr-font-semibold"&gt;1&lt;/span&gt;
+  &lt;button class="gr-btn gr-btn-icon"&gt;+&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Кликайте быстро — цифра не выделяется</div>
+  <div class="gr-flex gr-flex-items-center gr-gap-sm gr-user-select-none gr-w-fit">
+    <button class="gr-btn gr-btn-icon" type="button" onclick="const n=this.nextElementSibling; n.textContent=Math.max(0, +n.textContent-1)">−</button>
+    <span class="gr-font-semibold" style="min-width:2ch;text-align:center">1</span>
+    <button class="gr-btn gr-btn-icon" type="button" onclick="const n=this.previousElementSibling; n.textContent=+n.textContent+1">+</button>
+  </div>
+</div>
+
+<h3>Недоступное действие</h3>
+
+<p>
+  Кнопка «Отправить», пока форма не заполнена: сама кнопка получает
+  <code>.gr-pointer-events-none</code> с <code>.gr-opacity-50</code>
+  (приглушение — из <a href="effects.html">Effects</a>), а курсор
+  «нельзя» показывает обёртка — <code>.gr-cursor-not-allowed</code>:
+  на элементе, который не принимает события, курсор не сработал бы.
+  Для настоящих форм первым выбором остаётся атрибут
+  <code>disabled</code> — у <code>.gr-btn</code> он стилизован из коробки;
+  классовая пара нужна там, где атрибута нет — ссылкам и своим виджетам.
+</p>
+
+<pre><code>&lt;span class="gr-cursor-not-allowed"&gt;
+  &lt;a class="gr-btn gr-btn-primary gr-pointer-events-none gr-opacity-50"
+     href="/checkout" aria-disabled="true"&gt;Оформить заказ&lt;/a&gt;
+&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Ссылка-кнопка выключена классами, курсор — у обёртки</div>
+  <span class="gr-cursor-not-allowed gr-w-fit gr-inline-block">
+    <a class="gr-btn gr-btn-primary gr-pointer-events-none gr-opacity-50" href="#" aria-disabled="true">Оформить заказ</a>
+  </span>
+</div>
+
 </main>
 </div>
 

@@ -538,6 +538,81 @@ document.addEventListener('griffincss:themechange', function (e) {
     </p>
   </section>
 
+  <section>
+    <h2>Примеры использования</h2>
+
+    <p>
+      Вся страница выше — живой пример: прибор, образцы и острова уже
+      работают на токенах. Здесь — два рецепта, которые чаще всего
+      переносят к себе в проект.
+    </p>
+
+    <h3 class="gr-mt-6">Переключатель темы в шапке сайта</h3>
+
+    <p class="gr-mt-2 gr-text-ink-secondary">
+      Кнопка-тумблер: клик — <code class="token">Griffincss.theme.toggle()</code>,
+      подпись обновляется по событию
+      <code class="token">griffincss:themechange</code>, поэтому она честна
+      и тогда, когда тему сменили в другом месте — хоть из этого прибора,
+      хоть из системных настроек в режиме <code class="token">auto</code>.
+    </p>
+
+<pre>&lt;button id="theme-toggle" type="button"&gt;☾ Тёмная&lt;/button&gt;
+
+&lt;script&gt;
+  var btn = document.getElementById('theme-toggle');
+  btn.addEventListener('click', function () { Griffincss.theme.toggle(); });
+  document.addEventListener('griffincss:themechange', function (e) {
+    btn.textContent = e.detail.resolved === 'dark' ? '☀ Светлая' : '☾ Тёмная';
+  });
+&lt;/script&gt;</pre>
+
+    <p class="gr-mt-4">
+      <button class="btn" type="button" id="demo-theme-toggle">☾ Тёмная</button>
+      <span class="gr-text-ink-secondary gr-ms-2">— рабочая кнопка: переключает всю страницу.</span>
+    </p>
+
+    <h3 class="gr-mt-6">Свой бренд одним токеном</h3>
+
+    <p class="gr-mt-2 gr-text-ink-secondary">
+      Акцентный цвет всего сайта — один HSL-токен
+      <code class="token">--gr-hsl-accent</code> на
+      <code class="token">:root</code>: кнопки, ссылки, фокус и выделение
+      перекрашиваются вместе; для тёмной темы — вторая строка
+      в <code class="token">[data-gr-theme="dark"]</code>, обычно светлее.
+      Переопределять HSL-компоненты можно только там, где объявлены
+      семантические токены, — <code class="token">var()</code> подставляется
+      в месте объявления. Локальному острову поэтому переопределяют сам
+      семантический токен — как на примере ниже.
+    </p>
+
+<pre>/* весь сайт */
+:root { --gr-hsl-accent: 152, 60%, 32%; }
+[data-gr-theme="dark"] { --gr-hsl-accent: 152, 45%, 60%; }
+
+/* один блок */
+.promo { --gr-color-accent: hsl(152, 60%, 32%); --gr-color-accent-hover: hsl(152, 60%, 26%); }</pre>
+
+    <div class="island gr-mt-4" style="--gr-color-accent: hsl(152, 60%, 32%); --gr-color-accent-hover: hsl(152, 60%, 26%)">
+      <h3>Бренд — зелёный</h3>
+      <p class="gr-text-ink-secondary gr-mt-2">Семантический токен переопределён на этом острове: <a href="#" onclick="return false">ссылка</a> и кнопка уже в фирменном цвете.</p>
+      <button class="btn gr-mt-4" type="button">Действие</button>
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+        var btn = document.getElementById('demo-theme-toggle');
+        btn.addEventListener('click', function () { window.Griffincss.theme.toggle(); });
+        function label() {
+          btn.textContent = window.Griffincss.theme.get().resolved === 'dark' ? '☀ Светлая' : '☾ Тёмная';
+        }
+        document.addEventListener('griffincss:themechange', label);
+        label();
+      })();
+    </script>
+  </section>
+
 </main>
 
 <script>

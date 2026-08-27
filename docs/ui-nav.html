@@ -255,6 +255,94 @@
   </p>
 </div>
 
+<h2>Примеры использования</h2>
+
+<p>
+  Навигационные компоненты чаще всего встречаются не поодиночке, а связкой:
+  крошки над заголовком, пагинация в подвале таблицы. Два рецепта ниже —
+  обе связки целиком.
+</p>
+
+<h3>Шапка страницы админки</h3>
+
+<p>
+  Классический page header: хлебные крошки, под ними — строка «заголовок
+  слева, действия справа» (<code>.gr-flex .gr-flex-between
+  .gr-flex-items-center</code>, на узком экране <code>.gr-flex-wrap</code>
+  переносит кнопки под заголовок). Название страницы дублирует последнюю
+  крошку — это норма: крошка отвечает «где я», заголовок — «что это».
+</p>
+
+<pre><code>&lt;nav aria-label="Хлебные крошки"&gt;
+  &lt;ol class="gr-breadcrumb"&gt;
+    &lt;li&gt;&lt;a href="/"&gt;Главная&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/orders"&gt;Заказы&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;span aria-current="page"&gt;№ 4172&lt;/span&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/nav&gt;
+&lt;div class="gr-flex gr-flex-wrap gr-flex-between gr-flex-items-center gr-gap-sm gr-mt-2"&gt;
+  &lt;h1 class="gr-text-2xl gr-mb-0"&gt;Заказ № 4172&lt;/h1&gt;
+  &lt;div class="gr-flex gr-gap-sm"&gt;
+    &lt;button class="gr-btn"&gt;Печать&lt;/button&gt;
+    &lt;button class="gr-btn gr-btn-primary"&gt;Подтвердить&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Крошки → заголовок → действия: один блок шапки</div>
+  <nav aria-label="Хлебные крошки (пример)">
+    <ol class="gr-breadcrumb">
+      <li><a href="#nav">Главная</a></li>
+      <li><a href="#nav">Заказы</a></li>
+      <li><span aria-current="page">№ 4172</span></li>
+    </ol>
+  </nav>
+  <div class="gr-flex gr-flex-wrap gr-flex-between gr-flex-items-center gr-gap-sm gr-mt-2">
+    <h3 class="gr-m-0 gr-text-2xl">Заказ № 4172</h3>
+    <div class="gr-flex gr-gap-sm">
+      <button class="gr-btn" type="button">Печать</button>
+      <button class="gr-btn gr-btn-primary" type="button">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<h3>Подвал таблицы: диапазон и страницы</h3>
+
+<p>
+  Под таблицей админки живут двое: слева — тихая строка «Показано 1–10
+  из 97», справа — плотная пагинация <code>.gr-pagination-compact</code>.
+  Разводит их всё тот же <code>.gr-flex-between</code>
+  с <code>.gr-flex-wrap</code>: на узком экране пагинация переносится
+  под подпись, а не давит её.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-flex-between gr-flex-items-center gr-gap gr-pt-3 gr-border-t"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary"&gt;Показано 1–10 из 97&lt;/span&gt;
+  &lt;nav aria-label="Страницы"&gt;
+    &lt;ul class="gr-pagination gr-pagination-compact"&gt;
+      &lt;li&gt;&lt;a class="gr-page" href="?page=1" aria-current="page"&gt;1&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a class="gr-page" href="?page=2"&gt;2&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;span class="gr-page-gap" aria-hidden="true"&gt;…&lt;/span&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a class="gr-page" href="?page=10"&gt;10&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a class="gr-page" href="?page=2"&gt;→&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/nav&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Диапазон слева, страницы справа, перенос на узком экране</div>
+  <div class="gr-flex gr-flex-wrap gr-flex-between gr-flex-items-center gr-gap gr-pt-3 gr-border-t">
+    <span class="gr-text-sm gr-text-ink-secondary">Показано 1–10 из 97</span>
+    <nav aria-label="Страницы (пример)">
+      <ul class="gr-pagination gr-pagination-compact">
+        <li><a class="gr-page" href="#nav" aria-current="page">1</a></li>
+        <li><a class="gr-page" href="#nav">2</a></li>
+        <li><span class="gr-page-gap" aria-hidden="true">…</span></li>
+        <li><a class="gr-page" href="#nav">10</a></li>
+        <li><a class="gr-page" href="#nav">→</a></li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
 </main>
 </div>
 

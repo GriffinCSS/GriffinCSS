@@ -110,17 +110,19 @@
 
 <div class="demo-block">
   <div class="demo-block-title">gr-table-bordered + gr-table-compact</div>
-  <table class="gr-table gr-table-bordered gr-table-compact">
-    <thead>
-      <tr><th scope="col">Слой</th><th scope="col">Кто в нём</th><th scope="col">Кого перекрывает</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>griffincss.reset</td><td>Ресет</td><td>никого</td></tr>
-      <tr><td>griffincss.core</td><td>Токены, раскладки, флекс</td><td>ресет</td></tr>
-      <tr><td>griffincss.ui</td><td>Компоненты</td><td>ядро и ресет</td></tr>
-      <tr><td>griffincss.utils</td><td>Утилиты</td><td>всех троих</td></tr>
-    </tbody>
-  </table>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Слои библиотеки">
+    <table class="gr-table gr-table-bordered gr-table-compact">
+      <thead>
+        <tr><th scope="col">Слой</th><th scope="col">Кто в нём</th><th scope="col">Кого перекрывает</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>griffincss.reset</td><td>Ресет</td><td>никого</td></tr>
+        <tr><td>griffincss.core</td><td>Токены, раскладки, флекс</td><td>ресет</td></tr>
+        <tr><td>griffincss.ui</td><td>Компоненты</td><td>ядро и ресет</td></tr>
+        <tr><td>griffincss.utils</td><td>Утилиты</td><td>всех троих</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="demo-block">
@@ -194,6 +196,128 @@
     линия оставалась на исходном месте и пропадала из виду. Тень принадлежит
     элементу и едет вместе с ним.
   </p>
+</div>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Классы таблицы держат каркас, а живой её делают соседи в ячейках:
+  аватары, бейджи, кнопки-иконки, выравнивание чисел. Два рецепта ниже —
+  самая тиражируемая таблица админки и её противоположность, тихий
+  прайс-лист.
+</p>
+
+<h3>Таблица пользователей: составные ячейки</h3>
+
+<p>
+  Первая колонка — мини медиа-объект: <code>.gr-avatar-sm</code> и стопка
+  «имя + почта» двумя строками разного веса. Статус — бейдж со смысловым
+  цветом, действия — <code>.gr-btn-icon .gr-btn-ghost</code>
+  с <code>.gr-sr-only</code>-подписью, прижатые в конец колонки
+  <code>.gr-text-end</code>. Всё это лежит в обычных <code>td</code> —
+  таблице достаточно <code>.gr-table .gr-table-hover</code>
+  и обёртки с прокруткой на узкий экран.
+</p>
+
+<pre><code>&lt;div class="gr-table-wrap" tabindex="0" role="region" aria-label="Пользователи"&gt;
+  &lt;table class="gr-table gr-table-hover"&gt;
+    &lt;thead&gt;&lt;tr&gt;&lt;th scope="col"&gt;Пользователь&lt;/th&gt;&lt;th scope="col"&gt;Статус&lt;/th&gt;&lt;th scope="col" class="gr-text-end"&gt;Действия&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td&gt;
+          &lt;span class="gr-flex gr-flex-items-center gr-gap-sm"&gt;
+            &lt;span class="gr-avatar gr-avatar-sm"&gt;АК&lt;/span&gt;
+            &lt;span&gt;&lt;span class="gr-block gr-font-medium"&gt;Анна Ковалёва&lt;/span&gt;
+            &lt;span class="gr-block gr-text-xs gr-text-ink-secondary"&gt;anna@example.ru&lt;/span&gt;&lt;/span&gt;
+          &lt;/span&gt;
+        &lt;/td&gt;
+        &lt;td&gt;&lt;span class="gr-badge gr-badge-success"&gt;Активна&lt;/span&gt;&lt;/td&gt;
+        &lt;td class="gr-text-end"&gt;
+          &lt;button class="gr-btn gr-btn-icon gr-btn-ghost"&gt;✎&lt;span class="gr-sr-only"&gt;Редактировать&lt;/span&gt;&lt;/button&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Ячейка-стопка, бейдж статуса, действия в конце строки</div>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Пользователи">
+    <table class="gr-table gr-table-hover">
+      <thead>
+        <tr><th scope="col">Пользователь</th><th scope="col">Статус</th><th scope="col" class="gr-text-end">Действия</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <span class="gr-flex gr-flex-items-center gr-gap-sm">
+              <span class="gr-avatar gr-avatar-sm">АК</span>
+              <span><span class="gr-block gr-font-medium">Анна Ковалёва</span><span class="gr-block gr-text-xs gr-text-ink-secondary">anna@example.ru</span></span>
+            </span>
+          </td>
+          <td><span class="gr-badge gr-badge-success">Активна</span></td>
+          <td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Редактировать</span></button></td>
+        </tr>
+        <tr>
+          <td>
+            <span class="gr-flex gr-flex-items-center gr-gap-sm">
+              <span class="gr-avatar gr-avatar-sm">ДС</span>
+              <span><span class="gr-block gr-font-medium">Даниил Соколов</span><span class="gr-block gr-text-xs gr-text-ink-secondary">d.sokolov@example.ru</span></span>
+            </span>
+          </td>
+          <td><span class="gr-badge gr-badge-warning">Приглашён</span></td>
+          <td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Редактировать</span></button></td>
+        </tr>
+        <tr>
+          <td>
+            <span class="gr-flex gr-flex-items-center gr-gap-sm">
+              <span class="gr-avatar gr-avatar-sm">МЛ</span>
+              <span><span class="gr-block gr-font-medium">Мария Лебедева</span><span class="gr-block gr-text-xs gr-text-ink-secondary">m.lebedeva@example.ru</span></span>
+            </span>
+          </td>
+          <td><span class="gr-badge gr-badge-danger">Заблокирована</span></td>
+          <td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Редактировать</span></button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h3>Прайс-лист с числами по правому краю</h3>
+
+<p>
+  Счёт, спецификация, отчёт: две-три колонки, числа выровнены вправо
+  (<code>.gr-text-end</code> — мелочь, без которой разряды не совпадают
+  и колонку невозможно сканировать взглядом), плотность —
+  <code>.gr-table-compact</code>, итог — <code>tfoot</code>
+  с <code>.gr-font-semibold</code>. Никакой зебры: в коротком списке
+  она шумит, хватает разделителей строк.
+</p>
+
+<pre><code>&lt;table class="gr-table gr-table-compact"&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th scope="col"&gt;Позиция&lt;/th&gt;&lt;th scope="col" class="gr-text-end"&gt;Кол-во&lt;/th&gt;&lt;th scope="col" class="gr-text-end"&gt;Сумма&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;Кресло «Дюна»&lt;/td&gt;&lt;td class="gr-text-end"&gt;2&lt;/td&gt;&lt;td class="gr-text-end"&gt;24 800 ₽&lt;/td&gt;&lt;/tr&gt;
+    …
+  &lt;/tbody&gt;
+  &lt;tfoot&gt;
+    &lt;tr class="gr-font-semibold"&gt;&lt;td&gt;Итого&lt;/td&gt;&lt;td class="gr-text-end"&gt;4&lt;/td&gt;&lt;td class="gr-text-end"&gt;33 900 ₽&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Числа — <code>.gr-text-end</code>, итог — <code>tfoot</code> полужирным</div>
+  <table class="gr-table gr-table-compact" style="max-width: 30rem">
+    <thead>
+      <tr><th scope="col">Позиция</th><th scope="col" class="gr-text-end">Кол-во</th><th scope="col" class="gr-text-end">Сумма</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Кресло «Дюна»</td><td class="gr-text-end">2</td><td class="gr-text-end">24 800 ₽</td></tr>
+      <tr><td>Торшер «Свет»</td><td class="gr-text-end">1</td><td class="gr-text-end">5 900 ₽</td></tr>
+      <tr><td>Полка «Норд»</td><td class="gr-text-end">1</td><td class="gr-text-end">3 200 ₽</td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="gr-font-semibold"><td>Итого</td><td class="gr-text-end">4</td><td class="gr-text-end">33 900 ₽</td></tr>
+    </tfoot>
+  </table>
 </div>
 
 </main>

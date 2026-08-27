@@ -1,6 +1,6 @@
 {
   "name": "griffincss-core",
-  "version": "0.17.0",
+  "version": "0.19.0",
   "description": "Griffincss Core — ядро: токены, темы, ресет, раскладки CSS Grid и Flexbox, рантайм-парсер data-gr-layout",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
@@ -49,6 +49,6 @@
     "build:css": "sass scss/griffincss-core.scss dist/griffincss-core.css --style=compressed --no-source-map",
     "build:reset": "sass scss/griffincss-reset.scss dist/griffincss-reset.css --style=compressed --no-source-map",
     "build:styles": "sass scss/griffincss-styles.scss dist/griffincss-styles.css --style=compressed --no-source-map",
-    "build:js": "terser src/griffincss.js -c passes=3 -m --comments false --format \"preamble='/*! Griffincss Core | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss.js.map'\" -o dist/griffincss.js && terser src/griffincss-theme.js -c passes=3 -m --comments false --format \"preamble='/*! Griffincss Theme | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-theme.js.map'\" -o dist/griffincss-theme.js"
+    "build:js": "terser src/griffincss.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss Core | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss.js.map'\" -o dist/griffincss.js && terser src/griffincss-theme.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss Theme | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-theme.js.map'\" -o dist/griffincss-theme.js"
   }
 }

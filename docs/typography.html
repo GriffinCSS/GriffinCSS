@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/utils/dist/griffincss-utils.js"></script>
 <style>
 @layer griffincss.docs {
   .typo-demo-text { margin: 0; padding: 0; max-width: none; }
@@ -578,39 +579,6 @@
   </div>
 </div>
 
-<h2>Практический пример: карточка статьи</h2>
-
-<pre><code>&lt;article class="gr-font-sans gr-leading-normal"&gt;
-  &lt;span class="gr-text-xs gr-uppercase gr-font-semibold"&gt;Дизайн&lt;/span&gt;
-  &lt;h3 class="gr-text-2xl gr-font-bold gr-leading-tight"&gt;
-    Как типографика влияет на восприятие
-  &lt;/h3&gt;
-  &lt;p class="gr-text-sm"&gt;
-    Правильно подобранный шрифт и интервал улучшают читаемость
-    и удержание внимания. Модульные классы Griffincss позволяют
-    настроить типографику без единой строки CSS.
-  &lt;/p&gt;
-  &lt;footer class="gr-text-xs gr-no-underline"&gt;
-    &lt;span class="gr-font-medium"&gt;Иван Петров&lt;/span&gt;
-    &lt;span&gt;· 5 мин чтения&lt;/span&gt;
-  &lt;/footer&gt;
-&lt;/article&gt;</code></pre>
-
-<div class="demo-block">
-  <div class="demo-block-title">Результат</div>
-  <div class="card-demo" style="max-width:460px;">
-    <article class="gr-font-sans gr-leading-normal">
-      <span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent">Дизайн</span>
-      <h3 class="gr-text-2xl gr-font-bold gr-leading-tight gr-mt-2 gr-mb-3">Как типографика влияет на восприятие</h3>
-      <p class="gr-text-sm gr-text-ink-secondary">Правильно подобранный шрифт и интервал улучшают читаемость и удержание внимания. Модульные классы Griffincss позволяют настроить типографику без единой строки CSS.</p>
-      <footer class="gr-text-xs gr-text-ink-secondary gr-mt-4">
-        <span class="gr-font-medium">Иван Петров</span>
-        <span>· 5 мин чтения</span>
-      </footer>
-    </article>
-  </div>
-</div>
-
 <h2>SCSS-реализация</h2>
 
 <pre><code>// _typography.scss — все утилиты генерируются циклами
@@ -671,7 +639,199 @@ $gr-weights: (
 </div>
 
 <div class="callout callout-warning">
-  <p><strong>Аккуратно с <code>gr-truncate</code>.</strong> Класс обрезает текст и скрывает его. Не используйте на элементах, где важна полная доступность контента. Для многострочного усечения — свойство <code>line-clamp</code> вручную.</p>
+  <p><strong>Аккуратно с <code>gr-truncate</code>.</strong> Класс обрезает текст и скрывает его. Не используйте на элементах, где важна полная доступность контента. Для многострочного усечения есть <code>.gr-line-clamp-1…6</code> — см. «Обрезка по числу строк».</p>
+</div>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Типографика редко живёт одна: заголовок стоит над подводкой ограниченной
+  ширины, пункт списка начинается с цветной галочки, метастрока собирается
+  флексом. Рецепты ниже — самые ходовые текстовые блоки, собранные из этого
+  модуля вместе с цветами, отступами и флексом ядра.
+</p>
+
+<h3>Hero: заголовок, подводка, кнопки</h3>
+
+<p>
+  Первый экран лендинга держится на контрасте трёх ступеней. Заголовок —
+  крупный и плотный: <code>.gr-text-4xl .gr-text-5xl-md</code> (на телефоне
+  меньше), <code>.gr-font-extrabold</code>, <code>.gr-leading-tight</code>,
+  а <code>.gr-text-balance</code> просит браузер разбить строки поровну,
+  чтобы последняя не осталась из одного слова. Ключевое слово выделяется
+  простым <code>span</code> с <code>.gr-text-primary</code> — градиентной
+  заливки текста в библиотеке нет, акцент делается цветом. Подводка —
+  тише и ýже: <code>.gr-text-lg .gr-text-ink-secondary</code> с пределом
+  <code>.gr-max-w-[55ch]</code>, чтобы строка оставалась читаемой.
+  Ряд кнопок — <code>.gr-flex .gr-gap-sm .gr-flex-center</code>.
+</p>
+
+<pre><code>&lt;section class="gr-text-center gr-py-12"&gt;
+  &lt;h1 class="gr-text-4xl gr-text-5xl-md gr-font-extrabold gr-leading-tight gr-text-balance gr-mb-4"&gt;
+    Вёрстка &lt;span class="gr-text-primary"&gt;без борьбы&lt;/span&gt; с CSS
+  &lt;/h1&gt;
+  &lt;p class="gr-text-lg gr-text-ink-secondary gr-text-pretty gr-max-w-[55ch] gr-mx-auto gr-mb-6"&gt;
+    Модульная библиотека утилит: подключаете только нужное,
+    собираете интерфейс из готовых классов.
+  &lt;/p&gt;
+  &lt;div class="gr-flex gr-gap-sm gr-flex-center"&gt;
+    &lt;button class="gr-btn gr-btn-primary gr-btn-lg"&gt;Начать&lt;/button&gt;
+    &lt;button class="gr-btn gr-btn-ghost gr-btn-lg"&gt;Документация&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Hero: контраст ступеней <code>.gr-text-*</code> + <code>.gr-text-balance</code> на заголовке</div>
+  <div class="gr-text-center gr-py-8 gr-px-4 gr-bg-surface gr-radius-2">
+    <h4 class="gr-m-0 gr-text-3xl gr-text-4xl-md gr-font-extrabold gr-leading-tight gr-text-balance gr-mb-4">Вёрстка <span class="gr-text-primary">без борьбы</span> с CSS</h4>
+    <p class="gr-m-0 gr-text-lg gr-text-ink-secondary gr-text-pretty gr-max-w-[55ch] gr-mx-auto gr-mb-6">Модульная библиотека утилит: подключаете только нужное, собираете интерфейс из готовых классов.</p>
+    <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-center">
+      <button class="gr-btn gr-btn-primary" type="button">Начать</button>
+      <button class="gr-btn gr-btn-ghost" type="button">Документация</button>
+    </div>
+  </div>
+</div>
+
+<h3>Список фич с галочками</h3>
+
+<p>
+  Список преимуществ в прайсинге или feature-секции — это
+  <code>&lt;ul role="list"&gt;</code> (ресет снимает маркеры, роль остаётся
+  для скринридеров), где каждый пункт — мини медиа-объект:
+  <code>.gr-flex .gr-gap-sm .gr-flex-items-start</code>. Галочка —
+  обычный символ с <code>.gr-text-success .gr-font-bold</code>; выравнивание
+  по верху не даёт второй строке текста залезть под неё. Текст пунктов
+  приглушён токеном <code>.gr-text-ink-secondary</code> — цвет чернил
+  из темы, а не серый из палитры.
+</p>
+
+<pre><code>&lt;ul role="list" class="gr-flex gr-flex-col gr-gap-sm"&gt;
+  &lt;li class="gr-flex gr-gap-sm gr-flex-items-start"&gt;
+    &lt;span class="gr-text-success gr-font-bold"&gt;✓&lt;/span&gt;
+    &lt;span class="gr-text-ink-secondary"&gt;Все модули независимы&lt;/span&gt;
+  &lt;/li&gt;
+  &lt;li class="gr-flex gr-gap-sm gr-flex-items-start"&gt;
+    &lt;span class="gr-text-success gr-font-bold"&gt;✓&lt;/span&gt;
+    &lt;span class="gr-text-ink-secondary"&gt;Тёмная тема из коробки&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Пункт = <code>.gr-flex .gr-gap-sm .gr-flex-items-start</code>, галочка не пускает текст под себя</div>
+  <ul role="list" class="gr-flex gr-flex-col gr-gap-sm gr-m-0">
+    <li class="gr-flex gr-gap-sm gr-flex-items-start">
+      <span class="gr-text-success gr-font-bold">✓</span>
+      <span class="gr-text-ink-secondary">Все модули независимы — подключается только нужное</span>
+    </li>
+    <li class="gr-flex gr-gap-sm gr-flex-items-start">
+      <span class="gr-text-success gr-font-bold">✓</span>
+      <span class="gr-text-ink-secondary">Тёмная тема из коробки: цвета — токены, а не константы, и длинный пункт списка переносится ровно по своей вертикали, не залезая под галочку</span>
+    </li>
+    <li class="gr-flex gr-gap-sm gr-flex-items-start">
+      <span class="gr-text-success gr-font-bold">✓</span>
+      <span class="gr-text-ink-secondary">Логические свойства для RTL</span>
+    </li>
+  </ul>
+</div>
+
+<h3>Цитата с цветной линией</h3>
+
+<p>
+  Редакционная цитата собирается из трёх модулей: линия слева —
+  <code>.gr-border-s-4 .gr-border-primary</code> из бордеров (логическая
+  сторона <code>s</code> — в RTL линия сама перейдёт направо), воздух
+  от линии — <code>.gr-ps-4</code> из спейсинга, а голос цитаты — курсив
+  <code>.gr-italic</code> с укрупнённым <code>.gr-text-lg</code>. Подпись
+  автора — ступенькой ниже и тише: <code>.gr-text-sm .gr-text-ink-secondary
+  .gr-not-italic</code>, чтобы выйти из курсива родителя.
+</p>
+
+<pre><code>&lt;blockquote class="gr-border-s-4 gr-border-primary gr-ps-4 gr-italic gr-text-lg"&gt;
+  &lt;p class="gr-mb-2"&gt;Хорошая типографика незаметна — замечают только плохую.&lt;/p&gt;
+  &lt;footer class="gr-not-italic gr-text-sm gr-text-ink-secondary"&gt;— Анна Ковалёва, дизайнер&lt;/footer&gt;
+&lt;/blockquote&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Цитата: бордер + отступ + курсив; подпись выходит из курсива через <code>.gr-not-italic</code></div>
+  <blockquote class="gr-m-0 gr-border-s-4 gr-border-primary gr-ps-4 gr-italic gr-text-lg">
+    <p class="gr-m-0 gr-mb-2">Хорошая типографика незаметна — замечают только плохую.</p>
+    <footer class="gr-not-italic gr-text-sm gr-text-ink-secondary">— Анна Ковалёва, дизайнер</footer>
+  </blockquote>
+</div>
+
+<h3>Статистика крупными цифрами</h3>
+
+<p>
+  Stats-секция строится на контрасте кеглей в паре «число — подпись»:
+  число в три-четыре раза крупнее (<code>.gr-text-4xl .gr-font-extrabold</code>),
+  подпись — мелкая и разреженная (<code>.gr-text-xs .gr-uppercase
+  .gr-text-ink-secondary</code>). Ряд из трёх пар держит грид
+  <code>.gr-grid-1 .gr-grid-3-sm</code>. Утилиты табличных цифр
+  в библиотеке нет: она нужна только «тикающим» счётчикам, а там
+  <code>font-variant-numeric: tabular-nums</code> задаётся обычным CSS.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-sm gr-gap gr-text-center"&gt;
+  &lt;div&gt;
+    &lt;p class="gr-m-0 gr-text-4xl gr-font-extrabold gr-text-primary"&gt;12 000+&lt;/p&gt;
+    &lt;p class="gr-m-0 gr-mt-1 gr-text-xs gr-uppercase gr-text-ink-secondary"&gt;Проектов&lt;/p&gt;
+  &lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Пара «число — подпись»: контраст кеглей делает всю работу</div>
+  <div class="gr-grid-1 gr-grid-3-sm gr-gap gr-text-center">
+    <div>
+      <p class="gr-m-0 gr-text-4xl gr-font-extrabold gr-text-primary">12 000+</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-uppercase gr-text-ink-secondary">Проектов</p>
+    </div>
+    <div>
+      <p class="gr-m-0 gr-text-4xl gr-font-extrabold gr-text-primary">99,9 %</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-uppercase gr-text-ink-secondary">Аптайм</p>
+    </div>
+    <div>
+      <p class="gr-m-0 gr-text-4xl gr-font-extrabold gr-text-primary">4,8</p>
+      <p class="gr-m-0 gr-mt-1 gr-text-xs gr-uppercase gr-text-ink-secondary">Средняя оценка</p>
+    </div>
+  </div>
+</div>
+
+<h3>Карточка статьи: рубрика, анонс, метастрока</h3>
+
+<p>
+  Карточка блога — концентрат модуля: рубрика-надзаголовок
+  (<code>.gr-text-xs .gr-uppercase .gr-font-semibold</code> цветом акцента),
+  заголовок с плотным интервалом, анонс, обрезанный на второй строке
+  <code>.gr-line-clamp-2</code>, — благодаря ему карточки в сетке остаются
+  одной высоты. Метастрока внизу — флекс с аватаром из ui и разделителями:
+  мелкий кегль и приглушённый цвет отделяют служебное от главного.
+</p>
+
+<pre><code>&lt;article&gt;
+  &lt;span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent"&gt;Дизайн&lt;/span&gt;
+  &lt;h3 class="gr-text-2xl gr-font-bold gr-leading-tight gr-mt-2 gr-mb-3"&gt;
+    Как типографика влияет на восприятие
+  &lt;/h3&gt;
+  &lt;p class="gr-line-clamp-2 gr-text-sm gr-text-ink-secondary"&gt;Анонс, обрезанный на второй строке…&lt;/p&gt;
+  &lt;footer class="gr-flex gr-flex-items-center gr-gap-sm gr-mt-4 gr-text-xs gr-text-ink-secondary"&gt;
+    &lt;span class="gr-avatar gr-avatar-sm"&gt;ИП&lt;/span&gt;
+    &lt;span class="gr-font-medium"&gt;Иван Петров&lt;/span&gt;
+    &lt;span&gt;·&lt;/span&gt;
+    &lt;span&gt;5 мин чтения&lt;/span&gt;
+  &lt;/footer&gt;
+&lt;/article&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Анонс держит <code>.gr-line-clamp-2</code> — карточки в сетке не разъезжаются</div>
+  <div class="card-demo" style="max-width:460px;">
+    <article>
+      <span class="gr-text-xs gr-uppercase gr-font-semibold gr-text-accent">Дизайн</span>
+      <h3 class="gr-m-0 gr-text-2xl gr-font-bold gr-leading-tight gr-mt-2 gr-mb-3">Как типографика влияет на восприятие</h3>
+      <p class="gr-m-0 gr-line-clamp-2 gr-text-sm gr-text-ink-secondary">Правильно подобранный шрифт и интервал улучшают читаемость и удержание внимания — а этот хвост анонса уже спрятан за многоточием, потому что в карточке ему не место.</p>
+      <footer class="gr-flex gr-flex-items-center gr-gap-sm gr-mt-4 gr-text-xs gr-text-ink-secondary">
+        <span class="gr-avatar gr-avatar-sm">ИП</span>
+        <span class="gr-font-medium">Иван Петров</span>
+        <span>·</span>
+        <span>5 мин чтения</span>
+      </footer>
+    </article>
+  </div>
 </div>
 
 </main>
