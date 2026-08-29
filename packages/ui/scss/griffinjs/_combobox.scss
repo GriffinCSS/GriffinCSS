@@ -1,0 +1,84 @@
+// GriffinJS — комбобокс
+// Поле ввода с подсказками из внешнего источника. База без JS — само поле:
+// обычный <input> в форме поиска, отправляемой Enter. Скрипт добавляет
+// список под полем, роли combobox/listbox/option и клавиатуру.
+//
+//   <div class="gr-combobox" data-gr-combobox="src: /search?q={q}; min: 2">
+//     <input class="gr-input" type="search" name="q" autocomplete="off">
+//   </div>
+//
+// Список скрипт создаёт сам (или берёт готовый [role="listbox"] внутри).
+// Показывается он состоянием обёртки — data-gr-state="open"; без скрипта
+// состояния нет, и списка не видно.
+
+.gr-combobox {
+  position: relative;
+}
+
+.gr-combobox-list {
+  position: absolute;
+  z-index: var(--gr-z-dropdown);
+  inset-block-start: calc(100% + var(--gr-ui-gap) * 0.5);
+  inset-inline: 0;
+  display: none;
+  box-sizing: border-box;
+  max-block-size: min(20rem, 60dvh);
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface-overlay);
+  color: var(--gr-color-text);
+  box-shadow: var(--gr-shadow-lg);
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.gr-combobox[data-gr-state="open"] > .gr-combobox-list {
+  display: block;
+}
+
+// Позиция. Выбранная — та, что названа в aria-activedescendant: подсветка
+// привязана к aria-selected, а не к классу, который ставил бы скрипт.
+// Не флекс: подпись состоит из текстовых узлов и <mark>, и зазор флекса
+// разрывал бы слово на подсвеченной букве.
+.gr-combobox-option {
+  display: block;
+  box-sizing: border-box;
+  min-block-size: var(--gr-control-height-sm);
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.gr-combobox-option[aria-selected="true"] {
+  background-color: color-mix(in srgb, var(--gr-color-accent) 12%, transparent);
+}
+
+.gr-combobox-option mark {
+  background: none;
+  color: inherit;
+  font-weight: 600;
+}
+
+// Заголовок группы и подпись пустого ответа.
+.gr-combobox-group {
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  color: var(--gr-color-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.gr-combobox-empty {
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  color: var(--gr-color-text-secondary);
+}

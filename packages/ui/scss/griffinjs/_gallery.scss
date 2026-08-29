@@ -1,0 +1,54 @@
+// GriffinJS — галерея: большая дорожка + полоса превью
+// База без JS: две дорожки, каждая листается сама по себе. Скрипт связывает
+// их: щелчок по превью ведёт большую дорожку, активное превью получает
+// aria-current и подъезжает в видимую часть полосы.
+
+.gr-gallery-thumbs {
+  gap: var(--gr-ui-gap);
+  margin-block-start: var(--gr-ui-gap);
+
+  // Полоса превью не привязывается к каждому кадру: активное превью
+  // подводится скриптом, остальное — свободная прокрутка.
+  scroll-snap-type: x proximity;
+}
+
+.gr-gallery-thumbs > * {
+  flex: 0 0 auto;
+  inline-size: 5rem;
+  padding: 0;
+  border: var(--gr-border-width) solid transparent;
+  border-radius: var(--gr-radius);
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.6;
+  transition: opacity var(--gr-transition), border-color var(--gr-transition);
+}
+
+.gr-gallery-thumbs > :hover,
+.gr-gallery-thumbs > [aria-current='true'] {
+  opacity: 1;
+}
+
+.gr-gallery-thumbs > [aria-current='true'] {
+  border-color: var(--gr-color-accent);
+}
+
+.gr-gallery-thumbs > :focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Вложенное скругление: внутренний радиус равен внешнему минус рамка,
+// иначе уголки картинки и рамки превью расходятся — у картинки виден
+// либо просвет, либо более крутой скос, чем у обёртки.
+.gr-gallery-thumbs > * > * {
+  border-radius: calc(var(--gr-radius) - var(--gr-border-width));
+}
+
+.gr-gallery-thumbs img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}

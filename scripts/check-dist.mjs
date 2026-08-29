@@ -4,7 +4,7 @@
 // что stylelint на интерполированных исходниках увидеть не может.
 // Ноль зависимостей.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -332,7 +332,7 @@ const BANNER = /^\/\*![^*]*\*\//;
 const CYRILLIC = /[\u0400-\u04FF]/;
 const STRINGS = /'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g;
 
-for (const file of RUNTIMES) {
+function checkMinified(file) {
   const js = read(file);
   const banner = js.match(BANNER);
 
@@ -357,6 +357,8 @@ for (const file of RUNTIMES) {
     fail(file, `кириллица вне строкового литерала — уехал комментарий: …${code.slice(Math.max(0, at - 30), at + 30)}…`);
   }
 }
+
+for (const file of RUNTIMES) checkMinified(file);
 
 // 15. Свежесть индекса поиска. Сравнивается не хеш и не дата, а сам текст:
 //     генератор детерминирован, поэтому расхождение файла с тем, что он
@@ -449,6 +451,153 @@ try {
   fail(BUNDLE, 'бандл не собран — npm run build:bundle');
 }
 
+// 17. Слой GriffinJS (Этап 21).
+//
+//     Бюджет у слоя свой, не JS_BUDGET: ориентир — UIkit ≈ 40 КБ,
+//     Swiper ≈ 45 КБ gzip. «Ядро + scroll + slider» — минимальный набор
+//     для слайдера; полный файл — всё, что слой умеет.
+//
+//     Замер 21b: ядро с track, motion и gesture — 5,6 КБ, движок scroll —
+//     0,9 КБ; первоначальные 5 КБ на всё вместе со слайдером оказались
+//     недостижимы при записанном составе ядра. Решение 2026-08-29 —
+//     состав сохранить, бюджет минимального набора — 8 КБ; после страниц,
+//     rewind и снапа по страницам (замечания пользователя) — 9 КБ.
+//
+//     Замер 21f: полный файл с окнами и комбобоксом — 15,4 КБ при 15;
+//     по модулям (gzip): ядро 6,0 · scroll 1,5 · fade 0,5 · anchor 0,9 ·
+//     slider 1,6 · gallery 0,7 · lightbox 1,7 · parallax 0,3 · megamenu 2,2 ·
+//     dropdown 1,9 · tooltip 0,9 · dialog 1,8 · combobox 2,3. Потолок 15
+//     назначен в 21a до того, как в инвентарь вошли anchor и семейство
+//     выпадающего; флаги terser (unsafe, props) дают 50–130 Б. Решение
+//     2026-08-29 — 16 КБ; состав не режется, ориентиры UIkit/Swiper те же.
+const GRIFFIN_SRC = 'packages/ui/src/griffinjs';
+const GRIFFIN = 'packages/ui/dist/griffinjs.js';
+const GRIFFIN_CSS = 'packages/ui/dist/griffinjs.css';
+const GRIFFIN_BUDGET = 16 * 1024;
+const GRIFFIN_CORE_BUDGET = 9 * 1024;
+// Части минимального набора для слайдера.
+const GRIFFIN_CORE_PARTS = [
+  'packages/ui/dist/griffinjs-core.js',
+  'packages/ui/dist/griffinjs-scroll.js',
+  'packages/ui/dist/griffinjs-slider.js',
+];
+
+let griffinWeight = 0;
+let griffinCoreWeight = 0;
+
+try {
+  for (const file of [GRIFFIN, ...GRIFFIN_CORE_PARTS]) checkMinified(file);
+
+  griffinWeight = gzipOf(GRIFFIN);
+
+  // Набор меряется как ОДИН файл, той же методикой, что и полный griffinjs.js:
+  // сумма трёх независимых gzip платит за три словаря вместо одного
+  // (~1 КБ на пустом месте) и измеряла бы нарезку, а не код.
+  griffinCoreWeight = gzipSync(
+    Buffer.concat(GRIFFIN_CORE_PARTS.map((file) => readFileSync(join(root, file)))),
+    { level: 9 },
+  ).length;
+
+  if (griffinWeight > GRIFFIN_BUDGET) {
+    fail(GRIFFIN, `слой весит ${griffinWeight} Б gzip при бюджете ${GRIFFIN_BUDGET} Б — превышение на ${griffinWeight - GRIFFIN_BUDGET} Б`);
+  }
+
+  if (griffinCoreWeight > GRIFFIN_CORE_BUDGET) {
+    fail(GRIFFIN_CORE_PARTS[0], `ядро + scroll + slider весят ${griffinCoreWeight} Б gzip при бюджете ${GRIFFIN_CORE_BUDGET} Б`);
+  }
+
+  // Стили слоя: та же дисциплина, что у компонентов, — порядок слоёв
+  // первой строкой, весь вывод в griffincss.ui, префикс gr-, без !important.
+  // Проверка :root не нужна: файл подключается поверх griffincss-ui.css
+  // и токенов не несёт по устройству.
+  const css = read(GRIFFIN_CSS);
+  const parsed = parseBlocks(css);
+  const strayCss = parsed.topLevel.filter((prelude) => prelude !== '@layer griffincss.ui');
+
+  if (!css.replace(/\s+/g, ' ').startsWith(LAYER_ORDER.slice(0, -1))) {
+    fail(GRIFFIN_CSS, 'порядок слоёв не объявлен первой строкой');
+  }
+  if (strayCss.length > 0) fail(GRIFFIN_CSS, `вне слоя griffincss.ui осталось блоков — ${strayCss.length}`);
+  if (css.includes('!important')) fail(GRIFFIN_CSS, 'найден !important');
+
+  for (const name of classNames(parsed.selectors)) {
+    if (!name.startsWith('gr-')) fail(GRIFFIN_CSS, `класс .${name} без префикса gr-`);
+  }
+} catch (e) {
+  fail(GRIFFIN, `слой не собран — npm run build:griffinjs --workspace griffincss-ui (${e.message})`);
+}
+
+// Инварианты слоя по исходникам (docs/griffinjs-architecture.html, «Инварианты»):
+// JS не пишет transform и opacity — движение делает CSS через
+// --gr-progress и data-gr-state; развилок по User-Agent нет.
+const FORBIDDEN_IN_SRC = [
+  [/\.style\.(transform|opacity)\b/, 'запись transform/opacity из JS — движение делает CSS'],
+  [/setProperty\(\s*['"](transform|opacity)['"]/, 'запись transform/opacity через setProperty'],
+  [/navigator\.userAgent|navigator\.platform|navigator\.vendor/, 'развилка по User-Agent'],
+];
+
+function walkJs(dir, out = []) {
+  for (const name of readdirSync(join(root, dir)).sort()) {
+    const rel = `${dir}/${name}`;
+
+    if (statSync(join(root, rel)).isDirectory()) walkJs(rel, out);
+    else if (name.endsWith('.js')) out.push(rel);
+  }
+
+  return out;
+}
+
+for (const file of walkJs(GRIFFIN_SRC)) {
+  const code = read(file).replace(STRINGS, '');
+
+  for (const [pattern, what] of FORBIDDEN_IN_SRC) {
+    if (pattern.test(code)) fail(file, what);
+  }
+}
+
+// Версия ядра слоя — та же, что у всего репозитория.
+for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
+  if (!read(`${GRIFFIN_SRC}/core/griffinjs-core.js`).includes(needle)) {
+    fail(`${GRIFFIN_SRC}/core/griffinjs-core.js`, `версия разошлась с корневым package.json (${VERSION}): не найдено «${needle}»`);
+  }
+}
+// 18. Бейджи «нужен griffinjs.js» (правило разделения «с/без», Этап 21).
+//     Демонстрация, чья разметка требует скрипт (data-gr-<виджет> слоя),
+//     обязана нести бейдж; на страницах компонентов ui-*.html такие
+//     демонстрации допустимы только в подразделе «С подключённым
+//     griffinjs.js» — после заголовка с id="griffinjs". Без бейджа читатель без скрипта
+//     получил бы неработающий пример без объяснения.
+{
+  const layerAttr = /data-gr-(?:track|slider|gallery|lightbox|parallax|megamenu|dropdown|tooltip|dialog|open|combobox)\b/;
+  const docsDir = join(root, 'docs');
+
+  for (const name of readdirSync(docsDir).filter((f) => f.endsWith('.html'))) {
+    const html = readFileSync(join(docsDir, name), 'utf8');
+
+    // (ссылки в <head> и подраздел в конце).
+    // Подраздел «С подключённым griffinjs.js» начинается заголовком
+    // с id="griffinjs" и идёт до конца страницы.
+    const section = html.search(/<h2[^>]*\bid="griffinjs"/);
+
+    for (const match of html.matchAll(/<div class="demo-block">([\s\S]*?)\n<\/div>\n/g)) {
+      const block = match[1];
+
+      if (!layerAttr.test(block)) continue;
+
+      const title = (block.match(/demo-block-title">([\s\S]*?)<\/div>/) || [])[1] || '';
+      const inside = section !== -1 && match.index > section;
+
+      if (!/нужен griffinjs\.js/.test(block)) {
+        fail(`docs/${name}`, `демонстрация со скриптом без бейджа «нужен griffinjs.js»: ${title.replace(/<[^>]*>/g, '').trim().slice(0, 60)}`);
+      }
+
+      if (name.startsWith('ui-') && !inside) {
+        fail(`docs/${name}`, `демонстрация со скриптом вне подраздела «С подключённым griffinjs.js»: ${title.replace(/<[^>]*>/g, '').trim().slice(0, 60)}`);
+      }
+    }
+  }
+}
+
 // --- итог -------------------------------------------------------------------
 
 if (problems.length > 0) {
@@ -465,4 +614,5 @@ console.log(`  ui     ${size(UI)} (${uiClasses.size} классов) + scoped ${
 console.log(`  utils  ${size(UTILS)} (${utilsClasses.size} классов) + scoped ${size(UTILS_SCOPED)}`);
 console.log(`  js     ${(jsWeight / 1024).toFixed(1)} КБ gzip на ${RUNTIMES.length} рантайма (бюджет ${JS_BUDGET / 1024} КБ)`);
 console.log(`  бандл  ${(bundleWeight / 1024).toFixed(1)} КБ gzip одним файлом (бюджет ${BUNDLE_BUDGET / 1024} КБ)`);
+console.log(`  griffinjs ${(griffinWeight / 1024).toFixed(1)} КБ gzip (бюджет ${GRIFFIN_BUDGET / 1024} КБ), ядро+scroll+slider ${(griffinCoreWeight / 1024).toFixed(1)} КБ (бюджет ${GRIFFIN_CORE_BUDGET / 1024} КБ)`);
 console.log(`  брейкпоинты: ${[...breakpoints].join(', ')}`);

@@ -1,0 +1,31 @@
+// GriffinJS — стили слоя виджетов с состоянием
+// Собирается в packages/ui/dist/griffinjs.css отдельно от griffincss-ui.css:
+// файл компонентов не должен расти ради необязательного слоя.
+//
+// Слой каскада тот же, что у компонентов, — griffincss.ui: стили дорожки
+// и лайтбокса — такие же компоненты, только требующие скрипт. Токены
+// берутся из ядра через var(--gr-*); блок :root сюда не входит —
+// griffinjs.css подключается всегда ПОВЕРХ griffincss-ui.css, где он есть.
+//
+// Оформление привязывается к состояниям, а не к классам, которые JS
+// добавляет: [data-gr-state="open"], .gr-slide[aria-current],
+// var(--gr-progress). Движение — здесь, в CSS; JS transform и opacity
+// не пишет никогда (инварианты слоя — docs/griffinjs-architecture.html).
+//
+// Модули: track (дорожка и слайдер), gallery, lightbox — 21c;
+// parallax — 21d; megamenu и controllers (дропдаун, подсказка) — 21e;
+// окна в controllers и combobox — 21f.
+
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод слоя — в griffincss.ui, как у компонентов.
+@layer griffincss.ui {
+  @include meta.load-css('track');
+  @include meta.load-css('gallery');
+  @include meta.load-css('lightbox');
+  @include meta.load-css('megamenu');
+  @include meta.load-css('controllers');
+  @include meta.load-css('combobox');
+}

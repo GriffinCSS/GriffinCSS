@@ -84,6 +84,19 @@
         { href: 'ui-overlays.html',        text: 'Слои поверх страницы' }
       ]
     },
+    // Раздел слоя GriffinJS (Этап 21) — наравне с «Компоненты».
+    {
+      title: 'GriffinJS',
+      links: [
+        { href: 'griffinjs.html',          text: 'Обзор слоя' },
+        { href: 'griffinjs-slides.html',   text: 'Слайды' },
+        { href: 'griffinjs-parallax.html', text: 'Параллакс' },
+        { href: 'griffinjs-menus.html',    text: 'Меню' },
+        { href: 'griffinjs-overlays.html', text: 'Окна и комбобокс' },
+        { href: 'griffinjs-architecture.html', text: 'Архитектура' },
+        { href: 'griffinjs-lab.html',      text: 'Полигон' }
+      ]
+    },
     {
       title: 'Runtime',
       links: [
@@ -160,7 +173,7 @@
     ? window.Griffincss.theme.get()
     : { theme: 'auto', a11y: false, style: 'standard' };
 
-  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.19.0</span></a>';
+  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.21.0</span></a>';
 
   html += '<div class="sidebar-controls">';
   html += '<fieldset class="gr-segmented gr-w-full" aria-label="Цветовая тема">';
@@ -1048,6 +1061,8 @@
 
     spread(index.classes, '.', 5);
     spread(index.tokens, '', 3);
+    // Атрибуты слоя GriffinJS — data-gr-<виджет> — ищутся как классы.
+    spread(index.attrs, '', 4);
 
     return out;
   };

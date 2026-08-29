@@ -12,6 +12,8 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/ui/dist/griffinjs.js"></script>
 <script src="../packages/ui/dist/griffincss-ui.js"></script>
 </head>
 <body>
@@ -557,6 +559,185 @@
     <button class="gr-btn gr-btn-primary gr-btn-block" type="button">Оформить заказ</button>
   </div>
 </dialog>
+
+<h2 id="griffinjs">С подключённым <code>griffinjs.js</code></h2>
+
+<div class="callout">
+  <p>
+    Всё выше работает без скрипта. Этот подраздел — о том, что добавляет
+    опциональный слой <a href="griffinjs.html">GriffinJS</a> к тем же
+    компонентам: разметка и классы не меняются, скрипт читает
+    <code>data-gr-*</code> и пишет только <code>aria-*</code>
+    и <code>data-gr-state</code>. Каждый пример здесь помечен бейджем
+    «нужен <code>griffinjs.js</code>»; без скрипта он остаётся обычным
+    компонентом из основной части страницы.
+  </p>
+</div>
+
+<h3>Дропдаун: роли меню, клавиатура, закрытие, позиция</h3>
+
+<p>
+  <code>data-gr-dropdown</code> на обёртке любой из трёх форм —
+  <code>&lt;details&gt;</code>, popover, наведение. Контроллер ставит роли
+  <code>menu</code>/<code>menuitem</code>/<code>separator</code>, честный
+  <code>aria-expanded</code>, ведёт клавиатуру по схеме WAI-ARIA <em>menu
+  button</em> (<kbd>↓</kbd> открывает и переходит к первому пункту,
+  <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Home</kbd> <kbd>End</kbd> по пунктам, набор
+  по первой букве, <kbd>Esc</kbd> закрывает и возвращает фокус) и добавляет
+  <code>&lt;details&gt;</code> то, чего у него нет: закрытие по <kbd>Esc</kbd>
+  и щелчку мимо. Popover-панель контроллер кладёт под кнопку сам — по
+  <code>getBoundingClientRect</code>, одинаково во всех браузерах, без
+  зависимости от CSS anchor positioning; при нехватке места снизу
+  переворачивает вверх, при прокрутке — догоняет кнопку.
+</p>
+
+<pre><code>&lt;details class="gr-dropdown" data-gr-dropdown&gt;…&lt;/details&gt;
+&lt;div class="gr-dropdown" data-gr-dropdown="align: end"&gt;
+  &lt;button popovertarget="m"&gt;…&lt;/button&gt;&lt;div id="m" popover&gt;…&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="gr-dropdown gr-dropdown-hover" data-gr-dropdown="hover; delay: 100"&gt;…&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три формы с контроллером: попробуйте <kbd>↓</kbd>, буквы, <kbd>Esc</kbd> <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <details class="gr-dropdown" data-gr-dropdown>
+      <summary class="gr-btn">Действия</summary>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><button class="gr-menu-item" type="button">Переименовать</button></li>
+          <li><button class="gr-menu-item" type="button">Дублировать</button></li>
+          <li><hr class="gr-menu-sep"></li>
+          <li><button class="gr-menu-item gr-menu-danger" type="button">Удалить</button></li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="gr-dropdown" data-gr-dropdown>
+      <button class="gr-btn gr-btn-primary" type="button" popovertarget="gjs-export">Экспорт</button>
+      <div class="gr-dropdown-panel" id="gjs-export" popover>
+        <ul class="gr-menu">
+          <li><button class="gr-menu-item" type="button">PDF</button></li>
+          <li><button class="gr-menu-item" type="button">CSV</button></li>
+          <li><button class="gr-menu-item" type="button" aria-checked="true">PNG</button></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="gr-dropdown gr-dropdown-hover" data-gr-dropdown="hover">
+      <button class="gr-btn gr-btn-ghost" type="button">Продукты ▾</button>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><a class="gr-menu-item" href="#griffinjs">Ядро</a></li>
+          <li><a class="gr-menu-item" href="#griffinjs">Компоненты</a></li>
+          <li><a class="gr-menu-item" href="#griffinjs">Утилиты</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Параметр <code>data-gr-dropdown</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>role</code></td><td><code>menu</code></td><td>Роли списка; <code>none</code> — панель с формой или произвольным содержимым, ролей и <code>aria-haspopup</code> нет</td></tr>
+  <tr><td><code>hover</code></td><td><code>false</code></td><td>Открывать по наведению мыши и пера с задержкой <code>delay</code>, закрывать через <code>hide</code> после ухода</td></tr>
+  <tr><td><code>delay</code> / <code>hide</code></td><td><code>100</code> / <code>300</code></td><td>мс задержки намерения и ухода</td></tr>
+  <tr><td><code>side</code> / <code>align</code> / <code>gap</code></td><td><code>bottom</code> / <code>start</code> / <code>4</code></td><td>Только для popover-панели: сторона, выравнивание вдоль неё, зазор в px</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    С контроллером у варианта по наведению <code>aria-expanded</code> наконец
+    правдив, а <kbd>Esc</kbd> закрывает панель — два ограничения из
+    предупреждения выше сняты. Третье остаётся решением автора: наведение
+    для навигации, не для действий.
+  </p>
+</div>
+
+<h3>Окно и панель: открытие атрибутом, стек, прокрутка, медиа, ajax, hash</h3>
+
+<p>
+  Контроллер окон ничего не переписывает у <code>&lt;dialog&gt;</code>:
+  верхний слой, фокус, <kbd>Esc</kbd> и <code>inert</code> остаются
+  платформе, щелчок по подложке — атрибуту <code>data-gr-overlay-close</code>
+  выше. Он добавляет <code>data-gr-open="#id"</code> на кнопке вместо
+  <code>onclick</code>, стек окон, блокировку прокрутки страницы под окном
+  (в том числе на iOS), паузу видео при закрытии, содержимое с сервера
+  по <code>data-gr-src</code> и синхронизацию с адресом
+  (<code>data-gr-dialog="hash"</code>). Подробно — на странице
+  <a href="griffinjs-overlays.html">GriffinJS → «Окна и комбобокс»</a>.
+</p>
+
+<pre><code>&lt;button class="gr-btn" type="button" data-gr-open="#cart"&gt;Корзина&lt;/button&gt;
+&lt;dialog class="gr-drawer gr-drawer-end" id="cart" data-gr-dialog="hash" data-gr-overlay-close&gt;…&lt;/dialog&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Окно и панель поверх него; страница под ними не прокручивается <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <button class="gr-btn gr-btn-primary" type="button" data-gr-open="#gjs-modal">Открыть окно</button>
+    <button class="gr-btn" type="button" data-gr-open="#gjs-drawer">Панель с hash</button>
+  </div>
+</div>
+
+<dialog class="gr-modal gr-modal-sm" id="gjs-modal" aria-labelledby="gjs-modal-title" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <h2 class="gr-modal-title" id="gjs-modal-title">Окно</h2>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <p>Открыто через <code>data-gr-open</code>. Кнопка ниже — панель поверх окна.</p>
+    <button class="gr-btn" type="button" data-gr-open="#gjs-drawer">Панель поверх</button>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-end" id="gjs-drawer" aria-label="Панель с hash" data-gr-dialog="hash" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Панель</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body"><p class="gr-mb-0">В адресе — <code>#gjs-drawer</code>; «Назад» закрывает панель.</p></div>
+</dialog>
+
+<h3>Подсказка в верхнем слое</h3>
+
+<p>
+  Обычной подсказке скрипт не нужен. Он нужен подсказке внутри таблицы
+  с прокруткой или блока с <code>overflow: hidden</code> — её обрезает край
+  предка. <code>data-gr-tooltip</code> на обёртке переводит подсказку
+  в <code>popover="manual"</code>, показывает по наведению с задержкой
+  (мышь и перо) и по фокусу сразу, прячет по уходу, потере фокуса
+  и <kbd>Esc</kbd>, а положение у якоря считает сам. Без скрипта та же
+  разметка — обычная подсказка из раздела выше; <code>aria-describedby</code>
+  работает в обоих случаях.
+</p>
+
+<pre><code>&lt;span class="gr-tooltip-anchor" data-gr-tooltip="side: bottom"&gt;
+  &lt;button class="gr-btn" type="button" aria-describedby="t9"&gt;В таблице&lt;/button&gt;
+  &lt;span class="gr-tooltip" id="t9" role="tooltip"&gt;Не обрежется&lt;/span&gt;
+&lt;/span&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Блок с <code>overflow: hidden</code> высотой в одну кнопку <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap" style="overflow: hidden; padding: 0.5rem; border: 1px dashed var(--gr-color-border); border-radius: var(--gr-radius)">
+    <span class="gr-tooltip-anchor" data-gr-tooltip>
+      <button class="gr-btn" type="button" aria-describedby="gjs-tip-1">Сверху</button>
+      <span class="gr-tooltip" id="gjs-tip-1" role="tooltip">В верхнем слое, поверх края блока</span>
+    </span>
+    <span class="gr-tooltip-anchor" data-gr-tooltip="side: bottom">
+      <button class="gr-btn" type="button" aria-describedby="gjs-tip-2">Снизу</button>
+      <span class="gr-tooltip" id="gjs-tip-2" role="tooltip">side: bottom</span>
+    </span>
+    <span class="gr-tooltip-anchor" data-gr-tooltip="side: end">
+      <button class="gr-btn" type="button" aria-describedby="gjs-tip-3">Сбоку</button>
+      <span class="gr-tooltip" id="gjs-tip-3" role="tooltip">side: end</span>
+    </span>
+  </div>
+</div>
+
+<table>
+  <tr><th>Параметр <code>data-gr-tooltip</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>delay</code></td><td><code>150</code></td><td>мс до показа по наведению; по фокусу — сразу</td></tr>
+  <tr><td><code>side</code> / <code>align</code> / <code>gap</code></td><td><code>top</code> / <code>center</code> / <code>6</code></td><td>Сторона, выравнивание, зазор в px; при нехватке места сторона переворачивается</td></tr>
+</table>
 
 </main>
 </div>

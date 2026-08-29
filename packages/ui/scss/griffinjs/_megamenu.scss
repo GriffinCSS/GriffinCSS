@@ -1,0 +1,137 @@
+// GriffinJS — мегаменю
+// Панели во всю ширину полосы под пунктами шапки. База без JS — тот же
+// .gr-navbar с <details> в пунктах .gr-nav: щелчок по заголовку
+// раскрывает панель, на узком экране она ложится аккордеоном
+// под свёрнутой навигацией. Скрипт добавляет наведение с задержкой
+// намерения, единственную открытую панель, клавиатуру и ajax-содержимое.
+//
+//   <nav class="gr-navbar gr-megamenu" data-gr-megamenu>
+//     <a class="gr-navbar-brand" href="/">Сайт</a>
+//     <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+//     <ul class="gr-nav gr-nav-collapse">
+//       <li>
+//         <details class="gr-megamenu-item">
+//           <summary class="gr-nav-link">Каталог</summary>
+//           <div class="gr-megamenu-panel" data-gr-layout="…">…</div>
+//         </details>
+//       </li>
+//     </ul>
+//   </nav>
+//
+// Панель позиционируется от полосы, а не от пункта: dropbar во всю
+// ширину — это position: absolute от ближайшего предка с position: relative,
+// и ни одной координаты из JS. Верхний слой здесь не нужен, поэтому
+// и anchor positioning — тоже.
+
+@use 'sass:map';
+@use 'griffincss-core/scss/breakpoints' as bp;
+
+// Тот же экран, с которого перестаёт сворачиваться шапка (_nav.scss).
+$gr-megamenu-expand: map.get(bp.$gr-breakpoints, md);
+
+.gr-megamenu {
+  position: relative;
+}
+
+// Пункт растягивается в своей <li>, чтобы заголовок занимал всю ширину
+// столбца в свёрнутой навигации; в ряду это ничего не меняет.
+.gr-megamenu-item {
+  position: static;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.gr-megamenu-item > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.gr-megamenu-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+// Стрелка раскрытия: перевёрнутая у открытого пункта. Оформление
+// заголовка — от .gr-nav-link, класс ставится на тот же <summary>.
+.gr-megamenu-item > summary::after {
+  content: "";
+  inline-size: 0.4em;
+  block-size: 0.4em;
+  margin-inline-start: auto;
+  border-inline-end: 2px solid currentcolor;
+  border-block-end: 2px solid currentcolor;
+  rotate: 45deg;
+  translate: 0 -0.15em;
+  transition: rotate var(--gr-transition);
+}
+
+.gr-megamenu-item[open] > summary::after {
+  rotate: 225deg;
+  translate: 0 0.15em;
+}
+
+// Открытый пункт подсвечен как текущий: читатель видит, к какому
+// заголовку относится панель.
+.gr-megamenu-item[open] > summary {
+  --gr-nav-fg: var(--gr-color-text);
+
+  background-color: color-mix(in srgb, currentcolor 8%, transparent);
+}
+
+// --- Панель -----------------------------------------------------------------
+
+// На узком экране — в потоке, под заголовком: аккордеон в свёрнутой
+// навигации. Поверхность та же, что у меню.
+//
+// overflow-anchor: none — страховка от привязки прокрутки: закрытую панель
+// Chromium держит в ::details-content с content-visibility: hidden, и у неё
+// есть прямоугольник внутри слота; при открытии она переезжает под полосу,
+// и такой узел не должен становиться якорем прокрутки — иначе страница
+// сдвинулась бы вслед за ним, а заголовок ушёл бы из-под курсора.
+.gr-megamenu-panel {
+  box-sizing: border-box;
+  margin: 0;
+  overflow-anchor: none;
+  padding: var(--gr-gap);
+  border-block-end: var(--gr-border-width) solid var(--gr-color-border);
+  background-color: var(--gr-color-surface-overlay);
+  color: var(--gr-color-text);
+}
+
+// Ajax-панель, пока грузится: место под содержимое, чтобы полоса
+// не дёргалась, и мигание фона. Состояние ставит скрипт.
+.gr-megamenu-item[data-gr-state="loading"] > .gr-megamenu-panel {
+  min-block-size: 6rem;
+  animation: gr-megamenu-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes gr-megamenu-loading {
+  50% {
+    background-color: var(--gr-color-surface-sunken, var(--gr-color-surface));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-megamenu-item > summary::after {
+    transition-duration: 0.01ms;
+  }
+
+  .gr-megamenu-item[data-gr-state="loading"] > .gr-megamenu-panel {
+    animation: none;
+  }
+}
+
+// --- Широкий экран: dropbar ---------------------------------------------------
+
+// Панель отрывается от пункта и ложится под всю полосу — от края до края
+// .gr-megamenu. Тень отделяет её от страницы; линия сверху продолжает
+// нижнюю границу шапки.
+@media (width >= $gr-megamenu-expand) {
+  .gr-megamenu-panel {
+    position: absolute;
+    z-index: var(--gr-z-dropdown);
+    inset-block-start: 100%;
+    inset-inline: 0;
+    border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+    box-shadow: var(--gr-shadow-lg);
+  }
+}

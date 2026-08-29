@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Слайды — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffinjs.js"></script>
+<style>
+  /* Заполнители кадров: градиенты вместо картинок, чтобы страница
+     не тянула файлы. В своём проекте на этом месте <img>. */
+  @layer griffincss.docs {
+    .frame {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 16 / 7;
+      border-radius: var(--gr-radius);
+      color: hsl(var(--gr-hsl-white));
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .frame-1 { background: linear-gradient(135deg, hsl(220 80% 45%), hsl(260 70% 55%)); }
+    .frame-2 { background: linear-gradient(135deg, hsl(148 60% 38%), hsl(180 60% 45%)); }
+    .frame-3 { background: linear-gradient(135deg, hsl(36 90% 50%), hsl(4 80% 55%)); }
+    .frame-4 { background: linear-gradient(135deg, hsl(292 60% 45%), hsl(330 70% 55%)); }
+
+    .frame-square { aspect-ratio: 4 / 3; }
+
+    .needs { margin-inline-start: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Слайды</h1>
+  <p>Дорожка, слайдер, галерея с превью и лайтбокс — семейство прокрутки слоя GriffinJS. Один механизм с разной навигацией и обёрткой; без скрипта у каждого есть рабочая база.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">GriffinJS</span>
+    <span class="badge">packages/ui/scss/griffinjs/_track.scss, _gallery.scss, _lightbox.scss</span>
+    <span class="badge">packages/ui/src/griffinjs/widgets/</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Бейдж <span class="badge badge-accent">нужен griffinjs.js</span> у примера означает,
+    что показанное поведение даёт скрипт. У примеров без бейджа разметка обязана
+    работать без него — это проверяется на полигоне с отключённым скриптом.
+  </p>
+</div>
+
+<h2>Подключение</h2>
+
+<pre><code>&lt;link rel="stylesheet" href="griffincss-ui.css"&gt;
+&lt;link rel="stylesheet" href="griffinjs.css"&gt;
+&lt;script src="griffinjs.js"&gt;&lt;/script&gt;</code></pre>
+
+<p>
+  <code>griffinjs.css</code> подключается поверх <code>griffincss-ui.css</code>:
+  у него нет собственного блока <code>:root</code>, токены берутся из ядра.
+  Скрипт поднимает виджеты по атрибутам <code>data-gr-*</code> сам; атрибут
+  <code>data-auto="false"</code> на теге отключает автозапуск — тогда
+  <code>GriffinJS.start()</code> зовётся вручную.
+</p>
+
+<h2>Дорожка</h2>
+
+<p>
+  <code>.gr-track</code> — scroll-snap-контейнер. Каждый прямой потомок —
+  слайд во всю ширину; свайп, инерция, колесо и RTL — от браузера. Это база
+  без JS для всего семейства.
+</p>
+
+<table>
+  <tr><th>Класс / атрибут</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-track</code></td><td>Дорожка: flex, <code>scroll-snap-type: x mandatory</code>, без полосы прокрутки</td></tr>
+  <tr><td><code>.gr-track-2</code> / <code>-3</code> / <code>-4</code></td><td>Слайдов в ряд; суффикс брейкпоинта — <code>.gr-track-1-sm .gr-track-3-md</code></td></tr>
+  <tr><td><code>.gr-track-scale</code></td><td>Соседи активного слайда чуть меньше — на <code>--gr-progress</code>; без скрипта — натуральная величина</td></tr>
+  <tr><td><code>data-gr-track</code> <span class="badge badge-accent">нужен griffinjs.js</span></td><td>Клавиатура (←→ с учётом RTL, Home, End), <code>aria-current</code> и <code>inert</code> на слайдах, <code>--gr-progress</code>, событие <code>griffin:change</code></td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-track gr-track-2-sm gr-track-3-md" tabindex="0" aria-label="Категории"&gt;
+  &lt;div class="gr-card gr-p-4"&gt;Первая&lt;/div&gt;
+  &lt;div class="gr-card gr-p-4"&gt;Вторая&lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Дорожка без скрипта: три в ряд от md</div>
+  <div class="gr-track gr-track-2-sm gr-track-3-md" tabindex="0" aria-label="Категории">
+    <div class="gr-card gr-p-4">Ноутбуки</div>
+    <div class="gr-card gr-p-4">Планшеты</div>
+    <div class="gr-card gr-p-4">Телефоны</div>
+    <div class="gr-card gr-p-4">Наушники</div>
+    <div class="gr-card gr-p-4">Часы</div>
+    <div class="gr-card gr-p-4">Аксессуары</div>
+  </div>
+</div>
+
+<h3>Параметры <code>data-gr-track</code></h3>
+
+<table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Смысл</th></tr>
+  <tr><td><code>loop</code></td><td><code>false</code></td><td>Бесконечная дорожка: индекс идёт по кругу</td></tr>
+  <tr><td><code>rewind</code></td><td><code>false</code></td><td>С края — на другой край без клонов</td></tr>
+  <tr><td><code>step</code></td><td><code>1</code></td><td>Шаг <code>next()</code>/<code>prev()</code>: число или <code>page</code></td></tr>
+  <tr><td><code>index</code></td><td><code>0</code></td><td>Начальный слайд</td></tr>
+  <tr><td><code>keyboard</code></td><td><code>true</code></td><td>Стрелки, Home, End</td></tr>
+  <tr><td><code>inert</code></td><td><code>true</code></td><td>Невидимые слайды помечаются <code>inert</code></td></tr>
+  <tr><td><code>label</code></td><td><code>Слайд {i} из {n}</code></td><td>Подпись слайда без своей <code>aria-label</code></td></tr>
+  <tr><td><code>engine</code></td><td><code>scroll</code></td><td>Движок движения; <code>fade</code> — отдельным модулем</td></tr>
+</table>
+
+<h2>Слайдер</h2>
+
+<p>
+  <code>data-gr-slider</code> на обёртке превращает дорожку в слайдер: кнопки
+  <code>[data-gr-prev]</code> / <code>[data-gr-next]</code>, точки в
+  <code>[data-gr-dots]</code>, автоплей с паузой. Органы управления спрятаны
+  CSS, пока скрипт не поставил <code>data-gr-state</code> на корень —
+  бездействующая кнопка хуже отсутствующей.
+</p>
+
+<table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Смысл</th></tr>
+  <tr><td><code>autoplay</code></td><td><code>0</code></td><td>Миллисекунд между слайдами; <code>0</code> — выключено. Уважает <code>prefers-reduced-motion</code></td></tr>
+  <tr><td><code>loop</code></td><td><code>false</code></td><td>По кругу; без цикла кнопки у краёв получают <code>aria-disabled</code></td></tr>
+  <tr><td><code>rewind</code></td><td><code>false</code></td><td>«Бесконечно» без клонов: с последней страницы — на первую, с первой — на последнюю; кнопки у краёв не блокируются</td></tr>
+  <tr><td><code>step</code></td><td><code>1</code></td><td>Шаг кнопок, точек <strong>и свайпа</strong>: число слайдов или <code>page</code> — на столько, сколько видно. Снап-точки дорожка ставит только началам страниц (<code>--gr-snap</code> на слайдах), так что палец останавливается там же, куда ведут точки</td></tr>
+  <tr><td><code>pause-on-hover</code></td><td><code>true</code></td><td>Наведение и фокус держат автоплей; кнопка паузы фиксирует его</td></tr>
+  <tr><td><code>dots</code></td><td><code>true</code></td><td>Строить точки в <code>[data-gr-dots]</code> — по <strong>страницам</strong>, не по слайдам</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <code>loop</code> — бесшовный переход через край. У движка <code>scroll</code>
+    это клоны краёв: по одному видимому слайду с каждой стороны, помеченные
+    <code>data-gr-clone</code>, <code>aria-hidden</code> и <code>inert</code>;
+    дорожка доезжает до клона плавно и на остановке мгновенно перескакивает
+    на настоящий слайд. У <code>fade</code> цикл бесплатен. Если движок цикла
+    не умеет, <code>loop</code> ведёт себя как <code>rewind</code>.
+  </p>
+</div>
+
+<h3>Шаг и <code>rewind</code></h3>
+
+<p>
+  Пять карточек по две в ряд. Первый слайдер листает <code>step: 2</code> —
+  ровно на две карточки, точек три (последняя страница — одна карточка,
+  выровненная к концу); второй — <code>step: page</code>, то же самое,
+  но шаг подстраивается под число видимых на любой ширине. У обоих
+  <code>rewind</code>: с последней страницы кнопка «вперёд» возвращает к первой,
+  и у краёв ничего не блокируется. Сравните с третьим — без <code>rewind</code>
+  кнопка у края гаснет.
+</p>
+
+<pre><code>&lt;div class="gr-slider" data-gr-slider="step: 2; rewind"&gt;    &lt;!-- на две карточки --&gt;
+&lt;div class="gr-slider" data-gr-slider="step: page; rewind"&gt; &lt;!-- на сколько видно --&gt;
+&lt;div class="gr-slider" data-gr-slider="step: page"&gt;         &lt;!-- без rewind: у края кнопка недоступна --&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title"><code>step: 2; rewind</code> <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="step: 2; rewind" aria-label="Шаг в две карточки">
+    <div class="gr-track gr-track-2">
+      <div class="frame frame-1 frame-square">1</div>
+      <div class="frame frame-2 frame-square">2</div>
+      <div class="frame frame-3 frame-square">3</div>
+      <div class="frame frame-4 frame-square">4</div>
+      <div class="frame frame-1 frame-square">5</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+<div class="demo-block">
+  <div class="demo-block-title"><code>step: page; rewind</code> <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="step: page; rewind" aria-label="Шаг на страницу">
+    <div class="gr-track gr-track-2">
+      <div class="frame frame-1 frame-square">1</div>
+      <div class="frame frame-2 frame-square">2</div>
+      <div class="frame frame-3 frame-square">3</div>
+      <div class="frame frame-4 frame-square">4</div>
+      <div class="frame frame-1 frame-square">5</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+<div class="demo-block">
+  <div class="demo-block-title"><code>step: page</code> без <code>rewind</code> <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="step: page" aria-label="Без перескока">
+    <div class="gr-track gr-track-2">
+      <div class="frame frame-1 frame-square">1</div>
+      <div class="frame frame-2 frame-square">2</div>
+      <div class="frame frame-3 frame-square">3</div>
+      <div class="frame frame-4 frame-square">4</div>
+      <div class="frame frame-1 frame-square">5</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<p>
+  Когда в ряд видно несколько слайдов, крайний достижимый индекс —
+  <code>count − perView</code>: последний слайд выравнивается к концу дорожки,
+  и дальше браузер не прокрутит. Точки строятся по страницам от этого предела
+  (при <code>step: page</code> последняя страница может быть короче шага),
+  а при смене брейкпоинта — перестраиваются: дорожка шлёт
+  <code>griffin:layout</code>.
+</p>
+
+<table>
+  <tr><th>Часть</th><th>Что делает скрипт</th></tr>
+  <tr><td>корень</td><td><code>role="region"</code>, <code>aria-roledescription="carousel"</code>, <code>data-gr-state</code>: <code>ready</code> / <code>playing</code> / <code>paused</code></td></tr>
+  <tr><td><code>.gr-track</code></td><td><code>aria-live="polite"</code>; при автоплее — <code>off</code></td></tr>
+  <tr><td><code>[data-gr-dots]</code></td><td>кнопки <code>.gr-slider-dot</code> по одной на страницу, активная — <code>aria-current</code></td></tr>
+  <tr><td><code>[data-gr-pause]</code></td><td>кнопка паузы; создаётся сама, если автоплей включён, а кнопки нет (WCAG 2.2.2). Ход — кольцом из <code>--gr-progress</code></td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-slider" data-gr-slider="autoplay: 4000; loop" aria-label="Акции"&gt;
+  &lt;div class="gr-track"&gt;
+    &lt;div class="frame frame-1"&gt;Первый&lt;/div&gt;
+    &lt;div class="frame frame-2"&gt;Второй&lt;/div&gt;
+    &lt;div class="frame frame-3"&gt;Третий&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад"&gt;‹&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд"&gt;›&lt;/button&gt;
+  &lt;div class="gr-slider-dots" data-gr-dots&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Слайдер с автоплеем и циклом <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="autoplay: 4000; loop" aria-label="Акции">
+    <div class="gr-track">
+      <div class="frame frame-1">Первый</div>
+      <div class="frame frame-2">Второй</div>
+      <div class="frame frame-3">Третий</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h3>Событие и API</h3>
+
+<p>
+  Каждое изменение слайда — событие <code>griffin:change</code> на дорожке,
+  всплывающее до документа: <code>detail.index</code> (виртуальный индекс,
+  в цикле растёт бесконечно), <code>detail.physical</code> (позиция в DOM),
+  <code>detail.previous</code>.
+</p>
+
+<pre><code>const el = document.querySelector('.gr-slider');
+const slider = GriffinJS.instance(el, 'slider');
+
+slider.next();          // slider.prev(), slider.goTo(2), slider.pause(), slider.play()
+slider.track.index;     // текущий индекс
+
+el.addEventListener('griffin:change', (e) =&gt; {
+  console.log(e.detail.physical, e.detail.previous);
+});
+
+// Дорожка вручную, без атрибута:
+const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true });</code></pre>
+
+<h2>Движок <code>fade</code></h2>
+
+<p>
+  Слайды стопкой, переход прозрачностью. Разметка та же, плюс класс
+  <code>.gr-track-fade</code>: CSS кладёт слайды в одну ячейку сетки
+  и связывает <code>opacity</code> с <code>--gr-progress</code>. Движок ничего
+  не двигает — он публикует позицию, переход делает CSS-transition. Свайп
+  и тяга — через примитив <code>gesture</code>: пока палец на экране,
+  прозрачность следует за ним без сглаживания (<code>data-gr-state="dragging"</code>
+  на дорожке). Цикл — бесплатно, без клонов. Без скрипта показан первый слайд.
+</p>
+
+<pre><code>&lt;div class="gr-slider" data-gr-slider="engine: fade; loop; autoplay: 4000"&gt;
+  &lt;div class="gr-track gr-track-fade"&gt;
+    &lt;div class="frame frame-1"&gt;Первый&lt;/div&gt;
+    …
+  &lt;/div&gt;
+  &lt;div class="gr-slider-dots" data-gr-dots&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Fade: потяните пальцем или мышью <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="engine: fade; loop; autoplay: 4000" aria-label="Fade">
+    <div class="gr-track gr-track-fade">
+      <div class="frame frame-1">Первый</div>
+      <div class="frame frame-2">Второй</div>
+      <div class="frame frame-4">Третий</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h2>Галерея</h2>
+
+<p>
+  <code>data-gr-gallery</code> — слайдер плюс полоса превью
+  <code>.gr-gallery-thumbs</code>: щелчок по превью ведёт большую дорожку,
+  активное превью получает <code>aria-current</code> и подъезжает в видимую
+  часть полосы. Превью — кнопки: клавиатура и фокус у них свои. Параметры —
+  те же, что у слайдера.
+</p>
+
+<pre><code>&lt;div class="gr-gallery" data-gr-gallery aria-label="Фотографии товара"&gt;
+  &lt;div class="gr-track"&gt;
+    &lt;div class="frame frame-1 frame-square"&gt;1&lt;/div&gt;
+    …
+  &lt;/div&gt;
+  &lt;div class="gr-track gr-gallery-thumbs"&gt;
+    &lt;button type="button"&gt;&lt;div class="frame frame-1 frame-square"&gt;&lt;/div&gt;&lt;/button&gt;
+    …
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Галерея с превью <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-gallery" data-gr-gallery aria-label="Фотографии товара" style="max-width:32rem">
+    <div class="gr-track">
+      <div class="frame frame-1 frame-square">1</div>
+      <div class="frame frame-2 frame-square">2</div>
+      <div class="frame frame-3 frame-square">3</div>
+      <div class="frame frame-4 frame-square">4</div>
+    </div>
+    <div class="gr-track gr-gallery-thumbs">
+      <button type="button"><div class="frame frame-1 frame-square"></div></button>
+      <button type="button"><div class="frame frame-2 frame-square"></div></button>
+      <button type="button"><div class="frame frame-3 frame-square"></div></button>
+      <button type="button"><div class="frame frame-4 frame-square"></div></button>
+    </div>
+  </div>
+</div>
+
+<h2>Лайтбокс</h2>
+
+<p>
+  <code>data-gr-lightbox</code> на ссылке или кнопке. Значение — имя группы:
+  элементы с одним значением листаются в одном окне; пустое значение — окно
+  на один кадр. Окно — <code>&lt;dialog class="gr-modal gr-lightbox"&gt;</code>,
+  строится при открытии и уничтожается при закрытии, поэтому видео
+  и iframe останавливаются сами. База без JS — обычная ссылка на большое
+  изображение.
+</p>
+
+<table>
+  <tr><th>Атрибут</th><th>Смысл</th></tr>
+  <tr><td><code>data-gr-lightbox="группа"</code></td><td>Что открывать; адрес — из <code>href</code> или <code>data-gr-src</code></td></tr>
+  <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
+  <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу (mp4/webm, YouTube, Vimeo)</td></tr>
+</table>
+
+<pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;
+  &lt;div class="frame frame-1 frame-square"&gt;&lt;/div&gt;
+&lt;/a&gt;
+&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Зелёный"&gt;…&lt;/a&gt;
+
+&lt;!-- из скрипта --&gt;
+GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp4' }], 0);</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Группа из трёх кадров <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-grid-3 gr-gap">
+    <a href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%234a6fd1'/%3E%3C/svg%3E" data-gr-lightbox="promo" data-gr-caption="Синий кадр"><div class="frame frame-1 frame-square">1</div></a>
+    <a href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%232f9a63'/%3E%3C/svg%3E" data-gr-lightbox="promo" data-gr-caption="Зелёный кадр"><div class="frame frame-2 frame-square">2</div></a>
+    <a href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%23e07a2e'/%3E%3C/svg%3E" data-gr-lightbox="promo" data-gr-caption="Оранжевый кадр"><div class="frame frame-3 frame-square">3</div></a>
+  </div>
+</div>
+
+<h2>Прогресс движения</h2>
+
+<p>
+  Дорожка публикует <code>--gr-progress</code>: на каждом слайде — <code>1</code>
+  на своём месте и <code>0</code> на расстоянии в один слайд; на самой дорожке —
+  долю пройденного пути. Скрипт не пишет ни <code>transform</code>, ни
+  <code>opacity</code>: эффект целиком в CSS, и запасное значение делает его
+  безопасным без скрипта.
+</p>
+
+<pre><code>/* соседи меньше активного — готовый класс .gr-track-scale делает то же */
+.my-track &gt; * { scale: calc(0.9 + 0.1 * var(--gr-progress, 1)); }
+
+/* полоса прогресса из --gr-progress дорожки */
+.my-bar { inline-size: calc(var(--gr-progress, 0) * 100%); }</code></pre>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Рецепты ниже собирают семейство прокрутки с компонентами и утилитами
+  библиотеки: баннер витрины, товары в ряд, отзывы, галерея товара,
+  лайтбокс поверх сетки карточек и лента без единой строки скрипта.
+</p>
+
+<h3>Баннер витрины: автоплей, цикл, точки</h3>
+
+<p>
+  Кадр во всю ширину, кнопки по краям, точки под кадром. Автоплей
+  останавливается наведением и фокусом, а кнопка паузы в углу показывает
+  ход кольцом — WCAG 2.2.2 закрыт без единой своей строки. Слайды —
+  обычные блоки: внутрь идут <code>.gr-card</code>, кнопки, любая раскладка.
+</p>
+
+<pre><code>&lt;div class="gr-slider gr-radius-3 gr-overflow-hidden" data-gr-slider="autoplay: 5000; loop" aria-label="Баннеры"&gt;
+  &lt;div class="gr-track"&gt;
+    &lt;div class="frame frame-1 gr-p-6 gr-text-start"&gt;
+      &lt;div&gt;&lt;h3 class="gr-m-0"&gt;Осенняя коллекция&lt;/h3&gt;&lt;a class="gr-btn gr-mt-3" href="#"&gt;Смотреть&lt;/a&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    …
+  &lt;/div&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад"&gt;‹&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд"&gt;›&lt;/button&gt;
+  &lt;div class="gr-slider-dots" data-gr-dots&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Баннер <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="autoplay: 5000; loop" aria-label="Баннеры">
+    <div class="gr-track">
+      <div class="frame frame-1 gr-p-6"><div class="gr-text-center"><h3 class="gr-m-0">Осенняя коллекция</h3><a class="gr-btn gr-btn-secondary gr-mt-3" href="#">Смотреть</a></div></div>
+      <div class="frame frame-2 gr-p-6"><div class="gr-text-center"><h3 class="gr-m-0">Скидки на наушники</h3><a class="gr-btn gr-btn-secondary gr-mt-3" href="#">К товарам</a></div></div>
+      <div class="frame frame-4 gr-p-6"><div class="gr-text-center"><h3 class="gr-m-0">Доставка за день</h3><a class="gr-btn gr-btn-secondary gr-mt-3" href="#">Условия</a></div></div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h3>Товары в ряд: один на телефоне, четыре на десктопе</h3>
+
+<p>
+  Слайдер и адаптивная дорожка — одна разметка: <code>.gr-track-2-sm
+  .gr-track-4-lg</code> задаёт число карточек в ряд, <code>step: page</code>
+  листает сразу на страницу, <code>rewind</code> с последней возвращает
+  к первой. Точек столько, сколько страниц на текущей ширине — на телефоне
+  шесть, на десктопе две. Карточки — <code>.gr-card</code> из компонентов,
+  ничего специального.
+</p>
+
+<pre><code>&lt;div class="gr-slider" data-gr-slider="step: page; rewind" aria-label="Хиты продаж"&gt;
+  &lt;div class="gr-track gr-track-2-sm gr-track-4-lg"&gt;
+    &lt;div class="gr-card gr-p-4"&gt;…&lt;/div&gt;
+    ×6
+  &lt;/div&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад"&gt;‹&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд"&gt;›&lt;/button&gt;
+  &lt;div class="gr-slider-dots" data-gr-dots&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Карточки в ряд: постранично, по кругу без клонов <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="step: page; rewind" aria-label="Хиты продаж">
+    <div class="gr-track gr-track-2-sm gr-track-4-lg">
+      <div class="gr-card gr-p-4"><div class="frame frame-1 frame-square gr-mb-3"></div><strong>Наушники</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">4 990 ₽</p></div>
+      <div class="gr-card gr-p-4"><div class="frame frame-2 frame-square gr-mb-3"></div><strong>Колонка</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">7 490 ₽</p></div>
+      <div class="gr-card gr-p-4"><div class="frame frame-3 frame-square gr-mb-3"></div><strong>Часы</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">12 990 ₽</p></div>
+      <div class="gr-card gr-p-4"><div class="frame frame-4 frame-square gr-mb-3"></div><strong>Планшет</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">24 990 ₽</p></div>
+      <div class="gr-card gr-p-4"><div class="frame frame-2 frame-square gr-mb-3"></div><strong>Клавиатура</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">3 490 ₽</p></div>
+      <div class="gr-card gr-p-4"><div class="frame frame-1 frame-square gr-mb-3"></div><strong>Мышь</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">1 990 ₽</p></div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h3>Отзывы: соседи чуть меньше активного</h3>
+
+<p>
+  <code>.gr-track-scale</code> уменьшает соседей на величину, которую дорожка
+  пишет в <code>--gr-progress</code>. Эффект следует за пальцем при свайпе —
+  без единого кадра анимации в скрипте. При <code>prefers-reduced-motion</code>
+  масштаб отключён. Листается по одному отзыву с <code>rewind</code>:
+  при трёх в ряд из четырёх точек две — по достижимым страницам.
+</p>
+
+<pre><code>&lt;div class="gr-slider" data-gr-slider="rewind" aria-label="Отзывы"&gt;
+  &lt;div class="gr-track gr-track-scale gr-track-3-md gr-py-4"&gt;
+    &lt;blockquote class="gr-card gr-p-4 gr-m-0"&gt;…&lt;/blockquote&gt;
+    …
+  &lt;/div&gt;
+  &lt;div class="gr-slider-dots" data-gr-dots&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Масштаб соседей из <code>--gr-progress</code> <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-slider" data-gr-slider="rewind" aria-label="Отзывы">
+    <div class="gr-track gr-track-scale gr-track-3-md gr-py-4">
+      <blockquote class="gr-card gr-p-4 gr-m-0"><p class="gr-m-0">«Собрал витрину за вечер — раскладка строкой, слайдер атрибутом».</p><footer class="gr-mt-3 gr-text-sm gr-text-ink-secondary">— Анна, магазин керамики</footer></blockquote>
+      <blockquote class="gr-card gr-p-4 gr-m-0"><p class="gr-m-0">«Без скрипта дорожка всё равно листается — это подкупило».</p><footer class="gr-mt-3 gr-text-sm gr-text-ink-secondary">— Михаил, студия</footer></blockquote>
+      <blockquote class="gr-card gr-p-4 gr-m-0"><p class="gr-m-0">«Тёмная тема и режим для слабовидящих — из коробки, в слайдере тоже».</p><footer class="gr-mt-3 gr-text-sm gr-text-ink-secondary">— Ольга, агентство</footer></blockquote>
+      <blockquote class="gr-card gr-p-4 gr-m-0"><p class="gr-m-0">«Лайтбокс без своей разметки: ссылка и атрибут».</p><footer class="gr-mt-3 gr-text-sm gr-text-ink-secondary">— Сергей, фотограф</footer></blockquote>
+    </div>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h3>Галерея товара: превью снизу, лайтбокс по щелчку</h3>
+
+<p>
+  Два виджета в одной разметке: галерея листает кадры и подсвечивает превью,
+  а <code>data-gr-lightbox</code> на кадрах открывает их во весь экран
+  той же группой. Оба берут разметку как есть; без скрипта остаются
+  две дорожки и ссылки на большие изображения.
+</p>
+
+<pre><code>&lt;div class="gr-gallery" data-gr-gallery aria-label="Фотографии"&gt;
+  &lt;div class="gr-track"&gt;
+    &lt;a href="large-1.jpg" data-gr-lightbox="product" data-gr-caption="Вид спереди"&gt;&lt;img …&gt;&lt;/a&gt;
+    …
+  &lt;/div&gt;
+  &lt;div class="gr-track gr-gallery-thumbs"&gt;
+    &lt;button type="button"&gt;&lt;img …&gt;&lt;/button&gt; …
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Галерея + лайтбокс <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-gallery" data-gr-gallery aria-label="Фотографии" style="max-width:28rem">
+    <div class="gr-track">
+      <a class="gr-block" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%234a6fd1'/%3E%3C/svg%3E" data-gr-lightbox="product" data-gr-caption="Вид спереди"><div class="frame frame-1 frame-square">Спереди</div></a>
+      <a class="gr-block" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%232f9a63'/%3E%3C/svg%3E" data-gr-lightbox="product" data-gr-caption="Вид сбоку"><div class="frame frame-2 frame-square">Сбоку</div></a>
+      <a class="gr-block" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%23a04ad1'/%3E%3C/svg%3E" data-gr-lightbox="product" data-gr-caption="Детали"><div class="frame frame-4 frame-square">Детали</div></a>
+    </div>
+    <div class="gr-track gr-gallery-thumbs">
+      <button type="button"><div class="frame frame-1 frame-square"></div></button>
+      <button type="button"><div class="frame frame-2 frame-square"></div></button>
+      <button type="button"><div class="frame frame-4 frame-square"></div></button>
+    </div>
+  </div>
+</div>
+
+<h3>Лента без скрипта</h3>
+
+<p>
+  Не каждой дорожке нужен слайдер. Лента историй, ряд логотипов, полоса
+  тегов — <code>.gr-track</code> с шириной слайдов через утилиты
+  и ничего больше. Это же — «база без JS» любого слайдера на странице,
+  где <code>griffinjs.js</code> не подключён.
+</p>
+
+<pre><code>&lt;div class="gr-track gr-gap-sm" tabindex="0" aria-label="Истории"&gt;
+  &lt;a class="gr-w-24 gr-flex-none" href="#"&gt;…&lt;/a&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Истории: только CSS</div>
+  <div class="gr-track gr-gap-sm" tabindex="0" aria-label="Истории">
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-1 gr-radius-pill" style="aspect-ratio:1"></div>Новинки</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-2 gr-radius-pill" style="aspect-ratio:1"></div>Акции</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-3 gr-radius-pill" style="aspect-ratio:1"></div>Бренды</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-4 gr-radius-pill" style="aspect-ratio:1"></div>Подарки</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-1 gr-radius-pill" style="aspect-ratio:1"></div>Отзывы</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-2 gr-radius-pill" style="aspect-ratio:1"></div>Блог</a>
+    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-3 gr-radius-pill" style="aspect-ratio:1"></div>Помощь</a>
+  </div>
+</div>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

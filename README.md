@@ -7,7 +7,7 @@
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
 | **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | 3.3 КБ CSS + 4.8 КБ JS |
-| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние | 10.0 КБ CSS + 2.9 КБ JS |
+| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс | 10.0 КБ CSS + 2.9 КБ JS (+ 15,6 КБ GriffinJS по желанию) |
 | **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | 14.2 КБ CSS + 2.5 КБ JS |
 
 JS-рантаймы опциональны: у ядра это раскладки и переключатель темы,
@@ -49,7 +49,7 @@ properties. JS-рантайм не требует сборки и не имее�
 
 ## Установка / Installation
 
-> **Текущая версия `0.19.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.21.0`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -76,10 +76,19 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.19.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.19.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.21.0/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss.js"></script>
+```
+
+Слой виджетов с состоянием — GriffinJS — подключается ещё двумя строками,
+и только если нужен (слайдер, галерея, лайтбокс, параллакс, мегаменю,
+дропдаун с ролями, подсказка в верхнем слое, окна, комбобокс):
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffinjs.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffinjs.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
@@ -91,7 +100,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.19.0/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
@@ -118,6 +127,7 @@ npm run build
 | `packages/ui/dist/griffincss-ui.css` | Компоненты интерфейса |
 | `packages/ui/dist/griffincss-ui-scoped.css` | То же, обёрнутое в `@scope (.griffin)` |
 | `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты, клавиатура вкладок и события `griffincss:*` |
+| `packages/ui/dist/griffinjs.js`, `griffinjs.css` | GriffinJS — опциональный слой виджетов с состоянием (`window.GriffinJS`): слайдер, галерея, лайтбокс, параллакс, мегаменю, контроллеры дропдауна, подсказки и окон, комбобокс; 15,6 КБ gzip целиком, `griffinjs-core.js` + модули по одному — для сборки нужного набора. Документация — раздел «GriffinJS» доксайта |
 | `packages/utils/dist/griffincss-utils.css` | Утилитарные классы |
 | `packages/utils/dist/griffincss-utils-scoped.css` | То же, обёрнутое в `@scope (.griffin)` |
 | `packages/utils/dist/griffincss-utils.js` | Опциональный рантайм утилит: каскад скруглений произвольной глубины и произвольные значения `gr-*-[…]` |

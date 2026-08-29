@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Меню — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffinjs.js"></script>
+<style>
+  @layer griffincss.docs {
+    /* Панели примеров: колонки ссылок и промо-карточка. Всё — из утилит
+       и компонентов; своего здесь только мягкий фон промо. */
+    .mm-promo {
+      display: grid;
+      place-items: center;
+      min-block-size: 7rem;
+      border-radius: var(--gr-radius);
+      background: linear-gradient(135deg, hsl(220 80% 45%), hsl(260 70% 55%));
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+    }
+    .mm-title { margin: 0 0 var(--gr-ui-gap); font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gr-color-text-secondary); }
+  }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Меню</h1>
+  <p>Мегаменю: панели во всю ширину полосы под пунктами шапки. Наведение с задержкой намерения, безопасный треугольник, клавиатура, аккордеон на узком экране, ajax-панели — поверх обычного <code>&lt;details&gt;</code>, который работает и без скрипта.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">GriffinJS</span>
+    <span class="badge">packages/ui/src/griffinjs/widgets/megamenu.js</span>
+    <span class="badge">scss/griffinjs/_megamenu.scss</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Мегаменю — <strong>новый виджет</strong> слоя: своя разметка и свои стили
+    в <code>griffinjs.css</code>, как компонента <code>ui</code> его не существует,
+    и описан он только здесь. Дропдаун и подсказка — <strong>контроллеры</strong>
+    поверх существующих компонентов: их разметка не меняется, а что добавляет
+    скрипт, описано на странице
+    <a href="ui-overlays.html#griffinjs">«Слои поверх страницы» → «С подключённым <code>griffinjs.js</code>»</a>.
+  </p>
+</div>
+
+<h2>Как работает</h2>
+
+<p>
+  Полоса — обычная шапка <code>.gr-navbar</code> с классом <code>.gr-megamenu</code>
+  и атрибутом <code>data-gr-megamenu</code>. Пункт с панелью —
+  <code>&lt;details class="gr-megamenu-item"&gt;</code> внутри <code>.gr-nav</code>:
+  заголовок на <code>&lt;summary class="gr-nav-link"&gt;</code>, панель —
+  <code>.gr-megamenu-panel</code> сразу за ним. Обычные ссылки в том же ряду
+  остаются ссылками.
+</p>
+
+<pre><code>&lt;nav class="gr-navbar gr-megamenu" data-gr-megamenu&gt;
+  &lt;a class="gr-navbar-brand" href="/"&gt;Сайт&lt;/a&gt;
+  &lt;details class="gr-nav-toggle"&gt;&lt;summary aria-label="Меню"&gt;☰&lt;/summary&gt;&lt;/details&gt;
+  &lt;ul class="gr-nav gr-nav-collapse"&gt;
+    &lt;li&gt;
+      &lt;details class="gr-megamenu-item"&gt;
+        &lt;summary class="gr-nav-link"&gt;Каталог&lt;/summary&gt;
+        &lt;div class="gr-megamenu-panel"&gt;…колонки, карточки, что угодно…&lt;/div&gt;
+      &lt;/details&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a class="gr-nav-link" href="/sale"&gt;Акции&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+
+<p>
+  <strong>База без JS</strong> — этот же <code>&lt;details&gt;</code>: щелчок
+  по заголовку раскрывает панель, на широком экране CSS кладёт её под всю
+  полосу (<code>position: absolute</code> от <code>.gr-megamenu</code>), на узком —
+  аккордеоном под заголовком в свёрнутой навигации. Ни одной координаты
+  из скрипта: панель не в верхнем слое, и anchor positioning ей не нужен.
+  Скрипт добавляет то, чего <code>&lt;details&gt;</code> не умеет: единственную
+  открытую панель, наведение, клавиатуру, закрытие мимо и ajax.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-megamenu</code></td><td>На полосе (<code>.gr-navbar</code>): контейнер, от которого позиционируются панели</td></tr>
+  <tr><td><code>.gr-megamenu-item</code></td><td><code>&lt;details&gt;</code> пункта; открытый подсвечивает заголовок и переворачивает стрелку</td></tr>
+  <tr><td><code>.gr-megamenu-panel</code></td><td>Панель: поверхность меню, отступ <code>--gr-gap</code>; на широком экране — во всю полосу, с тенью</td></tr>
+</table>
+
+<h3>Параметры <code>data-gr-megamenu</code></h3>
+
+<table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>hover</code></td><td><code>true</code></td><td>Открывать по наведению на широком экране; <code>hover: false</code> — только щелчком и клавиатурой</td></tr>
+  <tr><td><code>delay</code></td><td><code>120</code></td><td>мс задержки намерения: панель не открывается от случайного пролёта курсора</td></tr>
+  <tr><td><code>hide</code></td><td><code>250</code></td><td>мс после ухода указателя с полосы до закрытия</td></tr>
+  <tr><td><code>bp</code></td><td><code>md</code></td><td>Брейкпоинт широкого режима — токен <code>--gr-bp-md</code>; ниже него наведение и стрелки выключены, панели — аккордеон</td></tr>
+</table>
+
+<p>
+  На пункте: <code>data-gr-src</code> с адресом фрагмента — ajax-панель
+  (см. ниже).
+</p>
+
+<h3>С <code>griffinjs.js</code> и без</h3>
+
+<table>
+  <tr><th></th><th>Без скрипта</th><th>Со скриптом</th></tr>
+  <tr><td>Открытие</td><td>щелчок по заголовку</td><td>щелчок, наведение с задержкой (мышь и перо), <kbd>↓</kbd> с клавиатуры</td></tr>
+  <tr><td>Несколько панелей</td><td>могут быть открыты все</td><td>открыта одна: следующая закрывает предыдущую</td></tr>
+  <tr><td>Закрытие</td><td>тот же щелчок</td><td>плюс щелчок мимо полосы, уход указателя, <kbd>Esc</kbd>, уход фокуса</td></tr>
+  <tr><td>Клавиатура</td><td><kbd>Tab</kbd>, <kbd>Enter</kbd>/<kbd>Space</kbd> на заголовке</td><td>плюс <kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd> по ряду, <kbd>↓</kbd> в панель, <kbd>↑</kbd> <kbd>↓</kbd> внутри, <kbd>Esc</kbd> назад</td></tr>
+  <tr><td>Состояние для программ чтения</td><td>родное у <code>&lt;summary&gt;</code></td><td>плюс <code>aria-expanded</code> и <code>aria-controls</code> на заголовке</td></tr>
+  <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии</td></tr>
+  <tr><td>Узкий экран</td><td>аккордеон в свёрнутой навигации</td><td>тот же аккордеон, одна открытая панель, <kbd>Esc</kbd></td></tr>
+</table>
+
+<h3>Наведение и касание</h3>
+
+<p>
+  Поведение выбирается по <code>pointerType</code> <em>каждого события</em>,
+  а не по типу устройства: iPad с мышью и Surface с пером — гибриды.
+  Мышь и перо открывают панель после <code>delay</code> — случайный пролёт
+  курсора через ряд не раскрывает ничего. Касание наведения не знает:
+  тап по заголовку открывает панель ровно так же, как без скрипта, а переход
+  по разделу — ссылка внутри панели.
+</p>
+
+<p>
+  Между заголовком и открытой панелью соседний пункт не перехватывает
+  курсор: пока указатель движется в треугольник «текущая точка — верхние
+  углы панели», переключение откладывается. Диагональ к нужной ссылке
+  не закрывает меню на полпути.
+</p>
+
+<h3>Клавиатура</h3>
+
+<p>
+  Схема — WAI-ARIA <em>disclosure navigation</em>: полоса остаётся
+  навигацией, без ролей <code>menu</code>/<code>menuitem</code>, которые
+  превратили бы её в меню приложения и поменяли ожидания программ чтения.
+</p>
+
+<table>
+  <tr><th>Где</th><th>Клавиша</th><th>Действие</th></tr>
+  <tr><td>Ряд</td><td><kbd>→</kbd> <kbd>←</kbd></td><td>Следующий/предыдущий пункт ряда по кругу — заголовки и ссылки, минуя панели</td></tr>
+  <tr><td>Ряд</td><td><kbd>Home</kbd> <kbd>End</kbd></td><td>Первый/последний пункт ряда</td></tr>
+  <tr><td>Заголовок</td><td><kbd>↓</kbd></td><td>Открыть панель и перейти к первой ссылке в ней</td></tr>
+  <tr><td>Заголовок</td><td><kbd>Enter</kbd> <kbd>Space</kbd></td><td>Открыть/закрыть — родное поведение <code>&lt;summary&gt;</code></td></tr>
+  <tr><td>Панель</td><td><kbd>↓</kbd> <kbd>↑</kbd></td><td>По ссылкам и кнопкам панели</td></tr>
+  <tr><td>Панель, заголовок</td><td><kbd>Esc</kbd></td><td>Закрыть панель и вернуть фокус на заголовок</td></tr>
+  <tr><td>Везде</td><td><kbd>Tab</kbd></td><td>Обычный обход; уход фокуса с полосы закрывает панель</td></tr>
+</table>
+
+<h3>Ajax-панели</h3>
+
+<p>
+  Пункт с <code>data-gr-src</code> открывается с пустой панелью, и скрипт
+  один раз загружает адрес и вставляет ответ как HTML. Состояние пишется
+  на пункт: <code>data-gr-state="loading"</code> — панель держит место
+  и мигает фоном, <code>ready</code> — загружено, <code>error</code> — сервер
+  не ответил (панель остаётся пустой, ошибка — в консоли). Вложенные
+  виджеты в загруженном фрагменте поднимает сканер слоя.
+</p>
+
+<pre><code>&lt;details class="gr-megamenu-item" data-gr-src="/menu/brands.html"&gt;
+  &lt;summary class="gr-nav-link"&gt;Бренды&lt;/summary&gt;
+  &lt;div class="gr-megamenu-panel"&gt;&lt;/div&gt;
+&lt;/details&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Ответ вставляется как есть.</strong> Адрес в <code>data-gr-src</code>
+    должен вести на свой сервер и отдавать фрагмент, которому вы доверяете:
+    скрипт не чистит разметку и не проверяет, что в ней нет
+    <code>&lt;script&gt;</code>.
+  </p>
+</div>
+
+<h3>Узкий экран</h3>
+
+<p>
+  Ниже брейкпоинта <code>bp</code> (по умолчанию <code>md</code>, 768px) переключатель
+  шапки прячет навигацию, а панели ложатся аккордеоном под заголовками:
+  тот же <code>&lt;details&gt;</code>, только в потоке. Наведения и стрелок
+  здесь нет — только тап, <kbd>Tab</kbd>, <kbd>Enter</kbd> и <kbd>Esc</kbd>;
+  правило «одна открытая панель» остаётся. Переход через брейкпоинт
+  ловится через <code>matchMedia</code> по токену <code>--gr-bp-*</code>
+  подключённого CSS.
+</p>
+
+<h3>API</h3>
+
+<pre><code>var menu = GriffinJS.instance(document.querySelector('[data-gr-megamenu]'), 'megamenu');
+
+menu.items          // [{ el, summary, panel, loaded }]
+menu.open(menu.items[0]);
+menu.closeAll();
+menu.current();     // открытый пункт или null
+menu.destroy();     // снимает всё: атрибуты, слушатели, таймеры</code></pre>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Полоса витрины на трёх приёмах: колонки ссылок из <code>.gr-nav-vertical</code>,
+  промо-блок из утилит, ajax-панель. Все примеры работают и без скрипта —
+  как обычный <code>&lt;details&gt;</code>; бейдж отмечает то, что добавляет
+  <code>griffinjs.js</code>.
+</p>
+
+<h3>Каталог витрины: колонки разделов и промо</h3>
+
+<p>
+  Панель — обычная вёрстка Griffincss: три колонки <code>.gr-nav-vertical</code>
+  во флексе и промо-карточка. Сложная раскладка панели — сильная сторона
+  библиотеки, и скрипту до неё дела нет.
+</p>
+
+<pre><code>&lt;details class="gr-megamenu-item"&gt;
+  &lt;summary class="gr-nav-link"&gt;Каталог&lt;/summary&gt;
+  &lt;div class="gr-megamenu-panel"&gt;
+    &lt;div class="gr-flex gr-gap-lg gr-flex-wrap"&gt;
+      &lt;div class="gr-flex-1"&gt;
+        &lt;p class="mm-title"&gt;Компьютеры&lt;/p&gt;
+        &lt;ul class="gr-nav gr-nav-vertical"&gt;…&lt;/ul&gt;
+      &lt;/div&gt;
+      …
+      &lt;div class="gr-flex-1 mm-promo"&gt;Скидки недели&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/details&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Наведите на «Каталог» или нажмите <kbd>↓</kbd> с клавиатуры <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <nav class="gr-navbar gr-megamenu" data-gr-megamenu aria-label="Пример: витрина">
+    <a class="gr-navbar-brand" href="#mm-1">Витрина</a>
+    <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+    <ul class="gr-nav gr-nav-collapse">
+      <li>
+        <details class="gr-megamenu-item">
+          <summary class="gr-nav-link">Каталог</summary>
+          <div class="gr-megamenu-panel">
+            <div class="gr-flex gr-gap-lg gr-flex-wrap">
+              <div class="gr-flex-1">
+                <p class="mm-title">Компьютеры</p>
+                <ul class="gr-nav gr-nav-vertical">
+                  <li><a class="gr-nav-link" href="#mm-1">Ноутбуки</a></li>
+                  <li><a class="gr-nav-link" href="#mm-1">Настольные</a></li>
+                  <li><a class="gr-nav-link" href="#mm-1">Мониторы</a></li>
+                </ul>
+              </div>
+              <div class="gr-flex-1">
+                <p class="mm-title">Звук</p>
+                <ul class="gr-nav gr-nav-vertical">
+                  <li><a class="gr-nav-link" href="#mm-1">Наушники</a></li>
+                  <li><a class="gr-nav-link" href="#mm-1">Колонки</a></li>
+                  <li><a class="gr-nav-link" href="#mm-1">Микрофоны</a></li>
+                </ul>
+              </div>
+              <div class="gr-flex-1">
+                <p class="mm-title">Дом</p>
+                <ul class="gr-nav gr-nav-vertical">
+                  <li><a class="gr-nav-link" href="#mm-1">Умный дом</a></li>
+                  <li><a class="gr-nav-link" href="#mm-1">Освещение</a></li>
+                </ul>
+              </div>
+              <div class="gr-flex-1 mm-promo">Скидки недели<br>до −30 %</div>
+            </div>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details class="gr-megamenu-item">
+          <summary class="gr-nav-link">Услуги</summary>
+          <div class="gr-megamenu-panel">
+            <ul class="gr-nav gr-nav-vertical">
+              <li><a class="gr-nav-link" href="#mm-1">Доставка</a></li>
+              <li><a class="gr-nav-link" href="#mm-1">Сборка и настройка</a></li>
+              <li><a class="gr-nav-link" href="#mm-1">Гарантия</a></li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li><a class="gr-nav-link" href="#mm-1">Акции</a></li>
+      <li><a class="gr-nav-link" href="#mm-1">Контакты</a></li>
+    </ul>
+  </nav>
+</div>
+
+<h3>Меню без наведения: только щелчок и клавиатура</h3>
+
+<p>
+  Для админки или приложения, где случайное раскрытие мешает, наведение
+  отключают — <code>hover: false</code>. Остальное — единственная открытая
+  панель, стрелки, <kbd>Esc</kbd>, закрытие мимо — остаётся.
+</p>
+
+<pre><code>&lt;nav class="gr-navbar gr-megamenu" data-gr-megamenu="hover: false"&gt;…&lt;/nav&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Щелчок, <kbd>↓</kbd>, <kbd>→</kbd>, <kbd>Esc</kbd>; наведение не открывает <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <nav class="gr-navbar gr-megamenu" data-gr-megamenu="hover: false" aria-label="Пример: админка">
+    <a class="gr-navbar-brand" href="#mm-2">Панель</a>
+    <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+    <ul class="gr-nav gr-nav-collapse">
+      <li>
+        <details class="gr-megamenu-item">
+          <summary class="gr-nav-link">Заказы</summary>
+          <div class="gr-megamenu-panel">
+            <div class="gr-flex gr-gap-lg gr-flex-wrap">
+              <ul class="gr-nav gr-nav-vertical gr-flex-1">
+                <li><a class="gr-nav-link" href="#mm-2">Новые</a></li>
+                <li><a class="gr-nav-link" href="#mm-2">В работе</a></li>
+                <li><a class="gr-nav-link" href="#mm-2">Возвраты</a></li>
+              </ul>
+              <ul class="gr-nav gr-nav-vertical gr-flex-1">
+                <li><a class="gr-nav-link" href="#mm-2">Отчёт за день</a></li>
+                <li><a class="gr-nav-link" href="#mm-2">Экспорт</a></li>
+              </ul>
+            </div>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details class="gr-megamenu-item">
+          <summary class="gr-nav-link">Товары</summary>
+          <div class="gr-megamenu-panel">
+            <ul class="gr-nav gr-nav-vertical">
+              <li><a class="gr-nav-link" href="#mm-2">Список</a></li>
+              <li><a class="gr-nav-link" href="#mm-2">Категории</a></li>
+              <li><a class="gr-nav-link" href="#mm-2">Остатки</a></li>
+            </ul>
+          </div>
+        </details>
+      </li>
+      <li><a class="gr-nav-link" href="#mm-2">Клиенты</a></li>
+    </ul>
+  </nav>
+</div>
+
+<h3>Панель с сервера</h3>
+
+<p>
+  Дерево каталога в CMS меняется, и держать его в шаблоне шапки неудобно:
+  пункт получает <code>data-gr-src</code>, а панель приезжает при первом
+  открытии. В примере адрес — <code>data:</code>-URL, на сайте это путь
+  к фрагменту, который отдаёт сервер.
+</p>
+
+<pre><code>&lt;details class="gr-megamenu-item" data-gr-src="/menu/brands.html"&gt;
+  &lt;summary class="gr-nav-link"&gt;Бренды&lt;/summary&gt;
+  &lt;div class="gr-megamenu-panel"&gt;&lt;/div&gt;
+&lt;/details&gt;
+
+/* пока грузится */
+.gr-megamenu-item[data-gr-state="loading"] &gt; .gr-megamenu-panel { min-block-size: 6rem; }</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Откройте «Бренды» — панель загрузится один раз <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <nav class="gr-navbar gr-megamenu" data-gr-megamenu aria-label="Пример: ajax">
+    <a class="gr-navbar-brand" href="#mm-3">Витрина</a>
+    <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+    <ul class="gr-nav gr-nav-collapse">
+      <li>
+        <details class="gr-megamenu-item" data-gr-src="data:text/html;charset=utf-8,%3Cdiv%20class%3D%22gr-flex%20gr-gap-lg%20gr-flex-wrap%22%3E%3Cul%20class%3D%22gr-nav%20gr-nav-vertical%20gr-flex-1%22%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EAcme%3C%2Fa%3E%3C%2Fli%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EGlobex%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3Cul%20class%3D%22gr-nav%20gr-nav-vertical%20gr-flex-1%22%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EInitech%3C%2Fa%3E%3C%2Fli%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EUmbrella%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3C%2Fdiv%3E">
+          <summary class="gr-nav-link">Бренды</summary>
+          <div class="gr-megamenu-panel"></div>
+        </details>
+      </li>
+      <li><a class="gr-nav-link" href="#mm-3">Акции</a></li>
+    </ul>
+  </nav>
+</div>
+
+<h3>Без скрипта</h3>
+
+<p>
+  Та же разметка на странице без <code>griffinjs.js</code>: панель открывается
+  щелчком по заголовку и закрывается им же, на узком экране складывается
+  аккордеоном. Это и есть база, от которой скрипт только прибавляет.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

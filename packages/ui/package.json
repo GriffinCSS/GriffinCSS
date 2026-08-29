@@ -1,7 +1,7 @@
 {
   "name": "griffincss-ui",
-  "version": "0.19.0",
-  "description": "Griffincss UI — компоненты интерфейса: кнопки, поля, карточки, таблицы, статусы; на токенах ядра, с обеими темами и режимом для слабовидящих",
+  "version": "0.21.0",
+  "description": "Griffincss UI — компоненты интерфейса: кнопки, поля, карточки, таблицы, статусы; на токенах ядра, с обеими темами и режимом для слабовидящих. Плюс GriffinJS — опциональный слой виджетов: слайдер, галерея, лайтбокс, параллакс, мегаменю, дропдаун, подсказка, окна, комбобокс",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
     "type": "git",
@@ -20,6 +20,8 @@
     ".": "./dist/griffincss-ui.css",
     "./scoped": "./dist/griffincss-ui-scoped.css",
     "./js": "./dist/griffincss-ui.js",
+    "./griffinjs": "./dist/griffinjs.js",
+    "./griffinjs.css": "./dist/griffinjs.css",
     "./scss": "./scss/griffincss-ui.scss",
     "./scss/*": "./scss/*",
     "./dist/*": "./dist/*",
@@ -31,7 +33,7 @@
     "src/"
   ],
   "peerDependencies": {
-    "griffincss-core": "^0.19.0"
+    "griffincss-core": "^0.21.0"
   },
   "keywords": [
     "css",
@@ -42,12 +44,19 @@
     "button",
     "form",
     "card",
+    "slider",
+    "gallery",
+    "lightbox",
+    "megamenu",
+    "combobox",
+    "griffinjs",
     "griffincss"
   ],
   "scripts": {
-    "build": "npm run build:css && npm run build:scoped && npm run build:js",
+    "build": "npm run build:css && npm run build:scoped && npm run build:js && npm run build:griffinjs",
     "build:css": "sass scss/griffincss-ui.scss dist/griffincss-ui.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:scoped": "sass scss/griffincss-ui-scoped.scss dist/griffincss-ui-scoped.css --load-path=../../node_modules --style=compressed --no-source-map",
-    "build:js": "terser src/griffincss-ui.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss UI | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-ui.js.map'\" -o dist/griffincss-ui.js"
+    "build:js": "terser src/griffincss-ui.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss UI | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-ui.js.map'\" -o dist/griffincss-ui.js",
+    "build:griffinjs": "node ../../scripts/build-griffinjs.mjs"
   }
 }

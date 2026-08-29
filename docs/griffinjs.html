@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GriffinJS — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>GriffinJS</h1>
+  <p>Опциональный слой виджетов с состоянием: слайдер, галерея, лайтбокс, параллакс, мегаменю. Один файл, одна строка подключения; страница без него — законное и рабочее состояние.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">В разработке — Этап 21</span>
+    <span class="badge">packages/ui/dist/griffinjs.js</span>
+    <span class="badge">packages/ui/dist/griffinjs.css</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Обзорная страница этапа 21. Готовы семейство прокрутки — страница
+    <a href="griffinjs-slides.html">«Слайды»</a>: дорожка, слайдер, галерея,
+    лайтбокс, движок fade, — <a href="griffinjs-parallax.html">параллакс</a>
+    и семейство выпадающего: <a href="griffinjs-menus.html">мегаменю</a>
+    плюс контроллеры дропдауна и подсказки на странице
+    <a href="ui-overlays.html#griffinjs">«Слои поверх страницы»</a>, —
+    и <a href="griffinjs-overlays.html">окна и комбобокс</a>. Устройство
+    слоя — на странице <a href="griffinjs-architecture.html">«Архитектура»</a>.
+    Инвентарь этапа собран; впереди приёмка по матрице устройств.
+  </p>
+</div>
+
+<h2>Подключение</h2>
+
+<p>
+  Слой лежит внутри пакета <code>griffincss-ui</code> и подключается одной
+  строкой после стилей. У него свой глобал — <code>window.GriffinJS</code>,
+  отдельный от <code>window.Griffincss</code>; от рантаймов ядра, компонентов
+  и утилит он не зависит и работает при подключённом одном CSS.
+</p>
+
+<pre><code>&lt;link rel="stylesheet" href="griffincss-ui.css"&gt;
+&lt;link rel="stylesheet" href="griffinjs.css"&gt;
+&lt;script src="griffinjs.js"&gt;&lt;/script&gt;</code></pre>
+
+<p>
+  Атрибут <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code>
+  отключает автозапуск — как у остальных рантаймов библиотеки.
+</p>
+
+<h2>Два рода вещей</h2>
+
+<p>
+  Документация различает <strong>новые виджеты</strong> и
+  <strong>контроллеры</strong>. У новых виджетов — слайдера, галереи,
+  лайтбокса, параллакса, мегаменю, комбобокса — своя разметка и свои стили
+  в <code>griffinjs.css</code>; как компонентов <code>ui</code> их не существует,
+  и описываются они только в этом разделе. Контроллеры — модалка, панель,
+  дропдаун, подсказка — ничего не меняют в разметке существующих компонентов:
+  скрипт добавляет к ним атрибуты и поведение, а описание живёт на странице
+  компонента в подразделе «С подключённым <code>griffinjs.js</code>».
+</p>
+
+<h2>С <code>griffinjs.js</code> и без</h2>
+
+<p>
+  Каждый виджет обязан иметь «базу без JS». Матрица заполняется по мере
+  появления виджетов; сейчас в ней только то, что уже решено планом.
+</p>
+
+<table>
+  <tr><th>Виджет</th><th>С <code>griffinjs.js</code></th><th>База без JS</th></tr>
+  <tr><td><a href="griffinjs-slides.html">Дорожка</a></td><td>клавиатура, <code>aria-current</code>/<code>inert</code>, <code>--gr-progress</code>, <code>griffin:change</code></td><td>scroll-snap-дорожка</td></tr>
+  <tr><td><a href="griffinjs-slides.html">Слайдер</a></td><td>точки, кнопки, автоплей с паузой, цикл</td><td>scroll-snap-дорожка; органы управления скрыты</td></tr>
+  <tr><td><a href="griffinjs-slides.html">Галерея</a></td><td>превью ведут дорожку и следуют за ней</td><td>две дорожки без синхронизации</td></tr>
+  <tr><td><a href="griffinjs-slides.html">Лайтбокс</a></td><td><code>&lt;dialog&gt;</code> + дорожка, группы по атрибуту, видео и iframe</td><td>ссылка на большое изображение</td></tr>
+  <tr><td><a href="griffinjs-parallax.html">Параллакс</a></td><td><code>--gr-progress</code> на любом блоке; рецепты эффектов в CSS</td><td>статичный блок (запасное значение в <code>var()</code>)</td></tr>
+  <tr><td><a href="griffinjs-slides.html#dvizhok-fade">Движок fade</a></td><td>стопка слайдов, переход прозрачностью, следование за пальцем</td><td>первый слайд</td></tr>
+  <tr><td><a href="griffinjs-menus.html">Мегаменю</a></td><td>наведение с задержкой намерения и безопасным треугольником, одна открытая панель, клавиатура disclosure navigation, ajax-панели, аккордеон на узком экране</td><td><code>.gr-navbar</code> + <code>&lt;details&gt;</code> в пунктах <code>.gr-nav</code>: щелчок раскрывает панель, CSS кладёт её под полосу</td></tr>
+  <tr><td><a href="ui-overlays.html#griffinjs">Дропдаун</a> <span class="badge">контроллер</span></td><td>роли меню, клавиатура menu button, <kbd>Esc</kbd> и щелчок мимо для <code>&lt;details&gt;</code>, позиция popover-панели без anchor positioning, наведение с задержкой</td><td><code>.gr-dropdown</code> как есть: <code>&lt;details&gt;</code>, popover или наведение из <code>ui</code></td></tr>
+  <tr><td><a href="griffinjs-overlays.html">Окна</a> <span class="badge">контроллер</span></td><td><code>data-gr-open</code>, стек, блокировка прокрутки под окном (и на iOS), остановка видео, ajax-содержимое, hash с кнопкой «Назад»</td><td><code>.gr-modal</code> / <code>.gr-drawer</code> как есть: <code>showModal()</code> и <code>&lt;form method="dialog"&gt;</code></td></tr>
+  <tr><td><a href="griffinjs-overlays.html#komboboks">Комбобокс</a></td><td>роли combobox/listbox, <code>aria-activedescendant</code>, дебаунс, отмена запроса, кеш, группы, подсветка, выбор</td><td>обычное поле в форме поиска</td></tr>
+  <tr><td><a href="ui-overlays.html#griffinjs">Подсказка</a> <span class="badge">контроллер</span></td><td>верхний слой (popover) по наведению с задержкой и по фокусу, позиция у якоря, <kbd>Esc</kbd></td><td><code>.gr-tooltip-anchor</code> как есть: <code>:hover</code> и <code>:focus-within</code> из <code>ui</code></td></tr>
+</table>
+
+<h2>Модульная сборка</h2>
+
+<p>
+  Кроме <code>griffinjs.js</code> целиком в <code>dist/</code> лежат
+  <code>griffinjs-core.js</code> и по файлу на движок и виджет —
+  подключаются после ядра в любом наборе. Одна общая часть вне ядра:
+  <code>griffinjs-anchor.js</code> — позиционирование у якоря, которое
+  нужно дропдауну и подсказке; в полном файле она уже есть. Размеры
+  по модулям — на странице <a href="griffinjs-architecture.html#modulnaya-sborka-i-razmery">«Архитектура»</a>.
+</p>
+
+<pre><code>&lt;script src="griffinjs-core.js"&gt;&lt;/script&gt;
+&lt;script src="griffinjs-anchor.js"&gt;&lt;/script&gt;
+&lt;script src="griffinjs-dropdown.js"&gt;&lt;/script&gt;
+&lt;script src="griffinjs-megamenu.js"&gt;&lt;/script&gt;</code></pre>
+
+<h2>Полигон</h2>
+
+<p>
+  <a href="griffinjs-lab.html">Страница-полигон</a> собирает все виджеты слоя
+  на одном экране. Её проверяют браузерные тесты на трёх движках — и второй
+  раз с отключённым скриптом: каждый пример без бейджа «нужен
+  <code>griffinjs.js</code>» обязан работать и так.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

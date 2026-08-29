@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архитектура GriffinJS — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Архитектура GriffinJS</h1>
+  <p>Как устроен слой: ядро с реестрами, примитив <code>motion</code> и прогресс 0…1 как общая валюта, дорожка как состояние и движок за интерфейсом из трёх частей, контракт с CSS, модульная сборка и её цена.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">GriffinJS</span>
+    <span class="badge">packages/ui/src/griffinjs/</span>
+  </div>
+</div>
+
+<h2>Ядро и реестры</h2>
+
+<p>
+  Ядро не знает ни одного виджета. Оно держит два реестра —
+  <code>GriffinJS.engines</code> и <code>GriffinJS.widgets</code>, — куда
+  модули <strong>регистрируются</strong>, а не патчат его:
+  <code>defineEngine(name, factory)</code> и <code>defineWidget(name, factory)</code>.
+  Ядро монтирует виджеты на элементы с <code>data-gr-&lt;виджет&gt;</code>
+  и ведёт жизненный цикл: <code>start()</code> поднимает всё,
+  <code>destroy()</code> снимает всё до последнего атрибута.
+</p>
+
+<pre><code>GriffinJS.defineWidget('counter', function (el, opts, G) {
+  var attrs = G.recorder();        // всё, что ставится на элементы, снимется restore()
+  var events = G.listeners();      // все подписки снимутся removeAll()
+
+  attrs.set(el, 'data-gr-state', 'ready');
+  events.add(el, 'click', function () { /* … */ });
+
+  return { destroy: function () { events.removeAll(); attrs.restore(); } };
+});
+
+GriffinJS.mount(el, 'counter', { step: 2 });   // или &lt;div data-gr-counter="step: 2"&gt;
+GriffinJS.instance(el, 'counter');             // живой экземпляр
+GriffinJS.unmount(el, 'counter');</code></pre>
+
+<table>
+  <tr><th>Часть ядра</th><th>Файл</th><th>За что отвечает</th></tr>
+  <tr><td>Реестры и жизненный цикл</td><td><code>core/griffinjs-core.js</code></td><td><code>define*</code>, <code>mount</code>/<code>unmount</code>/<code>instance</code>, <code>init(root)</code>, <code>start</code>/<code>destroy</code>, автостарт, помощники <code>recorder</code>, <code>listeners</code>, <code>merge</code></td></tr>
+  <tr><td>Параметры</td><td><code>core/options.js</code></td><td><code>data-gr-x="a: 1; b; c: text"</code> → <code>{a: 1, b: true, c: 'text'}</code>; ключи в camelCase; значение с <code>{</code> — JSON целиком</td></tr>
+  <tr><td>Делегирование</td><td><code>core/registry.js</code></td><td><code>G.on(type, selector, handler)</code> — один слушатель на документ на тип события; <code>G.emit(name, node, detail)</code></td></tr>
+  <tr><td>Сканер</td><td><code>core/scanner.js</code></td><td>MutationObserver: появившиеся узлы получают виджеты, удалённые — теряют; одна порция на тик</td></tr>
+  <tr><td>Брейкпоинты</td><td><code>core/media.js</code></td><td>Единственный источник — токены <code>--gr-bp-*</code> подключённого CSS; <code>media.on('md', fn)</code></td></tr>
+  <tr><td>Движение</td><td><code>core/motion.js</code></td><td>Источники прогресса → <code>--gr-progress</code></td></tr>
+  <tr><td>Жест</td><td><code>core/gesture.js</code></td><td>Свайп и тяга по pointer-событиям, порог, скорость, ось; поведение по <code>pointerType</code> каждого события</td></tr>
+  <tr><td>Дорожка</td><td><code>core/track.js</code></td><td>Состояние и интерфейс движка</td></tr>
+</table>
+
+<h2>Прогресс как валюта: <code>motion</code></h2>
+
+<p>
+  Всё движение в слое сводится к одному числу — прогрессу 0…1 между двумя
+  состояниями, который публикуется на элементе как <code>--gr-progress</code>.
+  Источники разные, потребитель их не знает:
+</p>
+
+<table>
+  <tr><th>Источник</th><th>Откуда число</th><th>Кто пользуется</th></tr>
+  <tr><td>Дорожка</td><td><code>scrollLeft</code> / размер — считает движок <code>scroll</code></td><td>Слайд (масштаб соседей, проявление), индикатор</td></tr>
+  <tr><td>Окно просмотра</td><td>IntersectionObserver + один пересчёт на кадр</td><td>Параллакс: <code>0</code> — вошёл снизу, <code>1</code> — ушёл вверх</td></tr>
+  <tr><td>Время</td><td>Тикер на rAF с паузой</td><td>Автоплей слайдера и его индикатор на кнопке паузы</td></tr>
+  <tr><td>Жест</td><td>Смещение пальца / размер</td><td>Движок <code>fade</code>: слайд следует за пальцем</td></tr>
+</table>
+
+<p>
+  Отсюда главный запрет слоя: JS <strong>никогда</strong> не пишет
+  <code>transform</code> и <code>opacity</code>. Иначе fade и параллакс стали бы
+  нестилизуемыми — эффект был бы зашит в скрипт, а не открыт в CSS.
+  Проверка стоит в <code>check-dist</code> по исходникам.
+</p>
+
+<h2>Дорожка: состояние и движок</h2>
+
+<p>
+  <code>track</code> разделён на <strong>состояние</strong> — индекс, число
+  слайдов, цикл, страницы, синхронизация с другой дорожкой, <code>aria</code>,
+  клавиатура, <code>inert</code> неактивных — и <strong>движок</strong>
+  за интерфейсом из трёх частей:
+</p>
+
+<pre><code>engine = {
+  goTo(index, { instant }),   // доехать до слайда
+  onChange(index, progress),  // сообщить дорожке, где мы
+  layout()                    // пересчитать геометрию (брейкпоинт, мутация)
+};</code></pre>
+
+<p>
+  Индекс дорожки <strong>виртуальный</strong>: он никогда не равен позиции
+  в DOM, между ними всегда <code>physical(index)</code>. Поэтому бесконечная
+  прокрутка — режим дорожки, а не движок: у <code>scroll</code> это клоны краёв
+  и мгновенный перескок, у <code>fade</code> — индекс по модулю. Движок
+  объявляет <code>engine.loop</code>; без него <code>loop</code> честно
+  вырождается в <code>rewind</code>.
+</p>
+
+<table>
+  <tr><th>Движок</th><th>Как двигает</th><th>Что даёт браузер</th></tr>
+  <tr><td><code>scroll</code> (v1)</td><td>scroll-snap: <code>scrollTo({behavior})</code> из JS, в CSS дорожки <code>scroll-behavior: auto</code></td><td>Свайп, инерция, колесо, RTL, «тянуть мышью»</td></tr>
+  <tr><td><code>fade</code> (модуль)</td><td>Стопка <code>grid-area: 1/1</code>, движок публикует позицию, переход — CSS-transition; жест через <code>gesture</code></td><td>Ничего — отсюда и жест в ядре</td></tr>
+</table>
+
+<p>
+  Шесть требований к дорожке для iOS Safari — в спецификации, не
+  «по жалобам»: <code>scrollend</code> только за <code>'onscrollend' in window</code>,
+  плавность только из JS, очередь команд на время инерционного жеста,
+  <code>overscroll-behavior-x: contain</code>, перепривязка после мутации,
+  <code>inert</code> на неактивных слайдах.
+</p>
+
+<h2>Второй вектор: контроллеры поверх платформы</h2>
+
+<p>
+  «Показать, спрятать, позиционировать» для окон и выпадающего делает
+  платформа — <code>&lt;dialog&gt;</code> и <code>popover</code>. Различия между
+  дропдауном, комбобоксом и мегаменю лежат в ролях и клавиатуре, не в показе,
+  поэтому общего «класса окна» в слое нет: каждый контроллер — тонкая
+  обёртка над примитивом, добавляющая то, чего у него нет (наведение
+  с задержкой, роли, стек, hash, ajax).
+</p>
+
+<p>
+  Положение панели в верхнем слое <strong>считается в JS</strong> —
+  <code>core/anchor.js</code>, <code>getBoundingClientRect</code> →
+  <code>top/left</code>, переворот при нехватке места. CSS anchor positioning
+  зависимостью не является, развилки <code>@supports</code> в слое нет:
+  в Firefox и Chromium панель стоит одинаково. Эта часть лежит в
+  <code>core/</code>, но в <code>griffinjs-core.js</code> не входит — бюджет
+  ядра занят, а нужна она только дропдауну и подсказке.
+</p>
+
+<h2>Контракт с CSS</h2>
+
+<table>
+  <tr><th>JS пишет</th><th>JS читает</th><th>JS не трогает</th></tr>
+  <tr><td><code>aria-*</code>, <code>role</code>, <code>id</code>, <code>inert</code>, <code>data-gr-state</code>, <code>--gr-progress</code>; координаты <code>top/left</code> панелей в верхнем слое</td><td>Только <code>data-gr-*</code></td><td>Классы <code>ui</code> — ни добавляет, ни требует; <code>transform</code>, <code>opacity</code></td></tr>
+</table>
+
+<p>
+  Оформление привязывается к состояниям: <code>.gr-slide[aria-current]</code>,
+  <code>[data-gr-state="open"]</code>, <code>var(--gr-progress)</code>. Стили
+  контроллеров в <code>griffinjs.css</code> стоят под <code>[data-gr-state]</code>
+  — без скрипта состояния нет, и правила компонентов <code>ui</code> не тронуты.
+</p>
+
+<h2>Инварианты</h2>
+
+<ol>
+  <li>Состояние дорожки не выводится из <code>scrollLeft</code> нигде, кроме движка <code>scroll</code>.</li>
+  <li>JS не пишет <code>transform</code> и <code>opacity</code>.</li>
+  <li>Модуль регистрируется в реестре, а не патчит ядро.</li>
+  <li>Ни одной развилки по User-Agent; по возможностям — только <code>'onscrollend' in window</code>; указатель — по <code>pointerType</code> события.</li>
+  <li>Разметка без скрипта остаётся рабочей: у каждого виджета есть «база без JS».</li>
+  <li>Всё, что рантайм ставит на элемент, снимается <code>destroy()</code>.</li>
+  <li>JS читает только <code>data-gr-*</code> и пишет только состояния.</li>
+</ol>
+
+<h2>Модульная сборка и размеры</h2>
+
+<p>
+  Исходники — ES2020 без модулей, самодостаточные IIFE; склейка в порядке
+  списка без бандлера, затем terser. На выходе <code>griffinjs.js</code>
+  целиком, <code>griffinjs-core.js</code> и по файлу на движок, общую часть
+  и виджет — подключаются после ядра в любом наборе.
+</p>
+
+<table>
+  <tr><th>Файл</th><th>gzip</th><th>Состав</th></tr>
+  <tr><td><code>griffinjs-core.js</code></td><td>6,0 КБ</td><td>ядро, options, registry, scanner, media, motion, gesture, track</td></tr>
+  <tr><td><code>griffinjs-scroll.js</code> / <code>-fade.js</code></td><td>1,5 / 0,5</td><td>движки дорожки</td></tr>
+  <tr><td><code>griffinjs-anchor.js</code></td><td>0,9</td><td>позиционирование у якоря — перед <code>dropdown</code> и <code>tooltip</code></td></tr>
+  <tr><td><code>griffinjs-slider.js</code> / <code>-gallery.js</code> / <code>-lightbox.js</code> / <code>-parallax.js</code></td><td>1,6 / 0,7 / 1,7 / 0,3</td><td>семейство прокрутки и параллакс</td></tr>
+  <tr><td><code>griffinjs-megamenu.js</code> / <code>-dropdown.js</code> / <code>-tooltip.js</code></td><td>2,2 / 1,9 / 0,9</td><td>семейство выпадающего</td></tr>
+  <tr><td><code>griffinjs-dialog.js</code> / <code>-combobox.js</code></td><td>1,8 / 2,3</td><td>окна и комбобокс</td></tr>
+  <tr><td><strong><code>griffinjs.js</code></strong></td><td><strong>15,4 КБ</strong></td><td>всё вместе (бюджет 16); ядро + <code>scroll</code> + <code>slider</code> — 7,9 при бюджете 8</td></tr>
+</table>
+
+<p>
+  Ориентир — UIkit ≈ 40 КБ и Swiper ≈ 45 КБ gzip. Бюджеты проверяет
+  <code>check-dist</code>; слой в <code>griffincss-all.js</code> не входит
+  и в <code>JS_BUDGET</code> рантаймов не считается.
+</p>
+
+<h2>Проверка</h2>
+
+<p>
+  Состояние, разбор параметров и синхронизация проверяются на
+  <code>node:test</code> с мок-DOM без зависимостей; клавиатура, фокус
+  в верхнем слое и snap — Playwright на трёх движках по странице-полигону
+  <a href="griffinjs-lab.html">«Полигон»</a>, включая прогон с заблокированным
+  <code>griffinjs.js</code>: каждый пример без бейджа обязан работать и так.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

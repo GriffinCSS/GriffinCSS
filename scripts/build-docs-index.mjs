@@ -18,7 +18,7 @@
 //
 // Ноль зависимостей.
 
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -43,6 +43,45 @@ const CSS = [
 // а не раздел. Найти его поиском — значит попасть на «страница не найдена»
 // как на результат поиска, что читателя только собьёт.
 const SKIP = new Set(['stream-off.html', 'slow.html', '404.html']);
+// Полигон GriffinJS — стенд для браузерных тестов, а не раздел документации:
+// та же причина, что у stream-off.html.
+SKIP.add('griffinjs-lab.html');
+
+// Слой GriffinJS: классы griffinjs.css попадают в индекс наравне с классами
+// компонентов, а атрибуты data-gr-<виджет> слоя — отдельной группой: их
+// ищут так же, как классы, а страница у них — раздел GriffinJS, где о них
+// говорят, а не страница компонента, где они только стоят в разметке.
+CSS.push('packages/ui/dist/griffinjs.css');
+
+const GRIFFIN_SRC = 'packages/ui/src/griffinjs';
+const ATTR = /\bdata-gr-[\w-]+/g;
+
+// Объявленные атрибуты слоя: data-gr-<виджет> по defineWidget и строковые
+// литералы 'data-gr-…' в исходниках (data-gr-open, data-gr-src, data-gr-prev…).
+function griffinAttrs() {
+  const out = new Set();
+  const dir = join(root, GRIFFIN_SRC);
+
+  if (!existsSync(dir)) return out;
+
+  const walk = (at) => {
+    for (const name of readdirSync(at)) {
+      const full = join(at, name);
+
+      if (statSync(full).isDirectory()) { walk(full); continue; }
+      if (!name.endsWith('.js')) continue;
+
+      const source = readFileSync(full, 'utf8');
+
+      for (const m of source.matchAll(/defineWidget\('([\w-]+)'/g)) out.add(`data-gr-${m[1]}`);
+      for (const m of source.matchAll(/'(data-gr-[\w-]+)'/g)) out.add(m[1]);
+    }
+  };
+
+  walk(dir);
+
+  return out;
+}
 
 // --- разбор HTML ------------------------------------------------------------
 
@@ -127,8 +166,12 @@ const slug = (text) => {
 
 // --- сбор -------------------------------------------------------------------
 
-export function collect() {
-  const files = readdirSync(DOCS)
+// Каталог документации — параметр: сборка публичного дерева пересобирает
+// индекс по СВОЕМУ docs/, где страниц меньше, чем в Dev. Без этого
+// публичный check-dist сверял бы индекс, собранный там, с индексом,
+// привезённым отсюда, — и находил бы «расхождение» при каждом выпуске.
+export function collect(docs = DOCS) {
+  const files = readdirSync(docs)
     .filter((name) => name.endsWith('.html') && !SKIP.has(name))
     .sort();
 
@@ -184,7 +227,7 @@ export function collect() {
   const NAME = /--gr-[\w-]+|\bgr-[\w:-]+/g;
 
   files.forEach((file, page) => {
-    const html = readFileSync(join(DOCS, file), 'utf8');
+    const html = readFileSync(join(docs, file), 'utf8');
     const title = plain(html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? file)
       .replace(/\s*—\s*Griffincss$/, '')
       .replace(/^Griffincss\s*—\s*/, '');
@@ -228,6 +271,13 @@ export function collect() {
     for (const match of html.matchAll(NAME)) {
       bump(used, match[0], page);
     }
+
+    for (const match of spokenText.matchAll(ATTR)) {
+      bump(spoken, match[0], page);
+      bumpFamilies(match[0], page);
+    }
+
+    for (const match of html.matchAll(ATTR)) bump(used, match[0], page);
   });
 
   // Объявленные имена. Классы берутся из собранного CSS, а не из документации:
@@ -319,7 +369,11 @@ export function collect() {
     .map((name) => [name, pageOf(name)])
     .filter(([, page]) => page >= 0);
 
-  return { pages, headings, classes: withPage(declared), tokens: withPage(tokenNames) };
+  const data = { pages, headings, classes: withPage(declared), tokens: withPage(tokenNames) };
+
+  data.attrs = withPage(griffinAttrs());
+
+  return data;
 }
 
 export function render(data) {
@@ -355,13 +409,14 @@ export function render(data) {
     '],',
     'tokens: [',
     grouped(data.tokens),
+    ...(data.attrs ? ['],', 'attrs: [', grouped(data.attrs)] : []),
     ']',
     '};',
     '',
   ].join('\n');
 }
 
-export const buildIndexSource = () => render(collect());
+export const buildIndexSource = (docs = DOCS) => render(collect(docs));
 
 // --- запуск -----------------------------------------------------------------
 

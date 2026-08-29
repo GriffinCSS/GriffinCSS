@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.19.0
+ * Griffincss — Runtime Grid Parser v0.21.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.19.0';
+  var VERSION = '0.21.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки

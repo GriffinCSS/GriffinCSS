@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Полигон GriffinJS — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffinjs.js"></script>
+<script>
+  // Полигон в RTL: ?dir=rtl — направление ставится до раскладки, как
+  // на настоящей странице на арабском или иврите, а не переключается
+  // на лету поверх уже посчитанной прокрутки.
+  if (/[?&]dir=rtl\b/.test(location.search)) document.documentElement.setAttribute('dir', 'rtl');
+</script>
+<style>
+  @layer griffincss.docs {
+    [data-gr-lab-track] > * { flex-basis: 80%; min-height: 8rem; }
+    .frame { display: grid; place-items: center; aspect-ratio: 16 / 7; border-radius: var(--gr-radius); color: #fff; font-weight: 600; }
+    .frame-1 { background: hsl(220 80% 45%); }
+    .frame-2 { background: hsl(148 60% 38%); }
+    .frame-3 { background: hsl(36 90% 50%); }
+  }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Полигон GriffinJS</h1>
+  <p>Все виджеты слоя на одном экране — предмет браузерных тестов на трёх движках и ручной матрицы. Второй прогон идёт с отключённым скриптом: каждый блок без бейджа обязан работать и так.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent" id="gr-lab-status">griffinjs.js не подключён</span>
+    <span class="badge">docs/griffinjs-lab.html</span>
+  </div>
+</div>
+
+<h2>Дорожка</h2>
+
+<p>
+  Scroll-snap-дорожка листается средствами браузера — свайп, инерция,
+  колесо, RTL: так выглядит слайдер у читателя, который не подключил
+  <code>griffinjs.js</code>. Со скриптом <code>data-gr-track</code> добавляет
+  клавиатуру (стрелки, Home, End), <code>aria-current</code> и
+  <code>inert</code> на слайдах, <code>--gr-progress</code> и событие
+  <code>griffin:change</code>. Точки, кнопки и автоплей приедут с виджетом
+  <code>slider</code> в фазе 21c.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">scroll-snap: без скрипта — листается, со скриптом — <span class="badge">нужен griffinjs.js</span> клавиатура и aria</div>
+  <div class="gr-track" data-gr-lab-track data-gr-track tabindex="0" aria-label="Дорожка из четырёх слайдов">
+    <div class="gr-card gr-p-4 gr-bg-surface">Слайд 1</div>
+    <div class="gr-card gr-p-4 gr-bg-sunken">Слайд 2</div>
+    <div class="gr-card gr-p-4 gr-bg-surface">Слайд 3</div>
+    <div class="gr-card gr-p-4 gr-bg-sunken">Слайд 4</div>
+  </div>
+</div>
+
+<h2>Слайдер</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Автоплей 3 с, цикл <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-slider" id="gr-lab-slider" data-gr-slider="autoplay: 3000; loop" aria-label="Стенд слайдера">
+    <div class="gr-track">
+      <div class="frame frame-1">Первый</div>
+      <div class="frame frame-2">Второй</div>
+      <div class="frame frame-3">Третий</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три в ряд, постранично, rewind <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-slider" id="gr-lab-pages" data-gr-slider="step: page; rewind" aria-label="Стенд страниц">
+    <div class="gr-track gr-track-3">
+      <div class="frame frame-1">1</div>
+      <div class="frame frame-2">2</div>
+      <div class="frame frame-3">3</div>
+      <div class="frame frame-1">4</div>
+      <div class="frame frame-2">5</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Цикл с клонами краёв <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-slider" id="gr-lab-loop" data-gr-slider="loop" aria-label="Стенд цикла">
+    <div class="gr-track">
+      <div class="frame frame-1">1</div>
+      <div class="frame frame-2">2</div>
+      <div class="frame frame-3">3</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Движок fade <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-slider" id="gr-lab-fade" data-gr-slider="engine: fade; loop" aria-label="Стенд fade">
+    <div class="gr-track gr-track-fade">
+      <div class="frame frame-1">1</div>
+      <div class="frame frame-2">2</div>
+      <div class="frame frame-3">3</div>
+    </div>
+    <button class="gr-btn gr-btn-icon gr-slider-prev" data-gr-prev aria-label="Назад">‹</button>
+    <button class="gr-btn gr-btn-icon gr-slider-next" data-gr-next aria-label="Вперёд">›</button>
+    <div class="gr-slider-dots" data-gr-dots></div>
+  </div>
+</div>
+
+<h2>Параллакс</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">--gr-progress от положения на экране <span class="badge">нужен griffinjs.js</span></div>
+  <div class="frame frame-2" id="gr-lab-parallax" data-gr-parallax style="min-height:6rem">параллакс</div>
+</div>
+
+<h2>Галерея</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Превью ведут дорожку <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-gallery" id="gr-lab-gallery" data-gr-gallery aria-label="Стенд галереи" style="max-width:28rem">
+    <div class="gr-track">
+      <div class="frame frame-1">1</div>
+      <div class="frame frame-2">2</div>
+      <div class="frame frame-3">3</div>
+    </div>
+    <div class="gr-track gr-gallery-thumbs">
+      <button type="button"><div class="frame frame-1"></div></button>
+      <button type="button"><div class="frame frame-2"></div></button>
+      <button type="button"><div class="frame frame-3"></div></button>
+    </div>
+  </div>
+</div>
+
+<h2>Лайтбокс</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Группа из двух кадров <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap">
+    <a id="gr-lab-lightbox-1" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%234a6fd1'/%3E%3C/svg%3E" data-gr-lightbox="lab" data-gr-caption="Первый кадр"><div class="frame frame-1" style="width:8rem">1</div></a>
+    <a id="gr-lab-lightbox-2" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%232f9a63'/%3E%3C/svg%3E" data-gr-lightbox="lab" data-gr-caption="Второй кадр"><div class="frame frame-2" style="width:8rem">2</div></a>
+  </div>
+</div>
+
+<h2>Мегаменю</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Шапка с панелями во всю полосу; вторая панель — ajax <span class="badge">нужен griffinjs.js</span></div>
+  <nav class="gr-navbar gr-megamenu" id="gr-lab-megamenu" data-gr-megamenu="delay: 100; hide: 200" aria-label="Стенд мегаменю">
+    <a class="gr-navbar-brand" href="#gr-lab-megamenu">Витрина</a>
+    <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
+    <ul class="gr-nav gr-nav-collapse">
+      <li>
+        <details class="gr-megamenu-item">
+          <summary class="gr-nav-link">Каталог</summary>
+          <div class="gr-megamenu-panel">
+            <div class="gr-flex gr-gap gr-flex-wrap">
+              <ul class="gr-nav gr-nav-vertical gr-flex-1">
+                <li><a class="gr-nav-link" href="#gr-lab-megamenu">Ноутбуки</a></li>
+                <li><a class="gr-nav-link" href="#gr-lab-megamenu">Планшеты</a></li>
+              </ul>
+              <ul class="gr-nav gr-nav-vertical gr-flex-1">
+                <li><a class="gr-nav-link" href="#gr-lab-megamenu">Наушники</a></li>
+                <li><a class="gr-nav-link" href="#gr-lab-megamenu">Колонки</a></li>
+              </ul>
+            </div>
+          </div>
+        </details>
+      </li>
+      <li>
+        <details class="gr-megamenu-item" data-gr-src="data:text/html;charset=utf-8,%3Cp%20class%3D%22gr-m-0%22%3E%D0%9F%D0%B0%D0%BD%D0%B5%D0%BB%D1%8C%20%D0%B7%D0%B0%D0%B3%D1%80%D1%83%D0%B6%D0%B5%D0%BD%D0%B0%20%D1%81%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0%3A%20%3Ccode%3Edata-gr-src%3C/code%3E.%3C/p%3E">
+          <summary class="gr-nav-link">Бренды</summary>
+          <div class="gr-megamenu-panel"></div>
+        </details>
+      </li>
+      <li><a class="gr-nav-link" href="#gr-lab-megamenu">Акции</a></li>
+    </ul>
+  </nav>
+</div>
+
+<h2>Дропдаун</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Контроллер на трёх формах: <code>&lt;details&gt;</code>, popover, наведение <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <details class="gr-dropdown" id="gr-lab-dd-details" data-gr-dropdown>
+      <summary class="gr-btn">Действия</summary>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><button class="gr-menu-item" type="button">Переименовать</button></li>
+          <li><button class="gr-menu-item" type="button">Дублировать</button></li>
+          <li><hr class="gr-menu-sep"></li>
+          <li><button class="gr-menu-item gr-menu-danger" type="button">Удалить</button></li>
+        </ul>
+      </div>
+    </details>
+
+    <div class="gr-dropdown" id="gr-lab-dd-popover" data-gr-dropdown>
+      <button class="gr-btn gr-btn-primary" type="button" popovertarget="gr-lab-dd-popover-panel">Экспорт</button>
+      <div class="gr-dropdown-panel" id="gr-lab-dd-popover-panel" popover>
+        <ul class="gr-menu">
+          <li><button class="gr-menu-item" type="button">PDF</button></li>
+          <li><button class="gr-menu-item" type="button">CSV</button></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="gr-dropdown gr-dropdown-hover" id="gr-lab-dd-hover" data-gr-dropdown="hover">
+      <button class="gr-btn gr-btn-ghost" type="button">Продукты ▾</button>
+      <div class="gr-dropdown-panel">
+        <ul class="gr-menu">
+          <li><a class="gr-menu-item" href="#gr-lab-dd-hover">Ядро</a></li>
+          <li><a class="gr-menu-item" href="#gr-lab-dd-hover">Компоненты</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Подсказка</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">В блоке с <code>overflow: hidden</code>: со скриптом — в верхнем слое, без него обрезается <span class="badge">нужен griffinjs.js</span></div>
+  <div style="overflow:hidden; block-size: 3.5rem; display:flex; align-items:flex-end; border: 1px dashed var(--gr-color-border); padding: 0.5rem">
+    <span class="gr-tooltip-anchor" id="gr-lab-tip" data-gr-tooltip="delay: 50">
+      <button class="gr-btn" type="button" aria-describedby="gr-lab-tip-text">Сохранить</button>
+      <span class="gr-tooltip" id="gr-lab-tip-text" role="tooltip">Ctrl + S</span>
+    </span>
+  </div>
+</div>
+
+<h2>Окна</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Модалка, панель с hash, окно с ajax — через <code>data-gr-open</code> <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <button class="gr-btn gr-btn-primary" type="button" data-gr-open="#gr-lab-modal">Окно</button>
+    <button class="gr-btn" type="button" data-gr-open="#gr-lab-drawer">Панель (hash)</button>
+    <button class="gr-btn" type="button" data-gr-open="#gr-lab-ajax">Ajax-окно</button>
+  </div>
+</div>
+
+<dialog class="gr-modal" id="gr-lab-modal" aria-labelledby="gr-lab-modal-title" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <h2 class="gr-modal-title" id="gr-lab-modal-title">Стенд окна</h2>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <p>Пока окно открыто, страница под ним не прокручивается.</p>
+    <button class="gr-btn" type="button" data-gr-open="#gr-lab-drawer">Открыть панель поверх</button>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-end" id="gr-lab-drawer" aria-label="Стенд панели" data-gr-dialog="hash">
+  <div class="gr-modal-header">
+    <strong>Панель</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body"><p class="gr-mb-0">В адресе — <code>#gr-lab-drawer</code>; «Назад» закрывает панель.</p></div>
+</dialog>
+
+<dialog class="gr-modal gr-modal-sm" id="gr-lab-ajax" aria-label="Стенд ajax-окна" data-gr-dialog data-gr-src="data:text/html;charset=utf-8,%3Cp%20class%3D%22gr-m-0%22%3E%D0%A1%D0%BE%D0%B4%D0%B5%D1%80%D0%B6%D0%B8%D0%BC%D0%BE%D0%B5%20%D0%BE%D0%BA%D0%BD%D0%B0%20%D0%BF%D1%80%D0%B8%D0%B5%D1%85%D0%B0%D0%BB%D0%BE%20%D1%81%20%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B0.%3C/p%3E">
+  <div class="gr-modal-body" data-gr-content></div>
+  <div class="gr-modal-footer"><form method="dialog"><button class="gr-btn" type="submit">Закрыть</button></form></div>
+</dialog>
+
+<h2>Комбобокс</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Источник — функция; наберите «а» <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="gr-lab-combobox" style="max-width: 20rem">
+    <input class="gr-input" type="search" name="q" placeholder="Поиск по каталогу" aria-label="Поиск по каталогу">
+  </div>
+</div>
+
+<script>
+  // Показание стенда: слой подключён или нет. Меняется только текст
+  // бейджа — сам полигон от скрипта не зависит.
+  (function () {
+    var status = document.getElementById('gr-lab-status');
+
+    if (window.GriffinJS) {
+      status.textContent = 'GriffinJS v' + window.GriffinJS.version;
+
+      // Комбобокс с источником-функцией: фильтр по подстроке, без сервера.
+      var goods = [
+        { value: 'Acer Aspire', group: 'Ноутбуки' }, { value: 'Asus Zenbook', group: 'Ноутбуки' },
+        { value: 'AirPods', group: 'Наушники' }, { value: 'Anker Soundcore', group: 'Наушники' },
+        { value: 'Apple Watch', group: 'Часы' }
+      ];
+
+      window.GriffinJS.mount(document.getElementById('gr-lab-combobox'), 'combobox', {
+        min: 1, delay: 50, empty: 'Ничего не найдено',
+        source: function (q) {
+          return Promise.resolve(goods.filter(function (g) { return g.value.toLowerCase().indexOf(q.toLowerCase()) !== -1; }));
+        }
+      });
+    }
+  })();
+</script>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

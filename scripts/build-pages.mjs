@@ -99,11 +99,18 @@ function checkAssets(out, pages) {
 
 // Выход наверх из корня сайта не ведёт никуда. Если он где-то уцелел,
 // значит замена его не покрыла, и это ошибка сборки, а не мелочь.
+//
+// Проверяются файлы документации: страницы, стили и скрипты доксайта —
+// именно они ссылаются друг на друга и на dist по пути. Артефакты
+// packages/*/dist/ копируются как есть и ни на что не ссылаются, а строка
+// `../` в них — не адрес: модули GriffinJS несут в обёртке
+// require('../core/griffinjs-core.js') для запуска под Node.
 function checkNoEscapes(out, written) {
   const guilty = [];
 
   for (const file of written) {
     if (!TEXT.has(extname(file))) continue;
+    if (relative(out, file).split(sep)[0] === 'packages') continue;
     if (readFileSync(file, 'utf8').includes('../')) guilty.push(relative(out, file));
   }
 

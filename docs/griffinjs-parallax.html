@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Параллакс — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffinjs.js"></script>
+<style>
+  /* Рецепты эффектов. Все — на одном свойстве --gr-progress, которое
+     скрипт пишет на блок с data-gr-parallax; без скрипта запасное
+     значение 0.5 оставляет блок в нейтральном положении. */
+  @layer griffincss.docs {
+    .px-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 14rem;
+      border-radius: var(--gr-radius);
+      overflow: hidden;
+      color: hsl(var(--gr-hsl-white));
+      font-weight: 600;
+    }
+
+    /* 1. Сдвиг фона медленнее страницы */
+    .px-shift { background: linear-gradient(135deg, hsl(220 80% 45%), hsl(260 70% 55%)); }
+    .px-shift::before {
+      content: '';
+      position: absolute;
+      inset: -20% 0;
+      background: repeating-linear-gradient(45deg, transparent 0 24px, hsl(0 0% 100% / 0.12) 24px 48px);
+      translate: 0 calc((var(--gr-progress, 0.5) - 0.5) * -40%);
+    }
+
+    /* 2. Проявление и подъём заголовка */
+    .px-reveal { background: linear-gradient(135deg, hsl(148 60% 38%), hsl(180 60% 45%)); }
+    .px-reveal .px-title {
+      opacity: clamp(0, var(--gr-progress, 0.5) * 3, 1);
+      translate: 0 calc((1 - clamp(0, var(--gr-progress, 0.5) * 3, 1)) * 2rem);
+    }
+
+    /* 3. Масштаб: блок «приближается», проходя центр экрана */
+    .px-zoom { background: linear-gradient(135deg, hsl(36 90% 50%), hsl(4 80% 55%)); }
+    .px-zoom .px-title {
+      scale: calc(0.8 + 0.4 * (1 - abs(var(--gr-progress, 0.5) - 0.5) * 2));
+    }
+
+    /* 4. Поворот и цвет */
+    .px-rotate { background: linear-gradient(135deg, hsl(292 60% 45%), hsl(330 70% 55%)); }
+    .px-rotate .px-card {
+      padding: 1rem 1.5rem;
+      border-radius: var(--gr-radius);
+      background: hsl(0 0% 100% / calc(0.4 + var(--gr-progress, 0.5) * 0.5));
+      color: hsl(var(--gr-hsl-gray-900));
+      rotate: calc((var(--gr-progress, 0.5) - 0.5) * 12deg);
+    }
+
+    /* 5. Полоса прогресса чтения блока */
+    .px-bar { height: 0.375rem; background: var(--gr-color-border); border-radius: var(--gr-radius-pill); overflow: hidden; }
+    .px-bar::before {
+      content: '';
+      display: block;
+      height: 100%;
+      inline-size: calc(var(--gr-progress, 0) * 100%);
+      background: var(--gr-color-accent);
+    }
+
+    .px-value { font-family: var(--gr-font-mono); font-variant-numeric: tabular-nums; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .px-shift::before, .px-reveal .px-title, .px-zoom .px-title, .px-rotate .px-card {
+        translate: none;
+        scale: none;
+        rotate: none;
+        opacity: 1;
+      }
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Параллакс</h1>
+  <p>Одно свойство на блок — <code>--gr-progress</code> от положения на экране. Эффект — открытый набор в CSS, а не перечень в скрипте: сдвиг, проявление, масштаб, поворот, полоса прогресса — что угодно из одного числа.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">GriffinJS</span>
+    <span class="badge">packages/ui/src/griffinjs/widgets/parallax.js</span>
+  </div>
+</div>
+
+<h2>Как работает</h2>
+
+<p>
+  <code>data-gr-parallax</code> на любом блоке. Скрипт пишет на него
+  <code>--gr-progress</code>: <code>0</code> — верхний край блока только вошёл
+  снизу экрана, <code>1</code> — нижний край ушёл вверх, <code>0.5</code> — блок
+  в середине пути. Источник — IntersectionObserver, который включает
+  и выключает подписку на прокрутку, и один пересчёт на кадр. Ни
+  <code>transform</code>, ни <code>opacity</code> скрипт не пишет — только число.
+</p>
+
+<pre><code>&lt;section class="hero-block" data-gr-parallax&gt;…&lt;/section&gt;
+
+.hero-block .bg {
+  translate: 0 calc((var(--gr-progress, 0.5) - 0.5) * -40%);
+}</code></pre>
+
+<div class="callout">
+  <p>
+    Запасное значение в <code>var(--gr-progress, 0.5)</code> — «база без JS»:
+    без скрипта блок стоит в нейтральном положении. Там, где есть
+    scroll-driven animations, тот же CSS отдаётся платформе без смены
+    разметки — <code>animation-timeline: view()</code> вместо переменной.
+  </p>
+</div>
+
+<h3>Живое значение</h3>
+
+<div class="demo-block">
+  <div class="demo-block-title">Прокрутите страницу: число и полоса — из <code>--gr-progress</code> <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div data-gr-parallax id="px-live">
+    <div class="px-bar gr-mb-2"></div>
+    <div class="px-value">--gr-progress: <span id="px-live-value">—</span></div>
+  </div>
+</div>
+
+<h2>Примеры использования</h2>
+
+<p>
+  Каждый рецепт — один блок с <code>data-gr-parallax</code> и несколько строк
+  CSS. Все они уважают <code>prefers-reduced-motion</code>: в этом режиме
+  свойства движения сброшены, а блок остаётся видимым.
+</p>
+
+<h3>Фон медленнее страницы</h3>
+
+<p>
+  Классический параллакс: узор фона сдвигается на 40 % высоты в противоход
+  прокрутке. <code>inset: -20% 0</code> у псевдоэлемента даёт запас, чтобы
+  края не оголялись.
+</p>
+
+<pre><code>.px-shift::before {
+  inset: -20% 0;
+  translate: 0 calc((var(--gr-progress, 0.5) - 0.5) * -40%);
+}</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Сдвиг фона <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="px-stage px-shift" data-gr-parallax><span class="px-title gr-text-2xl">Фон отстаёт</span></div>
+</div>
+
+<h3>Проявление и подъём</h3>
+
+<p>
+  Заголовок проявляется и подъезжает, пока блок входит в первую треть пути:
+  <code>clamp(0, progress × 3, 1)</code> растягивает начало шкалы, чтобы
+  эффект закончился, когда блок ещё внизу экрана.
+</p>
+
+<pre><code>.px-reveal .px-title {
+  opacity: clamp(0, var(--gr-progress, 0.5) * 3, 1);
+  translate: 0 calc((1 - clamp(0, var(--gr-progress, 0.5) * 3, 1)) * 2rem);
+}</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Проявление <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="px-stage px-reveal" data-gr-parallax><span class="px-title gr-text-2xl">Появляюсь снизу</span></div>
+</div>
+
+<h3>Масштаб через центр экрана</h3>
+
+<p>
+  <code>1 − |progress − 0.5| × 2</code> — «колокол»: ноль по краям экрана,
+  единица в центре. Элемент растёт к середине пути и убывает к концу.
+</p>
+
+<pre><code>.px-zoom .px-title {
+  scale: calc(0.8 + 0.4 * (1 - abs(var(--gr-progress, 0.5) - 0.5) * 2));
+}</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Масштаб <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="px-stage px-zoom" data-gr-parallax><span class="px-title gr-text-2xl">Крупнее в центре</span></div>
+</div>
+
+<h3>Поворот и цвет</h3>
+
+<p>
+  Прогресс годится не только для движения: карточка слегка поворачивается
+  и её подложка плотнеет — оба значения из той же переменной.
+</p>
+
+<pre><code>.px-rotate .px-card {
+  rotate: calc((var(--gr-progress, 0.5) - 0.5) * 12deg);
+  background: hsl(0 0% 100% / calc(0.4 + var(--gr-progress, 0.5) * 0.5));
+}</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Поворот и плотность <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="px-stage px-rotate" data-gr-parallax><div class="px-card gr-text-lg">Карточка</div></div>
+</div>
+
+<h3>Полоса прочитанного</h3>
+
+<p>
+  Длинная статья с индикатором: <code>--gr-progress</code> всей статьи
+  превращается в ширину полосы. Та же полоса подходит слайдеру — там
+  дорожка пишет ту же переменную на себя.
+</p>
+
+<pre><code>&lt;article data-gr-parallax&gt;
+  &lt;div class="px-bar"&gt;&lt;/div&gt;
+  …
+&lt;/article&gt;
+
+.px-bar::before { inline-size: calc(var(--gr-progress, 0) * 100%); }</code></pre>
+
+</main>
+</div>
+
+<script>
+  // Показание живого значения: читается из style блока, куда его пишет виджет.
+  (function () {
+    var block = document.getElementById('px-live');
+    var out = document.getElementById('px-live-value');
+
+    if (!block || !out) return;
+
+    var tick = function () {
+      out.textContent = block.style.getPropertyValue('--gr-progress') || '—';
+      requestAnimationFrame(tick);
+    };
+
+    tick();
+  })();
+</script>
+
+  <script src="nav.js"></script>
+</body>
+</html>

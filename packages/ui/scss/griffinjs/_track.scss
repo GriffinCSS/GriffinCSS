@@ -1,0 +1,185 @@
+// GriffinJS — дорожка и слайдер
+// База без JS: scroll-snap-контейнер, который листается свайпом, колесом
+// и клавиатурой браузера. Скрипт добавляет клавиатуру по слайдам, aria,
+// inert, --gr-progress и — у .gr-slider — кнопки, точки и автоплей.
+//
+// Органы управления слайдера спрятаны, пока скрипт не поставил
+// data-gr-state на корень: кнопка «вперёд», которая ничего не делает,
+// хуже отсутствующей кнопки.
+//
+// Движение — здесь. JS пишет только aria-*, data-gr-state и --gr-progress.
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+
+.gr-track {
+  display: flex;
+  gap: var(--gr-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+
+  // Плавность — только из JS (scrollTo({behavior})): иначе перескок цикла
+  // с края на край анимируется через всю дорожку.
+  scroll-behavior: auto;
+  scrollbar-width: none;
+}
+
+.gr-track::-webkit-scrollbar {
+  display: none;
+}
+
+// Снап-точка каждого слайда — из --gr-snap: при листании по страницам
+// дорожка ставит start только началам страниц и end последнему слайду,
+// чтобы свайп с инерцией останавливался там же, куда ведут кнопки и точки.
+// Без скрипта — каждый слайд.
+.gr-track > * {
+  flex: 0 0 100%;
+  min-inline-size: 0;
+  scroll-snap-align: var(--gr-snap, start);
+}
+
+// Несколько слайдов в ряд: ширина считается от зазора дорожки.
+@each $n in (2, 3, 4) {
+  .gr-track-#{$n} > * {
+    flex-basis: calc((100% - var(--gr-gap) * #{$n - 1}) / #{$n});
+  }
+}
+
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width >= $bp-value) {
+    @each $n in (1, 2, 3, 4) {
+      .gr-track-#{$n}-#{$bp-name} > * {
+        flex-basis: calc((100% - var(--gr-gap) * #{$n - 1}) / #{$n});
+      }
+    }
+  }
+}
+
+// Соседи чуть меньше активного: единственный источник — --gr-progress,
+// который дорожка публикует на каждом слайде. Без скрипта прогресса нет,
+// и запасное значение 1 оставляет слайды в натуральную величину.
+.gr-track-scale > * {
+  scale: calc(0.92 + 0.08 * var(--gr-progress, 1));
+}
+
+// --- Движок fade ------------------------------------------------------------
+
+// Слайды стопкой в одной ячейке; прозрачность — из --gr-progress, который
+// дорожка раздаёт слайдам. Без скрипта прогресса нет: показан первый слайд,
+// остальные скрыты — data-gr-state на дорожку ставит движок.
+.gr-track-fade {
+  display: grid;
+  overflow: hidden;
+  scroll-snap-type: none;
+}
+
+.gr-track-fade > * {
+  grid-area: 1 / 1;
+  opacity: var(--gr-progress, 1);
+  transition: opacity var(--gr-transition);
+  pointer-events: none;
+}
+
+.gr-track-fade > [aria-current='true'] {
+  pointer-events: auto;
+}
+
+.gr-track-fade:not([data-gr-state]) > :not(:first-child) {
+  display: none;
+}
+
+// Пока палец на экране, прозрачность следует за ним без сглаживания.
+.gr-track-fade[data-gr-state='dragging'] > * {
+  transition: none;
+}
+
+// --- Слайдер ----------------------------------------------------------------
+
+.gr-slider {
+  position: relative;
+}
+
+.gr-slider:not([data-gr-state]) :is(.gr-slider-prev, .gr-slider-next, .gr-slider-dots, .gr-slider-pause) {
+  display: none;
+}
+
+// Стрелки по краям дорожки. Стороны логические: в RTL «назад» — справа.
+.gr-slider-prev,
+.gr-slider-next {
+  position: absolute;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+}
+
+.gr-slider-prev {
+  inset-inline-start: var(--gr-ui-gap);
+}
+
+.gr-slider-next {
+  inset-inline-end: var(--gr-ui-gap);
+}
+
+.gr-slider-prev[aria-disabled='true'],
+.gr-slider-next[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gr-slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--gr-ui-gap);
+  padding-block: var(--gr-ui-gap);
+}
+
+.gr-slider-dot {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  padding: 0;
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color var(--gr-transition);
+}
+
+.gr-slider-dot[aria-current='true'] {
+  border-color: var(--gr-color-accent);
+  background-color: var(--gr-color-accent);
+}
+
+.gr-slider-dot:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Кнопка паузы показывает ход автоплея кольцом: угол — из --gr-progress,
+// который на неё пишет тикер. Ни кадра анимации в JS.
+.gr-slider-pause {
+  position: absolute;
+  inset-block-end: var(--gr-ui-gap);
+  inset-inline-end: var(--gr-ui-gap);
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--gr-color-surface-overlay) 58%, transparent 60%),
+    conic-gradient(var(--gr-color-accent) calc(var(--gr-progress, 0) * 360deg), var(--gr-color-border) 0);
+  color: var(--gr-color-text);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gr-slider-pause:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-track-scale > * {
+    scale: none;
+  }
+}

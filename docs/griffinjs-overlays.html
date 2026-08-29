@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Окна и комбобокс — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<script src="../packages/ui/dist/griffincss-ui.js"></script>
+<script src="../packages/ui/dist/griffinjs.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Окна и комбобокс</h1>
+  <p>Контроллер окон поверх <code>&lt;dialog&gt;</code>: открытие атрибутом, стек, блокировка прокрутки под окном, остановка видео, ajax-содержимое, hash. И комбобокс — поле с подсказками из внешнего источника по WAI-ARIA.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">GriffinJS</span>
+    <span class="badge">widgets/dialog.js</span>
+    <span class="badge">widgets/combobox.js</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Окна — <strong>контроллер</strong>: разметка и стили <code>.gr-modal</code>
+    и <code>.gr-drawer</code> из пакета <code>ui</code> не меняются, скрипт
+    добавляет поведение. Комбобокс — <strong>новый виджет</strong> со своей
+    разметкой и стилями в <code>griffinjs.css</code>. Подраздел
+    «С подключённым <code>griffinjs.js</code>» на странице
+    <a href="ui-overlays.html#griffinjs">«Слои поверх страницы»</a> повторяет
+    главное о контроллере рядом с самими компонентами.
+  </p>
+</div>
+
+<h2>Окна</h2>
+
+<p>
+  <code>&lt;dialog&gt;</code> сам даёт верхний слой, ловушку фокуса, <kbd>Esc</kbd>,
+  <code>inert</code> под окном и возврат фокуса; закрытие щелчком по подложке —
+  <code>data-gr-overlay-close</code> из <code>griffincss-ui.js</code>. Контроллер
+  не переписывает ничего из этого. Он добавляет то, чего нет:
+</p>
+
+<table>
+  <tr><th>Что</th><th>Как</th></tr>
+  <tr><td>Открытие атрибутом</td><td><code>data-gr-open="#id"</code> на любой кнопке или ссылке — без <code>onclick</code>; <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>-щелчок по ссылке не перехватывается</td></tr>
+  <tr><td>Стек</td><td>Окно поверх окна: <code>GriffinJS.dialog.top()</code>, <code>stack()</code>, <code>closeAll()</code>; <kbd>Esc</kbd> закрывает верхнее — так делает сам <code>&lt;dialog&gt;</code></td></tr>
+  <tr><td>Прокрутка под окном</td><td>Пока стек не пуст, на <code>&lt;html&gt;</code> стоит <code>data-gr-state="locked"</code>: CSS слоя прячет переполнение и держит место полосы (<code>scrollbar-gutter</code>); на сенсорном экране жест вне прокручиваемого тела окна отменяется — iOS Safari двигает страницу и под модальным окном</td></tr>
+  <tr><td>Медиа</td><td>При закрытии <code>&lt;video&gt;</code>/<code>&lt;audio&gt;</code> — на паузу, <code>&lt;iframe&gt;</code> разгружается и возвращается при следующем открытии; <code>media: false</code> отключает</td></tr>
+  <tr><td>Ajax</td><td><code>data-gr-src</code> на окне: фрагмент грузится при первом открытии в <code>[data-gr-content]</code> (или в само окно); состояния <code>loading</code> → <code>open</code> | <code>error</code></td></tr>
+  <tr><td>Hash</td><td><code>data-gr-dialog="hash"</code>: открытие пишет <code>#id</code> в историю, «Назад» закрывает окно, страница с <code>#id</code> в адресе показывает его сразу</td></tr>
+  <tr><td>События</td><td><code>griffin:open</code> и <code>griffin:close</code> на окне, со всплытием</td></tr>
+</table>
+
+<pre><code>&lt;button class="gr-btn" type="button" data-gr-open="#cart"&gt;Корзина&lt;/button&gt;
+
+&lt;dialog class="gr-drawer gr-drawer-end" id="cart" aria-label="Корзина"
+        data-gr-dialog="hash" data-gr-overlay-close&gt;
+  &lt;div class="gr-modal-header"&gt;
+    &lt;strong&gt;Корзина&lt;/strong&gt;
+    &lt;form method="dialog"&gt;&lt;button class="gr-btn gr-btn-ghost gr-btn-icon" aria-label="Закрыть"&gt;✕&lt;/button&gt;&lt;/form&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-modal-body"&gt;…&lt;/div&gt;
+&lt;/dialog&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Окно, панель с hash и окно поверх окна <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <button class="gr-btn gr-btn-primary" type="button" data-gr-open="#ov-modal">Условия</button>
+    <button class="gr-btn" type="button" data-gr-open="#ov-cart">Корзина (hash)</button>
+  </div>
+</div>
+
+<dialog class="gr-modal" id="ov-modal" aria-labelledby="ov-modal-title" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <h2 class="gr-modal-title" id="ov-modal-title">Условия использования</h2>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <p>Страница под окном не прокручивается — попробуйте колесом. Кнопка ниже открывает панель поверх этого окна: стек ведёт слой, <kbd>Esc</kbd> закрывает верхнее.</p>
+    <button class="gr-btn" type="button" data-gr-open="#ov-cart">Открыть корзину поверх</button>
+  </div>
+  <div class="gr-modal-footer">
+    <form method="dialog"><button class="gr-btn gr-btn-primary" type="submit">Понятно</button></form>
+  </div>
+</dialog>
+
+<dialog class="gr-drawer gr-drawer-end" id="ov-cart" aria-label="Корзина" data-gr-dialog="hash" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Корзина</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body">
+    <p>В адресе сейчас <code>#ov-cart</code>. Кнопка «Назад» в браузере закроет панель, а ссылка с этим hash откроет её сразу.</p>
+  </div>
+</dialog>
+
+<h3>Параметры <code>data-gr-dialog</code></h3>
+
+<table>
+  <tr><th>Параметр</th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>hash</code></td><td><code>false</code></td><td>Синхронизация с адресом: <code>#id</code> при открытии, «Назад» закрывает</td></tr>
+  <tr><td><code>lock</code></td><td><code>true</code></td><td>Блокировать прокрутку страницы под окном</td></tr>
+  <tr><td><code>media</code></td><td><code>true</code></td><td>Останавливать видео, аудио и iframe при закрытии</td></tr>
+</table>
+
+<p>
+  Атрибут <code>data-gr-dialog</code> на окне нужен только ради параметров:
+  окно, открытое через <code>data-gr-open</code>, контроллер поднимает сам
+  с умолчаниями. Программно — <code>GriffinJS.dialog.open('#id')</code>
+  и <code>close('#id')</code>.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>База без JS — кнопка с <code>onclick="m.showModal()"</code> и
+    <code>&lt;form method="dialog"&gt;</code></strong>, как описано у компонента.
+    <code>data-gr-open</code> без скрипта не делает ничего: если окно обязано
+    открываться и без слоя, оставьте <code>onclick</code> — контроллер его
+    не сломает, стек и блокировка подхватят окно по событиям.
+  </p>
+</div>
+
+<h2>Комбобокс</h2>
+
+<p>
+  Поле ввода с подсказками из внешнего источника. База без JS — само поле
+  в форме поиска: <kbd>Enter</kbd> отправляет её, как всегда. Скрипт добавляет
+  список под полем и то, что описано в WAI-ARIA <em>combobox</em>:
+  <code>role="combobox"</code> с <code>aria-autocomplete="list"</code>,
+  <code>listbox</code> с <code>option</code>, <code>aria-activedescendant</code>
+  — фокус остаётся в поле, иначе набирать дальше было бы нечем.
+</p>
+
+<pre><code>&lt;form action="/search" class="gr-combobox" data-gr-combobox="src: /search/suggest?q={q}; min: 2; delay: 250"&gt;
+  &lt;input class="gr-input" type="search" name="q" placeholder="Поиск"&gt;
+&lt;/form&gt;</code></pre>
+
+<table>
+  <tr><th>Параметр <code>data-gr-combobox</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>src</code></td><td>—</td><td>Адрес с <code>{q}</code>; ответ — JSON: массив строк или объектов <code>{value, label, href, group}</code>, либо <code>{items: […]}</code></td></tr>
+  <tr><td><code>min</code></td><td><code>1</code></td><td>Минимальная длина запроса; короче — список закрыт, запрос не уходит</td></tr>
+  <tr><td><code>delay</code></td><td><code>200</code></td><td>мс дебаунса: запрос уходит, когда перестали печатать</td></tr>
+  <tr><td><code>empty</code></td><td><code>''</code></td><td>Подпись пустого ответа (<code>role="status"</code>); пустая — список просто закрывается</td></tr>
+  <tr><td><code>navigate</code></td><td><code>false</code></td><td>Выбор позиции с <code>href</code> — переход по адресу</td></tr>
+  <tr><td><code>highlight</code></td><td><code>true</code></td><td>Совпадение в подписи оборачивается <code>&lt;mark&gt;</code> — через <code>textContent</code>, данные разметкой не становятся</td></tr>
+  <tr><td><code>cache</code></td><td><code>true</code></td><td>Выдача по запросу запоминается на время жизни страницы</td></tr>
+</table>
+
+<p>
+  Через JS источником может быть функция, а позиция — своей разметкой:
+</p>
+
+<pre><code>GriffinJS.mount(el, 'combobox', {
+  min: 1,
+  source: function (query, signal) {           // Promise&lt;items&gt;; signal — AbortController
+    return fetch('/api/suggest?q=' + encodeURIComponent(query), { signal: signal }).then(r =&gt; r.json());
+  },
+  render: function (item, query) {            // узел позиции; null — рисовать по умолчанию
+    var li = document.createElement('li');
+    li.className = 'gr-combobox-option';
+    li.textContent = item.label + ' — ' + item.data.price;
+    return li;
+  }
+});
+
+el.addEventListener('griffin:select', function (e) { console.log(e.detail.item); });</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Источник — функция с фильтром по подстроке; наберите «а» <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="ov-combobox" style="max-width: 24rem">
+    <input class="gr-input" type="search" name="q" placeholder="Поиск по каталогу" aria-label="Поиск по каталогу">
+  </div>
+</div>
+
+<h3>Клавиатура</h3>
+
+<table>
+  <tr><th>Клавиша</th><th>Действие</th></tr>
+  <tr><td><kbd>↓</kbd> <kbd>↑</kbd></td><td>По позициям по кругу; на закрытом списке — показать прошлую выдачу</td></tr>
+  <tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>Первая и последняя позиция</td></tr>
+  <tr><td><kbd>Enter</kbd></td><td>Выбрать позицию; без выбранной — отдаётся форме, как без скрипта</td></tr>
+  <tr><td><kbd>Esc</kbd></td><td>Закрыть список, не стирая запрос</td></tr>
+  <tr><td><kbd>Tab</kbd></td><td>Закрыть и уйти дальше по странице</td></tr>
+  <tr><td>Наведение</td><td>Выбирает позицию без подкрутки списка; щелчок — выбор</td></tr>
+</table>
+
+<h3>Что даёт слой, а что остаётся сайту</h3>
+
+<p>
+  Граница проведена по поведению поля. В слое — всё, что одинаково у любого
+  живого поиска и что обычно переписывают заново на каждом сайте: роли
+  и <code>aria-activedescendant</code>, дебаунс и минимальная длина, отмена
+  устаревшего запроса, кеш выдачи, возврат прошлой выдачи по <kbd>↓</kbd>
+  и по фокусу, наведение как выбор, <kbd>Esc</kbd> без стирания запроса,
+  <kbd>Enter</kbd> с передачей форме, подсветка совпадения через
+  <code>textContent</code> — данные никогда не становятся разметкой.
+  Сайту остаётся то, что у каждого своё: как выглядит позиция (значок
+  раздела, цена со скидкой, карточка с описанием) и что происходит
+  при выборе — это <code>render()</code> и обработчик
+  <code>griffin:select</code>, которому слой отдаёт позицию с исходными
+  данными в <code>item.data</code>. Так один и тот же комбобокс служит
+  и поиску по каталогу с карточками, и подсказке адреса в форме.
+</p>
+
+<h2>Примеры использования</h2>
+
+<h3>Корзина в панели: открытие из шапки, hash, содержимое с сервера</h3>
+
+<p>
+  Кнопка корзины в шапке открывает панель; содержимое приезжает при первом
+  открытии, адрес получает <code>#cart</code>, и ссылку на корзину можно
+  отправить. Закрытие панели ставит на паузу видео товара, если оно там было.
+</p>
+
+<pre><code>&lt;button class="gr-btn gr-btn-ghost" type="button" data-gr-open="#cart"&gt;Корзина · 3&lt;/button&gt;
+
+&lt;dialog class="gr-drawer gr-drawer-end" id="cart" aria-label="Корзина"
+        data-gr-dialog="hash" data-gr-src="/cart/panel" data-gr-overlay-close&gt;
+  &lt;div class="gr-modal-header"&gt;&lt;strong&gt;Корзина&lt;/strong&gt;
+    &lt;form method="dialog"&gt;&lt;button class="gr-btn gr-btn-ghost gr-btn-icon" aria-label="Закрыть"&gt;✕&lt;/button&gt;&lt;/form&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-modal-body" data-gr-content&gt;&lt;/div&gt;
+  &lt;div class="gr-modal-footer"&gt;&lt;a class="gr-btn gr-btn-primary" href="/checkout"&gt;Оформить&lt;/a&gt;&lt;/div&gt;
+&lt;/dialog&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Содержимое панели — с «сервера» (<code>data:</code>-URL), один раз <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <button class="gr-btn gr-btn-ghost" type="button" data-gr-open="#ov-ajax">Корзина · 3</button>
+</div>
+
+<dialog class="gr-drawer gr-drawer-end" id="ov-ajax" aria-label="Корзина с сервера" data-gr-dialog data-gr-src="data:text/html;charset=utf-8,%3Cul%20class%3D%22gr-menu%22%3E%3Cli%3E%3Cspan%20class%3D%22gr-menu-item%22%3E%D0%9D%D0%BE%D1%83%D1%82%D0%B1%D1%83%D0%BA%20Acer%20%C2%B7%201%3C%2Fspan%3E%3C%2Fli%3E%3Cli%3E%3Cspan%20class%3D%22gr-menu-item%22%3E%D0%9D%D0%B0%D1%83%D1%88%D0%BD%D0%B8%D0%BA%D0%B8%20%C2%B7%202%3C%2Fspan%3E%3C%2Fli%3E%3C%2Ful%3E" data-gr-overlay-close>
+  <div class="gr-modal-header">
+    <strong>Корзина</strong>
+    <form method="dialog"><button class="gr-btn gr-btn-ghost gr-btn-icon" type="submit" aria-label="Закрыть">✕</button></form>
+  </div>
+  <div class="gr-modal-body" data-gr-content></div>
+  <div class="gr-modal-footer"><form method="dialog"><button class="gr-btn gr-btn-primary" type="submit">Оформить</button></form></div>
+</dialog>
+
+<h3>Живой поиск в шапке витрины</h3>
+
+<p>
+  Форма поиска остаётся формой: без скрипта <kbd>Enter</kbd> ведёт на страницу
+  результатов. Со скриптом под полем — подсказки по группам, выбор позиции
+  с адресом ведёт на её страницу (<code>navigate</code>).
+</p>
+
+<pre><code>&lt;form class="gr-combobox" action="/search" data-gr-combobox="src: /search/suggest?q={q}; min: 2; navigate; empty: Ничего не найдено"&gt;
+  &lt;div class="gr-input-group"&gt;
+    &lt;input class="gr-input" type="search" name="q" placeholder="Поиск по каталогу"&gt;
+    &lt;button class="gr-btn gr-btn-primary" type="submit"&gt;Найти&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+
+</main>
+</div>
+
+<script>
+  // Комбобоксы страницы: источник — функция, фильтр по подстроке.
+  (function () {
+    if (!window.GriffinJS) return;
+
+    var goods = [
+      { value: 'Acer Aspire', group: 'Ноутбуки' }, { value: 'Asus Zenbook', group: 'Ноутбуки' },
+      { value: 'AirPods', group: 'Наушники' }, { value: 'Anker Soundcore', group: 'Наушники' },
+      { value: 'Apple Watch', group: 'Часы' }, { value: 'Amazfit', group: 'Часы' }
+    ];
+
+    var source = function (q) {
+      return Promise.resolve(goods.filter(function (g) { return g.value.toLowerCase().indexOf(q.toLowerCase()) !== -1; }));
+    };
+
+    var el = document.getElementById('ov-combobox');
+
+    if (el) window.GriffinJS.mount(el, 'combobox', { min: 1, delay: 100, empty: 'Ничего не найдено', source: source });
+  })();
+</script>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+// GriffinJS — лайтбокс
+// <dialog class="gr-modal gr-lightbox">, который скрипт строит сам из
+// элементов с data-gr-lightbox. Верхний слой, ловушка фокуса, Esc и возврат
+// фокуса — от <dialog>; здесь — тёмная сцена во весь экран, дорожка
+// с медиа по центру, подпись и кнопки по углам.
+//
+// Правил на .gr-modal здесь нет: класс принадлежит пакету ui, лайтбокс
+// только уточняет его своим классом.
+
+.gr-lightbox {
+  inline-size: 100%;
+  block-size: 100%;
+  max-block-size: none;
+  border: 0;
+  border-radius: 0;
+  background-color: hsl(var(--gr-hsl-black), 0.92);
+  color: hsl(var(--gr-hsl-white));
+}
+
+.gr-lightbox::backdrop {
+  background-color: transparent;
+}
+
+.gr-lightbox-track {
+  flex: 1 1 auto;
+  gap: 0;
+  block-size: 100%;
+}
+
+.gr-lightbox-item {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  block-size: 100%;
+  padding: var(--gr-gap-lg);
+  box-sizing: border-box;
+}
+
+.gr-lightbox-item img,
+.gr-lightbox-item video {
+  max-inline-size: 100%;
+  max-block-size: calc(100dvh - var(--gr-gap-lg) * 2 - 3rem);
+  object-fit: contain;
+}
+
+.gr-lightbox-item iframe {
+  inline-size: min(100%, calc((100dvh - var(--gr-gap-lg) * 2 - 3rem) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+.gr-lightbox-caption {
+  margin-block-start: var(--gr-ui-gap);
+  text-align: center;
+  color: hsl(var(--gr-hsl-gray-200));
+}
+
+.gr-lightbox-counter {
+  position: absolute;
+  inset-block-start: var(--gr-gap);
+  inset-inline-start: var(--gr-gap);
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--gr-hsl-gray-300));
+}
+
+// Кнопки — по углам и по краям; стороны логические.
+.gr-lightbox-close,
+.gr-lightbox-prev,
+.gr-lightbox-next {
+  position: absolute;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: hsl(var(--gr-hsl-white), 0.12);
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--gr-transition);
+}
+
+.gr-lightbox-close:hover,
+.gr-lightbox-prev:hover,
+.gr-lightbox-next:hover {
+  background-color: hsl(var(--gr-hsl-white), 0.24);
+}
+
+.gr-lightbox-close:focus-visible,
+.gr-lightbox-prev:focus-visible,
+.gr-lightbox-next:focus-visible {
+  outline: var(--gr-focus-width) solid hsl(var(--gr-hsl-white));
+  outline-offset: 2px;
+}
+
+.gr-lightbox-close {
+  inset-block-start: var(--gr-gap);
+  inset-inline-end: var(--gr-gap);
+}
+
+.gr-lightbox-prev,
+.gr-lightbox-next {
+  inset-block-start: 50%;
+  translate: 0 -50%;
+}
+
+.gr-lightbox-prev {
+  inset-inline-start: var(--gr-gap);
+}
+
+.gr-lightbox-next {
+  inset-inline-end: var(--gr-gap);
+}

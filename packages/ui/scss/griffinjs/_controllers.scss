@@ -1,0 +1,86 @@
+// GriffinJS — контроллеры поверх компонентов ui: дропдаун и подсказка
+// Разметка и стили .gr-dropdown / .gr-tooltip из пакета ui не меняются.
+// Здесь — только то, что нужно, когда положение панели в верхнем слое
+// считает скрипт: панель отвязывается от anchor positioning и от
+// UA-раскладки попапа и слушается координат top/left из style.
+//
+// Признак «скрипт на месте» — data-gr-state на обёртке: без него
+// правила не действуют, и без скрипта всё остаётся как в ui.
+
+// --- Дропдаун -------------------------------------------------------------
+
+// Панель popover с позицией от скрипта. inset: auto снимает UA-inset
+// и anchor()-вылеты; position-try-fallbacks: none — иначе браузер
+// с anchor positioning переворачивал бы панель сам, вопреки координатам.
+.gr-dropdown[data-gr-state] > .gr-dropdown-panel[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-inline-size: min(20rem, 90vw);
+  position-try-fallbacks: none;
+}
+
+// Панель по наведению (.gr-dropdown-hover) открывается скриптом
+// и без :hover — с клавиатуры ↓ и по наведению с задержкой намерения.
+.gr-dropdown[data-gr-state="open"] > .gr-dropdown-panel {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+// --- Подсказка ------------------------------------------------------------
+
+// Подсказка в верхнем слое с позицией от скрипта: сброс абсолютной
+// раскладки обёртки и UA-стилей попапа; появление — тем же переходом,
+// что у обычной подсказки, через popover-open.
+.gr-tooltip-anchor[data-gr-state] > .gr-tooltip[popover] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  border: 0;
+  translate: none;
+  overflow: visible;
+  position-area: none;
+  position-try-fallbacks: none;
+}
+
+.gr-tooltip-anchor[data-gr-state] > .gr-tooltip[popover]:popover-open {
+  opacity: 1;
+  visibility: visible;
+  content-visibility: visible;
+}
+
+// Переход из display: none — только с allow-discrete, иначе подсказка
+// появлялась бы рывком; @starting-style задаёт, откуда проявляться.
+@supports (transition-behavior: allow-discrete) {
+  .gr-tooltip-anchor[data-gr-state] > .gr-tooltip[popover] {
+    transition:
+      opacity var(--gr-transition),
+      overlay var(--gr-transition) allow-discrete,
+      display var(--gr-transition) allow-discrete;
+  }
+
+  @starting-style {
+    .gr-tooltip-anchor[data-gr-state] > .gr-tooltip[popover]:popover-open {
+      opacity: 0;
+    }
+  }
+}
+
+// --- Окна -----------------------------------------------------------------
+
+// Под открытым окном страница не прокручивается. Модальный <dialog> делает
+// её инертной, но колесо и жест всё равно двигают документ под подложкой;
+// состояние ставит контроллер окон на <html>, пока стек окон не пуст.
+// scrollbar-gutter держит место полосы: иначе страница дёргалась бы
+// на ширину полосы при каждом открытии.
+html[data-gr-state="locked"] {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+// Окно с ajax-содержимым, пока грузится: тело держит место.
+.gr-modal[data-gr-state="loading"] .gr-modal-body,
+.gr-drawer[data-gr-state="loading"] .gr-modal-body {
+  min-block-size: 6rem;
+}
