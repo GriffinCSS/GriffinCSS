@@ -49,7 +49,7 @@ properties. JS-рантайм не требует сборки и не имее�
 
 ## Установка / Installation
 
-> **Текущая версия `0.21.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.21.1`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -76,10 +76,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.21.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.1/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.1/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.21.1/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.1/dist/griffincss.js"></script>
 ```
 
 Слой виджетов с состоянием — GriffinJS — подключается ещё двумя строками,
@@ -87,8 +87,8 @@ npm i griffincss-core griffincss-ui griffincss-utils
 дропдаун с ролями, подсказка в верхнем слое, окна, комбобокс):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffinjs.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.0/dist/griffinjs.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.1/dist/griffinjs.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.21.1/dist/griffinjs.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
@@ -100,7 +100,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.0/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.21.1/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
