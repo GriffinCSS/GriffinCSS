@@ -94,3 +94,16 @@ test('параллакс: --gr-progress по положению блока, dest
     delete global.window;
   }
 });
+
+test('fade: отчёты о позиции во время тяги индекс не меняют — исход решает отпускание', () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 3, 200);
+  const t = G.track(node, { engine: 'fade' });
+
+  node.dispatchEvent(pointer('pointerdown', node, 150, 0));
+  node.dispatchEvent(pointer('pointermove', node, 20, 50));     // −130 px из 200 → позиция 0.65
+  assert.equal(t.index, 0, 'на середине индекс ещё прежний');
+  node.dispatchEvent(pointer('pointermove', node, 140, 300));   // вернулись почти на место
+  node.dispatchEvent(pointer('pointerup', node, 140, 900));
+  assert.equal(t.index, 0, 'короткая тяга — возврат');
+});

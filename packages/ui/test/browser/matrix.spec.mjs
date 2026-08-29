@@ -61,9 +61,13 @@ test('RTL: стрелки дорожки зеркальны, popover-панел�
   const track = page.locator('[data-gr-lab-track]');
   const index = () => page.evaluate(() => window.GriffinJS.instance(document.querySelector('[data-gr-lab-track]'), 'track').index);
 
+  const moving = () => page.evaluate(() => window.GriffinJS.instance(document.querySelector('[data-gr-lab-track]'), 'track').moving);
+
   await track.focus();
   await page.keyboard.press('ArrowLeft');
   await expect.poll(index).toBe(1);
+  // Пока дорожка едет, команды не принимаются — вторая стрелка после остановки.
+  await expect.poll(moving, { timeout: 3000 }).toBe(false);
   await page.keyboard.press('ArrowRight');
   await expect.poll(index).toBe(0);
 

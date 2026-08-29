@@ -348,3 +348,90 @@ test('при шаге 1 --gr-snap не пишется', () => {
 
   G.destroy();
 });
+
+test('страницы с остатком: назад с последней — на начало предыдущей, goTo мимо страницы — к её началу', () => {
+  const { G, doc } = setup(PARTS);
+  const s = wide(doc, 5, 2, { 'data-gr-slider': 'step: page; rewind' });
+
+  G.start();
+
+  const w = G.instance(s.root, 'slider');
+  const t = w.track;
+
+  assert.equal(t.pages, 3, 'страницы 0, 2, 3(конец)');
+
+  w.next(); w.next();
+  assert.equal(t.index, 3, 'последняя страница выровнена к концу');
+
+  w.prev();
+  assert.equal(t.index, 2, 'назад — на начало предыдущей страницы, а не на 3 − 2 = 1');
+  w.prev();
+  assert.equal(t.index, 0);
+  w.prev();
+  assert.equal(t.index, 3, 'rewind назад — на последнюю страницу');
+
+  w.goTo(1);
+  assert.equal(t.index, 2, 'индекс без снап-точки приведён к ближайшей странице');
+  assert.equal(w.goTo(4), false, 'за крайним индексом — отказ, как и раньше');
+  w.goTo(3);
+  assert.equal(t.index, 3);
+
+  G.destroy();
+});
+
+test('остаток в один слайд при трёх в ряд: вперёд идёт на конец, назад — на предыдущую страницу', () => {
+  const { G, doc } = setup(PARTS);
+  const s = wide(doc, 7, 3, { 'data-gr-slider': 'step: page' });
+
+  G.start();
+
+  const w = G.instance(s.root, 'slider');
+  const t = w.track;
+
+  assert.equal(t.last, 4);
+  assert.equal(t.pages, 3, 'страницы 0, 3, 4(конец)');
+  assert.deepEqual(t.slides.map((n) => n.style.getPropertyValue('--gr-snap')), ['start', 'none', 'none', 'start', 'none', 'none', 'end']);
+
+  assert.equal(w.next(), true); assert.equal(t.index, 3);
+  assert.equal(w.next(), true); assert.equal(t.index, 4);
+  assert.equal(s.next.getAttribute('aria-disabled'), 'true');
+  assert.equal(w.next(), false, 'без rewind у края — отказ');
+  assert.equal(w.prev(), true); assert.equal(t.index, 3);
+  assert.equal(w.prev(), true); assert.equal(t.index, 0);
+  assert.equal(s.prev.getAttribute('aria-disabled'), 'true');
+
+  G.destroy();
+});
+
+test('при шаге 1 next/prev по-прежнему идут на один слайд', () => {
+  const { G, doc } = setup(PARTS);
+  const s = wide(doc, 5, 2, { 'data-gr-slider': '' });
+
+  G.start();
+
+  const w = G.instance(s.root, 'slider');
+
+  w.next(); w.next(); w.next();
+  assert.equal(w.track.index, 3);
+  w.prev();
+  assert.equal(w.track.index, 2);
+
+  G.destroy();
+});
+
+test('автоплей пропускает такт, пока дорожка едет', async () => {
+  const { G, doc } = setup(PARTS);
+  const s = slider(doc, 3, { 'data-gr-slider': 'autoplay: 40' });
+  s.trackEl.scrollTo = (opts) => { s.trackEl.scrollCalls.push({ left: opts.left, behavior: opts.behavior }); };
+
+  G.start();
+
+  const w = G.instance(s.root, 'slider');
+
+  await wait(60);
+  assert.equal(w.track.index, 1, 'первый такт принят');
+  await wait(50);
+  assert.equal(w.track.index, 1, 'второй пропущен: дорожка так и не доехала');
+
+  G.destroy();
+});

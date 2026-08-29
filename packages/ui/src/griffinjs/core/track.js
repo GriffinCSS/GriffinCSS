@@ -235,20 +235,59 @@
     // дорожка — долю пройденного пути. Потребители — fade, масштаб соседей,
     // полоса прогресса — источника не знают.
     function report(position) {
-      if (!G.motion) return;
-
       var n = count();
 
-      for (var i = 0; i < n; i++) {
-        var distance = Math.abs(position - i);
+      if (G.motion) {
+        for (var i = 0; i < n; i++) {
+          var distance = Math.abs(position - i);
 
-        // В цикле расстояние — по кругу: позиция −0.5 наполовину на последнем.
-        if (looping && n) distance = Math.min(distance, n - distance);
+          // В цикле расстояние — по кругу: позиция −0.5 наполовину на последнем.
+          if (looping && n) distance = Math.min(distance, n - distance);
 
-        G.motion.set(slides[i], distance >= 1 ? 0 : 1 - distance);
+          G.motion.set(slides[i], distance >= 1 ? 0 : 1 - distance);
+        }
+
+        G.motion.set(el, n > 1 ? position / (n - 1) : 1);
       }
 
-      G.motion.set(el, n > 1 ? position / (n - 1) : 1);
+      follow(position);
+    }
+
+    // Начало страницы, ближайшее к дробной позиции: именно туда доснапит
+    // браузер, и туда же обязаны указывать точки.
+    function nearestPage(position) {
+      var best = 0;
+      var total = pages();
+
+      for (var k = 0; k < total; k++) {
+        if (Math.abs(position - pageStart(k)) < Math.abs(position - pageStart(best))) best = k;
+      }
+
+      return pageStart(best);
+    }
+
+    // Индекс следует за движением пользователя, не дожидаясь остановки:
+    // слайд встал на место, а точки ждали scrollend или дебаунс после
+    // инерции — заметное отставание на телефоне. Только для движков,
+    // которые это объявили (engine.live): fade сам решает исход жеста
+    // по отпусканию пальца и на track.index опирается как на базу.
+    // Пока дорожка едет по своей команде, индекс уже целевой.
+    function follow(position) {
+      var n = count();
+
+      if (!n || !engine || !engine.live) return;
+      if (typeof engine.moving === 'function' && engine.moving()) return;
+      // Команда отложена до конца жеста: индекс уже её, палец не перебивает.
+      if (typeof engine.queued === 'function' && engine.queued()) return;
+
+      var p;
+
+      if (looping) p = mod(Math.round(position), n);
+      else p = paged() ? nearestPage(position) : physical(Math.round(position));
+
+      var next = nearest(p);
+
+      if (next !== index) commit(next);
     }
 
     function settle(p) {
@@ -263,6 +302,14 @@
 
     // --- Публичное движение ----------------------------------------------------
 
+    // Страничный режим без цикла: индекс приводится к началу ближайшей
+    // страницы. Снап-точки стоят только там, и команда «на слайд 1» при шаге 2
+    // всё равно кончилась бы на 0 или 2 — только уже руками браузера,
+    // с индексом, разошедшимся с положением дорожки.
+    function paged() {
+      return !looping && stepSize() > 1;
+    }
+
     function goTo(i, options) {
       if (destroyed || count() === 0) return false;
 
@@ -270,7 +317,11 @@
 
       var next = looping ? i : physical(i);
 
-      if (engine) engine.goTo(physical(next), !!(options && options.instant));
+      if (paged()) next = pageStart(pageOf(next));
+
+      // Движок вправе отказать: дорожка ещё едет по прошлой команде.
+      // Индекс тогда не меняется — точки не убегают от слайдов.
+      if (engine && engine.goTo(physical(next), !!(options && options.instant)) === false) return false;
 
       if (next === index) return true;
 
@@ -279,20 +330,29 @@
       return true;
     }
 
-    // Шаг вперёд/назад. Без цикла у края — отказ, а с rewind — перескок
+    // Шаг вперёд/назад — по СТРАНИЦАМ, а не «индекс ± шаг»: последняя
+    // страница короче шага и выровнена к концу, и «назад» с неё обязано
+    // вести на начало предыдущей страницы, а не на шаг от её индекса —
+    // там снап-точки нет. Без цикла у края — отказ, с rewind — перескок
     // на другой край: «бесконечная» лента без клонов и без обмана позиции.
     function next(options) {
       if (looping) return goTo(index + stepSize(), options);
-      if (index >= last()) return rewinding ? goTo(0, options) : false;
 
-      return goTo(Math.min(index + stepSize(), last()), options);
+      var page = pageOf(index);
+
+      if (page < pages() - 1) return goTo(pageStart(page + 1), options);
+
+      return rewinding ? goTo(0, options) : false;
     }
 
     function prev(options) {
       if (looping) return goTo(index - stepSize(), options);
-      if (index <= 0) return rewinding ? goTo(last(), options) : false;
 
-      return goTo(Math.max(index - stepSize(), 0), options);
+      var page = pageOf(index);
+
+      if (page > 0) return goTo(pageStart(page - 1), options);
+
+      return rewinding ? goTo(pageStart(pages() - 1), options) : false;
     }
 
     function goToPage(k, options) {
@@ -471,6 +531,7 @@
     Object.defineProperty(api, 'step', { get: stepSize });
     Object.defineProperty(api, 'slides', { get: function () { return slides.slice(); } });
     Object.defineProperty(api, 'loop', { get: function () { return !!looping; } });
+    Object.defineProperty(api, 'moving', { get: function () { return !!(engine && typeof engine.moving === 'function' && engine.moving()); } });
     Object.defineProperty(api, 'rewind', { get: function () { return rewinding; } });
 
     // --- Подъём ----------------------------------------------------------------

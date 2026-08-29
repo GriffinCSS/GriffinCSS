@@ -32,9 +32,12 @@ test('цикл: с последнего слайда «вперёд» ведёт
   expect((await info()).clones).toBe(2);
   await expect(slider.locator('.gr-slider-dot')).toHaveCount(3);
 
-  await slider.locator('[data-gr-next]').click();
-  await slider.locator('[data-gr-next]').click();
-  await slider.locator('[data-gr-next]').click();
+  // Пока дорожка едет, команды не принимаются — между нажатиями ждём остановки.
+  for (let i = 0; i < 3; i++) {
+    await slider.locator('[data-gr-next]').click();
+    await expect.poll(async () => (await info()).index, { timeout: 3000 }).toBe(i + 1);
+    await expect.poll(() => slider.evaluate((el) => window.GriffinJS.instance(el, 'slider').track.moving), { timeout: 3000 }).toBe(false);
+  }
 
   await expect.poll(async () => (await info()).index).toBe(3);
   await expect.poll(async () => (await info()).atFirst, { timeout: 3000 }).toBe(true);

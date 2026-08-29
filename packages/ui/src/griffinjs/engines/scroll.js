@@ -39,6 +39,10 @@
     var settleTimer = null;
     var busy = false;       // палец на экране или инерция после него
     var queued = null;      // {physical, instant} — команда, отложенная до конца жеста
+    var moving = false;     // плавная прокрутка по СВОЕЙ команде ещё идёт
+    var target = null;      // scrollLeft, к которому она едет
+    var waits = 0;          // сколько раз остановка отложена из-за незавершённого движения
+    var MAX_WAITS = 5;      // дальше считаем, что доехать некуда, и фиксируем как есть
     var events = G.listeners();
     var listen = events.add;
     var hasScrollEnd = typeof window !== 'undefined' && 'onscrollend' in window;
@@ -203,6 +207,12 @@
 
       if (typeof el.scrollTo === 'function') el.scrollTo({ left: left, behavior: instant ? 'auto' : 'smooth' });
       else el.scrollLeft = left;
+
+      // Плавная прокрутка не меняет scrollLeft сразу: пока не доехали —
+      // движемся, и новые команды не принимаются. Мгновенная — доехала уже.
+      moving = !instant && Math.abs(el.scrollLeft - left) >= 1;
+      target = moving ? left : null;
+      waits = 0;
     }
 
     // В цикле у слайда до трёх копий; едем к ближайшей от текущего
@@ -226,17 +236,38 @@
       return best;
     }
 
+    // true — команда принята (сразу или отложена до конца жеста), false —
+    // отклонена: дорожка ещё едет по прошлой команде. Иначе быстрые нажатия
+    // уводили индекс и точки вперёд, а дорожку — назад через полтрека
+    // (в цикле копия цели оказывалась позади), и при rewind три нажатия
+    // подряд возвращали на первую страницу, хотя видно было одну.
     function goTo(physical, instant) {
       if (busy) {
         queued = { physical: physical, instant: instant };
-        return;
+        return true;
       }
 
+      if (moving && !instant) return false;
+
       scrollTo(nearestChild(physical), instant);
+
+      return true;
     }
 
     function settle() {
       settleTimer = null;
+
+      // Пауза в событиях scroll посреди своей плавной прокрутки — ещё
+      // не остановка (Safari без scrollend). Ждём, но не вечно: цель может
+      // оказаться недостижимой, и тогда фиксируем, где стоим.
+      if (moving && target !== null && Math.abs(el.scrollLeft - target) >= 1 && waits < MAX_WAITS) {
+        waits += 1;
+        settleTimer = setTimeout(settle, SETTLE_DELAY);
+        return;
+      }
+
+      moving = false;
+      target = null;
       busy = false;
 
       var pos = Math.round(position());
@@ -248,14 +279,18 @@
         scrollTo(childOf(pos), true);
       }
 
-      track._settle(pos);
-
+      // Отложенная команда выполняется вместо фиксации: индекс уже её,
+      // а фиксация по текущему положению откатила бы его назад — дорожка
+      // потом доедет и зафиксируется сама.
       if (queued) {
         var command = queued;
 
         queued = null;
         scrollTo(nearestChild(command.physical), command.instant);
+        return;
       }
+
+      track._settle(pos);
     }
 
     function onScroll() {
@@ -286,11 +321,14 @@
 
     return {
       loop: loop,
+      live: true,           // отчёты о позиции ведут индекс, не дожидаясь остановки
       goTo: goTo,
       layout: layout,
       visible: visible,
       perView: perView,
       position: position,
+      moving: function () { return moving; },
+      queued: function () { return !!queued; },
       destroy: function () {
         events.removeAll();
         dropClones();

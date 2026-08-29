@@ -1,6 +1,6 @@
 {
   "name": "griffincss-core",
-  "version": "0.21.1",
+  "version": "0.21.4",
   "description": "Griffincss Core — ядро: токены, темы, ресет, раскладки CSS Grid и Flexbox, рантайм-парсер data-gr-layout",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {

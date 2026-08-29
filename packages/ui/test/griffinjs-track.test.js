@@ -82,7 +82,7 @@ test('цикл: индекс виртуальный, physical — по моду�
   assert.deepEqual(log.map((r) => r[2]), [2, 0, 1, 2, 0]);
 });
 
-test('прокрутка пользователем: движок отчитывается позицией и после паузы фиксирует индекс', async () => {
+test('прокрутка пользователем: движок отчитывается позицией, индекс следует за ней, остановка подтверждает', async () => {
   const { G, doc } = setup(PARTS);
   const { node, slides } = build(doc, 4);
   const t = G.track(node);
@@ -95,7 +95,7 @@ test('прокрутка пользователем: движок отчитыв
   assert.equal(slides[2].style.getPropertyValue('--gr-progress'), '0.5');
   assert.equal(slides[0].style.getPropertyValue('--gr-progress'), '0');
   assert.equal(node.style.getPropertyValue('--gr-progress'), '0.5');
-  assert.equal(t.index, 0, 'до остановки индекс не меняется');
+  assert.equal(t.index, 2, 'индекс следует за движением: на середине — уже к ближайшему');
 
   node.scrollLeft = 200;
   node.dispatchEvent(event('scroll', node));
@@ -295,4 +295,155 @@ test('loop без поддержки движка вырождается в rewi
   assert.equal(t.index, 0, 'с края — на другой край');
   t.prev();
   assert.equal(t.index, 1);
+});
+
+// Плавная прокрутка в браузере не меняет scrollLeft сразу: мок ниже
+// только записывает цель, а «доезжает» по команде теста.
+function smooth(node) {
+  node.scrollTo = (opts) => { node.scrollCalls.push({ left: opts.left, behavior: opts.behavior }); node.pending = opts.left; };
+  node.arrive = async () => { node.scrollLeft = node.pending; node.dispatchEvent(event('scroll', node)); await wait(160); };
+}
+
+test('пока дорожка едет по своей команде, новые команды отклоняются, индекс и точки не убегают', async () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 4);
+  smooth(node);
+  const t = G.track(node);
+  const log = changes(node);
+
+  assert.equal(t.next(), true);
+  assert.equal(t.index, 1);
+  assert.equal(t.moving, true);
+
+  assert.equal(t.next(), false, 'на ходу — отказ');
+  assert.equal(t.goTo(3), false);
+  assert.equal(t.index, 1, 'индекс не тронут');
+  assert.equal(log.length, 1);
+
+  await node.arrive();
+  assert.equal(t.moving, false);
+  assert.equal(t.next(), true);
+  assert.equal(t.index, 2);
+});
+
+test('мгновенная команда и команда в ту же точку не считаются движением', () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 4);
+  smooth(node);
+  const t = G.track(node);
+
+  t.goTo(2, { instant: true });
+  assert.equal(t.moving, false);
+
+  node.scrollLeft = 200;
+  assert.equal(t.goTo(2), true, 'уже там');
+  assert.equal(t.moving, false);
+});
+
+test('пауза событий scroll посреди движения — ещё не остановка; недостижимая цель фиксируется после ожидания', async () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 4);
+  smooth(node);
+  const t = G.track(node);
+
+  t.next();
+  node.scrollLeft = 40;                          // проехали чуть-чуть
+  node.dispatchEvent(event('scroll', node));
+  await wait(160);
+  assert.equal(t.moving, true, 'дебаунс сработал, но до цели не доехали — ждём');
+  assert.equal(t.index, 1);
+
+  await wait(700);                               // 5 отложенных остановок по 120 мс
+  assert.equal(t.moving, false, 'ждать вечно нельзя');
+  assert.equal(t.index, 0, 'зафиксировано, где стоим');
+  assert.equal(t.next(), true, 'команды снова принимаются');
+});
+
+test('во время жеста команда откладывается, а не отклоняется', async () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 4);
+  smooth(node);
+  const t = G.track(node);
+
+  node.pending = undefined;                       // начальная привязка уже прошла
+  node.dispatchEvent(event('touchstart', node));
+  assert.equal(t.goTo(2), true);
+  assert.equal(t.index, 2, 'состояние обновлено сразу');
+  assert.equal(node.pending, undefined, 'scrollTo отложен');
+
+  node.scrollLeft = 30;
+  node.dispatchEvent(event('scroll', node));
+  await wait(160);
+  assert.equal(node.pending, 200, 'после остановки жеста команда выполнена');
+  assert.equal(t.index, 2, 'фиксация по положению пальца не откатила индекс');
+
+  await node.arrive();
+  assert.equal(t.index, 2);
+  assert.equal(t.moving, false);
+});
+
+test('свайп: индекс и событие — при пересечении середины, остановка лишь подтверждает', async () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 4);
+  const t = G.track(node);
+  const log = changes(node);
+
+  node.scrollLeft = 40;                          // 0.4 — ещё первый
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 0);
+
+  node.scrollLeft = 160;                         // 1.6 — ближе ко второму
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 2, 'индекс переключился до остановки');
+  assert.equal(slides[2].getAttribute('aria-current'), 'true');
+  assert.deepEqual(log, [[0, 2, 2]]);
+
+  await wait(160);                               // дебаунс-остановка
+  assert.equal(t.index, 2);
+  assert.deepEqual(log, [[0, 2, 2]], 'остановка не порождает второго события');
+});
+
+test('на ходу по своей команде отчёты индекс не трогают', async () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 4);
+  smooth(node);
+  const t = G.track(node);
+
+  t.goTo(3);
+  assert.equal(t.index, 3);
+  node.scrollLeft = 120;                         // едем мимо второго
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 3, 'цель не подменяется промежуточной позицией');
+
+  await node.arrive();
+  assert.equal(t.index, 3);
+});
+
+test('страничный свайп: индекс — ближайшее начало страницы, а не ближайший слайд', () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 5, 100, {}, 2);
+  const t = G.track(node, { step: 'page' });    // страницы 0, 2, 3
+
+  node.scrollLeft = 80;                          // 0.8: ближе к 0, чем к 2
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 0);
+
+  node.scrollLeft = 120;                         // 1.2: ближе к 2
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 2);
+
+  node.scrollLeft = 260;                         // 2.6: ближе к 3 (конец)
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, 3);
+});
+
+test('в цикле свайп через клон переключает на настоящий индекс по кругу', () => {
+  const { G, doc } = setup(PARTS);
+  const { node } = build(doc, 3);
+  const t = G.track(node, { loop: true });       // дети: клон2, 0, 1, 2, клон0 — смещения 0…400
+
+  node.scrollLeft = 30;                          // позиция −0.7 → ближе к клону последнего
+  node.dispatchEvent(event('scroll', node));
+  assert.equal(t.index, -1);
+  assert.equal(t.physical(t.index), 2);
 });

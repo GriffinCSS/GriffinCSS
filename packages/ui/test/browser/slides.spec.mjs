@@ -139,3 +139,80 @@ test('постранично: свайп на середину страницы 
   expect([0, 2]).toContain(r.index);
   await expect(slider.locator('.gr-slider-dot').nth(r.index === 0 ? 0 : 1)).toHaveAttribute('aria-current', 'true');
 });
+
+test('страницы с остатком на странице «Слайды»: вперёд-вперёд-назад-назад-назад по кнопкам', async ({ page }) => {
+  await page.goto('/docs/griffinjs-slides.html');
+
+  const slider = page.locator('[aria-label="Шаг на страницу"]');
+  const track = slider.locator('.gr-track');
+  const info = () => track.evaluate((el) => {
+    const t = window.GriffinJS.instance(el.parentElement, 'slider').track;
+    const offsets = [...el.children].map((c) => Math.round(c.offsetLeft - el.offsetLeft));
+    return { index: t.index, left: Math.round(el.scrollLeft), at: offsets.indexOf(Math.round(el.scrollLeft)), end: Math.round(el.scrollWidth - el.clientWidth) };
+  });
+  const dot = (k) => expect(slider.locator('.gr-slider-dot').nth(k)).toHaveAttribute('aria-current', 'true');
+  const settled = async (index, at) => {
+    await expect.poll(async () => { const s = await info(); return s.index === index && (at === 'end' ? s.left === s.end : s.at === at); }, { timeout: 3000 }).toBe(true);
+  };
+
+  await slider.scrollIntoViewIfNeeded();
+  await slider.locator('[data-gr-next]').click(); await settled(2, 2); await dot(1);
+  await slider.locator('[data-gr-next]').click(); await settled(3, 'end'); await dot(2);
+  await slider.locator('[data-gr-prev]').click(); await settled(2, 2); await dot(1);
+  await slider.locator('[data-gr-prev]').click(); await settled(0, 0); await dot(0);
+  await slider.locator('[data-gr-prev]').click(); await settled(3, 'end'); await dot(2);
+});
+
+test('быстрые нажатия: принимается меньше команд, чем нажатий, а индекс, дорожка и точки сходятся', async ({ page }) => {
+  await page.goto(LAB);
+
+  for (const sel of ['#gr-lab-loop', '#gr-lab-pages']) {
+    const slider = page.locator(sel);
+    const next = slider.locator('[data-gr-next]');
+
+    await slider.scrollIntoViewIfNeeded();
+    await slider.evaluate((el) => { window.__accepted = 0; el.addEventListener('griffin:change', () => { window.__accepted += 1; }); });
+    for (let i = 0; i < 4; i++) { await next.click({ force: true }); await page.waitForTimeout(40); }
+
+    const info = () => slider.evaluate((el) => {
+      const t = window.GriffinJS.instance(el, 'slider').track;
+      const track = el.querySelector('.gr-track');
+      const real = [...track.children].filter((c) => !c.hasAttribute('data-gr-clone'));
+      const target = real[t.physical(t.index)].offsetLeft - track.offsetLeft;
+      const end = track.scrollWidth - track.clientWidth;
+      return { accepted: window.__accepted, page: t.pageOf(t.index), moving: t.moving, atTarget: Math.abs(track.scrollLeft - target) <= 1 || Math.abs(track.scrollLeft - end) <= 1 };
+    });
+
+    await expect.poll(async () => (await info()).moving, { timeout: 4000 }).toBe(false);
+    await expect.poll(async () => (await info()).atTarget, { timeout: 4000 }).toBe(true);
+
+    const s = await info();
+
+    expect(s.accepted).toBeGreaterThanOrEqual(1);
+    expect(s.accepted).toBeLessThan(4);
+    await expect(slider.locator('.gr-slider-dot').nth(s.page)).toHaveAttribute('aria-current', 'true');
+  }
+});
+
+test('свайп: индекс и точка переключаются до остановки прокрутки', async ({ page }) => {
+  await page.goto(LAB);
+
+  const slider = page.locator('#gr-lab-slider');
+  const track = slider.locator('.gr-track');
+
+  await slider.scrollIntoViewIfNeeded();
+  await track.evaluate((el) => {
+    window.__t = { change: null, end: null };
+    el.addEventListener('griffin:change', () => { if (window.__t.change === null) window.__t.change = performance.now(); });
+    el.addEventListener('scrollend', () => { if (window.__t.end === null) window.__t.end = performance.now(); });
+    // «Палец» отпустили на 0.7 слайда: браузер сам доснапит ко второму.
+    const real = [...el.children].filter((c) => !c.hasAttribute('data-gr-clone'));
+    el.scrollTo({ left: real[0].offsetLeft - el.offsetLeft + (real[1].offsetLeft - real[0].offsetLeft) * 0.7, behavior: 'auto' });
+  });
+
+  await expect.poll(() => track.evaluate((el) => window.GriffinJS.instance(el.parentElement, 'slider').track.index), { timeout: 3000 }).toBe(1);
+  await expect(slider.locator('.gr-slider-dot').nth(1)).toHaveAttribute('aria-current', 'true');
+
+  const t = await track.evaluate(() => window.__t);
+  if (t.end !== null) expect(t.change).toBeLessThanOrEqual(t.end);
+});

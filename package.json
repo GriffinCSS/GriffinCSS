@@ -1,6 +1,6 @@
 {
   "name": "griffincss",
-  "version": "0.21.1",
+  "version": "0.21.4",
   "private": true,
   "description": "Монорепозиторий Griffincss: ядро griffincss-core, утилиты griffincss-utils и компоненты griffincss-ui",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
