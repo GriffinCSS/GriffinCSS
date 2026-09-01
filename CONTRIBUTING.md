@@ -439,7 +439,7 @@ packages/ui/scss/griffincss-ui.scss            @layer griffincss.ui
 └── _alert / _avatar / _badge / _button / _card / _choice / _form / _table
     (no deps — components read tokens through var(), not through @use)
 
-packages/ui/scss/griffincss-ui-scoped.scss — the same, wrapped in @scope (.griffin);
+packages/ui/scss/griffincss-ui-scoped.scss — the same, prefixed with :where(.griffin);
     tokens and theme stay outside the scope, [data-gr-theme] sits on <html>
 
 packages/utils/scss/griffincss-utils.scss      @layer griffincss.utils
@@ -450,7 +450,7 @@ packages/utils/scss/griffincss-utils.scss      @layer griffincss.utils
 ├── _typography.scss      → griffincss-core/scss/breakpoints
 └── _visibility.scss      → griffincss-core/scss/breakpoints
 
-packages/utils/scss/griffincss-utils-scoped.scss — the same, wrapped in @scope (.griffin)
+packages/utils/scss/griffincss-utils-scoped.scss — the same, prefixed with :where(.griffin)
 ```
 
 ### Common Patterns
@@ -728,6 +728,7 @@ G.needs('lightbox', ['track']);   // контроллер: регистриру�
 | SCSS-модуль | `npm run build`, затем grep класса в `dist/griffincss.css` и его отсутствия в `dist/griffincss-core.css` |
 | JS-рантайм | Node-скрипт с мок-DOM, включая невалидный ввод |
 | Адаптивность | Реальный браузер, минимум на ширинах 375 / 700 / 900 / 1200 px |
+| Виджет GriffinJS | `npm run test:browser` — Chromium, Firefox и WebKit на полигонах `docs/griffinjs-lab.html` и `docs/griffinjs-slides.html` |
 | Демо и docs | Открыть страницу, убедиться, что консоль чистая |
 
 Локальный просмотр демо:
@@ -745,6 +746,22 @@ npx serve -l 8800 -n .
 Тот же гейт запускается сам: `.gitverse/workflows/check.yaml` выполняет
 `npm ci` и `npm run check` на Node 22 и 24 при push в `main` и при запросе
 на слияние. Запрос, у которого гейт красный, не сливается.
+
+Рядом с ним в том же файле идут браузерные тесты: три ветки матрицы —
+`chromium`, `firefox`, `webkit`, — по 120 проверок на движок. Они вынесены
+в отдельный job и не входят в `npm run check`: движкам нужна загрузка
+в сотни мегабайт, а от версии Node их результат не зависит. Пересборки
+перед ними нет — тесты читают `packages/*/dist` из репозитория, то есть
+ровно то, что уходит пользователю; расхождение `dist` с `src` ловит
+`check-dist` в основном гейте.
+
+Локально они запускаются так же, но требуют разовой установки движков:
+
+```bash
+npx playwright install          # один раз, ~500 МБ на три движка
+npm run test:browser            # все три, около трёх минут
+npm run test:browser -- --project=webkit   # один движок
+```
 
 ---
 

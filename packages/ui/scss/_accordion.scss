@@ -61,7 +61,7 @@
 
 @media (hover: hover) {
   .gr-accordion-trigger:hover {
-    background-color: color-mix(in srgb, currentcolor 6%, transparent);
+    background-color: hsl(var(--gr-hsl-ink-0), 6%);
   }
 }
 

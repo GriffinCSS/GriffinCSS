@@ -18,6 +18,13 @@
 .gr-badge {
   --gr-badge-color: var(--gr-color-text-secondary);
   --gr-badge-fill: var(--gr-color-text-secondary);
+  --gr-badge-fill-hsl: var(--gr-hsl-ink-1);
+
+  // Вуаль отдельной переменной, а не выражением в правиле: варианты,
+  // у которых своя заливка (счётчик, точка) или её нет вовсе (контурный),
+  // снимают её так же, как раньше перебивали смешанный фон. Тень фоном
+  // не перебивается, и без этой ручки подложка проступала бы сквозь них.
+  --gr-badge-veil: hsl(var(--gr-badge-fill-hsl), 16%);
   --gr-badge-on-fill: var(--gr-color-on-accent);
 
   display: inline-flex;
@@ -28,7 +35,12 @@
   padding-inline: 0.5em;
   border: var(--gr-border-width) solid transparent;
   border-radius: calc(var(--gr-radius) * 0.5);
-  background-color: color-mix(in srgb, var(--gr-badge-fill) 16%, var(--gr-color-bg));
+
+  // Подложка — фон страницы под вуалью из заливки: 0,84·фон + 0,16·заливка,
+  // то же, что давало смешение 16 % на 84 %. Вуаль внутренней тенью, потому
+  // что альфу приписывают к hsl-записи, а не к готовому --gr-badge-fill.
+  background-color: var(--gr-color-bg);
+  background-image: linear-gradient(var(--gr-badge-veil), var(--gr-badge-veil));
   color: var(--gr-badge-color);
   font-size: 0.8125em;
   font-weight: 600;
@@ -37,13 +49,14 @@
   vertical-align: middle;
 }
 
-// Тройками: текст и линия, заливка, чернила на заливке.
+// Четвёрками: текст и линия, заливка, чернила на заливке и триплет заливки —
+// из него строится вуаль подложки.
 $gr-badge-statuses: (
-  accent: (var(--gr-color-accent), var(--gr-color-accent), var(--gr-color-on-accent)),
-  success: (var(--gr-color-success), var(--gr-color-success-surface), var(--gr-color-on-success)),
-  warning: (var(--gr-color-warning), var(--gr-color-warning-surface), var(--gr-color-on-warning)),
-  danger: (var(--gr-color-danger), var(--gr-color-danger-surface), var(--gr-color-on-danger)),
-  info: (var(--gr-color-info), var(--gr-color-info-surface), var(--gr-color-on-info))
+  accent: (var(--gr-color-accent), var(--gr-color-accent), var(--gr-color-on-accent), var(--gr-hsl-accent)),
+  success: (var(--gr-color-success), var(--gr-color-success-surface), var(--gr-color-on-success), var(--gr-hsl-status-success-surface)),
+  warning: (var(--gr-color-warning), var(--gr-color-warning-surface), var(--gr-color-on-warning), var(--gr-hsl-status-warning-surface)),
+  danger: (var(--gr-color-danger), var(--gr-color-danger-surface), var(--gr-color-on-danger), var(--gr-hsl-status-danger-surface)),
+  info: (var(--gr-color-info), var(--gr-color-info-surface), var(--gr-color-on-info), var(--gr-hsl-status-info-surface))
 );
 
 @each $gr-name, $gr-value in $gr-badge-statuses {
@@ -51,6 +64,7 @@ $gr-badge-statuses: (
     --gr-badge-color: #{list.nth($gr-value, 1)};
     --gr-badge-fill: #{list.nth($gr-value, 2)};
     --gr-badge-on-fill: #{list.nth($gr-value, 3)};
+    --gr-badge-fill-hsl: #{list.nth($gr-value, 4)};
   }
 }
 
@@ -65,6 +79,8 @@ $gr-badge-statuses: (
 .gr-badge-outline {
   border-color: currentcolor;
   background-color: transparent;
+
+  --gr-badge-veil: transparent;
 }
 
 // --- Счётчик ----------------------------------------------------------------
@@ -80,6 +96,9 @@ $gr-badge-statuses: (
   padding-inline: 0.4em;
   border-radius: var(--gr-radius-pill);
   background-color: var(--gr-badge-fill);
+
+  --gr-badge-veil: transparent;
+
   color: var(--gr-badge-on-fill);
   font-variant-numeric: tabular-nums;
 }

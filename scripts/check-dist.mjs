@@ -92,7 +92,7 @@ const LAYER_OF = new Map([
   ...STYLE_FILES.map((file) => [file, 'griffincss.style']),
 ]);
 
-// Классы вне схемы `gr-`: корень области видимости для @scope-сборки.
+// Классы вне схемы `gr-`: корень области видимости для scoped-сборок.
 const ALLOWED_BARE_CLASSES = new Set(['griffin']);
 
 const problems = [];
@@ -171,7 +171,7 @@ const classesByFile = new Map();
 for (const file of artifacts) {
   const css = read(file);
   const { selectors, atRules, topLevel } = parseBlocks(css);
-  const classes = classNames(selectors.concat(atRules.filter((r) => r.startsWith('@scope'))));
+  const classes = classNames(selectors);
   classesByFile.set(file, classes);
 
   for (const name of classes) {
@@ -371,13 +371,13 @@ for (const name of STYLE_NAMES) {
 }
 
 // 12. Ось оформления не просачивается в scoped-сборку компонентов.
-//     Внутри @scope селектор неявно получает :scope в начало и требует
-//     носитель атрибута в области, а data-gr-style стоит на <html>.
+//     Селектор там получает префикс :where(.griffin) и требует носитель
+//     атрибута внутри области, а data-gr-style стоит на <html>.
 //     Правило собралось бы, прошло бы все прочие проверки и молча
 //     не работало — то же основание, по которому в модулях ui запрещены
 //     селекторы по data-gr-theme.
 if (read(UI_SCOPED).includes('[data-gr-style')) {
-  fail(UI_SCOPED, 'правило оси оформления внутри @scope — оно никогда не сработает');
+  fail(UI_SCOPED, 'правило оси оформления внутри области .griffin — оно никогда не сработает');
 }
 
 // 13. Рантаймы в dist минифицированы: остались только баннер и код.

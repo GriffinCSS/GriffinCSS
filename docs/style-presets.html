@@ -393,10 +393,10 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
 </p>
 
 <pre><code>&lt;!-- все три стиля --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-styles.css"&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-styles.css"&gt;
 
 &lt;!-- или один — вместо предыдущей строки, а не вдобавок к ней --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-style-strict.css"&gt;</code></pre>
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-style-strict.css"&gt;</code></pre>
 
 <table>
   <thead>
@@ -459,14 +459,15 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
     <strong>В scoped-сборке структурных правил нет.</strong>
     <code>griffincss-ui-scoped.css</code> ограничен областью
     <code>.griffin</code>, а атрибут стоит на <code class="token">&lt;html&gt;</code>:
-    внутри <code>@scope</code> селектор требует носитель атрибута в области.
-    Ось там действует на уровне токенов — скругления, плотность, тени и цвета
-    работают полностью, — но шапка карточки не превращается в линию.
+    селектор там получает префикс <code>:where(.griffin)</code> и требует
+    носитель атрибута внутри области. Ось там действует на уровне токенов —
+    скругления, плотность, тени и цвета работают полностью, — но шапка
+    карточки не превращается в линию.
   </p>
   <p>
-    И порог браузеров у этих файлов выше: <code>@scope</code> требует
-    Chrome 118, Safari 17.4 и Firefox 146 против Chrome 99 и Firefox 97
-    у обычных сборок. Замер и метод — в разделе
+    Порог браузеров у этих файлов при этом тот же, что у обычных сборок:
+    <code>:where()</code> знают Chrome 88, Safari 14 и Firefox 78 — ниже
+    каскадных слоёв. Замер и метод — в разделе
     <a href="compatibility.html#scoped">«Совместимость»</a>.
   </p>
 </div>

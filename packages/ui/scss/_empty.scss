@@ -66,5 +66,10 @@
 .gr-empty-boxed {
   border: var(--gr-border-width) dashed var(--gr-color-border);
   border-radius: var(--gr-radius);
-  background-color: color-mix(in srgb, currentcolor 3%, transparent);
+
+  // ink-1, а не ink-0: у .gr-empty цвет текста — --gr-color-text-secondary,
+  // и оттенок, взятый прежде от currentcolor, шёл именно от него. С ink-0
+  // подложка выходит на 2/255 темнее — глазом не видно, но это уже другой
+  // цвет, а подгонять пришлось бы каждый раз заново.
+  background-color: hsl(var(--gr-hsl-ink-1), 3%);
 }

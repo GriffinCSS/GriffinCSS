@@ -81,8 +81,8 @@ test('граница видна без класса цвета, а класс ц
 test('@keyframes в scoped-сборке лежат вне области видимости', () => {
   assert.ok(scoped.includes('@keyframes gr-spin'), 'keyframes не попали в scoped-сборку');
   assert.ok(
-    scoped.indexOf('@keyframes gr-spin') < scoped.indexOf('@scope'),
-    'внутри @scope правило @keyframes недействительно',
+    scoped.indexOf('@keyframes gr-spin') < scoped.indexOf(':where(.griffin)'),
+    'объявление уехало внутрь области .griffin — имя анимации ищется глобально',
   );
 });
 

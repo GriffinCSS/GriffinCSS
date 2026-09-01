@@ -94,15 +94,28 @@
 <h2>Наведение и нажатие</h2>
 
 <p>
-  Вариант задаёт три переменные — <code>--gr-btn-bg</code>,
-  <code>--gr-btn-fg</code>, <code>--gr-btn-border</code>. Состояния
-  <code>:hover</code> и <code>:active</code> написаны один раз на все девять:
-  они подмешивают к фону варианта его же цвет текста через
-  <code>color-mix()</code>. Насколько это темнее или светлее, решает
-  действующая тема, а не таблица заготовленных оттенков.
+  Вариант задаёт цвета четырьмя переменными — <code>--gr-btn-bg</code>,
+  <code>--gr-btn-fg</code>, <code>--gr-btn-border</code> и триплетом
+  <code>--gr-btn-fg-hsl</code>. Состояния <code>:hover</code>
+  и <code>:active</code> написаны один раз на все девять: они кладут поверх
+  фона варианта вуаль из его же цвета текста. Насколько это темнее или
+  светлее, решает действующая тема, а не таблица заготовленных оттенков.
 </p>
 
-<pre><code>--gr-btn-bg-hover: color-mix(in srgb, var(--gr-btn-bg) 88%, var(--gr-btn-fg));</code></pre>
+<pre><code>--gr-btn-veil-hover: hsl(var(--gr-btn-fg-hsl), 12%);
+--gr-btn-veil-active: hsl(var(--gr-btn-fg-hsl), 24%);
+
+/* вуаль ложится внутренней тенью — поверх фона, но под текстом */
+box-shadow: inset 0 0 0 100vmax var(--gr-btn-veil-hover);</code></pre>
+
+<p>
+  Вуаль в 12 % даёт ровно то же, что дало бы смешение 88 % фона с 12 % текста,
+  и не требует <code>color-mix()</code>: альфу приписывают к записи
+  <code>hsl()</code>, поэтому цвет текста варианта продублирован триплетом.
+  Свой цвет вуали задают, переопределив <code>--gr-btn-veil-hover</code>
+  и <code>--gr-btn-veil-active</code>; значение <code>transparent</code>
+  снимает подсветку вовсе — так сделано у <code>.gr-btn-link</code>.
+</p>
 
 <div class="callout">
   <p>

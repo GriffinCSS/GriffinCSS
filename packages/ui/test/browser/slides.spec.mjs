@@ -133,11 +133,21 @@ test('постранично: свайп на середину страницы 
     index: window.GriffinJS.instance(el.parentElement, 'slider').track.index,
   }));
 
-  await expect.poll(async () => { const r = await rest(); return r.left === 0 || r.left === r.end; }, { timeout: 3000 }).toBe(true);
+  // Дорожка, индекс и точка сходятся не одновременно, и мерить их тремя
+  // снимками подряд нельзя: WebKit на пути к концу проходит через нулевую
+  // позицию, замер «дорожка снапнута» ловит её раньше времени, индекс
+  // после этого уезжает на 2 — и ожидание aria-current на первой точке
+  // висит до таймаута. Поэтому согласие трёх величин проверяется одним
+  // опросом: щели между замерами просто нет.
+  await expect.poll(async () => {
+    const r = await rest();
 
-  const r = await rest();
-  expect([0, 2]).toContain(r.index);
-  await expect(slider.locator('.gr-slider-dot').nth(r.index === 0 ? 0 : 1)).toHaveAttribute('aria-current', 'true');
+    if (r.left !== 0 && r.left !== r.end) return `дорожка между страницами (${r.left})`;
+
+    const dot = await slider.locator('.gr-slider-dot').nth(r.index === 0 ? 0 : 1).getAttribute('aria-current');
+
+    return `${r.index}:${dot}`;
+  }).toMatch(/^(0|2):true$/);
 });
 
 test('страницы с остатком на странице «Слайды»: вперёд-вперёд-назад-назад-назад по кнопкам', async ({ page }) => {

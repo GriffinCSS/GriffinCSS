@@ -74,7 +74,7 @@ $gr-megamenu-expand: map.get(bp.$gr-breakpoints, md);
 .gr-megamenu-item[open] > summary {
   --gr-nav-fg: var(--gr-color-text);
 
-  background-color: color-mix(in srgb, currentcolor 8%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 8%);
 }
 
 // --- Панель -----------------------------------------------------------------

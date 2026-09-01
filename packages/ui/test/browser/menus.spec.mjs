@@ -17,6 +17,11 @@ async function open(page) {
   await page.addStyleTag({ content: 'html { scroll-behavior: auto !important; }' });
 }
 
+// Читаются только через expect.poll. Открытие панели и перевод фокуса
+// внутрь — два разных шага рантайма: <details> уже открыт, а фокус ещё
+// на summary. Снимок activeElement сразу после нажатия ловит эту щель
+// и падает с «Действия» вместо «Переименовать» — на нагруженной машине
+// примерно раз на сотню прогонов. poll повторяет чтение до совпадения.
 const activeText = (page) => page.evaluate(() => (document.activeElement.textContent || '').trim());
 
 // Наведение «как у читателя»: мгновенная прокрутка к элементу и движение
@@ -45,22 +50,22 @@ test.describe('мегаменю', () => {
     await expect(first).toHaveJSProperty('open', true);
     await expect(summary).toHaveAttribute('aria-expanded', 'true');
     expect(await page.evaluate(() => !!document.activeElement.closest('.gr-megamenu-panel'))).toBe(true);
-    expect(await activeText(page)).toBe('Ноутбуки');
+    await expect.poll(() => activeText(page)).toBe('Ноутбуки');
 
     await page.keyboard.press('ArrowDown');
-    expect(await activeText(page)).toBe('Планшеты');
+    await expect.poll(() => activeText(page)).toBe('Планшеты');
 
     await page.keyboard.press('Escape');
     await expect(first).toHaveJSProperty('open', false);
-    expect(await activeTag(page)).toBe('SUMMARY');
-    expect(await activeText(page)).toBe('Каталог');
+    await expect.poll(() => activeTag(page)).toBe('SUMMARY');
+    await expect.poll(() => activeText(page)).toBe('Каталог');
 
     await page.keyboard.press('ArrowRight');
-    expect(await activeText(page)).toBe('Бренды');
+    await expect.poll(() => activeText(page)).toBe('Бренды');
     await page.keyboard.press('End');
-    expect(await activeText(page)).toBe('Акции');
+    await expect.poll(() => activeText(page)).toBe('Акции');
     await page.keyboard.press('ArrowRight');
-    expect(await activeText(page)).toBe('Каталог');
+    await expect.poll(() => activeText(page)).toBe('Каталог');
   });
 
   test('наведение: открывает с задержкой, одна панель на полосу, ajax-панель грузится, уход закрывает', async ({ page }) => {
@@ -132,14 +137,14 @@ test.describe('дропдаун', () => {
     await summary.focus();
     await page.keyboard.press('ArrowDown');
     await expect(root).toHaveJSProperty('open', true);
-    expect(await activeText(page)).toBe('Переименовать');
+    await expect.poll(() => activeText(page)).toBe('Переименовать');
 
     await page.keyboard.press('End');
-    expect(await activeText(page)).toBe('Удалить');
+    await expect.poll(() => activeText(page)).toBe('Удалить');
 
     await page.keyboard.press('Escape');
     await expect(root).toHaveJSProperty('open', false);
-    expect(await activeTag(page)).toBe('SUMMARY');
+    await expect.poll(() => activeTag(page)).toBe('SUMMARY');
   });
 });
 

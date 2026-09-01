@@ -65,13 +65,13 @@
 
 // --- Дорожка ----------------------------------------------------------------
 
-// Оттенок currentcolor, а не готовая поверхность: непрозрачный серый совпал бы
-// с одной из подложек, на которых ползунок может лежать, и исчез бы вместе
-// с ней. Тот же приём, что у .gr-progress.
+// Полупрозрачный оттенок цвета текста темы, а не готовая поверхность:
+// непрозрачный серый совпал бы с одной из подложек, на которых ползунок
+// может лежать, и исчез бы вместе с ней. Тот же приём, что у .gr-progress.
 .gr-range::-webkit-slider-runnable-track {
   block-size: var(--gr-range-track);
   border-radius: var(--gr-radius-pill);
-  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 12%);
 
   // Заливка поверх дорожки: акцент до отметки, дальше — сама дорожка.
   // Вторая точка каждого отрезка задана явно, поэтому переход резкий,
@@ -87,7 +87,7 @@
 .gr-range::-moz-range-track {
   block-size: var(--gr-range-track);
   border-radius: var(--gr-radius-pill);
-  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 12%);
 }
 
 .gr-range::-moz-range-progress {
@@ -130,7 +130,7 @@
 // прозрачны и служат только областью попадания.
 //
 // Наложением двух дорожек отрезок не собрать: дорожка полупрозрачна
-// намеренно — оттенок currentcolor ложится на любую подложку, — и верхняя
+// намеренно — полупрозрачный оттенок ложится на любую подложку, — и верхняя
 // не закрыла бы акцент нижней, а лишь притенила бы его. Отсюда общая полоса:
 // у неё обе границы отрезка сразу, и прятать друг за другом нечего.
 .gr-range-pair {
@@ -149,7 +149,7 @@
   align-self: center;
   block-size: var(--gr-range-track);
   border-radius: var(--gr-radius-pill);
-  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 12%);
 
   // Отрезок между ручками: доли пишет виджет range слоя. Без него обе
   // равны нулю, отрезок вырождается в точку — и остаётся чистая дорожка.
@@ -207,14 +207,15 @@
 }
 
 // Подсветка бегунка — только там, где указатель есть: на сенсорном экране
-// :hover залипает после касания. Подмешивается цвет чернил акцента, как
-// у кнопки, — насколько это темнее или светлее, решает тема.
+// :hover залипает после касания. Поверх акцента ложится вуаль из его чернил,
+// как у кнопки: 0,85·акцент + 0,15·чернила — насколько это темнее или
+// светлее, решает тема.
 @media (hover: hover) {
   .gr-range:hover:enabled::-webkit-slider-thumb {
-    background-color: color-mix(in srgb, var(--gr-color-accent) 85%, var(--gr-color-on-accent));
+    box-shadow: inset 0 0 0 100vmax hsl(var(--gr-hsl-on-accent), 15%);
   }
 
   .gr-range:hover:enabled::-moz-range-thumb {
-    background-color: color-mix(in srgb, var(--gr-color-accent) 85%, var(--gr-color-on-accent));
+    box-shadow: inset 0 0 0 100vmax hsl(var(--gr-hsl-on-accent), 15%);
   }
 }

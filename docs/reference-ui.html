@@ -54,7 +54,7 @@
 
 <p>Состояния: <code>:hover</code> (внутри <code>@media (hover: hover)</code>), <code>:active</code>, <code>:focus-visible</code>, <code>:disabled</code>, <code>[aria-disabled="true"]</code>, <code>[aria-busy="true"]</code>.</p>
 
-<p>Вариант задаёт три переменные — <code>--gr-btn-bg</code>, <code>--gr-btn-fg</code>, <code>--gr-btn-border</code>. Поэтому <code>:hover</code> и <code>:active</code> написаны один раз на все девять: они подмешивают к фону варианта его же цвет текста через <code>color-mix()</code>, а насколько это темнее или светлее — решает тема.</p>
+<p>Вариант задаёт цвета четырьмя переменными — <code>--gr-btn-bg</code>, <code>--gr-btn-fg</code>, <code>--gr-btn-border</code> и триплетом <code>--gr-btn-fg-hsl</code>. Поэтому <code>:hover</code> и <code>:active</code> написаны один раз на все девять: они кладут поверх фона варианта вуаль из его же цвета текста (<code>--gr-btn-veil-hover</code>, <code>--gr-btn-veil-active</code>), а насколько это темнее или светлее — решает тема.</p>
 
 <h2>Ссылки (<code>scss/_link.scss</code>)</h2>
 

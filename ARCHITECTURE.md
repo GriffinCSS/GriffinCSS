@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.22.0
+- **Version:** 0.22.1
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -84,8 +84,8 @@ style's selectors — the failure mode of a forgotten configuration is a silent 
 full file.
 
 `packages/ui/scss/_style-rules.scss` holds every structural rule of the axis and is loaded
-**only** by `griffincss-ui.scss`. Inside `@scope (.griffin)` a selector is implicitly
-prefixed with `:scope`, so `[data-gr-style="strict"] .gr-card-header` would require the
+**only** by `griffincss-ui.scss`. In the scoped build every selector is prefixed with
+`:where(.griffin)`, so `[data-gr-style="strict"] .gr-card-header` would require the
 attribute carrier inside the scope — and it sits on `<html>`. In the scoped build such a
 rule compiles, passes every other check and silently never matches. `@keyframes` and the
 theme are excluded from the scope for the same class of reason. `check-dist.mjs` guards it:
@@ -113,7 +113,7 @@ theme are excluded from the scope for the same class of reason. `check-dist.mjs`
 | SCSS Functions | `packages/core/scss/_functions.scss` | `gr-parse-layout`, `gr-parse-segment`, `gr-split-rows`, `gr-grid-areas`, `gr-grid-columns`, `gr-grid-rows`, `gr-area-names`, `gr-strip-unit`, `gr-rem` — validation rules mirror the runtime |
 | Utils package | `packages/utils/scss/_spacing.scss`, `_sizing.scss`, `_typography.scss`, `_colors.scss`, `_borders.scss`, `_border-radius.scss`, `_shadows.scss`, `_position.scss`, `_effects.scss`, `_visibility.scss`, `_interactivity.scss`, `_animations.scss`, `_keyframes.scss`, `_transforms.scss`, `_filters.scss`, `_gradients.scss`, `_palette.scss` | Opt-in utility classes |
 | UI package | `packages/ui/scss/_button.scss`, `_link.scss`, `_form.scss`, `_choice.scss`, `_card.scss`, `_table.scss`, `_alert.scss`, `_badge.scss`, `_avatar.scss` (wave 8a — static), `_nav.scss`, `_breadcrumb.scss`, `_menu.scss`, `_dropdown.scss`, `_accordion.scss`, `_tabs.scss`, `_modal.scss`, `_drawer.scss`, `_tooltip.scss`, `_pagination.scss` (wave 8b — navigation and disclosure) | Opt-in interface components; no library JS in either wave |
-| Entry points | `griffincss-core.scss`, `griffincss-reset.scss`, `griffincss-ui.scss`, `griffincss-ui-scoped.scss`, `griffincss-utils.scss`, `griffincss-utils-scoped.scss` | `@use` the partials; the scoped variants wrap the add-on in `@scope (.griffin)` via `meta.load-css()` |
+| Entry points | `griffincss-core.scss`, `griffincss-reset.scss`, `griffincss-ui.scss`, `griffincss-ui-scoped.scss`, `griffincss-utils.scss`, `griffincss-utils-scoped.scss` | `@use` the partials; the scoped variants wrap the add-on in `:where(.griffin)` via `meta.load-css()` |
 | JS Runtime | `packages/core/src/griffincss.js` (27 KB raw, 3.3 KB gzip minified, IIFE) | DOM-scanning grid parser, auto-hide, auto-assign, responsive ranges |
 | Tests | `packages/core/test/*.test.js`, `packages/ui/test/*.test.js`, `packages/utils/test/*.test.js` | `node:test`, zero dependencies; hand-written mock DOM in `test/helpers/dom.js`, CSS comparison in `test/helpers/css.js` |
 | Tooling | `scripts/sync-breakpoints.mjs`, `scripts/check-dist.mjs` | Runtime breakpoint fallbacks, compiled-artifact checks (both zero-dependency) |
@@ -169,7 +169,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.22.0)
+### JS Runtime Key Features (v0.22.1)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
@@ -322,7 +322,7 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 | `packages/utils/src/griffincss-utils.js` | Utils runtime — border-radius cascade of arbitrary depth **and arbitrary values** (`.gr-mt-[13px]`). Streams during parsing, observes the live tree, emits into `griffincss.utils` through the core's `_emit`/`_flush`. Rule table between `gr:rule-table` markers is generated by `scripts/sync-rule-table.mjs`; the `PROPS` table maps a class prefix to the declarations of its static twin, and `arbitrary.test.js` compares both against the compiled CSS. Bracket contents are validated like a layout string in the core — length, no `}`, `;` or `/*` — and rejected input is a `console.warn` plus a skip, never a broken rule |
 | `packages/ui/package.json` | `griffincss-ui` metadata and build scripts |
 | `packages/ui/scss/griffincss-ui.scss` | UI package entry |
-| `packages/ui/scss/griffincss-ui-scoped.scss` | Same components wrapped in `@scope (.griffin)` |
+| `packages/ui/scss/griffincss-ui-scoped.scss` | Same components prefixed with `:where(.griffin)` |
 | `packages/ui/scss/_button.scss` | `.gr-btn` + nine variants over three local custom props; one `:hover`/`:active` rule for all of them via `color-mix()` |
 | `packages/ui/scss/_link.scss` | `.gr-link` + variants; exists because the reset strips colour and underline from `<a>` |
 | `packages/ui/scss/_form.scss` | `.gr-input` / `.gr-textarea` / `.gr-select` as one control family, `.gr-field`, `.gr-input-group`, `:user-invalid`; the select draws its own arrow from two gradients in `currentcolor` — the UA arrow ignores `padding-inline-end` |
@@ -345,7 +345,7 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 | `packages/ui/scss/_pagination.scss` | `.gr-page` links with `[aria-current]` fill, ellipsis, compact and joined rows |
 | `packages/utils/package.json` | `griffincss-utils` metadata and build scripts |
 | `packages/utils/scss/griffincss-utils.scss` | Utils package entry |
-| `packages/utils/scss/griffincss-utils-scoped.scss` | Same utils wrapped in `@scope (.griffin)` |
+| `packages/utils/scss/griffincss-utils-scoped.scss` | Same utils prefixed with `:where(.griffin)` |
 | `packages/utils/scss/_spacing.scss` | Margin/padding, sparse scale `0 1 2 3 4 5 6 7 8 10 12 16` (0.25rem step), responsive on all 14 physical/axis properties; logical `ms`/`me`/`ps`/`pe` without breakpoint suffix (gotcha 28) |
 | `packages/utils/scss/_sizing.scss` | Width (incl. escaped fractions `.gr-w-1\/2`), height, min/max; `svw`/`svh` for viewport units |
 | `packages/utils/scss/_borders.scss` | Border width/side/style, physical `t`/`r`/`b`/`l` plus logical `s`/`e`, axes as `border-inline`/`border-block` — colour comes from `_colors.scss`, loaded after it |
@@ -358,7 +358,7 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 | `packages/utils/scss/_palette.scss` | `$gr-grays` and `$gr-accents` — maps only, no CSS. Two modules need them (`_colors.scss`, `_gradients.scss`), and `@use 'colors'` from a second module would re-emit the whole colour block. `_colors.scss` forwards it (forward BEFORE use), so `@use 'colors' with ($gr-accents: …)` still configures it |
 | `packages/utils/scss/_interactivity.scss` | Cursor, pointer-events, `.gr-user-select-*`, scroll-behavior |
 | `packages/utils/scss/_animations.scss` | Transition properties, durations, `.gr-animate-spin`; all under `prefers-reduced-motion` |
-| `packages/utils/scss/_keyframes.scss` | `@keyframes gr-spin` — separate file so the scoped build can emit it outside `@scope` |
+| `packages/utils/scss/_keyframes.scss` | `@keyframes gr-spin` — separate file so the scoped build emits it outside the `.griffin` scope |
 | `packages/utils/scss/_visibility.scss` | Display, visibility, overflow (both axes), sr-only + focusable, responsive hide |
 | `docs/demo.html` | Full feature demo page |
 | `docs/slow.html` | Slow-load simulation demo |
@@ -407,9 +407,10 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 13. **One responsive syntax: the breakpoint suffix.** `.gr-p-8-md`, never `.gr-md\:p-8`.
    The prefixed form existed only in `_spacing.scss` and was removed in 0.7.0 — every other
    module always used the suffix. A new module must follow the suffix.
-14. **`@keyframes` cannot live inside `@scope`.** They are not scoped constructs; nested in
-   a `@scope` block they simply do not apply. That is why `_keyframes.scss` is a separate
-   partial — `griffincss-utils-scoped.scss` loads it inside the layer but outside the scope.
+14. **`@keyframes` are declared outside the scope.** An animation name is looked up
+   globally, so the `:where(.griffin)` prefix has nothing to apply to. That is why
+   `_keyframes.scss` is a separate partial — `griffincss-utils-scoped.scss` loads it inside
+   the layer but outside the scope, and the ordering stays identical in both builds.
    Any future keyframe goes there, not into a module.
 15. **Shadow tokens live in the core `_tokens.scss`,** not in `_shadows.scss`. The same holds
    for component tokens: `--gr-control-*`, `--gr-ui-gap`, `--gr-overlay` and `--gr-z-*` live
@@ -453,7 +454,7 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 21. **A component must not depend on the reset.** `griffincss-reset.css` is opt-in, so every
    component sets its own `box-sizing`, `font-family: inherit`, `margin: 0` and, for tables,
    `border-collapse`. A rule that only works with the reset loaded is a bug in the component.
-22. **Rules keyed on `[data-gr-theme]` or `[data-gr-a11y]` cannot live inside `@scope`.**
+22. **Rules keyed on `[data-gr-theme]` or `[data-gr-a11y]` cannot live inside the scope.**
    Both attributes sit on `<html>`, outside `.griffin`, so a selector like
    `[data-gr-a11y="low-vision"] .gr-btn` never matches in the scoped build. Components
    therefore adapt through tokens only — `--gr-border-width`, `--gr-focus-width`,

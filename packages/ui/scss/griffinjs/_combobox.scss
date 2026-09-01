@@ -56,7 +56,7 @@
 }
 
 .gr-combobox-option[aria-selected="true"] {
-  background-color: color-mix(in srgb, var(--gr-color-accent) 12%, transparent);
+  background-color: hsl(var(--gr-hsl-accent), 12%);
 }
 
 .gr-combobox-option mark {

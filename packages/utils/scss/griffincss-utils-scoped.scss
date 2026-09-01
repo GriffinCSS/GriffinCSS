@@ -1,11 +1,18 @@
 // Griffincss Utils — версия, ограниченная областью .griffin
 // Утилитарные классы действуют только внутри элементов с классом .griffin,
 // что позволяет подключать библиотеку в чужую разметку без конфликтов.
-// Токены (из griffincss-core) объявляются вне @scope: :root должен остаться глобальным.
+// Токены (из griffincss-core) объявляются вне области: :root должен остаться глобальным.
 //
-// Слой тот же, что и у обычной сборки, — griffincss.utils.
-//
-// Требует поддержки CSS @scope (Chrome 118+, Safari 17.4+, Firefox 128+).
+// Слой тот же, что и у обычной сборки, — griffincss.utils.//
+// Область задаётся префиксом :where(.griffin), а не правилом @scope.
+// Вес у них одинаковый — нулевой: неявный :scope внутри @scope
+// специфичности не добавляет, и :where() не добавляет тоже, поэтому
+// scoped-сборка остаётся каскадным двойником обычной. Разница в пороге
+// браузеров: @scope требует Chrome 118, Safari 17.4 и Firefox 146,
+// а :where() — Chrome 88, Safari 14 и Firefox 78, то есть ниже
+// каскадных слоёв, на которых стоит вся библиотека. Файл, который
+// встраивают в чужую разметку, не вправе быть самым требовательным
+// в наборе.
 
 @use 'sass:meta';
 @layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
@@ -14,14 +21,15 @@
 @layer griffincss.utils {
   @include meta.load-css('griffincss-core/scss/tokens');
 
-  // Тема — тоже вне @scope: атрибут data-gr-theme стоит на <html>,
+  // Тема — тоже вне области: атрибут data-gr-theme стоит на <html>,
   // то есть заведомо снаружи области .griffin.
   @include meta.load-css('griffincss-core/scss/theme');
 
-  // @keyframes внутри @scope недействительны — подключаются вне области.
+  // @keyframes — вне области: имя анимации ищется глобально, префикс
+  // области к нему неприменим.
   @include meta.load-css('keyframes');
 
-  @scope (.griffin) {
+  :where(.griffin) {
     @include meta.load-css('animations');
     @include meta.load-css('border-radius');
     @include meta.load-css('borders');

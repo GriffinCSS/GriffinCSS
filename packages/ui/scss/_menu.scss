@@ -67,7 +67,7 @@
 
 @media (hover: hover) {
   .gr-menu-item:hover:not(:disabled, [aria-disabled="true"]) {
-    background-color: color-mix(in srgb, currentcolor 10%, transparent);
+    background-color: hsl(var(--gr-hsl-ink-0), 10%);
   }
 }
 
@@ -91,7 +91,7 @@
 .gr-menu-item[aria-current] {
   --gr-menu-fg: var(--gr-color-accent);
 
-  background-color: color-mix(in srgb, var(--gr-color-accent) 12%, transparent);
+  background-color: hsl(var(--gr-hsl-accent), 12%);
   font-weight: 600;
 }
 
@@ -103,7 +103,7 @@
 
 @media (hover: hover) {
   .gr-menu-danger:hover:not(:disabled, [aria-disabled="true"]) {
-    background-color: color-mix(in srgb, var(--gr-color-danger) 12%, transparent);
+    background-color: hsl(var(--gr-hsl-status-danger), 12%);
   }
 }
 

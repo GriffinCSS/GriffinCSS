@@ -7,7 +7,7 @@
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
 | **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | <!--gr:size:core-->3,3 КБ<!--/gr:size:core--> CSS + <!--gr:size:js-pkg-core-->4,8 КБ<!--/gr:size:js-pkg-core--> JS |
-| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->10,6 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->2,9 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->17,2 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
+| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->10,8 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->2,9 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->17,2 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
 | **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | <!--gr:size:utils-->14,6 КБ<!--/gr:size:utils--> CSS + <!--gr:size:js-utils-->2,4 КБ<!--/gr:size:js-utils--> JS |
 
 ### Раскладки: две дорожки, одна строка
@@ -60,9 +60,9 @@ peer-зависят от него: дизайн-токены и карта бр�
 поднимается только вместе с тем, что покупается, и подо что оставлен
 запас — записано рядом с каждой цифрой в `scripts/check-dist.mjs`.
 Для сравнения (замер сторонних файлов — 2026-08-30, gzip): ресет, ядро,
-компоненты и утилиты вместе — <!--gr:size:css-all-->29,2 КБ<!--/gr:size:css-all-->
+компоненты и утилиты вместе — <!--gr:size:css-all-->29,3 КБ<!--/gr:size:css-all-->
 против 30,1 КБ у `bootstrap.min.css` и 63,1 КБ у `bulma.min.css`;
-ресет, ядро и компоненты — <!--gr:size:css-ui-stack-->14,6 КБ<!--/gr:size:css-ui-stack-->
+ресет, ядро и компоненты — <!--gr:size:css-ui-stack-->14,7 КБ<!--/gr:size:css-ui-stack-->
 против 29,3 КБ у `uikit.min.css`; четыре рантайма —
 <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> против 23,2 КБ
 у `bootstrap.bundle.min.js`.
@@ -87,16 +87,22 @@ both add-ons peer-depend on it, yet their compiled CSS stays self-contained.
 ### Поддержка браузеров / Browser support
 
 Порог назван и измерен, а не оставлен умолчанием. Библиотека стоит
-на каскадных слоях, контейнерных запросах, `:has()` и — в сборках
-`-scoped` — на `@scope`. JS-рантайм не требует сборки и не имеет
-зависимостей.
+на каскадных слоях, контейнерных запросах и `:has()`; из отдельных
+возможностей выше порога стоит только `subgrid` — его требуют две
+утилиты сетки.
+JS-рантайм не требует сборки и не имеет зависимостей.
+
+Для сохранения совместимости с браузерами в библиотеке не используется 
+`color-mix()`: оттенки и подсветки собраны из hsl-триплетов темы и 
+полупрозрачных слоёв. Иначе порог поднялся бы до Chrome 111 · Safari 16.2
+ · Firefox 113, то есть выше каскадных слоёв, ради оттенка кнопки при наведении.
 
 | Возможность | Минимальные версии | Требуется для | В мире | В России |
 |---|---|---|---|---|
 | Каскадные слои | Chrome 99 · Edge 99 · Firefox 97 · Safari 15.4 | все файлы CSS и правила, которые пишет рантайм | 95,3 % | 96,8 % от измеримого трафика (сырое 64,5 % при атрибуции 66,7 %) |
 | Контейнерные запросы | Chrome 105 · Edge 105 · Firefox 110 · Safari 16.0 | утилиты `-c*`, `.gr-cq` ядра, `data-gr-layout-c*` | 94,0 % | 95,6 % от измеримого трафика (сырое 63,7 %) |
 | `:has()` | Chrome 105 · Edge 105 · Firefox 121 · Safari 15.4 | `griffincss-ui.css` | 94,1 % | 95,0 % от измеримого трафика (сырое 63,3 %) |
-| `@scope` | Chrome 118 · Edge 118 · Firefox 146 · Safari 17.4 | только `*-scoped.css` | 90,0 % | 83,8 % от измеримого трафика (сырое 55,9 %) |
+| `subgrid` (!) | Chrome 117 · Edge 117 · Firefox 71 · Safari 16.0 | только утилиты `.gr-subgrid` и `.gr-subgrid-rows` | 92,3 % | 86,2 % от измеримого трафика (сырое 57,5 %) |
 
 **Ниже порога слоёв страница остаётся читаемой, но не оформленной.**
 Браузер, не знающий `@layer`, пропускает блок целиком — то есть всю
@@ -104,12 +110,14 @@ both add-ons peer-depend on it, yet their compiled CSS stays self-contained.
 Текст, ссылки и поля работают, оформления нет совсем; ошибки в консоли
 при этом не будет.
 
-**Сборки `-scoped` требуют большего — отдельной строкой.** Firefox 146 —
-это осень 2025 года, и одним предложением на все файлы порог не описывается:
-обычные сборки `@scope` не требуют, а `griffincss-ui-scoped.css`
-и `griffincss-utils-scoped.css` требуют.
+**Сборки `-scoped` отдельной строки не требуют.** Область в них задаёт
+префикс `:where(.griffin)`, а его знают Chrome 88, Safari 14 и Firefox 78 —
+ниже каскадных слоёв. Специфичности `:where()` не добавляет, поэтому
+scoped-сборка остаётся каскадным двойником обычной: переопределяется тем же
+селектором и живёт в тех же браузерах. Плата за изоляцию — только размер
+файла: префикс повторяется в каждом правиле.
 
-**Замер: 2026-08-30, `npm run coverage`** (`browserslist --coverage`,
+**Замер: 2026-09-01, `npm run coverage`** (`browserslist --coverage`,
 данные `caniuse-lite`; постоянной зависимости нет, пакет тянется разово
 через `npx`). Российская цифра дана от измеримой доли не для красоты:
 `caniuse-lite` атрибутирует по РФ только 66,7 % трафика, а остальное —
@@ -118,14 +126,16 @@ both add-ons peer-depend on it, yet their compiled CSS stays self-contained.
 самопроверки — [docs/compatibility.html](docs/compatibility.html).
 
 Browser support in short: Chrome/Edge 99+, Firefox 97+, Safari 15.4+
-(cascade layers). Container queries, `:has()` and `@scope` raise the bar
-for specific files — see the table above.
+(cascade layers). Container queries, `:has()` and `subgrid` raise
+the bar for specific files — see the table above. The `-scoped` builds
+scope through a `:where(.griffin)` prefix and need nothing extra. `color-mix()` is not used
+anywhere in the library.
 
 ---
 
 ## Установка / Installation
 
-> **Текущая версия `0.22.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.22.1`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -152,10 +162,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.22.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.1/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.22.1/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss.js"></script>
 ```
 
 Стратегии оформления `data-gr-style` — отдельный файл, по желанию: все три
@@ -163,9 +173,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 
 ```html
 <!-- все три стиля -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-styles.css">
 <!-- или один — вместо предыдущей строки, а не вдобавок к ней -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-style-strict.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-style-strict.css">
 ```
 
 Разбор и веса по каждому файлу — [docs/style-presets.html](docs/style-presets.html).
@@ -176,8 +186,8 @@ npm i griffincss-core griffincss-ui griffincss-utils
 сортируемая таблица):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.0/dist/griffinjs.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.0/dist/griffinjs.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.1/dist/griffinjs.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.22.1/dist/griffinjs.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
@@ -189,7 +199,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.1/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
@@ -215,11 +225,11 @@ npm run build
 | `packages/core/dist/griffincss-theme.js` | Рантайм переключателя темы — подключается отдельно и по желанию |
 | `packages/core/dist/griffincss-all.js` | Бандл: все четыре рантайма одним файлом, на ~15 % легче суммы — для страниц, где нужны все |
 | `packages/ui/dist/griffincss-ui.css` | Компоненты интерфейса |
-| `packages/ui/dist/griffincss-ui-scoped.css` | То же, обёрнутое в `@scope (.griffin)`; порог браузеров выше остальных файлов — Chrome 118, Safari 17.4, Firefox 146 |
+| `packages/ui/dist/griffincss-ui-scoped.css` | То же, ограниченное областью `.griffin` префиксом `:where()`; порог браузеров тот же, что у остальных файлов |
 | `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты, клавиатура вкладок и события `griffincss:*` |
 | `packages/ui/dist/griffinjs.js`, `griffinjs.css` | GriffinJS — опциональный слой виджетов с состоянием (`window.GriffinJS`): слайдер, галерея, лайтбокс, параллакс, мегаменю, контроллеры дропдауна, подсказки и окон, комбобокс, ползунок, сортировка таблицы; <!--gr:size:griffinjs-->17,2 КБ<!--/gr:size:griffinjs--> gzip целиком, `griffinjs-core.js` + модули по одному — для сборки нужного набора. Документация — раздел «GriffinJS» доксайта |
 | `packages/utils/dist/griffincss-utils.css` | Утилитарные классы |
-| `packages/utils/dist/griffincss-utils-scoped.css` | То же, обёрнутое в `@scope (.griffin)`; порог браузеров выше остальных файлов — Chrome 118, Safari 17.4, Firefox 146 |
+| `packages/utils/dist/griffincss-utils-scoped.css` | То же, ограниченное областью `.griffin` префиксом `:where()`; порог браузеров тот же, что у остальных файлов |
 | `packages/utils/dist/griffincss-utils.js` | Опциональный рантайм утилит: каскад скруглений произвольной глубины и произвольные значения `gr-*-[…]` |
 
 Рантаймы пишутся руками в `packages/*/src/` и минифицируются при сборке
@@ -660,7 +670,7 @@ GriffinCSS/
 │   ├── ui/                       # Пакет griffincss-ui (надстройка над core)
 │   │   ├── scss/
 │   │   │   ├── griffincss-ui.scss        # Точка входа
-│   │   │   ├── griffincss-ui-scoped.scss # То же в @scope (.griffin)
+│   │   │   ├── griffincss-ui-scoped.scss # То же в :where(.griffin)
 │   │   │   ├── _accordion.scss           # Раскрывающиеся разделы на <details>
 │   │   │   ├── _alert.scss               # Сообщения о статусе
 │   │   │   ├── _avatar.scss              # Аватары и стопка
@@ -673,7 +683,7 @@ GriffinCSS/
 │   │   │   ├── _dropdown.scss            # Выпадающая панель: <details> и popover
 │   │   │   ├── _empty.scss               # Пустое состояние
 │   │   │   ├── _form.scss                # Поля, метки, подсказки, аддоны
-│   │   │   ├── _keyframes.scss           # @keyframes вне @scope
+│   │   │   ├── _keyframes.scss           # @keyframes вне области
 │   │   │   ├── _link.scss                # Ссылки: варианты и стили линии
 │   │   │   ├── _menu.scss                # Список действий внутри панели
 │   │   │   ├── _modal.scss               # Модальное окно на <dialog>
@@ -694,14 +704,14 @@ GriffinCSS/
 │   └── utils/                    # Пакет griffincss-utils (надстройка над core)
 │       ├── scss/
 │       │   ├── griffincss-utils.scss        # Точка входа
-│       │   ├── griffincss-utils-scoped.scss # То же в @scope (.griffin)
+│       │   ├── griffincss-utils-scoped.scss # То же в :where(.griffin)
 │       │   ├── _animations.scss             # Переходы, длительности, gr-spin
 │       │   ├── _border-radius.scss          # Каскадный border-radius
 │       │   ├── _borders.scss                # Границы: ширина, стороны, стиль
 │       │   ├── _colors.scss                 # HSL-палитра
 │       │   ├── _effects.scss                # Прозрачность, object-fit, пропорции
 │       │   ├── _interactivity.scss          # Курсор, выделение, прокрутка
-│       │   ├── _keyframes.scss              # @keyframes вне @scope
+│       │   ├── _keyframes.scss              # @keyframes вне области
 │       │   ├── _position.scss               # Позиционирование, inset, z-index
 │       │   ├── _shadows.scss                # Тени
 │       │   ├── _sizing.scss                 # Ширина, высота, min/max

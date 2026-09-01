@@ -58,10 +58,10 @@
 // --gr-color-surface: таблица может лежать на чём угодно — на странице,
 // на карточке, на утопленной панели, — и любой непрозрачный цвет
 // совпадёт с одной из этих подложек и станет невидимым. Оттенок виден
-// на всех и меняет направление вместе с темой сам: в светлой currentcolor
+// на всех и меняет направление вместе с темой сам: в светлой цвет текста
 // тёмный, в тёмной — светлый.
 .gr-table-striped tbody tr:nth-child(odd) {
-  background-color: color-mix(in srgb, currentcolor 5%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 5%);
 }
 
 // Полная сетка: к горизонтальным линиям добавляются вертикальные
@@ -106,8 +106,8 @@
 @media (hover: hover) {
   .gr-table-hover tbody tr:hover {
     background-image: linear-gradient(
-      color-mix(in srgb, currentcolor 6%, transparent),
-      color-mix(in srgb, currentcolor 6%, transparent)
+      hsl(var(--gr-hsl-ink-0), 6%),
+      hsl(var(--gr-hsl-ink-0), 6%)
     );
   }
 }

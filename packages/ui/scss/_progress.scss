@@ -23,7 +23,7 @@
 
 .gr-progress {
   --gr-progress-fill: var(--gr-color-accent);
-  --gr-progress-track: color-mix(in srgb, currentcolor 12%, transparent);
+  --gr-progress-track: hsl(var(--gr-hsl-ink-0), 12%);
   --gr-progress-height: 0.5rem;
 
   display: block;
@@ -139,14 +139,14 @@ $gr-progress-statuses: (
   block-size: var(--gr-meter-height);
   border: 0;
   border-radius: var(--gr-radius-pill);
-  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 12%);
   appearance: none;
   overflow: hidden;
 }
 
 .gr-meter::-webkit-meter-bar {
   background-image: none;
-  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+  background-color: hsl(var(--gr-hsl-ink-0), 12%);
   border: 0;
   border-radius: var(--gr-radius-pill);
 }

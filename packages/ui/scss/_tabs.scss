@@ -141,7 +141,7 @@
 
 @media (hover: hover) {
   .gr-tabs-pills .gr-tab:hover:not([aria-selected="true"], [aria-current], [aria-disabled="true"], :disabled) {
-    background-color: color-mix(in srgb, currentcolor 8%, transparent);
+    background-color: hsl(var(--gr-hsl-ink-0), 8%);
   }
 }
 

@@ -20,6 +20,8 @@
 .gr-alert {
   --gr-alert-color: var(--gr-color-info);
   --gr-alert-fill: var(--gr-color-info);
+  --gr-alert-fill-hsl: var(--gr-hsl-status-info);
+  --gr-alert-veil: hsl(var(--gr-alert-fill-hsl), 10%);
 
   display: flex;
   box-sizing: border-box;
@@ -29,7 +31,12 @@
   border: var(--gr-border-width) solid var(--gr-alert-fill);
   border-inline-start-width: calc(var(--gr-border-width) * 4);
   border-radius: var(--gr-radius);
-  background-color: color-mix(in srgb, var(--gr-alert-fill) 10%, var(--gr-color-bg));
+
+  // Подложка — фон страницы под вуалью из цвета полосы: 0,9·фон + 0,1·полоса,
+  // то же, что давало смешение. Тень внутренняя и потому лежит под рамкой,
+  // а не поверх неё.
+  background-color: var(--gr-color-bg);
+  background-image: linear-gradient(var(--gr-alert-veil), var(--gr-alert-veil));
   color: var(--gr-color-text);
   line-height: 1.5;
 }
@@ -64,18 +71,20 @@
 
 // --- Статусы ----------------------------------------------------------------
 
-// Парами: цвет слова и иконки, цвет полосы и подложки.
+// Тройками: цвет слова и иконки, цвет полосы и подложки, триплет того же
+// цвета полосы — из него строится вуаль подложки.
 $gr-alert-statuses: (
-  info: (var(--gr-color-info), var(--gr-color-info)),
-  success: (var(--gr-color-success), var(--gr-color-success)),
-  warning: (var(--gr-color-warning), var(--gr-color-warning-surface)),
-  danger: (var(--gr-color-danger), var(--gr-color-danger))
+  info: (var(--gr-color-info), var(--gr-color-info), var(--gr-hsl-status-info)),
+  success: (var(--gr-color-success), var(--gr-color-success), var(--gr-hsl-status-success)),
+  warning: (var(--gr-color-warning), var(--gr-color-warning-surface), var(--gr-hsl-status-warning-surface)),
+  danger: (var(--gr-color-danger), var(--gr-color-danger), var(--gr-hsl-status-danger))
 );
 
 @each $gr-name, $gr-value in $gr-alert-statuses {
   .gr-alert-#{$gr-name} {
     --gr-alert-color: #{list.nth($gr-value, 1)};
     --gr-alert-fill: #{list.nth($gr-value, 2)};
+    --gr-alert-fill-hsl: #{list.nth($gr-value, 3)};
   }
 }
 

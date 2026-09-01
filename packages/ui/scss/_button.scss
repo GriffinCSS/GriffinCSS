@@ -5,10 +5,12 @@
 // Ресет опционален, поэтому компонент не рассчитывает на него: box-sizing,
 // font-family и обнуление полей задаются здесь.
 //
-// Цвета варианта живут в трёх локальных переменных — --gr-btn-bg, --gr-btn-fg,
-// --gr-btn-border. Благодаря этому правила :hover и :active написаны один раз
-// на все девять вариантов: они подмешивают к фону варианта его же цвет текста,
-// а насколько это темнее или светлее — решает действующая тема.
+// Цвета варианта живут в локальных переменных — --gr-btn-bg, --gr-btn-fg,
+// --gr-btn-border и триплет --gr-btn-fg-hsl. Благодаря этому правила :hover
+// и :active написаны один раз на все девять вариантов: они кладут поверх фона
+// вуаль из цвета текста варианта, а насколько это темнее или светлее — решает
+// действующая тема. Триплет нужен затем, что альфу приписывают к hsl-записи,
+// а не к готовому цвету.
 
 @use 'sass:list';
 
@@ -17,8 +19,14 @@
   --gr-btn-bg: var(--gr-color-surface-raised);
   --gr-btn-fg: var(--gr-color-text);
   --gr-btn-border: var(--gr-color-border);
-  --gr-btn-bg-hover: color-mix(in srgb, var(--gr-btn-bg) 88%, var(--gr-btn-fg));
-  --gr-btn-bg-active: color-mix(in srgb, var(--gr-btn-bg) 76%, var(--gr-btn-fg));
+
+  // Подсветка наведения — не смешанный цвет, а полупрозрачная вуаль поверх
+  // фона: 0,88·фон + 0,12·текст даёт ровно то же, что смешение 88 % на 12 %,
+  // но обходится без color-mix. Вуаль берёт цвет текста варианта триплетом
+  // (--gr-btn-fg-hsl), потому что альфу к готовому --gr-btn-fg не приписать.
+  --gr-btn-fg-hsl: var(--gr-hsl-ink-0);
+  --gr-btn-veil-hover: hsl(var(--gr-btn-fg-hsl), 12%);
+  --gr-btn-veil-active: hsl(var(--gr-btn-fg-hsl), 24%);
 
   display: inline-flex;
   box-sizing: border-box;
@@ -43,6 +51,7 @@
   cursor: pointer;
   transition:
     background-color var(--gr-transition),
+    box-shadow var(--gr-transition),
     border-color var(--gr-transition),
     color var(--gr-transition);
 }
@@ -51,12 +60,12 @@
 // экране :hover залипает после тапа и кнопка остаётся подсвеченной.
 @media (hover: hover) {
   .gr-btn:hover:not(:disabled, [aria-disabled="true"]) {
-    background-color: var(--gr-btn-bg-hover);
+    box-shadow: inset 0 0 0 100vmax var(--gr-btn-veil-hover);
   }
 }
 
 .gr-btn:active:not(:disabled, [aria-disabled="true"]) {
-  background-color: var(--gr-btn-bg-active);
+  box-shadow: inset 0 0 0 100vmax var(--gr-btn-veil-active);
 }
 
 .gr-btn:focus-visible {
@@ -91,18 +100,22 @@
 // текстовый цвет в светлой теме тёмно-коричневый (иначе не читался бы
 // текстом на белом), а прямоугольник такого цвета читается как «оливковый»,
 // а не как «внимание». Ровно та же развилка теперь описана у всех четырёх.
+//
+// Третьим в паре идёт триплет тех же чернил: вуаль наведения строится
+// из него, а из готового --gr-btn-fg альфу не получить.
 $gr-btn-filled: (
-  primary: (var(--gr-color-accent), var(--gr-color-on-accent)),
-  success: (var(--gr-color-success-surface), var(--gr-color-on-success)),
-  warning: (var(--gr-color-warning-surface), var(--gr-color-on-warning)),
-  danger: (var(--gr-color-danger-surface), var(--gr-color-on-danger)),
-  info: (var(--gr-color-info-surface), var(--gr-color-on-info))
+  primary: (var(--gr-color-accent), var(--gr-color-on-accent), var(--gr-hsl-on-accent)),
+  success: (var(--gr-color-success-surface), var(--gr-color-on-success), var(--gr-hsl-on-status-success)),
+  warning: (var(--gr-color-warning-surface), var(--gr-color-on-warning), var(--gr-hsl-on-status-warning)),
+  danger: (var(--gr-color-danger-surface), var(--gr-color-on-danger), var(--gr-hsl-on-status-danger)),
+  info: (var(--gr-color-info-surface), var(--gr-color-on-info), var(--gr-hsl-on-status-info))
 );
 
 @each $gr-name, $gr-pair in $gr-btn-filled {
   .gr-btn-#{$gr-name} {
     --gr-btn-bg: #{list.nth($gr-pair, 1)};
     --gr-btn-fg: #{list.nth($gr-pair, 2)};
+    --gr-btn-fg-hsl: #{list.nth($gr-pair, 3)};
     --gr-btn-border: #{list.nth($gr-pair, 1)};
   }
 }
@@ -111,6 +124,7 @@ $gr-btn-filled: (
 .gr-btn-secondary {
   --gr-btn-bg: transparent;
   --gr-btn-fg: var(--gr-color-accent);
+  --gr-btn-fg-hsl: var(--gr-hsl-accent);
   --gr-btn-border: var(--gr-color-accent);
 }
 
@@ -127,9 +141,12 @@ $gr-btn-filled: (
 .gr-btn-link {
   --gr-btn-bg: transparent;
   --gr-btn-fg: var(--gr-color-link);
+  --gr-btn-fg-hsl: var(--gr-hsl-link);
   --gr-btn-border: transparent;
-  --gr-btn-bg-hover: transparent;
-  --gr-btn-bg-active: transparent;
+
+  // Подсветки фона у этого варианта нет вовсе — обе вуали сняты.
+  --gr-btn-veil-hover: transparent;
+  --gr-btn-veil-active: transparent;
 
   padding-inline: 0;
 

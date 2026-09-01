@@ -16,21 +16,50 @@
 .gr-spinner {
   --gr-spinner-size: 1.5em;
   --gr-spinner-thickness: 0.15em;
-  --gr-spinner-track: color-mix(in srgb, currentcolor 20%, transparent);
+  --gr-spinner-track: currentcolor;
+  --gr-spinner-track-opacity: 0.2;
   --gr-spinner-color: var(--gr-color-accent);
 
   display: inline-block;
   box-sizing: border-box;
   inline-size: var(--gr-spinner-size);
   block-size: var(--gr-spinner-size);
-  border: var(--gr-spinner-thickness) solid var(--gr-spinner-track);
-
-  // Акцентной оставлена одна сторона: без разрыва в кольце вращение
-  // не читалось бы вовсе — равномерный круг выглядит неподвижным.
-  border-block-start-color: var(--gr-spinner-color);
+  position: relative;
   border-radius: var(--gr-radius-pill);
   vertical-align: middle;
   animation: gr-spin 0.8s linear infinite;
+}
+
+// Кольцо собрано из двух слоёв, а не из одной границы с перекрашенной
+// стороной. Дорожке нужна прозрачность при сохранённом currentcolor —
+// на цветной кнопке она берёт цвет её текста, — а альфу к currentcolor
+// без color-mix не приписать; прозрачность даёт сам слой.
+//
+// Порядок слоёв важен: ::after идёт после ::before и потому лежит поверх,
+// как прежде акцентная сторона лежала в той же границе. Если поменять их
+// местами, дорожка закроет дугу и вращение перестанет читаться.
+//
+// box-sizing обязателен: ресет опционален, а с content-box толщина
+// прибавилась бы к размеру и кольцо вышло бы шире элемента.
+.gr-spinner::before,
+.gr-spinner::after {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  inset: 0;
+  border: var(--gr-spinner-thickness) solid transparent;
+  border-radius: inherit;
+}
+
+.gr-spinner::before {
+  border-color: var(--gr-spinner-track);
+  opacity: var(--gr-spinner-track-opacity);
+}
+
+// Акцентной оставлена одна сторона: без разрыва в кольце вращение
+// не читалось бы вовсе — равномерный круг выглядит неподвижным.
+.gr-spinner::after {
+  border-block-start-color: var(--gr-spinner-color);
 }
 
 .gr-spinner-sm {

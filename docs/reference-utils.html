@@ -156,9 +156,9 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p>Пустой список <code>()</code> выключает ось целиком. Неизвестное имя роняет сборку.</p>
 
-<p><strong>В scoped-сборке структурных правил нет.</strong> <code>griffincss-ui-scoped.css</code> ограничен областью <code>.griffin</code>, а атрибут стоит на <code>&lt;html&gt;</code>: внутри <code>@scope</code> селектор требует носитель атрибута в области. Ось там действует на уровне токенов — скругления, плотность, тени и цвета работают полностью, — но шапка карточки не превращается в линию.</p>
+<p><strong>В scoped-сборке структурных правил нет.</strong> <code>griffincss-ui-scoped.css</code> ограничен областью <code>.griffin</code>, а атрибут стоит на <code>&lt;html&gt;</code>: селектор там получает префикс <code>:where(.griffin)</code> и требует носитель атрибута внутри области. Ось там действует на уровне токенов — скругления, плотность, тени и цвета работают полностью, — но шапка карточки не превращается в линию.</p>
 
-<p><strong>И порог браузеров у scoped-сборок выше.</strong> <code>@scope</code> требует Chrome 118, Safari 17.4 и Firefox 146 — это осень 2025 года, тогда как обычные сборки живут с Chrome 99 и Firefox 97. Цифры и метод замера — в разделе <a href="compatibility.html#scoped">«Совместимость»</a>.</p>
+<p><strong>А вот порог браузеров у scoped-сборок тот же, что у обычных.</strong> <code>:where()</code> знают Chrome 88, Safari 14 и Firefox 78 — это ниже каскадных слоёв, на которых стоит вся библиотека. Цифры и метод замера — в разделе <a href="compatibility.html#scoped">«Совместимость»</a>.</p>
 
 <h2>Направление письма / Writing direction</h2>
 
@@ -645,7 +645,7 @@ Griffincss.utils.stop();               // снять всё наблюдение
 <p>Результат: <code>.gr-bg-brand</code>, <code>.gr-text-brand-dark</code>, <code>.gr-border-danger</code> и ни одного <code>.gr-bg-primary</code>. Вес — 14 974 Б gzip против 15 394 Б у обычной сборки: восемнадцать акцентов сменились тремя, серая шкала осталась на месте. Градиенты подстроились сами — <code>.gr-from-primary</code> исчез вместе с акцентом, остались <code>.gr-from-white</code>, <code>.gr-from-black</code> и <code>.gr-from-danger</code>.</p>
 
 <div class="callout callout-warning">
-  <p><strong>Готовую точку входа при этом не подключают.</strong> Модуль, загруженный с <code>$with</code>, не может быть загружен раньше — а <code>griffincss-utils.scss</code> загрузит его без настройки. Свой файл заменяет готовый, а не дополняет его. Для <code>-scoped</code>-сборки копируется <code>griffincss-utils-scoped.scss</code>: там те же модули, но внутри <code>@scope (.griffin)</code>.</p>
+  <p><strong>Готовую точку входа при этом не подключают.</strong> Модуль, загруженный с <code>$with</code>, не может быть загружен раньше — а <code>griffincss-utils.scss</code> загрузит его без настройки. Свой файл заменяет готовый, а не дополняет его. Для <code>-scoped</code>-сборки копируется <code>griffincss-utils-scoped.scss</code>: там те же модули, но внутри <code>:where(.griffin)</code>.</p>
 </div>
 
 <h3>Сократить шкалу</h3>

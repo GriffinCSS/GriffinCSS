@@ -199,15 +199,31 @@ test('подсветка по наведению — только там, где
   }
 });
 
+test('color-mix не вернулся ни в одну сборку', () => {
+  // Оттенки и подсветки собраны из hsl-триплетов темы и полупрозрачных
+  // слоёв намеренно: color-mix поднимал порог библиотеки до Chrome 111 /
+  // Safari 16.2 / Firefox 113 — выше заявленных каскадных слоёв, и притом
+  // молча, потому что в таблице совместимости его не было.
+  //
+  // Проверка стоит здесь, а не в check-dist: вернуть color-mix проще всего
+  // одной строкой в компоненте, и упасть это должно там же, где пишут
+  // компоненты.
+  for (const [name, css] of [['ui', ui], ['ui-scoped', scoped], ['core', core], ['utils', utils]]) {
+    assert.ok(!css.includes('color-mix('), `color-mix вернулся в ${name}`);
+  }
+});
+
 test('полосы и подсветка таблицы — оттенок, а не готовый цвет поверхности', () => {
   // Непрозрачный цвет совпадёт с одной из подложек, на которых таблица может
-  // лежать, и станет невидимым. Оттенок currentcolor виден на всех.
+  // лежать, и станет невидимым. Полупрозрачный оттенок виден на всех
+  // и меняет направление вместе с темой: ink-0 в светлой тёмный,
+  // в тёмной светлый.
   assert.ok(
-    ui.includes('.gr-table-striped tbody tr:nth-child(odd){background-color:color-mix(in srgb, currentcolor'),
+    ui.includes('.gr-table-striped tbody tr:nth-child(odd){background-color:hsl(var(--gr-hsl-ink-0), 5%)'),
     'полосы вернулись к непрозрачному цвету',
   );
   assert.ok(
-    /\.gr-table-hover tbody tr:hover\{background-image:linear-gradient\(color-mix\(in srgb, currentcolor/.test(ui),
+    /\.gr-table-hover tbody tr:hover\{background-image:linear-gradient\(hsl\(var\(--gr-hsl-ink-0\), 6%\)/.test(ui),
     'подсветка строки вернулась к непрозрачному цвету',
   );
 });
@@ -287,12 +303,21 @@ test('display-дубли не вернулись: флекс и грид ост�
 });
 
 test('в scoped-сборке компоненты внутри области, а токены и тема — снаружи', () => {
-  const scopeAt = scoped.indexOf('@scope (.griffin){');
+  // Область задаёт префикс :where(.griffin). Специфичность у него нулевая —
+  // ровно как у неявного :scope, который стоял здесь раньше, — поэтому
+  // scoped-сборка остаётся каскадным двойником обычной, но не требует
+  // от браузера ничего сверх каскадных слоёв.
+  const bare = [...scoped.matchAll(/(?:^|[{}])\s*(\.gr-[^{}]*)\{/g)].map((m) => m[1]);
 
-  assert.ok(scopeAt > 0, 'блок @scope (.griffin) не найден');
-  assert.ok(scoped.slice(0, scopeAt).includes(':root{'), ':root уехал внутрь области видимости');
-  assert.ok(scoped.slice(0, scopeAt).includes('[data-gr-theme=dark]'), 'тема уехала внутрь области');
-  assert.ok(scoped.slice(scopeAt).includes('.gr-btn{'), 'компоненты остались вне области');
+  assert.deepEqual(bare, [], 'правило компонента объявлено вне области .griffin');
+  assert.ok(scoped.includes(':where(.griffin) .gr-btn{'), 'кнопка не ограничена областью');
+  assert.ok(scoped.includes(':root{'), 'нет :root с токенами');
+  assert.ok(!/:where\(\.griffin\)[^{}]*:root\{/.test(scoped), ':root уехал внутрь области видимости');
+  assert.ok(scoped.includes('[data-gr-theme=dark]'), 'нет темы в scoped-сборке');
+  assert.ok(
+    !/:where\(\.griffin\)[^{}]*\[data-gr-theme/.test(scoped),
+    'тема уехала внутрь области видимости',
+  );
 });
 
 test('ссылка объявляет состояния в порядке LVHA', () => {
@@ -545,8 +570,7 @@ test('компоненты 8b не привязаны к атрибутам те
   // data-gr-theme и data-gr-a11y стоят на <html> — снаружи области .griffin.
   // Правило с таким селектором в scoped-сборке не совпало бы никогда,
   // поэтому тема доходит до компонентов только через токены.
-  const parts = ui.split('@scope');
-  const components = parts[0].slice(parts[0].indexOf('.gr-accordion{'));
+  const components = ui.slice(ui.indexOf('.gr-accordion{'));
 
   assert.ok(!components.includes('[data-gr-theme'), 'компонент цепляется за атрибут темы');
   assert.ok(!components.includes('[data-gr-a11y'), 'компонент цепляется за атрибут режима');
@@ -960,7 +984,7 @@ test('заглушка красится оттенком, а не готовой
   const at = ui.indexOf('.gr-skeleton{');
   const rule = ui.slice(at, ui.indexOf('}', at));
 
-  assert.ok(rule.includes('color-mix(in srgb, currentcolor'), 'заглушка залита готовым цветом');
+  assert.ok(rule.includes('hsl(var(--gr-hsl-ink-0), 12%)'), 'заглушка залита готовым цветом');
   assert.ok(ui.includes('@keyframes gr-skeleton-pulse{'), 'нет keyframe мерцания');
 
   for (const selector of ['.gr-skeleton-text{', '.gr-skeleton-circle{']) {
@@ -1106,15 +1130,18 @@ test('пустое состояние ограничивает ширину по
 });
 
 test('keyframes волны 8c объявлены вне области видимости', () => {
-  // Правило @keyframes внутри @scope недействительно: анимация не находится
-  // по имени, и полоса, кольцо и мерцание замирают в scoped-сборке.
-  const scopeAt = scoped.indexOf('@scope (.griffin){');
+  // Имя анимации ищется глобально, префикс области к нему неприменим:
+  // объявления обязаны стоять до первого правила области, иначе полоса,
+  // кольцо и мерцание замрут в scoped-сборке.
+  const scopeAt = scoped.indexOf(':where(.griffin)');
+
+  assert.ok(scopeAt > 0, 'в сборке нет ни одного правила области .griffin');
 
   for (const name of ['gr-spin', 'gr-progress-slide', 'gr-skeleton-pulse']) {
     const at = scoped.indexOf(`@keyframes ${name}{`);
 
     assert.ok(at > 0, `нет @keyframes ${name} в scoped-сборке`);
-    assert.ok(at < scopeAt, `@keyframes ${name} объявлен внутри @scope`);
+    assert.ok(at < scopeAt, `@keyframes ${name} объявлен внутри области`);
   }
 });
 
@@ -1170,13 +1197,13 @@ test('пустой список выключает структурные пра
 });
 
 test('scoped-сборка не получает ни одного правила оси', () => {
-  // Внутри @scope селектор неявно получает :scope в начало и требует носитель
-  // атрибута в области, а data-gr-style стоит на <html>. Правило собралось бы,
-  // прошло бы все прочие проверки и молча не работало — то же основание,
-  // по которому в модулях ui запрещены селекторы по data-gr-theme.
+  // Селектор в scoped-сборке получает префикс :where(.griffin) и требует
+  // носитель атрибута в области, а data-gr-style стоит на <html>. Правило
+  // собралось бы, прошло бы все прочие проверки и молча не работало — то же
+  // основание, по которому в модулях ui запрещены селекторы по data-gr-theme.
   assert.ok(
     !/\[data-gr-style/.test(scoped),
-    'правило оси внутри @scope никогда не сработает',
+    'правило оси внутри области .griffin никогда не сработает',
   );
 });
 
@@ -1380,8 +1407,8 @@ test('закраска ползунка приходит долей, а не з�
 
 test('пара «от — до»: дорожка и отрезок — на обёртке, а не наложением', () => {
   // Наложением отрезок не собрать: дорожка полупрозрачна намеренно —
-  // оттенок currentcolor ложится на любую подложку, — и верхняя дорожка
-  // не закрыла бы акцент нижней, а лишь притенила бы его.
+  // оттенок ложится на любую подложку, — и верхняя дорожка не закрыла бы
+  // акцент нижней, а лишь притенила бы его.
   const ruleOf = (selector) => {
     const at = ui.indexOf(selector);
 
@@ -1395,7 +1422,7 @@ test('пара «от — до»: дорожка и отрезок — на об
   const rail = ruleOf('.gr-range-pair::before{');
 
   assert.ok(rail.includes('block-size:var(--gr-range-track)'), 'общая дорожка не берёт толщину из ручки');
-  assert.ok(rail.includes('color-mix(in srgb, currentcolor 12%'), 'общая дорожка написана готовым цветом');
+  assert.ok(rail.includes('hsl(var(--gr-hsl-ink-0), 12%)'), 'общая дорожка написана готовым цветом');
   assert.ok(
     rail.includes('var(--gr-range-from, 0)') && rail.includes('var(--gr-range-to, 0)'),
     'отрезок рисуется не по обеим границам',
@@ -1505,15 +1532,16 @@ test('заливка рейтинга начинается с начала ст�
 });
 
 test('цвета рейтинга — токен заливки и оттенок текста', () => {
-  // Пустой знак — оттенок currentcolor, а не готовый серый: непрозрачный
-  // совпал бы с одной из подложек, на которых карточка товара может лежать.
-  // Тот же приём, что у дорожки .gr-progress.
+  // Пустой знак приглушён прозрачностью самого ряда, а не готовым серым:
+  // непрозрачный совпал бы с одной из подложек, на которых карточка товара
+  // может лежать. Прозрачность на ::before, поэтому currentcolor остаётся
+  // настоящим и перекрашенный рейтинг приглушает свой цвет.
   const rules = ratingRules(ui);
 
   assert.ok(rules.includes('color:var(--gr-rating-color)'), 'залитый знак красится не токеном');
   assert.ok(
-    rules.includes('color-mix(in srgb, currentcolor'),
-    'пустой знак написан готовым цветом, а не оттенком текста',
+    /\.gr-rating::before\{[^}]*opacity:\.3/.test(rules),
+    'пустой знак написан готовым цветом, а не приглушённым currentcolor',
   );
   assert.ok(
     /--gr-rating-color:\s*var\(--gr-color-warning-surface\)/.test(ui),
