@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Griffincss в React и Vue — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Griffincss в React и Vue</h1>
+  <p>Пакетов-обёрток нет и не планируется. Не потому, что до них не дошли руки, а потому, что работу обёртки уже делает сканер: узел, вставленный кем угодно, получает свои раскладки и виджеты, удалённый — теряет их вместе с <code>destroy</code>.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">Ни одного нового пакета</span>
+    <span class="badge">packages/ui/src/griffinjs/core/scanner.js</span>
+    <span class="badge">packages/core/src/griffincss.js</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Обёрток нет, и это не заготовка под будущий пакет.</strong>
+    Обёртка над библиотекой без состояния делает ровно одно: ловит момент,
+    когда фреймворк вставил узел, и говорит библиотеке «подними тут своё»,
+    а на размонтировании — «сними». Оба рантайма Griffincss делают это сами,
+    через <code>MutationObserver</code>, и им всё равно, кто вставил узел —
+    React, Vue, шаблонизатор на сервере или <code>innerHTML</code>.
+    Пакет <code>griffincss-react</code> состоял бы из вызовов, которые
+    уже происходят без него.
+  </p>
+</div>
+
+<h2>Что именно делает сканер</h2>
+
+<p>
+  Наблюдателей два, и они независимы. Рантайм ядра
+  (<code>griffincss.js</code>) следит за <code>data-gr-layout</code>:
+  появившийся контейнер получает разобранную раскладку, и правило CSS
+  генерируется однократно на строку, сколько бы контейнеров её ни просили.
+  Слой <a href="griffinjs.html">GriffinJS</a>
+  (<code>griffinjs.js</code>) следит за <code>data-gr-<i>виджет</i></code>:
+  появившийся узел получает экземпляр виджета, исчезнувший — вызов
+  <code>destroy()</code>, снимающий слушатели и возвращающий атрибуты
+  в исходное состояние.
+</p>
+
+<p>
+  Оба наблюдают <code>childList</code> и <code>subtree</code> на
+  <code>document.documentElement</code> — рантайм ядра под
+  <code>Griffincss.observe()</code> добавляет к ним атрибут
+  <code>class</code>, и только ради шестой оговорки ниже.
+  Мутации копятся и разбираются
+  одной порцией: сначала снимаются виджеты с узлов, которых в документе
+  больше нет, потом поднимаются виджеты на добавленных. Устройство слоя
+  разобрано на странице
+  <a href="griffinjs-architecture.html">«Архитектура»</a>, устройство
+  рантайма ядра — на странице <a href="runtime.html">«JS-рантайм»</a>.
+</p>
+
+<table>
+  <tr><th>Событие фреймворка</th><th>Что делает библиотека</th></tr>
+  <tr><td>Узел вставлен в документ</td><td><code>init(узел)</code> по каждому зарегистрированному имени виджета; раскладка разбирается и применяется</td></tr>
+  <tr><td>Узел удалён из документа</td><td><code>destroy()</code> у экземпляра, запись снимается с учёта</td></tr>
+  <tr><td>Узел перемещён</td><td>ничего: к разбору порции узел снова подключён, экземпляр тот же</td></tr>
+  <tr><td>Изменился атрибут <code>data-gr-*</code></td><td>ничего: из атрибутов наблюдается один <code>class</code></td></tr>
+  <tr><td>Перезаписан <code>className</code> контейнера раскладки</td><td>под <code>Griffincss.observe()</code> рантайм возвращает свои <code>.gr-ready</code> и <code>.gr-l-*</code>; без наблюдателя — ничего</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Виджет поднимается не в тот же миг, а следующим тактом.</strong>
+    Порция мутаций разбирается через <code>setTimeout(…, 0)</code>: поток
+    вставок из фреймворка не должен поднимать виджеты по одному на каждую
+    мутацию. Поэтому в <code>useEffect</code> сразу после отрисовки
+    экземпляра ещё нет, и <code>GriffinJS.instance(node, 'slider')</code>
+    вернёт <code>null</code>. Если экземпляр нужен немедленно —
+    поднимите его сами: <code>GriffinJS.mount(node, 'slider')</code>
+    идемпотентен, и сканер, дойдя до этого узла, вернёт уже поднятый.
+  </p>
+</div>
+
+<h2>Шесть оговорок</h2>
+
+<h3>1. StrictMode монтирует дважды — и это безопасно</h3>
+
+<p>
+  В режиме разработки React вызывает эффекты дважды подряд, чтобы поймать
+  невычищенные подписки. Для слоя это не опасно:
+  <code>mount</code> идемпотентен по паре «элемент + имя виджета» — повторный
+  вызов не строит второй экземпляр, а возвращает живой. Двух слайдеров
+  на одной дорожке не бывает.
+</p>
+
+<pre><code>useEffect(() =&gt; {
+  const node = ref.current;
+  const slider = GriffinJS.mount(node, 'slider');   // первый вызов строит
+  GriffinJS.mount(node, 'slider') === slider;        // второй возвращает тот же
+
+  return () =&gt; GriffinJS.unmount(node, 'slider');
+}, []);</code></pre>
+
+<div class="callout callout-danger">
+  <p>
+    <strong>Снимать виджет только через <code>GriffinJS.unmount</code>.</strong>
+    Соблазн написать в уборщике <code>slider.destroy()</code> велик, и это
+    ловушка: <code>destroy()</code> у экземпляра вычистит слушатели, но
+    запись в учёте ядра останется, и следующий <code>mount</code> на том же
+    узле вернёт <em>тот самый мёртвый экземпляр</em>, а не построит новый.
+    Проверено: после прямого <code>destroy()</code> фабрика виджета
+    не вызывается повторно, после <code>unmount</code> — вызывается.
+  </p>
+</div>
+
+<h3>2. Перерисовка по ключу заменяет узел — виджет поднимается заново</h3>
+
+<p>
+  Смена <code>key</code> — это не обновление узла, а удаление старого
+  и вставка нового. Сканер поступит правильно: снимет виджет со старого
+  и поднимет на новом. Но <strong>состояние виджета переедет только то,
+  что записано в самой разметке</strong>: всё остальное живёт в замыкании
+  экземпляра и умирает вместе с ним. Слайдер вернётся на первый слайд,
+  открытая панель закроется.
+</p>
+
+<pre><code>// Было: смена ключа перезапускает слайдер с первого слайда
+&lt;div key={filter} data-gr-slider&gt;…&lt;/div&gt;
+
+// Стало: узел живёт дольше набора, ключ — на детях
+&lt;div data-gr-slider&gt;
+  {items.map((it) =&gt; &lt;div className="gr-slide" key={it.id}&gt;…&lt;/div&gt;)}
+&lt;/div&gt;</code></pre>
+
+<p>
+  Второй вариант меняет содержимое дорожки, не трогая её саму. Дорожка
+  переставляет себя после мутации содержимого сама — это её штатное
+  поведение, а не обходной приём.
+</p>
+
+<h3>3. Управляемое поле и виджет спорят за значение</h3>
+
+<p>
+  Виджеты, которые пишут в поле, пишут в <code>input.value</code> напрямую:
+  комбобокс — выбранное значение, пара ползунков «от — до» — выравнивание
+  порядка ручек. React про такую запись не узнаёт: его
+  <code>onChange</code> висит на синтетическом событии, а присваивание
+  <code>value</code> из чужого кода событий не порождает. Управляемое поле
+  на следующей отрисовке вернёт своё значение, и выбор пропадёт.
+</p>
+
+<p>
+  Лечится это не борьбой с виджетом, а отказом от управляемости именно
+  этого поля: слушайте <code>griffin:select</code> и держите значение
+  у себя. События слоя — обычные <code>CustomEvent</code> со всплытием,
+  поэтому JSX-свойства для них нет, и подписка идёт через
+  <code>addEventListener</code>.
+</p>
+
+<pre><code>useEffect(() =&gt; {
+  const node = ref.current;
+  const onSelect = (e) =&gt; setCity(e.detail.item.value);
+
+  node.addEventListener('griffin:select', onSelect);
+  return () =&gt; node.removeEventListener('griffin:select', onSelect);
+}, []);
+
+// Поле неуправляемое: значение ведёт виджет, состояние догоняет событием
+&lt;input ref={ref} className="gr-input" data-gr-combobox defaultValue={city}&gt;</code></pre>
+
+<h3>4. На сервере слоя нет</h3>
+
+<p>
+  Оба рантайма проверяют наличие <code>window</code> и <code>document</code>
+  и на сервере не запускаются: под Node файл экспортируется модулем и
+  не трогает ничего. Падения при серверной отрисовке не будет —
+  но не будет и виджетов, поэтому разметка обязана быть осмысленной
+  без них.
+</p>
+
+<p>
+  Это то же требование, что библиотека предъявляет к себе:
+  у каждого виджета есть «база без JS» — дорожка на
+  <code>scroll-snap</code>, <code>&lt;dialog&gt;</code>,
+  <code>&lt;details&gt;</code>. Серверная отрисовка отдаёт именно её,
+  а слой поднимается поверх после гидратации. Проверить, что база жива,
+  проще всего так же, как это делает проект: открыть страницу
+  с отключённым скриптом.
+</p>
+
+<h3>5. Контейнер, отрисованный раньше детей, виджета не получит</h3>
+
+<p>
+  Оговорка, которой нет в документации фреймворков, а стоит она дороже
+  остальных четырёх. Виджет требует свою разметку в момент подъёма:
+  слайдер без дорожки внутри бросает исключение. Ядро ловит его,
+  пишет предупреждение в консоль и <strong>не оставляет записи</strong> —
+  а повторной попытки на этом узле не будет, потому что сканер зовёт
+  <code>init</code> по <em>добавленному</em> узлу, и контейнер,
+  лежащий выше него, в обход не попадает.
+</p>
+
+<pre><code>// Ловушка: на первой отрисовке items пуст, дорожки нет,
+// слайдер падает и больше не пробует
+&lt;div data-gr-slider&gt;
+  {items.map(…)}          // items приедут запросом
+&lt;/div&gt;</code></pre>
+
+<pre><code>// Верно: контейнер появляется вместе со своим содержимым
+{items.length &gt; 0 &amp;&amp; (
+  &lt;div data-gr-slider&gt;
+    {items.map(…)}
+  &lt;/div&gt;
+)}</code></pre>
+
+<p>
+  Тот же приём годится на все случаи: <strong>узел с
+  <code>data-gr-<i>виджет</i></code> вставляется в документ уже полным.</strong>
+  Если это неудобно, остаётся ручной подъём —
+  <code>GriffinJS.init(node)</code> после того, как содержимое приехало.
+</p>
+
+<h3>6. Класс контейнера раскладки — не ваш</h3>
+
+<p>
+  Эта оговорка про рантайм ядра, а не про слой виджетов, и она
+  единственная, где фреймворк и библиотека спорят за одно и то же
+  свойство. На контейнер с <code>data-gr-layout</code> рантайм вешает
+  два класса: <code>gr-ready</code> — им снимается защита от FOUC —
+  и <code>gr-l-<i>хеш</i></code>, на котором держится само правило сетки
+  (детям достаются <code>gr-area-*</code>). React и Vue считают
+  <code>className</code> своим и присваивают его <em>целиком</em>
+  при изменении пропа: оба класса слетают разом.
+</p>
+
+<p>
+  Плата за это несоразмерна причине. Раскладка не просто рассыпается —
+  контейнер снова попадает под защиту от FOUC, которая ловит его
+  по атрибуту, и остаётся в <code>opacity: 0</code>. Пустое место
+  на странице, ошибок в консоли нет.
+</p>
+
+<pre><code>// Ловушка: на каждом переключении active React переписывает
+// className целиком, и gr-ready с gr-l-* уезжают вместе с ним
+&lt;div data-gr-layout="a3b4-c2d5" className={active ? 'x' : ''}&gt;…&lt;/div&gt;</code></pre>
+
+<p>
+  С 0.22.0 рантайм это переживает: наблюдатель слушает и атрибут
+  <code>class</code>, замечает пропажу маркеров на разложенном контейнере
+  и возвращает их — класс фреймворка остаётся на месте, оба живут рядом.
+  Но <strong>возвращать их некому, пока не вызван
+  <code>Griffincss.observe()</code></strong>: без наблюдателя рантайм
+  отработал один раз на загрузке и о перерисовке не знает.
+  В SPA его и так вызывают — иначе не поднимаются раскладки
+  у вставленных позже узлов.
+</p>
+
+<pre><code>// Один раз при старте приложения
+useEffect(() =&gt; { Griffincss.observe(); }, []);</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Надёжнее не спорить вовсе.</strong> Возврат маркеров стоит
+    лишнего прохода по контейнеру на каждой такой перерисовке. Меняющийся
+    класс дешевле держать на обёртке, а <code>data-gr-layout</code>
+    оставить узлу, чей <code>className</code> постоянен:
+    <code>&lt;div className={active ? 'x' : ''}&gt;&lt;div data-gr-layout="a3b4-c2d5"&gt;…</code>
+  </p>
+</div>
+
+<h2>Хук, когда узлы живут недолго</h2>
+
+<p>
+  Сканер рассчитан на страницу, а не на список, который перерисовывается
+  по нажатию. Там, где узлы создаются и разрушаются чаще, чем удобно ждать
+  такта, дешевле вести виджет самому: подъём и снятие становятся
+  синхронными и привязанными к жизни компонента, а не к наблюдателю.
+</p>
+
+<pre><code>import { useEffect, useRef } from 'react';
+
+// Поднимает виджет на своём узле и снимает его на размонтировании.
+// Пересобирается при смене deps — например, когда меняются параметры.
+export function useGriffinWidget(name, options, deps = []) {
+  const ref = useRef(null);
+
+  useEffect(() =&gt; {
+    const node = ref.current;
+    if (!node || !window.GriffinJS) return undefined;
+
+    // Идемпотентно: если сканер успел раньше, вернётся уже поднятый.
+    GriffinJS.mount(node, name, options);
+
+    // Только unmount — прямой destroy() оставил бы запись в учёте.
+    return () =&gt; GriffinJS.unmount(node, name);
+  }, deps);
+
+  return ref;
+}
+
+// Применение
+function Slider({ items }) {
+  const ref = useGriffinWidget('slider', { loop: true });
+
+  if (!items.length) return null;   // узел появляется уже полным
+
+  return (
+    &lt;div ref={ref} className="gr-slider"&gt;
+      &lt;div className="gr-track"&gt;
+        {items.map((it) =&gt; (
+          &lt;div className="gr-slide" key={it.id}&gt;{it.title}&lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="callout">
+  <p>
+    Проверка <code>window.GriffinJS</code> обязательна, а не защитная:
+    при серверной отрисовке хук выполнится и на сервере, где глобала нет.
+    Порядок подключения тоже значим —
+    <code>griffinjs.js</code> должен выполниться раньше, чем хук впервые
+    вызовет <code>mount</code>. Обычный тег <code>&lt;script&gt;</code>
+    в <code>&lt;head&gt;</code> это обеспечивает; сборщик, кладущий скрипт
+    в конец с <code>type="module"</code>, — нет.
+  </p>
+</div>
+
+<h2>Vue</h2>
+
+<p>
+  Всё сказанное выше верно и здесь — меняются только имена. Vue заменяет
+  узел при смене <code>:key</code> так же, как React, и так же не узнаёт
+  о записи в <code>value</code> из чужого кода, если поле связано через
+  <code>v-model</code>.
+</p>
+
+<table>
+  <tr><th>React</th><th>Vue</th></tr>
+  <tr><td><code>useEffect</code> + <code>useRef</code></td><td><code>onMounted</code> / <code>onBeforeUnmount</code> + <code>ref</code></td></tr>
+  <tr><td>уборщик эффекта</td><td><code>onBeforeUnmount</code></td></tr>
+  <tr><td><code>defaultValue</code></td><td><code>:value</code> без <code>v-model</code></td></tr>
+  <tr><td><code>key</code> на детях, не на контейнере</td><td><code>:key</code> на детях, не на контейнере</td></tr>
+</table>
+
+<pre><code>&lt;script setup&gt;
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+
+const el = ref(null);
+
+onMounted(() =&gt; {
+  if (window.GriffinJS) GriffinJS.mount(el.value, 'slider');
+});
+
+onBeforeUnmount(() =&gt; {
+  if (window.GriffinJS) GriffinJS.unmount(el.value, 'slider');
+});
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div ref="el" class="gr-slider" v-if="items.length"&gt;
+    &lt;div class="gr-track"&gt;
+      &lt;div class="gr-slide" v-for="it in items" :key="it.id"&gt;{{ it.title }}&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+
+<h2>Классы и раскладки</h2>
+
+<p>
+  С утилитами и компонентами никакой особенности нет: это обычный CSS,
+  и <code>className</code> принимает его как любой другой. Раскладка
+  <code>data-gr-layout</code> — тоже обычный атрибут, и рантайм ядра
+  поднимет её на вставленном узле по тому же наблюдателю.
+  Одна оговорка всё же есть, и она шестая выше:
+  <a href="#6-klass-konteynera-raskladki-ne-vash">класс контейнера
+  раскладки — не ваш</a>.
+</p>
+
+<pre><code>&lt;div data-gr-layout="a3b4-c2d5" className="gr-gap-4"&gt;
+  &lt;aside className="gr-area-a gr-p-4 gr-bg-surface"&gt;…&lt;/aside&gt;
+  &lt;main className="gr-area-b gr-p-4"&gt;…&lt;/main&gt;
+&lt;/div&gt;</code></pre>
+
+<p>
+  Единственное, чего делать не стоит, — собирать имя класса из кусков
+  в рантайме. Отсечение неиспользуемого (<code>npm run purge</code>) читает
+  разметку статически, и <code>{`gr-p-${n}`}</code> оно не увидит:
+  класс уедет из сборки, а страница молча останется без отступа.
+  Полное имя класса в исходнике — условие того, что отсечение безопасно.
+</p>
+
+<h2>Почему обёрток не будет</h2>
+
+<p>
+  Решение записано и не меняется: экосистема — отдельный продукт
+  с постоянным сопровождением, и проекту одного автора она не по силам.
+  Но к биндингам это относится по другой причине, и она сильнее:
+  <strong>их работа уже сделана</strong>. Обёртка ловила бы вставку
+  и удаление узла — сканер ловит их сам, без пакета, без версии,
+  совместимой с мажором фреймворка, и без второго места, где может
+  разойтись жизненный цикл.
+</p>
+
+<p>
+  Что действительно нужно потребителю — не пакет, а шесть оговорок выше
+  и тридцать строк хука, которые можно скопировать себе и держать
+  под своим контролем. Они на этой странице.
+</p>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

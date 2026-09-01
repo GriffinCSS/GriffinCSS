@@ -43,18 +43,20 @@ const MODULES = {
   _modal: '.gr-modal',
   _nav: '.gr-nav',
   _pagination: '.gr-pagination',
+  _rating: '.gr-rating',
   _table: '.gr-table',
   _tabs: '.gr-tabs',
   _tooltip: '.gr-tooltip',
   _empty: '.gr-empty',
   _progress: '.gr-progress',
+  _range: '.gr-range',
   _skeleton: '.gr-skeleton',
   _spinner: '.gr-spinner',
   _steps: '.gr-steps',
   _toast: '.gr-toast',
 };
 
-test('все двадцать пять модулей трёх волн попали в обе сборки', () => {
+test('все двадцать семь модулей попали в обе сборки', () => {
   for (const [module, selector] of Object.entries(MODULES)) {
     // В сжатом CSS за классом идёт либо начало блока, либо запятая
     // группового селектора, либо псевдокласс: .gr-checkbox,.gr-radio{…}
@@ -1227,4 +1229,337 @@ test('стрелка списка рисуется одним слоем, а н�
   // Цвет обязан остаться currentcolor: с ним стрелка следует теме
   // и состоянию :disabled, а зашитый цвет не следовал бы ни тому, ни другому.
   assert.match(rule[0], /currentcolor/);
+});
+
+// --- Этап 25: формы витрины --------------------------------------------------
+
+test('принятое поле отмечается атрибутом, а не псевдоклассом', () => {
+  // Ошибку и успех ставит одна и та же серверная проверка, поэтому и признак
+  // у них парный: [aria-invalid="false"] рядом с [aria-invalid="true"].
+  // :user-valid здесь не годится вовсе: браузер считает валидным любое
+  // непустое поле без ограничений, и форма зеленела бы сама собой
+  // по мере заполнения — превращаясь в светофор.
+  for (const selector of [
+    '.gr-input[aria-invalid=false]',
+    '.gr-textarea[aria-invalid=false]',
+    '.gr-select[aria-invalid=false]',
+  ]) {
+    assert.ok(ui.includes(selector), `нет правила успеха для ${selector}`);
+  }
+
+  const at = ui.indexOf('.gr-input[aria-invalid=false]');
+
+  assert.ok(
+    ui.slice(at, ui.indexOf('}', at)).includes('border-color:var(--gr-color-success)'),
+    'принятое поле красится не цветом успеха',
+  );
+  assert.ok(!ui.includes(':user-valid'), ':user-valid вернулся — форма зеленеет сама собой');
+});
+
+test('подпись успеха — тот же приём, что и подпись ошибки', () => {
+  // Цвет не единственный признак ни там, ни там: рядом с полем стоит текст,
+  // который переживает и печать, и дальтонизм. Разойтись двум подписям
+  // в кегле нельзя — они стоят в одном и том же месте формы.
+  const ruleOf = (selector) => {
+    const at = ui.indexOf(selector);
+
+    assert.ok(at > 0, `нет правила ${selector}`);
+
+    return ui.slice(at, ui.indexOf('}', at));
+  };
+
+  const error = ruleOf('.gr-error{');
+  const success = ruleOf('.gr-success{');
+
+  assert.ok(success.includes('color:var(--gr-color-success)'), 'подпись успеха берёт не тот токен');
+  assert.equal(
+    success.match(/font-size:([^;}]+)/)[1],
+    error.match(/font-size:([^;}]+)/)[1],
+    'кегль подписи успеха разошёлся с подписью ошибки',
+  );
+});
+
+test('обязательность поля видна без единого класса в разметке', () => {
+  // Обязательность объявляет атрибут required — платформа делает это сама.
+  // Звёздочке остаётся показать её глазами, и раз атрибут уже стоит,
+  // требовать ещё и класс значило бы держать два источника правды.
+  assert.ok(
+    ui.includes('.gr-field:has([required]) .gr-label::after'),
+    'нет автоматической звёздочки .gr-field:has([required]) .gr-label::after',
+  );
+  assert.ok(
+    ui.includes('.gr-required::after'),
+    'нет ручной .gr-required — группе флажков автоматика не поможет',
+  );
+
+  const at = ui.indexOf('.gr-required::after');
+
+  assert.ok(
+    ui.slice(at, ui.indexOf('}', at)).includes('var(--gr-color-danger)'),
+    'звёздочка обязательности красится не цветом статуса',
+  );
+});
+
+test('ползунок красит дорожку и бегунок в обоих движках', () => {
+  // У каждого движка свои псевдоэлементы, и пропущенный — это системный
+  // ползунок вместо компонента. Группировать их нельзя: неизвестный селектор
+  // в группе выбрасывает правило целиком (см. тест о вендорных
+  // псевдоэлементах выше).
+  for (const selector of [
+    '.gr-range::-webkit-slider-runnable-track',
+    '.gr-range::-webkit-slider-thumb',
+    '.gr-range::-moz-range-track',
+    '.gr-range::-moz-range-thumb',
+    '.gr-range::-moz-range-progress',
+  ]) {
+    assert.ok(ui.includes(`${selector}{`), `нет правила ${selector}`);
+    assert.ok(scoped.includes(`${selector}{`), `нет правила ${selector} в scoped-сборке`);
+  }
+
+  const at = ui.indexOf('.gr-range{');
+  const rule = ui.slice(at, ui.indexOf('}', at));
+
+  // accent-color остаётся под псевдоэлементами: он один даёт правильный вид
+  // там, где appearance: none ещё не применён.
+  assert.ok(rule.includes('accent-color:var(--gr-color-accent)'), 'ползунок не берёт акцент платформы');
+  assert.ok(!/block-size:\s*[\d.]/.test(rule), 'высота ползунка задана числом, а не ручкой');
+});
+
+test('размеры ползунка заданы ручками в rem, а не пикселями', () => {
+  // Режим для слабовидящих поднимает кегль корня: пиксельная дорожка
+  // осталась бы прежней, а поле рядом с ней выросло.
+  const at = ui.indexOf('.gr-range{');
+  const rule = ui.slice(at, ui.indexOf('}', at));
+
+  for (const knob of ['--gr-range-track', '--gr-range-thumb']) {
+    const value = rule.match(new RegExp(`${knob}:([^;}]+)`));
+
+    assert.ok(value, `нет ручки ${knob}`);
+    assert.match(value[1], /rem/, `${knob} задана не в rem: ${value[1]}`);
+  }
+
+  const thumbAt = ui.indexOf('.gr-range::-webkit-slider-thumb{');
+
+  assert.ok(
+    ui.slice(thumbAt, ui.indexOf('}', thumbAt)).includes('var(--gr-range-thumb)'),
+    'бегунок вебкита взял размер числом, а не ручкой',
+  );
+});
+
+test('закраска ползунка приходит долей, а не значением элемента', () => {
+  // У WebKit псевдоэлемента заполненной части нет вовсе: след рисует
+  // градиент по --gr-progress, который пишет виджет слоя. У Firefox
+  // заполнение своё и работает без скрипта — поэтому градиента там нет.
+  const at = ui.indexOf('.gr-range{');
+  const base = ui.slice(at, ui.indexOf('}', at));
+
+  assert.match(base, /--gr-range-fill:\s*calc\(var\(--gr-progress, 0\)\s*\*\s*100%\)/);
+
+  const trackAt = ui.indexOf('.gr-range::-webkit-slider-runnable-track{');
+  const track = ui.slice(trackAt, ui.indexOf('}', trackAt));
+
+  assert.ok(track.includes('var(--gr-range-fill)'), 'дорожка вебкита не красится долей');
+  assert.ok(track.includes('var(--gr-color-accent)'), 'след нарисован не акцентом');
+  assert.ok(ui.includes('.gr-range::-moz-range-progress{'), 'у Firefox отняли родное заполнение');
+
+  // Направление — ручкой, а не парой правил на каждый градиент: иначе
+  // правила пары перебили бы разворот в RTL своей специфичностью.
+  assert.ok(base.includes('--gr-range-dir: to right'), 'направление заливки не вынесено в ручку');
+
+  const rtl = ui.match(/\.gr-range:dir\(rtl\)[^{]*\{[^}]*\}/);
+
+  assert.ok(rtl, 'нет разворота заливки в RTL');
+  assert.ok(rtl[0].includes('--gr-range-dir: to left'), 'разворот в RTL меняет не ручку направления');
+  assert.ok(rtl[0].includes('.gr-range-pair:dir(rtl)'), 'пара в RTL осталась неразвёрнутой');
+  const gradients = [...ui.matchAll(/\.gr-range[^{}]*\{[^{}]*\}/g)]
+    .map((m) => m[0])
+    .filter((rule) => /linear-gradient\(to (right|left)/.test(rule));
+
+  assert.deepEqual(gradients, [], 'градиент дорожки снова написан стороной, а не ручкой');
+});
+
+test('пара «от — до»: дорожка и отрезок — на обёртке, а не наложением', () => {
+  // Наложением отрезок не собрать: дорожка полупрозрачна намеренно —
+  // оттенок currentcolor ложится на любую подложку, — и верхняя дорожка
+  // не закрыла бы акцент нижней, а лишь притенила бы его.
+  const ruleOf = (selector) => {
+    const at = ui.indexOf(selector);
+
+    assert.ok(at > 0, `нет правила ${selector}`);
+
+    return ui.slice(at, ui.indexOf('}', at));
+  };
+
+  assert.ok(ruleOf('.gr-range-pair{').includes('display:grid'), 'ползунки пары не лежат в одной ячейке');
+
+  const rail = ruleOf('.gr-range-pair::before{');
+
+  assert.ok(rail.includes('block-size:var(--gr-range-track)'), 'общая дорожка не берёт толщину из ручки');
+  assert.ok(rail.includes('color-mix(in srgb, currentcolor 12%'), 'общая дорожка написана готовым цветом');
+  assert.ok(
+    rail.includes('var(--gr-range-from, 0)') && rail.includes('var(--gr-range-to, 0)'),
+    'отрезок рисуется не по обеим границам',
+  );
+  assert.ok(rail.includes('var(--gr-color-accent)'), 'отрезок между ручками нарисован не акцентом');
+
+  // Дорожки самих ползунков в паре не рисуют ничего — включая родное
+  // заполнение Firefox: оно красило бы путь от начала шкалы.
+  for (const part of ['::-webkit-slider-runnable-track', '::-moz-range-track', '::-moz-range-progress']) {
+    assert.ok(
+      ruleOf(`.gr-range-pair>.gr-range${part}{`).includes('background:none'),
+      `дорожка ${part} в паре продолжает рисовать себя`,
+    );
+  }
+
+  // Дорожка обёртки лежит под ползунками: без сквозных событий до ручек
+  // не добраться, а с ними верхний ползунок забрал бы себе всю дорожку.
+  assert.ok(ruleOf('.gr-range-pair>.gr-range{').includes('pointer-events:none'), 'события не отданы ручкам');
+
+  for (const thumb of ['::-webkit-slider-thumb', '::-moz-range-thumb']) {
+    assert.ok(
+      ruleOf(`.gr-range-pair>.gr-range${thumb}{`).includes('pointer-events:auto'),
+      `ручка ${thumb} не ловит указатель`,
+    );
+  }
+});
+
+// --- Этап 26: рейтинг --------------------------------------------------------
+
+// Правила модуля одним куском: от якорного класса до конца его последнего
+// правила. Резать по соседу в точке входа здесь нельзя — за _rating идёт
+// _skeleton, но между ними может встать блок @media, и срез по чужому классу
+// захватил бы его целиком.
+function ratingRules(css) {
+  const at = css.indexOf('.gr-rating{');
+
+  assert.ok(at > 0, 'нет правила .gr-rating');
+
+  const rules = [...css.slice(at).matchAll(/\.gr-rating[^{}]*\{[^{}]*\}/g)].map((m) => m[0]);
+
+  assert.ok(rules.length >= 3, `правил рейтинга найдено ${rules.length}`);
+
+  return rules.join('');
+}
+
+test('рейтинг рисуется знаком из переменной, а не иконкой', () => {
+  // Иконочного набора у библиотеки нет и не будет — это записано в «чего
+  // здесь не будет». Знак приходит переменной, и потребитель подставляет
+  // глиф своего набора одной строкой на весь сайт.
+  // Символ записан CSS-экранированием: литеральная звезда сделала бы
+  // собранный файл не-ASCII, Sass приписал бы к нему BOM, и объявление
+  // порядка слоёв перестало бы быть первой строкой (проверка 4 в check-dist).
+  for (const [name, css] of [['ui', ui], ['core', core], ['utils', utils], ['scoped', scoped]]) {
+    assert.ok(!/★/.test(css), `литеральная звезда в griffincss-${name}: Sass припишет к файлу BOM`);
+  }
+
+  assert.match(ui, /--gr-rating-symbol:\s*"\\2605"/, 'знак записан не CSS-экранированием');
+
+  for (const [name, css] of [['ui', ui], ['core', core], ['utils', utils]]) {
+    assert.ok(css.includes('--gr-rating-symbol:'), `нет токена знака в griffincss-${name}.css`);
+    assert.ok(css.includes('--gr-rating-color:'), `нет токена цвета заливки в griffincss-${name}.css`);
+  }
+
+  const rules = ratingRules(ui);
+
+  assert.ok(rules.includes('var(--gr-rating-symbol)'), 'знак подставлен не переменной');
+  assert.ok(!rules.includes('url('), 'в рейтинг приехала картинка');
+  assert.ok(!/2605/.test(rules), 'знак зашит в правило модуля мимо переменной');
+});
+
+test('рейтинг заливается долей значения, а не классом на каждую звезду', () => {
+  // Дробная оценка — обычное дело: 4,5 из 5 обязаны рисоваться половиной
+  // знака, а не округляться до класса. Классы .gr-rating-1…5 округляли бы.
+  const rules = ratingRules(ui);
+
+  assert.match(
+    rules,
+    /--gr-rating-fill:\s*calc\(var\(--gr-rating, 0\)\s*\/\s*5\s*\*\s*100%\)/,
+    'доля заливки считается не из --gr-rating',
+  );
+  assert.ok(rules.includes('inline-size:var(--gr-rating-fill)'), 'залитый ряд не обрезан по доле');
+  assert.ok(rules.includes('overflow:hidden'), 'залитый ряд ничем не обрезан');
+
+  for (const step of [1, 2, 3, 4, 5]) {
+    assert.ok(!ui.includes(`.gr-rating-${step}{`), `появился класс-ступень .gr-rating-${step}`);
+  }
+});
+
+test('знаки рейтинга стоят без разрядки — иначе доля перестаёт быть линейной', () => {
+  // Интервал между знаками сдвигает границу заливки на целое число
+  // интервалов, и половина пятого знака перестаёт приходиться на 90 %
+  // ширины: заливка уезжает тем сильнее, чем крупнее оценка.
+  const rules = ratingRules(ui);
+
+  assert.ok(!/letter-spacing/.test(rules), 'у рейтинга появилась разрядка');
+  assert.ok(!/word-spacing/.test(rules), 'у рейтинга появился межсловный интервал');
+});
+
+test('заливка рейтинга начинается с начала строки, а не слева', () => {
+  // Логический край разворачивается под dir="rtl" сам: правило на [dir]
+  // модулю не нужно ни одного.
+  const rules = ratingRules(ui);
+
+  assert.ok(rules.includes('inset-inline-start:'), 'залитый ряд прижат не к логическому краю');
+  assert.ok(!/[^-]left:/.test(rules), 'в рейтинге появился физический край');
+  assert.ok(!/\[dir/.test(rules), 'рейтинг разворачивается правилом на [dir]');
+});
+
+test('цвета рейтинга — токен заливки и оттенок текста', () => {
+  // Пустой знак — оттенок currentcolor, а не готовый серый: непрозрачный
+  // совпал бы с одной из подложек, на которых карточка товара может лежать.
+  // Тот же приём, что у дорожки .gr-progress.
+  const rules = ratingRules(ui);
+
+  assert.ok(rules.includes('color:var(--gr-rating-color)'), 'залитый знак красится не токеном');
+  assert.ok(
+    rules.includes('color-mix(in srgb, currentcolor'),
+    'пустой знак написан готовым цветом, а не оттенком текста',
+  );
+  assert.ok(
+    /--gr-rating-color:\s*var\(--gr-color-warning-surface\)/.test(ui),
+    'токен заливки выведен не из семантического цвета',
+  );
+});
+
+test('поле счётчика умеет остаться без системных стрелок', () => {
+  // Рядом с парой кнопок «минус — плюс» системные стрелки — второй орган
+  // управления тем же числом, и стоят они вплотную к «плюсу». Убрать их
+  // утилитами нельзя: это вендорные псевдоэлементы, поэтому у поля есть
+  // класс — единственный способ дотянуться до них из разметки.
+  assert.ok(ui.includes('.gr-input-no-spin{'), 'нет класса .gr-input-no-spin');
+
+  const at = ui.indexOf('.gr-input-no-spin{');
+  const rule = ui.slice(at, ui.indexOf('}', at));
+
+  // Firefox стрелки прячет только так; WebKit и Blink — через свои
+  // псевдоэлементы ниже.
+  assert.ok(rule.includes('appearance:textfield'), 'у Firefox стрелки остались');
+
+  for (const pseudo of ['::-webkit-outer-spin-button', '::-webkit-inner-spin-button']) {
+    const selector = `.gr-input-no-spin${pseudo}{`;
+
+    assert.ok(ui.includes(selector), `нет правила ${selector}`);
+    assert.ok(scoped.includes(selector), `нет правила ${selector} в scoped-сборке`);
+
+    const from = ui.indexOf(selector);
+
+    assert.ok(
+      ui.slice(from, ui.indexOf('}', from)).includes('appearance:none'),
+      `${pseudo} не снят`,
+    );
+  }
+
+  // Каждый псевдоэлемент — своим правилом, как у ползунка и полосы:
+  // неизвестный селектор в группе выбрасывает её целиком.
+  assert.ok(
+    !/\.gr-input-no-spin::-webkit-outer-spin-button,/.test(ui),
+    'вендорные псевдоэлементы снова собраны в группу',
+  );
+
+  // Стрелки прячутся только по классу: у обычного числового поля они
+  // остаются единственным способом шагнуть мышью.
+  assert.ok(
+    !/\.gr-input::-webkit-(inner|outer)-spin-button/.test(ui),
+    'стрелки сняты у всех числовых полей сразу',
+  );
 });

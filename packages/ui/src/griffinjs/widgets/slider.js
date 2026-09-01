@@ -38,7 +38,7 @@
     }
   }
 
-  G.defineWidget('slider', function (el, opts) {
+  G.defineWidget('slider', { needs: ['track', 'motion'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
 
     var trackEl = el.querySelector('.gr-track') || el.firstElementChild;

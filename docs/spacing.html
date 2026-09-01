@@ -88,9 +88,7 @@
 <table>
   <tr><th>Суффикс</th><th>CSS-свойство</th><th>Пример</th></tr>
   <tr><td><code>-t</code></td><td>top</td><td><code>.gr-mt-4</code> → <code>margin-top: 1rem</code></td></tr>
-  <tr><td><code>-r</code></td><td>right</td><td><code>.gr-mr-4</code> → <code>margin-right: 1rem</code></td></tr>
   <tr><td><code>-b</code></td><td>bottom</td><td><code>.gr-mb-4</code> → <code>margin-bottom: 1rem</code></td></tr>
-  <tr><td><code>-l</code></td><td>left</td><td><code>.gr-ml-4</code> → <code>margin-left: 1rem</code></td></tr>
   <tr><td><code>-s</code></td><td>начало строки</td><td><code>.gr-ms-4</code> → <code>margin-inline-start: 1rem</code></td></tr>
   <tr><td><code>-e</code></td><td>конец строки</td><td><code>.gr-me-4</code> → <code>margin-inline-end: 1rem</code></td></tr>
   <tr><td><code>-x</code></td><td>обе стороны строки</td><td><code>.gr-mx-4</code> → <code>margin-inline: 1rem</code></td></tr>
@@ -98,8 +96,9 @@
 </table>
 
 <p>
-  <code>-s</code> и <code>-e</code> — логические стороны: в LTR они совпадают
-  с <code>-l</code> и <code>-r</code>, в RTL меняются местами сами. Подробнее —
+  <code>-s</code> и <code>-e</code> — логические стороны строки: в LTR это
+  левый и правый край, в RTL они меняются местами сами. Физических
+  <code>-l</code> и <code>-r</code> в шкале больше нет — подробнее
   в разделе «Направление письма».
 </p>
 
@@ -111,14 +110,10 @@
 .gr-p-{n}    /* padding */
 
 .gr-mt-{n}   /* margin-top */
-.gr-mr-{n}   /* margin-right */
 .gr-mb-{n}   /* margin-bottom */
-.gr-ml-{n}   /* margin-left */
 
 .gr-pt-{n}   /* padding-top */
-.gr-pr-{n}   /* padding-right */
 .gr-pb-{n}   /* padding-bottom */
-.gr-pl-{n}   /* padding-left */
 
 .gr-ms-{n}   /* margin-inline-start */
 .gr-me-{n}   /* margin-inline-end */
@@ -159,15 +154,13 @@
   <tr><td><code>.gr-mx-auto</code></td><td><code>margin-inline: auto</code></td><td>Центрирование блока</td></tr>
   <tr><td><code>.gr-ms-auto</code></td><td><code>margin-inline-start: auto</code></td><td>Прижать к концу строки (во flex)</td></tr>
   <tr><td><code>.gr-me-auto</code></td><td><code>margin-inline-end: auto</code></td><td>Прижать к началу строки (во flex)</td></tr>
-  <tr><td><code>.gr-ml-auto</code></td><td><code>margin-left: auto</code></td><td>Прижать элемент вправо (во flex)</td></tr>
-  <tr><td><code>.gr-mr-auto</code></td><td><code>margin-right: auto</code></td><td>Прижать элемент влево (во flex)</td></tr>
 </table>
 
 <div class="demo-block">
-  <div class="demo-block-title">ml-auto во flex-контейнере</div>
+  <div class="demo-block-title">ms-auto во flex-контейнере</div>
   <div class="gr-flex gr-flex-items-center gr-p-4 gr-bg-surface gr-radius-2">
     <div class="flex-demo-item gr-py-2 gr-px-4">Лого</div>
-    <div class="flex-demo-item gr-ml-auto gr-py-2 gr-px-4" style="background-color:hsl(var(--gr-hsl-primary-dark));">ml-auto → прижат вправо</div>
+    <div class="flex-demo-item gr-ms-auto gr-py-2 gr-px-4" style="background-color:hsl(var(--gr-hsl-primary-dark));">ms-auto → прижат к концу строки</div>
   </div>
 </div>
 
@@ -176,21 +169,18 @@
 <p>
   Суффикс брейкпоинта в конце имени класса: <code>.gr-p-8-md</code>.
   Правило применяется начиная с указанной ширины экрана. Адаптивные
-  варианты есть у всех четырнадцати физических и осевых свойств
-  и у <code>.gr-mx-auto</code>, <code>.gr-ml-auto</code>,
-  <code>.gr-mr-auto</code>.
+  варианты есть у всех свойств шкалы — физических, логических
+  и осевых — и у авто-маржинов <code>.gr-mx-auto</code>,
+  <code>.gr-ms-auto</code>, <code>.gr-me-auto</code>.
 </p>
 
 <div class="callout">
   <p>
-    <strong>У логических <code>-s</code> и <code>-e</code> адаптивных
-    вариантов нет.</strong> Четыре свойства на двенадцати ступенях и пяти
-    брейкпоинтах — это 240 селекторов и +1086 Б gzip, вшестеро больше
-    бюджета этапа. Выбрана полная шкала без суффикса брейкпоинта: любой
-    физический класс заменяется на логический один-в-один, а прирост
-    держится в 240 Б. Если отступ вдоль строки должен меняться по ширине
-    окна, остаются <code>.gr-mx-*</code>/<code>.gr-px-*</code> и физические
-    <code>.gr-ml-*-md</code>.
+    <strong>Логические <code>-s</code> и <code>-e</code> адаптивны
+    по всей шкале.</strong> <code>.gr-ms-4-md</code> и контейнерный
+    <code>.gr-ms-4-cmd</code> существуют наравне с <code>.gr-mt-4-md</code>:
+    односторонний отступ от брейкпоинта разворачивается в RTL так же,
+    как и базовый.
   </p>
 </div>
 
@@ -223,20 +213,26 @@
 <h2>Направление письма</h2>
 
 <p>
-  Классы, работающие вдоль строки, есть в двух видах. <strong>Физический</strong>
-  называет сторону экрана и держится её всегда. <strong>Логический</strong>
-  называет сторону строки — <code>start</code> и <code>end</code> — и
-  разворачивается сам, когда на элементе или предке стоит
+  Классы, работающие вдоль строки, — <strong>логические</strong>: они
+  называют сторону строки, <code>start</code> и <code>end</code>,
+  и разворачиваются сами, когда на элементе или предке стоит
   <code>dir="rtl"</code>. Правил на <code>[dir]</code> в библиотеке нет:
-  разворотом занимается браузер.
+  разворотом занимается браузер. Физические односторонние классы удалены —
+  замена по таблице соответствия ниже.
 </p>
 
 <table>
-  <tr><th>Физический</th><th>Логический</th><th>Свойство</th></tr>
+  <tr><th>Было (удалено)</th><th>Стало</th><th>Свойство</th></tr>
   <tr><td><code>.gr-ml-{n}</code> / <code>.gr-mr-{n}</code></td><td><code>.gr-ms-{n}</code> / <code>.gr-me-{n}</code></td><td><code>margin-inline-start</code> / <code>-end</code></td></tr>
   <tr><td><code>.gr-pl-{n}</code> / <code>.gr-pr-{n}</code></td><td><code>.gr-ps-{n}</code> / <code>.gr-pe-{n}</code></td><td><code>padding-inline-start</code> / <code>-end</code></td></tr>
-  <tr><td><code>.gr-ml-auto</code> / <code>.gr-mr-auto</code></td><td><code>.gr-ms-auto</code> / <code>.gr-me-auto</code></td><td><code>margin-inline-start: auto</code></td></tr>
+  <tr><td><code>.gr-ml-auto</code> / <code>.gr-mr-auto</code></td><td><code>.gr-ms-auto</code> / <code>.gr-me-auto</code></td><td><code>margin-inline-start</code> / <code>-end</code>: <code>auto</code></td></tr>
 </table>
+
+<p>
+  Суффиксы брейкпоинтов переносятся как есть: <code>.gr-ml-4-md</code> →
+  <code>.gr-ms-4-md</code>, <code>.gr-pl-2-clg</code> →
+  <code>.gr-ps-2-clg</code>. Эта же таблица — в журнале изменений.
+</p>
 
 <p>
   Осевые <code>.gr-mx-*</code> и <code>.gr-px-*</code> записаны логическими
@@ -255,12 +251,14 @@
 
 <div class="callout callout-warning">
   <p>
-    <strong>Физические классы никуда не делись и не денутся.</strong>
-    Разметка, написанная на <code>.gr-ml-4</code>, продолжает работать:
-    переопределить такой класс в логический значило бы молча сменить его
-    смысл. Правило выбора простое — если сторона выбрана из-за текста,
-    берите логический класс; если из-за геометрии экрана (угол окна,
-    край панели) — физический.
+    <strong>Физические односторонние классы удалены.</strong> Это
+    единственное запланированное ломающее изменение библиотеки: класс
+    вида <code>.gr-ml-4</code> нельзя было молча переопределить
+    в логический — разметка, выбравшая левую сторону буквально, сменила
+    бы смысл. Классы удалены целиком, замена — по таблице выше. Верх
+    и низ (<code>.gr-mt-*</code>, <code>.gr-pb-*</code>) остаются
+    физическими: блочная ось в RTL не разворачивается. Стороне, нужной
+    буквально из-за геометрии экрана, остаётся свой CSS.
   </p>
 </div>
 
@@ -446,12 +444,12 @@
 
 <p>
   Шапка сайта — один флекс-ряд: лого, ссылки, действия. Между соседями
-  работает <code>.gr-gap</code>, а всё, что после <code>.gr-ml-auto</code>,
-  уезжает к правому краю: авто-маржин съедает свободное место ряда с одной
-  стороны. Это тот же приём, что <code>.gr-mx-auto</code> у колонки, только
-  место отдаётся не поровну, а целиком одной стороне. Если шапка должна
-  сама разворачиваться в RTL — вместо физического класса берётся логический
-  <code>.gr-ms-auto</code>. <code>.gr-flex-wrap</code> — страховка для
+  работает <code>.gr-gap</code>, а всё, что после <code>.gr-ms-auto</code>,
+  уезжает к концу строки (в LTR — к правому краю): авто-маржин съедает
+  свободное место ряда с одной стороны. Это тот же приём, что
+  <code>.gr-mx-auto</code> у колонки, только место отдаётся не поровну,
+  а целиком одной стороне; класс логический, и в RTL шапка развернётся
+  сама. <code>.gr-flex-wrap</code> — страховка для
   совсем узких экранов: когда ряду не хватает места, действия переносятся
   на новую строку, а не распирают шапку.
 </p>
@@ -462,17 +460,17 @@
     &lt;a href="#"&gt;Документация&lt;/a&gt;
     &lt;a href="#"&gt;Примеры&lt;/a&gt;
   &lt;/nav&gt;
-  &lt;button class="gr-btn gr-btn-primary gr-btn-sm gr-ml-auto"&gt;Войти&lt;/button&gt;
+  &lt;button class="gr-btn gr-btn-primary gr-btn-sm gr-ms-auto"&gt;Войти&lt;/button&gt;
 &lt;/header&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Шапка — <code>.gr-gap</code> между соседями, <code>.gr-ml-auto</code> у действий</div>
+  <div class="demo-block-title">Шапка — <code>.gr-gap</code> между соседями, <code>.gr-ms-auto</code> у действий</div>
   <header class="gr-flex gr-flex-wrap gr-flex-items-center gr-gap gr-px-4 gr-py-2 gr-bg-surface gr-radius-2">
     <span class="gr-font-bold">Griffin</span>
     <nav class="gr-flex gr-gap-sm gr-text-sm">
       <a href="#" onclick="return false">Документация</a>
       <a href="#" onclick="return false">Примеры</a>
     </nav>
-    <button class="gr-btn gr-btn-primary gr-btn-sm gr-ml-auto" type="button">Войти</button>
+    <button class="gr-btn gr-btn-primary gr-btn-sm gr-ms-auto" type="button">Войти</button>
   </header>
 </div>
 

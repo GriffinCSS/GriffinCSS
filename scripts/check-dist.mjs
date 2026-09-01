@@ -5,12 +5,14 @@
 // Ноль зависимостей.
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { buildIndexSource } from './build-docs-index.mjs';
 import { BUNDLE, bundleContent } from './build-bundle.mjs';
+import { STYLES as STYLE_NAMES, styleFile } from './build-styles.mjs';
+import { TOKENS, SETS, rootVariables, tokensContent } from './build-tokens.mjs';
+import { bytes, kb, rawOf } from './sizes.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -21,8 +23,26 @@ const UI_SCOPED = 'packages/ui/dist/griffincss-ui-scoped.css';
 const UTILS = 'packages/utils/dist/griffincss-utils.css';
 const UTILS_SCOPED = 'packages/utils/dist/griffincss-utils-scoped.css';
 const STYLES = 'packages/core/dist/griffincss-styles.css';
+const GRIFFIN_CSS = 'packages/ui/dist/griffinjs.css';
+
+// Однофайловые сборки оси: та же точка входа с одним стилем в $gr-styles.
+// Список берётся у скрипта сборки — иначе проверяемые артефакты
+// и собираемые разойдутся молча.
+const STYLE_FILES = STYLE_NAMES.map(styleFile);
+
+// Файлы оси: полного :root у них нет по устройству, они лишь
+// переопределяют отдельные токены поверх любой сборки библиотеки.
+const AXIS_FILES = [STYLES, ...STYLE_FILES];
 const BREAKPOINTS = 'packages/core/scss/_breakpoints.scss';
 const RUNTIME = 'packages/core/src/griffincss.js';
+
+// Исходники рантаймов: те же четыре файла до минификации.
+const RUNTIME_SOURCES = [
+  RUNTIME,
+  'packages/core/src/griffincss-theme.js',
+  'packages/ui/src/griffincss-ui.js',
+  'packages/utils/src/griffincss-utils.js',
+];
 
 // Собранные рантаймы: минифицированные terser'ом копии src/*.js.
 const RUNTIMES = [
@@ -32,14 +52,29 @@ const RUNTIMES = [
   'packages/utils/dist/griffincss-utils.js',
 ];
 
-// Бюджет на все рантаймы разом: Bootstrap отгружает 23,8 КБ gzip JS,
-// и превысить его, не давая взамен виджетов, — значит проиграть сравнение,
-// ради которого библиотека и минифицируется.
-const JS_BUDGET = 10 * 1024;
+// Бюджет на все рантаймы разом: ориентир — `bootstrap.bundle.min.js`,
+// 23 731 Б gzip (замер 2026-08-30, 5.3.3). Превысить его, не давая взамен
+// виджетов, — значит проиграть сравнение, ради которого библиотека
+// и минифицируется.
+//
+// Пересчёт Этапа 28: факт 10 193 Б при потолке 10 240 — 47 Б свободного
+// места, в которое не влезает ни один из двух вариантов Этапа 30
+// (строгий CSP). Проба обоих теми же флагами terser, что у сборки:
+// конструируемый лист +49 Б, nonce −6 Б. Потолок 10,2 КБ оставляет
+// 252 Б — впятеро больше дорогой из двух проб; это запас под Этап 30
+// и только под него. Правило Этапа 30 в силе: если готовая реализация
+// не влезет и сюда, этап останавливается, а не двигает потолок.
+const JS_BUDGET = Math.round(10.2 * 1024);
 
 // Бандл жмётся одним словарём и обязан быть заметно легче суммы четырёх:
 // перестанет — значит, склейка сломалась и смысла в ней больше нет.
-const BUNDLE_BUDGET = 9 * 1024;
+// Сегодня экономия 1 519 Б (8 674 против 10 193).
+//
+// Пересчёт Этапа 28: потолок опущен с 9 КБ до 8,8 КБ. Своих функций
+// у бандла нет — он растёт ровно настолько, насколько выросли рантаймы,
+// поэтому его запас (337 Б) повторяет запас рантаймов и назван тем же:
+// Этап 30. Прежние 542 Б были запасом ни подо что.
+const BUNDLE_BUDGET = Math.round(8.8 * 1024);
 
 // Порядок каскадных слоёв: объявляется целиком в каждой сборке,
 // поэтому итог не зависит от того, какой файл подключён первым.
@@ -54,6 +89,7 @@ const LAYER_OF = new Map([
   [UTILS, 'griffincss.utils'],
   [UTILS_SCOPED, 'griffincss.utils'],
   [STYLES, 'griffincss.style'],
+  ...STYLE_FILES.map((file) => [file, 'griffincss.style']),
 ]);
 
 // Классы вне схемы `gr-`: корень области видимости для @scope-сборки.
@@ -129,7 +165,7 @@ if (breakpoints.size === 0) {
   fail(BREAKPOINTS, 'карта $gr-breakpoints пуста или не найдена');
 }
 
-const artifacts = [CORE, RESET, UI, UI_SCOPED, UTILS, UTILS_SCOPED, STYLES];
+const artifacts = [CORE, RESET, UI, UI_SCOPED, UTILS, UTILS_SCOPED, ...AXIS_FILES];
 const classesByFile = new Map();
 
 for (const file of artifacts) {
@@ -191,12 +227,12 @@ for (const file of artifacts) {
   }
 
   // 5. Токены --gr-bp-* собраны из карты и не разошлись с ней.
-  //    Ресет токенов не содержит — там проверять нечего. Файл оси
-  //    оформления тоже: полного :root у него нет по устройству, он лишь
-  //    переопределяет отдельные токены поверх любой сборки библиотеки.
+  //    Ресет токенов не содержит — там проверять нечего. Файлы оси
+  //    оформления тоже: полного :root у них нет по устройству, они лишь
+  //    переопределяют отдельные токены поверх любой сборки библиотеки.
   //    Проверка «токены --gr-bp-* без пары в карте» при этом остаётся
   //    осмысленной, но объявить их файлу оси неоткуда.
-  if (file !== RESET && file !== STYLES) {
+  if (file !== RESET && !AXIS_FILES.includes(file)) {
     for (const [name, value] of breakpointMap) {
       if (!new RegExp(`--gr-bp-${name}:\\s*${value}\\s*[;}]`).test(css)) {
         fail(file, `нет токена --gr-bp-${name}: ${value} — токены разошлись с ${BREAKPOINTS}`);
@@ -303,13 +339,35 @@ if (!runtimeOrder) {
 //     компонентом: check-dist запрещает делить класс между пакетами,
 //     а слой griffincss.style старше griffincss.utils — правило про .gr-table,
 //     заехавшее сюда, начало бы выигрывать у утилит.
-const stylesClasses = classesByFile.get(STYLES) ?? new Set();
+for (const file of AXIS_FILES) {
+  const stylesClasses = classesByFile.get(file) ?? new Set();
 
-if (stylesClasses.size > 0) {
-  fail(
-    STYLES,
-    `ось оформления объявляет классы (${stylesClasses.size}): ${[...stylesClasses].slice(0, 5).join(', ')}`,
-  );
+  if (stylesClasses.size > 0) {
+    fail(
+      file,
+      `ось оформления объявляет классы (${stylesClasses.size}): ${[...stylesClasses].slice(0, 5).join(', ')}`,
+    );
+  }
+}
+
+// 11a. Однофайловая сборка несёт ровно свой стиль.
+//      Собираются они из того же источника с другим $gr-styles, поэтому
+//      разойтись с общим файлом могут только через ошибку в списке сборки:
+//      забытая конфигурация выродит артефакт в копию griffincss-styles.css,
+//      и пользователь получит все три стиля под именем одного — молча.
+for (const name of STYLE_NAMES) {
+  const file = styleFile(name);
+  const css = read(file);
+
+  if (!css.includes(`[data-gr-style=${name}]`)) {
+    fail(file, `нет ни одного правила стиля ${name} — сборка собрала общую часть без него`);
+  }
+
+  const strangers = STYLE_NAMES.filter((other) => other !== name && css.includes(`[data-gr-style=${other}]`));
+
+  if (strangers.length > 0) {
+    fail(file, `в файле одного стиля есть чужие: ${strangers.join(', ')}`);
+  }
 }
 
 // 12. Ось оформления не просачивается в scoped-сборку компонентов.
@@ -406,6 +464,7 @@ const VERSION_SITES = [
   ['README.md', `griffincss-core@${VERSION}/dist/`],
   ['README.md', `griffincss-ui@${VERSION}/dist/`],
   ['README.md', `griffincss-utils@${VERSION}/dist/`],
+  ['docs/style-presets.html', `griffincss-core@${VERSION}/dist/`],
   ['ARCHITECTURE.md', `**Version:** ${VERSION}`],
 ];
 
@@ -415,9 +474,86 @@ for (const [file, needle] of VERSION_SITES) {
   }
 }
 
+// 19. Бюджеты на собранный CSS (Этап 27, пересчитаны Этапом 28).
+//
+//     До Этапа 27 бюджетов на CSS не было ни одного: сверялись только
+//     рантаймы, бандл и слой виджетов. Ориентир «ui не более 10 КБ» жил
+//     в тексте плана и разошёлся с фактом на 0,5 КБ, никого не разбудив.
+//     Этап 27 завёл механизм и поставил потолки по факту дня, без запаса.
+//
+//     Этап 28 назначил честные значения. Правила пересчёта, общие
+//     для CSS и JS:
+//
+//       — потолок поднимается только вместе с тем, что покупается,
+//         и покупка названа здесь же;
+//       — запас — это байты под названную функцию, а не «на всякий
+//         случай»: такой запас съедается за две недели, что и произошло
+//         с рантаймами (47 Б на день ревизии);
+//       — где рост не планируется, потолок равен факту плюс допуск,
+//         и это сказано словами;
+//       — потолок без покупки может только опускаться.
+//
+//     Допуск — округление вверх до 0,1 КБ (единица, в которой проект
+//     называет веса): CI гоняет Node 22 и 24, и zlib разных версий даёт
+//     расхождение в единицы байт. При опускании потолка допуск берётся
+//     не меньше 0,1 КБ.
+//
+//     Замер 2026-08-30 (3091fcc), gzip уровня 9:
+//
+//       core          3 408 Б — рост не планируется, потолок прежний,
+//                     допуск 74 Б;
+//       reset           601 Б — то же, допуск 13 Б; файл нормализации
+//                     закрыт по составу с Этапа 6;
+//       ui           10 784 Б — потолок поднят с 10,6 до 10,8 КБ.
+//                     Покупка: нативное поле даты и слот иконки (Этап 33)
+//                     плюс указатель сортировки в таблице (Этап 35).
+//                     Проба всех трёх на собранном файле — +184 Б;
+//                     запас 275 Б;
+//       utils        14 945 Б (2026-08-31, Этап 36) — потолок опущен
+//                     с 16,6 КБ фазы 36a до 14,7 КБ. Размен Этапа 36:
+//                     логические отступы получили адаптивные
+//                     и контейнерные варианты (+1 527 Б gzip),
+//                     физические односторонние классы удалены
+//                     (−1 976 Б); итог −449 Б к 15 394 до этапа
+//                     при расчёте −296 правкой собранного файла —
+//                     честная сборка жмётся лучше ручной вставки
+//                     блоков, оба замера фаз сверены по составу
+//                     селекторов. Запас 108 Б — допуск, рост
+//                     не планируется: вывод Этапа 28 в силе, следующая
+//                     функция приходит с сокращением состава,
+//                     а не с новым потолком;
+//       griffinjs-css 2 408 Б — рост не планируется, потолок прежний,
+//                     допуск 50 Б. Оформление виджета Этапа 35 живёт
+//                     в _table.scss пакета ui, а не здесь.
+//
+//     Сравнение с альтернативой на потолках остаётся в пользу библиотеки
+//     (замер 2026-08-30, gzip уровня 9): reset+core+ui+utils — 30 208 Б (после Этапа 36)
+//     против 30 858 Б у bootstrap.min.css при 823 классах сверху
+//     и 64 593 Б у bulma.min.css; core+ui+reset — 15 155 Б против
+//     30 053 Б у uikit.min.css.
+const kbBudget = (value) => Math.round(value * 1024);
+
+// Артефакт, потолок, имя для сводки. Порядок — как в сводке.
+const CSS_BUDGETS = [
+  ['core', kbBudget(3.4), CORE],
+  ['ui', kbBudget(10.8), UI],
+  ['utils', kbBudget(14.7), UTILS],
+  ['reset', kbBudget(0.6), RESET],
+  ['griffinjs-css', kbBudget(2.4), GRIFFIN_CSS],
+];
+
+for (const [id, budget, file] of CSS_BUDGETS) {
+  const weight = bytes(id);
+
+  if (weight > budget) {
+    fail(file, `весит ${weight} Б gzip при бюджете ${budget} Б — превышение на ${weight - budget} Б`);
+  }
+}
+
 // 14. Бюджет на рантаймы.
-const gzipOf = (file) => gzipSync(readFileSync(join(root, file)), { level: 9 }).length;
-const jsWeight = RUNTIMES.reduce((sum, file) => sum + gzipOf(file), 0);
+//     Вес берётся у scripts/sizes.mjs — там же, откуда его берёт
+//     документация. Второй счёт разошёлся бы с первым (Этап 27).
+const jsWeight = bytes('js-all');
 
 if (jsWeight > JS_BUDGET) {
   fail(
@@ -439,7 +575,7 @@ try {
     fail(BUNDLE, 'бандл отстал от рантаймов — пересоберите: npm run build:bundle');
   }
 
-  bundleWeight = gzipOf(BUNDLE);
+  bundleWeight = bytes('bundle');
 
   if (bundleWeight > BUNDLE_BUDGET) {
     fail(
@@ -470,40 +606,88 @@ try {
 //     назначен в 21a до того, как в инвентарь вошли anchor и семейство
 //     выпадающего; флаги terser (unsafe, props) дают 50–130 Б. Решение
 //     2026-08-29 — 16 КБ; состав не режется, ориентиры UIkit/Swiper те же.
+//
+//     Замер 22a: 16 268 → 16 448 Б. +180 Б — цена объявленных зависимостей:
+//     девять списков needs в модулях и проверка на старте, без которой
+//     сборка «ядро + нужное» ломается молча и уже у читателя страницы
+//     (риск №1 Этапа 22). Рост объясним построчно и не связан с переносом
+//     ядра: тот состав файлов не меняет. Решение 2026-08-30 — 16,5 КБ.
+//
+//     Замер 25c: 16 448 → 16 892 Б. +444 Б — двенадцатый виджет, range:
+//     доля пройденного пути ползунка и пара «от — до». Потолок поднят
+//     ровно по прежнему правилу — «состав вырос, ориентир тот же»: так
+//     он вырос в 21f, когда пришли окна и комбобокс. Решение 2026-08-30 —
+//     17 КБ; ориентиры UIkit ≈ 40 КБ и Swiper ≈ 45 КБ не сдвинулись.
+//
+//     Пересчёт Этапа 28. Ориентиры измерены, а не оценены (2026-08-30,
+//     gzip уровня 9): uikit.min.js — 50 619 Б, uikit-core.min.js —
+//     33 945 Б, swiper-bundle.min.js — 42 014 Б плюс 4 827 Б своего CSS.
+//
+//       полный файл  16 892 Б — потолок поднят с 17 до 17,4 КБ. Покупка:
+//                    сортируемая таблица (Этап 35), оценка этапа
+//                    600–900 Б; запас 926 Б. Это и есть ответ на развилку
+//                    35-0 «входит в полный бандл, если Этап 28 дал
+//                    место»: место дано, виджет входит. Слой остаётся
+//                    легче uikit.min.js втрое;
+//       ядро слоя     2 689 Б — потолок опущен с 3 до 2,8 КБ, допуск
+//                    178 Б. Рост не планируется по устройству: новая
+//                    общая возможность кладётся в SHARED, а не в ядро
+//                    (правило в CONTRIBUTING.md), и виджеты Этапов 25
+//                    и 35 ядра не касаются — range приехал, ядро
+//                    осталось теми же 2 689 Б. Прежние 383 Б были
+//                    запасом ни подо что, а этот бюджет — плата
+//                    каждого, кто взял хоть один виджет;
+//       набор слайдера 7 760 Б — потолок опущен с 9 до 7,7 КБ, допуск
+//                    125 Б. Рост не планируется: состав набора закрыт
+//                    Этапом 22, а 1 456 Б прежнего запаса не были
+//                    названы ничем. Набор легче связки Swiper
+//                    (js + css) вшестеро.
 const GRIFFIN_SRC = 'packages/ui/src/griffinjs';
 const GRIFFIN = 'packages/ui/dist/griffinjs.js';
-const GRIFFIN_CSS = 'packages/ui/dist/griffinjs.css';
-const GRIFFIN_BUDGET = 16 * 1024;
-const GRIFFIN_CORE_BUDGET = 9 * 1024;
-// Части минимального набора для слайдера.
+const GRIFFIN_BUDGET = Math.round(17.4 * 1024);
+const GRIFFIN_CORE_BUDGET = Math.round(7.7 * 1024);
+// Части минимального набора для слайдера. После Этапа 22 дорожка и анимация
+// лежат вне ядра, но набору слайдера нужны обе: список повторяет needs.
 const GRIFFIN_CORE_PARTS = [
   'packages/ui/dist/griffinjs-core.js',
+  'packages/ui/dist/griffinjs-motion.js',
+  'packages/ui/dist/griffinjs-track.js',
   'packages/ui/dist/griffinjs-scroll.js',
   'packages/ui/dist/griffinjs-slider.js',
 ];
+// Налог на всех: ядро в одиночку. Именно оно теперь показывает, не растёт ли
+// плата тех, кто взял один лёгкий виджет. Замер 22b — 2 689 Б при 6 264 до
+// разнесения; бюджет пересчитан Этапом 28 (см. выше), и новая общая
+// возможность кладётся в SHARED, а не сюда (правило в CONTRIBUTING.md).
+const GRIFFIN_ONLY_CORE = 'packages/ui/dist/griffinjs-core.js';
+const GRIFFIN_ONLY_CORE_BUDGET = Math.round(2.8 * 1024);
 
 let griffinWeight = 0;
 let griffinCoreWeight = 0;
+let griffinOnlyCoreWeight = 0;
 
 try {
   for (const file of [GRIFFIN, ...GRIFFIN_CORE_PARTS]) checkMinified(file);
 
-  griffinWeight = gzipOf(GRIFFIN);
+  griffinWeight = bytes('griffinjs');
+  griffinOnlyCoreWeight = bytes('griffinjs-core');
 
   // Набор меряется как ОДИН файл, той же методикой, что и полный griffinjs.js:
   // сумма трёх независимых gzip платит за три словаря вместо одного
-  // (~1 КБ на пустом месте) и измеряла бы нарезку, а не код.
-  griffinCoreWeight = gzipSync(
-    Buffer.concat(GRIFFIN_CORE_PARTS.map((file) => readFileSync(join(root, file)))),
-    { level: 9 },
-  ).length;
+  // (~1 КБ на пустом месте) и измеряла бы нарезку, а не код. Состав набора
+  // объявлен в sizes.mjs — там же, где его берёт документация.
+  griffinCoreWeight = bytes('griffinjs-slider-set');
 
   if (griffinWeight > GRIFFIN_BUDGET) {
     fail(GRIFFIN, `слой весит ${griffinWeight} Б gzip при бюджете ${GRIFFIN_BUDGET} Б — превышение на ${griffinWeight - GRIFFIN_BUDGET} Б`);
   }
 
+  if (griffinOnlyCoreWeight > GRIFFIN_ONLY_CORE_BUDGET) {
+    fail(GRIFFIN_ONLY_CORE, `ядро весит ${griffinOnlyCoreWeight} Б gzip при бюджете ${GRIFFIN_ONLY_CORE_BUDGET} Б — это плата каждого, кто взял хоть один виджет`);
+  }
+
   if (griffinCoreWeight > GRIFFIN_CORE_BUDGET) {
-    fail(GRIFFIN_CORE_PARTS[0], `ядро + scroll + slider весят ${griffinCoreWeight} Б gzip при бюджете ${GRIFFIN_CORE_BUDGET} Б`);
+    fail(GRIFFIN_CORE_PARTS[0], `набор слайдера (ядро + motion + track + scroll + slider) весит ${griffinCoreWeight} Б gzip при бюджете ${GRIFFIN_CORE_BUDGET} Б`);
   }
 
   // Стили слоя: та же дисциплина, что у компонентов, — порядок слоёв
@@ -541,7 +725,7 @@ function walkJs(dir, out = []) {
     const rel = `${dir}/${name}`;
 
     if (statSync(join(root, rel)).isDirectory()) walkJs(rel, out);
-    else if (name.endsWith('.js')) out.push(rel);
+    else if (name.endsWith('.js') || name.endsWith('.mjs')) out.push(rel);
   }
 
   return out;
@@ -555,12 +739,83 @@ for (const file of walkJs(GRIFFIN_SRC)) {
   }
 }
 
+// Единственный источник <style> — рантайм ядра (Этап 30).
+//     Документация обещает читателю со строгим CSP ровно это: <style>
+//     создаёт один файл, и только он нуждается в nonce. Обещание, которое
+//     никто не сторожит, тихо перестаёт быть правдой при первой же
+//     надстройке, решившей завести свой лист.
+const STYLE_MAKER = /createElement\(\s*['"]style['"]/;
+
+for (const file of [...RUNTIME_SOURCES, ...walkJs(GRIFFIN_SRC)]) {
+  if (!STYLE_MAKER.test(read(file))) continue;
+
+  if (file !== RUNTIME) {
+    fail(file, '<style> создаёт не только рантайм ядра — раздел о строгом CSP перестал быть правдой');
+  }
+}
+
+if (!STYLE_MAKER.test(read(RUNTIME))) {
+  fail(RUNTIME, 'рантайм ядра больше не создаёт <style> — раздел о строгом CSP описывает не то');
+}
+
+if (!/styleEl\.nonce = nonce/.test(read(RUNTIME))) {
+  fail(RUNTIME, 'nonce на <style> не переносится — под строгим CSP раскладки потеряются молча');
+}
+
+// Динамический import() в тестах и скриптах — только по специферу или file:-URL.
+//     Абсолютный путь работает на POSIX и падает под Windows: `C:\…`
+//     разбирается как протокол. Сторож нужен потому, что вся проверка
+//     идёт на ubuntu-latest, и такая ошибка на ней невидима.
+{
+  const COMMENTS = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
+  const DYNAMIC_IMPORT = /(?<![.\w$])import\s*\(([^)]*)\)/g;
+  const dirs = ['scripts', ...RUNTIME_SOURCES.map((f) => `${f.split('/').slice(0, 2).join('/')}/test`)];
+
+  for (const dir of new Set(dirs)) {
+    for (const file of walkJs(dir)) {
+      // Комментарии и строки снимаются: специфер-литерал после этого
+      // выглядит как пустые скобки, и именно пустые скобки здесь — норма.
+      const code = read(file).replace(COMMENTS, '').replace(STRINGS, '');
+
+      for (const [, arg] of code.matchAll(DYNAMIC_IMPORT)) {
+        const spec = arg.trim();
+
+        if (spec === '' || spec.includes('pathToFileURL') || spec.includes('import.meta.url')) continue;
+
+        fail(file, `import(${spec}…) — путь вместо специфера или file:-URL: под Windows не разберётся`);
+      }
+    }
+  }
+}
+
 // Версия ядра слоя — та же, что у всего репозитория.
 for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
   if (!read(`${GRIFFIN_SRC}/core/griffinjs-core.js`).includes(needle)) {
     fail(`${GRIFFIN_SRC}/core/griffinjs-core.js`, `версия разошлась с корневым package.json (${VERSION}): не найдено «${needle}»`);
   }
 }
+// Выход наверх из docs/ (Этап 37). На GitVerse Pages корнем сайта
+//     становится сам docs/, и `../` из него не ведёт никуда. Исключение
+//     одно: `../packages/` — эти адреса переписывает build-pages.mjs,
+//     перекладывая dist под корень сайта.
+//
+//     Сторож стоит здесь, а не только в build-pages: тот запускается
+//     лишь при публикации документации, то есть уже в публичном CI,
+//     и ошибку показывает через выпуск. `npm run check` ловит её у автора.
+{
+  const docsDir = join(root, 'docs');
+
+  for (const name of readdirSync(docsDir).filter((f) => f.endsWith('.html'))) {
+    const html = readFileSync(join(docsDir, name), 'utf8');
+
+    for (const [, href] of html.matchAll(/(?:href|src)="(\.\.\/[^"]*)"/g)) {
+      if (href.startsWith('../packages/')) continue;
+
+      fail(`docs/${name}`, `ссылка выше корня сайта — ${href}`);
+    }
+  }
+}
+
 // 18. Бейджи «нужен griffinjs.js» (правило разделения «с/без», Этап 21).
 //     Демонстрация, чья разметка требует скрипт (data-gr-<виджет> слоя),
 //     обязана нести бейдж; на страницах компонентов ui-*.html такие
@@ -568,7 +823,7 @@ for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
 //     griffinjs.js» — после заголовка с id="griffinjs". Без бейджа читатель без скрипта
 //     получил бы неработающий пример без объяснения.
 {
-  const layerAttr = /data-gr-(?:track|slider|gallery|lightbox|parallax|megamenu|dropdown|tooltip|dialog|open|combobox)\b/;
+  const layerAttr = /data-gr-(?:track|slider|gallery|lightbox|parallax|megamenu|dropdown|tooltip|dialog|open|combobox|range|sortable)\b/;
   const docsDir = join(root, 'docs');
 
   for (const name of readdirSync(docsDir).filter((f) => f.endsWith('.html'))) {
@@ -598,6 +853,76 @@ for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
   }
 }
 
+// 19. Экспорт токенов не отстал от CSS и покрывает :root целиком (Этап 34).
+//     Файл отдают дизайнеру вместо Figma-кита, и вся его ценность в том,
+//     что разойтись с исходником он не может. Проверяется поэтому двумя
+//     способами сразу: содержимое — байт-в-байт против генерации из текущего
+//     ядра, состав — против перечня переменных :root. Новая переменная
+//     без токена роняет сборку: молча она уехала бы в никуда, и дизайнер
+//     узнал бы об этом, не найдя её в Figma.
+let tokenCount = 0;
+
+try {
+  const actual = read(TOKENS);
+
+  if (actual !== tokensContent(root)) {
+    fail(TOKENS, 'экспорт токенов отстал от собранного CSS — пересоберите: npm run build:tokens');
+  }
+
+  const exported = JSON.parse(actual);
+  const declared = [...rootVariables(read(CORE))].map((name) => name.replace(/^--gr-/, ''));
+
+  for (const { name } of SETS) {
+    const set = exported[name];
+
+    if (!set) {
+      fail(TOKENS, `нет набора ${name} — три оси темы обязаны приехать тремя наборами`);
+      continue;
+    }
+
+    tokenCount = Object.keys(set).filter((key) => !key.startsWith('$')).length;
+
+    const missing = declared.filter((token) => !(token in set));
+
+    if (missing.length > 0) {
+      fail(TOKENS, `в наборе ${name} нет токенов для переменных :root (${missing.length}): ${missing.slice(0, 10).join(', ')}`);
+    }
+  }
+
+  // Граница экспорта: это токены, а не кит. Класс, заехавший сюда, означал бы,
+  // что генератор начал вывозить наружу разметку.
+  if (/\.gr-/.test(actual)) fail(TOKENS, 'в экспорте токенов появился класс — это экспорт переменных, а не библиотека');
+} catch (e) {
+  fail(TOKENS, `экспорт токенов не собран — npm run build:tokens (${e.message})`);
+}
+
+// 20. Физических односторонних классов не осталось (Этап 36).
+//     Единственное запланированное ломающее изменение библиотеки:
+//     односторонние отступы, выравнивание текста, привязка к краям
+//     и стороны границ — только логические (s/e, start/end). Инвариант
+//     постоянный: физический класс, вернувшийся по невнимательности,
+//     пришлось бы удалять вторым ломающим изменением, поэтому он роняет
+//     сборку сразу. Верх и низ (t/b, top/bottom) остаются физическими:
+//     блочная ось в RTL не разворачивается.
+const PHYSICAL_SIDE_CLASSES = [
+  /\.gr-(?:ml|mr|pl|pr)-(?:\d|auto)/,
+  /\.gr-text-(?:left|right)\b/,
+  /\.gr-(?:left|right)-(?:0|auto)/,
+  /\.gr-border-[lr](?:-\d+)?\s*[,{.:]/,
+];
+
+for (const file of [UTILS, UTILS_SCOPED]) {
+  const css = read(file);
+
+  for (const pattern of PHYSICAL_SIDE_CLASSES) {
+    const hit = css.match(pattern);
+
+    if (hit) {
+      fail(file, `физический класс вернулся: «${hit[0]}» — с Этапа 36 стороны только логические (s/e, start/end)`);
+    }
+  }
+}
+
 // --- итог -------------------------------------------------------------------
 
 if (problems.length > 0) {
@@ -607,12 +932,15 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-const size = (file) => `${(readFileSync(join(root, file)).length / 1024).toFixed(1)} КБ`;
+const size = (file) => kb(rawOf(file));
 console.log('check-dist: проверки пройдены');
 console.log(`  core   ${size(CORE)} (${coreClasses.size} классов) + ресет ${size(RESET)}`);
 console.log(`  ui     ${size(UI)} (${uiClasses.size} классов) + scoped ${size(UI_SCOPED)}`);
 console.log(`  utils  ${size(UTILS)} (${utilsClasses.size} классов) + scoped ${size(UTILS_SCOPED)}`);
-console.log(`  js     ${(jsWeight / 1024).toFixed(1)} КБ gzip на ${RUNTIMES.length} рантайма (бюджет ${JS_BUDGET / 1024} КБ)`);
-console.log(`  бандл  ${(bundleWeight / 1024).toFixed(1)} КБ gzip одним файлом (бюджет ${BUNDLE_BUDGET / 1024} КБ)`);
-console.log(`  griffinjs ${(griffinWeight / 1024).toFixed(1)} КБ gzip (бюджет ${GRIFFIN_BUDGET / 1024} КБ), ядро+scroll+slider ${(griffinCoreWeight / 1024).toFixed(1)} КБ (бюджет ${GRIFFIN_CORE_BUDGET / 1024} КБ)`);
+console.log(`  js     ${kb(jsWeight)} gzip на ${RUNTIMES.length} рантайма (бюджет ${kb(JS_BUDGET)})`);
+console.log(`  бандл  ${kb(bundleWeight)} gzip одним файлом (бюджет ${kb(BUNDLE_BUDGET)})`);
+console.log(`  griffinjs ${kb(griffinWeight)} gzip (бюджет ${kb(GRIFFIN_BUDGET)}), ядро ${kb(griffinOnlyCoreWeight)} (бюджет ${kb(GRIFFIN_ONLY_CORE_BUDGET)}), набор слайдера ${kb(griffinCoreWeight)} (бюджет ${kb(GRIFFIN_CORE_BUDGET)})`);
+console.log(`  ось    ${size(STYLES)} на три стиля, по одному — ${STYLE_NAMES.map((name) => `${name} ${size(styleFile(name))}`).join(', ')}`);
+console.log(`  бюджет CSS ${CSS_BUDGETS.map(([id, budget]) => `${id} ${kb(bytes(id))} из ${kb(budget)}`).join(' · ')}`);
+console.log(`  токены ${tokenCount} на набор × ${SETS.length} набора (${SETS.map(({ name }) => name).join(', ')})`);
 console.log(`  брейкпоинты: ${[...breakpoints].join(', ')}`);

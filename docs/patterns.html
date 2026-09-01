@@ -25,13 +25,14 @@
 <div class="hero">
   <h1>Готовые блоки</h1>
   <p>
-    Двенадцать крупных сегментов вёрстки, которые забирают в проект целиком:
-    шапка, первый экран, сетка карточек, тарифы, форма входа, лента статей,
-    панель админки, дашборд, таблица с фильтрами, вопросы и ответы, призыв
-    к действию и подвал. У каждого — вкладка «Код» и кнопка копирования.
+    Тринадцать крупных сегментов вёрстки, которые забирают в проект целиком:
+    шапка, первый экран, сетка карточек, карточка товара, тарифы, форма
+    входа, лента статей, панель админки, дашборд, таблица с фильтрами,
+    вопросы и ответы, призыв к действию и подвал. У каждого — вкладка «Код»
+    и кнопка копирования.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">12 сегментов</span>
+    <span class="badge badge-accent">13 сегментов</span>
     <span class="badge">только классы библиотеки</span>
     <span class="badge">ни одного литерального цвета</span>
   </div>
@@ -42,7 +43,9 @@
 <p>
   Каждый блок ниже собран <strong>только на классах библиотеки</strong>:
   ни одного литерального цвета, ни одного пикселя в разметке, ни строчки
-  собственного CSS у этой страницы. Поэтому блок, перенесённый в ваш проект,
+  собственного CSS у этой страницы. Единственный атрибут <code>style</code>
+  на всей странице — оценка товара в <code>--gr-rating</code>: это данные,
+  а не оформление. Поэтому блок, перенесённый в ваш проект,
   сразу знает про светлую и тёмную тему, про режим для слабовидящих
   и про выбранную стратегию оформления — переключатели в боковой панели
   действуют и на эти сегменты, попробуйте.
@@ -52,8 +55,10 @@
   Порядок работы: вкладка <strong>«Код»</strong> → <strong>«Копировать»</strong> →
   вставить в свою разметку → заменить тексты и ссылки. Классы
   <code>gr-area-*</code> в панели админки и <code>data-gr-layout</code>
-  на её контейнере — единственное место, где нужен JS-рантайм; остальные
-  одиннадцать блоков работают без него.
+  на её контейнере — единственное место, где нужен JS-рантайм библиотеки;
+  остальные двенадцать блоков работают без него. Своего кода просит один
+  счётчик количества в карточке товара — два вызова
+  <code>stepUp()</code> / <code>stepDown()</code> прямо в разметке блока.
 </p>
 
 <div class="callout">
@@ -161,7 +166,132 @@
   </div>
 </div>
 
-<h2 id="tarify">4. Тарифы</h2>
+<h2 id="kartochka-tovara">4. Карточка товара</h2>
+
+<p>
+  Витрина магазина целиком: стикеры поверх обложки, рейтинг-звёзды, цена
+  со старой ценой и размером скидки, счётчик количества и кнопка. Нового
+  CSS здесь ровно один класс — <code>gr-rating</code>: дробное заполнение
+  знака из готовых утилит не собирается. Всё остальное уже было —
+  <code>gr-badge</code> в углу <code>gr-relative</code>-обёртки,
+  <code>gr-line-through</code> на старой цене, <code>gr-input-group</code>
+  вокруг пары кнопок со счётчиком.
+</p>
+
+<p>
+  Под курсором карточка приподнимается — это <code>gr-hover-lift</code>
+  из модуля трансформаций, один класс со своим переходом и своим
+  <code>@media (hover: hover)</code> внутри. На сенсорном экране эффект
+  не залипает после касания, а при <code>prefers-reduced-motion: reduce</code>
+  сжимается до неразличимого. Ни своего <code>@media</code>, ни своего
+  <code>transition</code> в блоке для этого не появилось.
+</p>
+
+<p>
+  Стикер стоит на логическом <code>gr-start-0</code> — физической
+  привязки в библиотеке больше нет: под <code>dir="rtl"</code> он уезжает
+  к правому краю обложки сам. Оценка
+  дублируется числом рядом и <code>aria-label</code> на самом рейтинге —
+  пять знаков это цвет и форма, а они не переживают ни печать, ни программу
+  чтения с экрана. Кнопка «В корзину» прижата к низу тем же приёмом, что
+  подвал карточки в третьем блоке: <code>gr-flex-1</code> на строке цены
+  забирает остаток высоты, и кнопки в ряду встают на одну линию.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Единственный <code>style</code> на всей странице — здесь.</strong>
+    В нём значение оценки: <code>--gr-rating: 4.5</code>. Это данные товара,
+    а не оформление — цвет, размер и раскладка по-прежнему целиком
+    на классах. Второе исключение рядом: кнопки счётчика зовут
+    <code>stepDown()</code> и <code>stepUp()</code> у соседнего поля прямо
+    из разметки — счётчик в демонстрации рабочий, и скопированный блок
+    работает так же. Методы родные, они уважают <code>min</code>,
+    <code>max</code> и <code>step</code>, а системные стрелки у поля
+    снимает <code>gr-input-no-spin</code> — рядом с кнопками они второй
+    орган управления тем же числом. Всё остальное — погасить «минус»
+    на границе, послать <code>change</code> в пересчёт корзины — остаётся
+    за вашим кодом, см. <a href="ui-forms.html">формы</a>.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Витрина: стикер, рейтинг, цена, счётчик</div>
+  <div class="gr-grid-auto-fit gr-gap">
+    <article class="gr-card gr-hover-lift">
+      <div class="gr-relative">
+        <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+        <div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm">
+          <span class="gr-badge gr-badge-danger">−25 %</span>
+          <span class="gr-badge gr-badge-success">Хит</span>
+        </div>
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col">
+        <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2">Рюкзак «Каппадокия», 22 л</h3>
+        <div class="gr-flex gr-flex-items-center gr-gap-sm gr-mb-3">
+          <span class="gr-rating" style="--gr-rating: 4.5" role="img" aria-label="4,5 из 5"></span>
+          <span class="gr-text-sm gr-text-ink-secondary">4,5 · 64 отзыва</span>
+        </div>
+        <p class="gr-flex gr-flex-1 gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0 gr-mb-4">
+          <span class="gr-text-2xl gr-font-bold gr-leading-tight">12 990 ₽</span>
+          <s class="gr-line-through gr-text-ink-secondary"><span class="gr-sr-only">Старая цена </span>17 320 ₽</s>
+        </p>
+        <div class="gr-input-group gr-mb-2">
+          <button class="gr-btn" type="button" aria-label="Убрать одну штуку" onclick="this.nextElementSibling.stepDown()">−</button>
+          <input class="gr-input gr-input-no-spin gr-text-center" type="number" inputmode="numeric" value="1" min="1" max="99" aria-label="Количество">
+          <button class="gr-btn" type="button" aria-label="Добавить одну штуку" onclick="this.previousElementSibling.stepUp()">+</button>
+        </div>
+        <button class="gr-btn gr-btn-primary gr-btn-block" type="button">В корзину</button>
+      </div>
+    </article>
+    <article class="gr-card gr-hover-lift">
+      <div class="gr-relative">
+        <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+        <div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm">
+          <span class="gr-badge gr-badge-accent">Новинка</span>
+        </div>
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col">
+        <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2">Термокружка «Полдень», 0,4 л</h3>
+        <div class="gr-flex gr-flex-items-center gr-gap-sm gr-mb-3">
+          <span class="gr-rating" style="--gr-rating: 5" role="img" aria-label="5 из 5"></span>
+          <span class="gr-text-sm gr-text-ink-secondary">5,0 · 9 отзывов</span>
+        </div>
+        <p class="gr-flex gr-flex-1 gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0 gr-mb-4">
+          <span class="gr-text-2xl gr-font-bold gr-leading-tight">2 450 ₽</span>
+        </p>
+        <div class="gr-input-group gr-mb-2">
+          <button class="gr-btn" type="button" aria-label="Убрать одну штуку" onclick="this.nextElementSibling.stepDown()">−</button>
+          <input class="gr-input gr-input-no-spin gr-text-center" type="number" inputmode="numeric" value="1" min="1" max="99" aria-label="Количество">
+          <button class="gr-btn" type="button" aria-label="Добавить одну штуку" onclick="this.previousElementSibling.stepUp()">+</button>
+        </div>
+        <button class="gr-btn gr-btn-primary gr-btn-block" type="button">В корзину</button>
+      </div>
+    </article>
+    <article class="gr-card gr-hover-lift">
+      <div class="gr-relative">
+        <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+        <div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm">
+          <span class="gr-badge">Нет в наличии</span>
+        </div>
+      </div>
+      <div class="gr-card-body gr-flex gr-flex-col">
+        <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2">Плед «Хвоя», 140 × 200</h3>
+        <div class="gr-flex gr-flex-items-center gr-gap-sm gr-mb-3">
+          <span class="gr-rating" style="--gr-rating: 3.2" role="img" aria-label="3,2 из 5"></span>
+          <span class="gr-text-sm gr-text-ink-secondary">3,2 · 5 отзывов</span>
+        </div>
+        <p class="gr-flex gr-flex-1 gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0 gr-mb-4">
+          <span class="gr-text-2xl gr-font-bold gr-leading-tight gr-text-ink-secondary">4 100 ₽</span>
+        </p>
+        <button class="gr-btn gr-btn-block" type="button" disabled>Нет в наличии</button>
+        <p class="gr-text-sm gr-text-ink-secondary gr-m-0 gr-mt-2">Сообщим, когда появится.</p>
+      </div>
+    </article>
+  </div>
+</div>
+
+<h2 id="tarify">5. Тарифы</h2>
 
 <p>
   Три плана, средний выделен рамкой и плашкой, а не размером: увеличенная
@@ -226,7 +356,7 @@
   </div>
 </div>
 
-<h2 id="forma-vhoda">5. Форма входа</h2>
+<h2 id="forma-vhoda">6. Форма входа</h2>
 
 <p>
   Каждое поле — <code>gr-field</code> с подписью и подсказкой, связанной
@@ -263,7 +393,7 @@
   </div>
 </div>
 
-<h2 id="lenta-statey">6. Лента статей</h2>
+<h2 id="lenta-statey">7. Лента статей</h2>
 
 <p>
   Крупная статья и две поменьше. Раскладка описана строкой
@@ -309,7 +439,7 @@
   </div>
 </div>
 
-<h2 id="panel-adminki">7. Панель админки</h2>
+<h2 id="panel-adminki">8. Панель админки</h2>
 
 <p>
   Единственный блок на этой странице, которому нужен
@@ -320,7 +450,7 @@
 
 <div class="demo-block">
   <div class="demo-block-title">Каркас административной панели</div>
-  <div data-gr-layout="hdr4-nav4-main4" data-gr-layout-md="hdr4hdr4hdr4hdr4-nav1main3main3main3" class="gr-radius gr-overflow-hidden gr-border">
+  <div data-gr-layout="hdr4-nav4-main4" data-gr-layout-md="hdr4-nav1main3" class="gr-radius gr-overflow-hidden gr-border">
     <div class="gr-area-hdr gr-navbar">
       <span class="gr-navbar-brand">Панель</span>
       <nav class="gr-nav" aria-label="Разделы панели">
@@ -357,7 +487,7 @@
   </div>
 </div>
 
-<h2 id="dashbord">8. Дашборд со статистикой</h2>
+<h2 id="dashbord">9. Дашборд со статистикой</h2>
 
 <p>
   Четыре показателя в ряд, под ними — полосы выполнения. Числа набраны
@@ -426,7 +556,7 @@
   </div>
 </div>
 
-<h2 id="tablica-s-filtrami">9. Таблица с фильтрами</h2>
+<h2 id="tablica-s-filtrami">10. Таблица с фильтрами</h2>
 
 <p>
   Панель отбора, таблица в прокручиваемой обёртке и страницы под ней.
@@ -484,7 +614,7 @@
   </div>
 </div>
 
-<h2 id="voprosy-i-otvety">10. Вопросы и ответы</h2>
+<h2 id="voprosy-i-otvety">11. Вопросы и ответы</h2>
 
 <p>
   Аккордеон на <code>&lt;details name="…"&gt;</code>: общее имя заставляет
@@ -521,7 +651,7 @@
   </div>
 </div>
 
-<h2 id="prizyv-k-deystviyu">11. Призыв к действию</h2>
+<h2 id="prizyv-k-deystviyu">12. Призыв к действию</h2>
 
 <p>
   Полоса на цвете акцента. Текст берёт <code>gr-text-on-accent</code>,
@@ -545,7 +675,7 @@
   </section>
 </div>
 
-<h2 id="podval">12. Подвал сайта</h2>
+<h2 id="podval">13. Подвал сайта</h2>
 
 <p>
   Четыре колонки на широком экране, две на планшете, одна на телефоне —
@@ -603,11 +733,39 @@
 <h2 id="chego-zdes-net">Чего здесь нет</h2>
 
 <p>
-  Ни карусели, ни выбора даты, ни таблицы с сортировкой. Это не забывчивость:
-  таким блокам нужен не «тонкий опциональный JS», а полноценный виджет
-  с управлением состоянием — другая библиотека и другая ответственность.
+  Ни выбора даты, ни фильтров с пагинацией. Это не забывчивость: таким
+  блокам нужен не «тонкий опциональный JS», а полноценный виджет
+  с управлением состоянием — другая ответственность и другой размер.
   Всё, что на этой странице, работает от разметки и стилей, и ровно один
-  сегмент из двенадцати просит рантайм.
+  сегмент из тринадцати просит рантайм.
+</p>
+
+<p>
+  Автодополнение и сортировка таблицы стояли здесь же — и оба уже неправда:
+  комбобокс и <a href="ui-tables.html#griffinjs">сортируемая таблица</a>
+  приехали тем же опциональным слоем. У сортировки основание пересмотра
+  названо отдельно: перестановка строк по признаку из разметки обходится
+  без модели состояния, а выбор даты — нет, и он в списке остался.
+</p>
+
+<p>
+  Про карусель здесь до <a href="griffinjs.html">Этапа 21</a> стояло то же
+  самое, и это уже неправда: слайдер, галерея, лайтбокс, параллакс
+  и мегаменю приехали <strong>опциональным слоем</strong>
+  <code>griffinjs.js</code> внутри пакета <code>griffincss-ui</code> —
+  «другая библиотека» получила имя и место, не меняя состава npm.
+  Подключается она отдельным файлом и по-прежнему никому не навязывается:
+  тринадцать блоков выше собраны без неё.
+</p>
+
+<p>
+  Товарной специфики здесь тоже нет как отдельного API: в карточке товара
+  ни <code>gr-price</code>, ни <code>gr-sticker</code>, ни <code>gr-qty</code> —
+  цена собирается кеглем и <code>gr-line-through</code>, стикер это
+  <code>gr-badge</code> в углу, счётчик — <code>gr-input-group</code>.
+  Своим классом стал только рейтинг: дробное заполнение знака из готовых
+  утилит не собирается, а остальное собирается — и тогда новое имя
+  не добавляет ни одного свойства.
 </p>
 
 </main>

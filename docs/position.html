@@ -50,22 +50,25 @@
   <tr><td><code>.gr-inset-auto</code></td><td><code>inset: auto</code></td></tr>
   <tr><td><code>.gr-inset-x-0</code></td><td><code>inset-inline: 0</code> — оба края строки</td></tr>
   <tr><td><code>.gr-inset-y-0</code></td><td><code>inset-block: 0</code> — верх и низ</td></tr>
-  <tr><td><code>.gr-top-0</code>, <code>.gr-right-0</code>, <code>.gr-bottom-0</code>, <code>.gr-left-0</code></td><td>Соответствующий край — <code>0</code></td></tr>
-  <tr><td><code>.gr-top-auto</code>, <code>.gr-right-auto</code>, <code>.gr-bottom-auto</code>, <code>.gr-left-auto</code></td><td>Соответствующий край — <code>auto</code></td></tr>
+  <tr><td><code>.gr-top-0</code>, <code>.gr-bottom-0</code></td><td>Верхний / нижний край — <code>0</code></td></tr>
+  <tr><td><code>.gr-top-auto</code>, <code>.gr-bottom-auto</code></td><td>То же — <code>auto</code></td></tr>
   <tr><td><code>.gr-start-0</code>, <code>.gr-end-0</code></td><td><code>inset-inline-start</code> / <code>inset-inline-end</code> — <code>0</code></td></tr>
   <tr><td><code>.gr-start-auto</code>, <code>.gr-end-auto</code></td><td>То же — <code>auto</code></td></tr>
 </table>
 
 <div class="callout">
   <p>
-    <strong><code>left</code>/<code>right</code> здесь физические, и это
-    сделано намеренно.</strong> Кнопка «закрыть» в углу окна обязана держаться
-    угла, а не начала строки, — поэтому <code>.gr-left-0</code> остаётся
-    левым краем при любом направлении письма. Когда край должен следовать
-    за текстом, берите <code>.gr-start-0</code> и <code>.gr-end-0</code>:
-    в LTR они совпадают с <code>left</code> и <code>right</code>, в RTL
-    меняются местами. Осевые <code>.gr-inset-x-0</code> и
-    <code>.gr-inset-y-0</code> одинаковы в обоих направлениях —
+    <strong>Боковая привязка — только логическая.</strong> Пара
+    <code>.gr-start-0</code> / <code>.gr-end-0</code> держится начала
+    и конца строки: в LTR это левый и правый край, в RTL они меняются
+    местами сами. Физические <code>.gr-left-*</code> /
+    <code>.gr-right-*</code> удалены вместе с остальными физическими
+    сторонами; краю, который обязан быть буквальным — например кнопке
+    «закрыть», держащей угол окна при любом направлении письма, — нужен
+    свой CSS. Верх и низ (<code>.gr-top-0</code>,
+    <code>.gr-bottom-0</code>) физические: блочная ось в RTL
+    не разворачивается. Осевые <code>.gr-inset-x-0</code>
+    и <code>.gr-inset-y-0</code> одинаковы в обоих направлениях —
     у них обе стороны равны нулю.
   </p>
 </div>
@@ -111,7 +114,7 @@
 
 <p>
   Классическая пара: родителю — <code>.gr-relative</code>, бейджу —
-  <code>.gr-absolute</code> с привязкой <code>.gr-top-0 .gr-right-0</code>
+  <code>.gr-absolute</code> с привязкой <code>.gr-top-0 .gr-end-0</code>
   и отступом от угла <code>.gr-m-2</code>. Родитель зауживается до картинки
   классом <code>.gr-w-fit</code> — без него блок растянулся бы на всю
   колонку, и бейдж повис бы у её дальнего края, а не у края картинки.
@@ -119,13 +122,13 @@
 
 <pre><code>&lt;div class="gr-relative gr-w-fit"&gt;
   &lt;img class="gr-radius-4" src="chair.jpg" alt="Кресло из ротанга" width="280" height="200"&gt;
-  &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2"&gt;−30%&lt;/span&gt;
+  &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-end-0 gr-m-2"&gt;−30%&lt;/span&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Бейдж — <code>.gr-absolute .gr-top-0 .gr-right-0</code> внутри <code>.gr-relative</code></div>
+  <div class="demo-block-title">Бейдж — <code>.gr-absolute .gr-top-0 .gr-end-0</code> внутри <code>.gr-relative</code></div>
   <div class="gr-relative gr-w-fit">
     <img class="gr-radius-4" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Ccircle%20cx='222'%20cy='52'%20r='26'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='104'%20width='72'%20height='26'%20rx='10'%20fill='%23e6cba6'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='98'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3Crect%20x='172'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3C/svg%3E" alt="Кресло из ротанга" width="280" height="200">
-    <span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2">−30%</span>
+    <span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-end-0 gr-m-2">−30%</span>
   </div>
 </div>
 
@@ -147,23 +150,23 @@
   &lt;img class="gr-radius-4" src="chair.jpg" alt="" width="360" height="257"&gt;
 
   &lt;!-- углы: привязка к краям, слой не нужен --&gt;
-  &lt;span class="gr-badge gr-absolute gr-top-0 gr-left-0 gr-m-2"&gt;top-left&lt;/span&gt;
-  &lt;span class="gr-badge gr-absolute gr-top-0 gr-right-0 gr-m-2"&gt;top-right&lt;/span&gt;
-  &lt;span class="gr-badge gr-absolute gr-bottom-0 gr-left-0 gr-m-2"&gt;bottom-left&lt;/span&gt;
-  &lt;span class="gr-badge gr-absolute gr-bottom-0 gr-right-0 gr-m-2"&gt;bottom-right&lt;/span&gt;
+  &lt;span class="gr-badge gr-absolute gr-top-0 gr-start-0 gr-m-2"&gt;top-start&lt;/span&gt;
+  &lt;span class="gr-badge gr-absolute gr-top-0 gr-end-0 gr-m-2"&gt;top-end&lt;/span&gt;
+  &lt;span class="gr-badge gr-absolute gr-bottom-0 gr-start-0 gr-m-2"&gt;bottom-start&lt;/span&gt;
+  &lt;span class="gr-badge gr-absolute gr-bottom-0 gr-end-0 gr-m-2"&gt;bottom-end&lt;/span&gt;
 
   &lt;!-- середины сторон и центр: слой во весь родитель + выравнивание --&gt;
   &lt;div class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-start gr-pointer-events-none"&gt;
     &lt;span class="gr-badge gr-m-2"&gt;top-center&lt;/span&gt;
   &lt;/div&gt;
   &lt;div class="gr-absolute gr-inset-0 gr-flex gr-flex-start gr-flex-items-center gr-pointer-events-none"&gt;
-    &lt;span class="gr-badge gr-m-2"&gt;center-left&lt;/span&gt;
+    &lt;span class="gr-badge gr-m-2"&gt;center-start&lt;/span&gt;
   &lt;/div&gt;
   &lt;div class="gr-absolute gr-inset-0 gr-grid-place-center gr-pointer-events-none"&gt;
     &lt;span class="gr-badge"&gt;center&lt;/span&gt;
   &lt;/div&gt;
   &lt;div class="gr-absolute gr-inset-0 gr-flex gr-flex-end gr-flex-items-center gr-pointer-events-none"&gt;
-    &lt;span class="gr-badge gr-m-2"&gt;center-right&lt;/span&gt;
+    &lt;span class="gr-badge gr-m-2"&gt;center-end&lt;/span&gt;
   &lt;/div&gt;
   &lt;div class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-end gr-pointer-events-none"&gt;
     &lt;span class="gr-badge gr-m-2"&gt;bottom-center&lt;/span&gt;
@@ -174,21 +177,21 @@
   <div class="gr-overflow-x-auto">
   <div class="gr-relative gr-w-fit">
     <img class="gr-radius-4" style="max-width: none" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Ccircle%20cx='222'%20cy='52'%20r='26'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='104'%20width='72'%20height='26'%20rx='10'%20fill='%23e6cba6'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='98'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3Crect%20x='172'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3C/svg%3E" alt="" width="360" height="257">
-    <span class="gr-badge gr-absolute gr-top-0 gr-left-0 gr-m-2">top-left</span>
-    <span class="gr-badge gr-absolute gr-top-0 gr-right-0 gr-m-2">top-right</span>
-    <span class="gr-badge gr-absolute gr-bottom-0 gr-left-0 gr-m-2">bottom-left</span>
-    <span class="gr-badge gr-absolute gr-bottom-0 gr-right-0 gr-m-2">bottom-right</span>
+    <span class="gr-badge gr-absolute gr-top-0 gr-start-0 gr-m-2">top-start</span>
+    <span class="gr-badge gr-absolute gr-top-0 gr-end-0 gr-m-2">top-end</span>
+    <span class="gr-badge gr-absolute gr-bottom-0 gr-start-0 gr-m-2">bottom-start</span>
+    <span class="gr-badge gr-absolute gr-bottom-0 gr-end-0 gr-m-2">bottom-end</span>
     <div class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-start gr-pointer-events-none">
       <span class="gr-badge gr-m-2">top-center</span>
     </div>
     <div class="gr-absolute gr-inset-0 gr-flex gr-flex-start gr-flex-items-center gr-pointer-events-none">
-      <span class="gr-badge gr-m-2">center-left</span>
+      <span class="gr-badge gr-m-2">center-start</span>
     </div>
     <div class="gr-absolute gr-inset-0 gr-grid-place-center gr-pointer-events-none">
       <span class="gr-badge">center</span>
     </div>
     <div class="gr-absolute gr-inset-0 gr-flex gr-flex-end gr-flex-items-center gr-pointer-events-none">
-      <span class="gr-badge gr-m-2">center-right</span>
+      <span class="gr-badge gr-m-2">center-end</span>
     </div>
     <div class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-end gr-pointer-events-none">
       <span class="gr-badge gr-m-2">bottom-center</span>
@@ -203,8 +206,8 @@
   Те же кирпичи в другой паре — «край + ось» вместо «край + край» — дают
   растянутые варианты. <code>.gr-top-0 .gr-inset-x-0</code> — полоса
   во всю ширину по верхнему краю; <code>.gr-bottom-0 .gr-inset-x-0</code> —
-  классическая подпись к фотографии; <code>.gr-left-0</code> или
-  <code>.gr-right-0</code> с <code>.gr-inset-y-0</code> — колонка во всю
+  классическая подпись к фотографии; <code>.gr-start-0</code> или
+  <code>.gr-end-0</code> с <code>.gr-inset-y-0</code> — колонка во всю
   высоту. Растяжение по всем четырём краям сразу — <code>.gr-inset-0</code>,
   уже знакомое по слоям выравнивания и затемнению. Специальных классов
   «полоса» или «колонка» в библиотеке нет, и они не нужны: край называет
@@ -221,8 +224,8 @@
 &lt;!-- колонки во всю высоту --&gt;
 &lt;div class="gr-relative gr-w-fit"&gt;
   &lt;img class="gr-radius-4" src="chair.jpg" alt="" width="280" height="200"&gt;
-  &lt;div class="gr-absolute gr-left-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center"&gt;left&lt;/div&gt;
-  &lt;div class="gr-absolute gr-right-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center"&gt;right&lt;/div&gt;
+  &lt;div class="gr-absolute gr-start-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center"&gt;start&lt;/div&gt;
+  &lt;div class="gr-absolute gr-end-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center"&gt;end&lt;/div&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Полосы — «край + <code>.gr-inset-x-0</code>», колонки — «край + <code>.gr-inset-y-0</code>»</div>
@@ -234,8 +237,8 @@
     </div>
     <div class="gr-relative gr-w-fit">
       <img class="gr-radius-4" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Ccircle%20cx='222'%20cy='52'%20r='26'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='104'%20width='72'%20height='26'%20rx='10'%20fill='%23e6cba6'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='98'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3Crect%20x='172'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3C/svg%3E" alt="" width="280" height="200">
-      <div class="gr-absolute gr-left-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center">left</div>
-      <div class="gr-absolute gr-right-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center">right</div>
+      <div class="gr-absolute gr-start-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center">start</div>
+      <div class="gr-absolute gr-end-0 gr-inset-y-0 gr-bg-black gr-text-white gr-opacity-75 gr-p-2 gr-flex gr-flex-items-center">end</div>
     </div>
   </div>
 </div>
@@ -249,43 +252,44 @@
   и «100%» раздували бы CSS. Их дают
   <a href="arbitrary-values.html">произвольные значения</a> —
   <code>.gr-top-[-0.5rem]</code> ставит верхний край выше родителя,
-  а <code>.gr-right-[100%]</code> выносит элемент целиком за левый край
-  (его правый край — на левом краю родителя). Вертикальный центр снаружи —
-  тот же слой с выравниванием, что и в девяти точках, только вместо
-  <code>.gr-left-0</code> у него <code>.gr-right-[100%]</code>.
+  а <code>.gr-end-[100%]</code> выносит элемент целиком за начало строки:
+  в LTR его правый край встаёт на левый край родителя, в RTL картинка
+  разворачивается сама. Вертикальный центр снаружи — тот же слой
+  с выравниванием, что и в девяти точках, только вместо
+  <code>.gr-start-0</code> у него <code>.gr-end-[100%]</code>.
 </p>
 
 <pre><code>&lt;!-- счётчик наполовину за углом кнопки --&gt;
 &lt;button class="gr-btn gr-relative" type="button"&gt;
   Входящие
-  &lt;span class="gr-badge gr-badge-count gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]"&gt;3&lt;/span&gt;
+  &lt;span class="gr-badge gr-badge-count gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-end-[-0.5rem]"&gt;3&lt;/span&gt;
 &lt;/button&gt;
 
 &lt;!-- ярлыки целиком снаружи, по вертикальному центру краёв --&gt;
 &lt;div class="gr-relative gr-w-fit"&gt;
   &lt;img class="gr-radius-4" src="chair.jpg" alt="" width="280" height="200"&gt;
-  &lt;div class="gr-absolute gr-inset-y-0 gr-right-[100%] gr-flex gr-flex-items-center"&gt;
+  &lt;div class="gr-absolute gr-inset-y-0 gr-end-[100%] gr-flex gr-flex-items-center"&gt;
     &lt;span class="gr-badge gr-m-2"&gt;снаружи&lt;/span&gt;
   &lt;/div&gt;
-  &lt;div class="gr-absolute gr-inset-y-0 gr-left-[100%] gr-flex gr-flex-items-center"&gt;
+  &lt;div class="gr-absolute gr-inset-y-0 gr-start-[100%] gr-flex gr-flex-items-center"&gt;
     &lt;span class="gr-badge gr-m-2"&gt;снаружи&lt;/span&gt;
   &lt;/div&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Счётчик за углом — отрицательные смещения; ярлыки снаружи — <code>.gr-right-[100%]</code> / <code>.gr-left-[100%]</code></div>
+  <div class="demo-block-title">Счётчик за углом — отрицательные смещения; ярлыки снаружи — <code>.gr-end-[100%]</code> / <code>.gr-start-[100%]</code></div>
   <div class="gr-flex gr-flex-wrap gr-flex-items-center gr-gap-lg">
     <button class="gr-btn gr-relative" type="button">
       Входящие
-      <span class="gr-badge gr-badge-count gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]">3</span>
+      <span class="gr-badge gr-badge-count gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-end-[-0.5rem]">3</span>
     </button>
     <div class="gr-overflow-x-auto">
       <div class="gr-w-fit" style="padding-inline: 96px">
         <div class="gr-relative gr-w-fit">
           <img class="gr-radius-4" style="max-width: none" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Ccircle%20cx='222'%20cy='52'%20r='26'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='104'%20width='72'%20height='26'%20rx='10'%20fill='%23e6cba6'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='98'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3Crect%20x='172'%20y='148'%20width='10'%20height='22'%20rx='3'%20fill='%236f4a34'/%3E%3C/svg%3E" alt="" width="280" height="200">
-          <div class="gr-absolute gr-inset-y-0 gr-right-[100%] gr-flex gr-flex-items-center">
+          <div class="gr-absolute gr-inset-y-0 gr-end-[100%] gr-flex gr-flex-items-center">
             <span class="gr-badge gr-m-2">снаружи</span>
           </div>
-          <div class="gr-absolute gr-inset-y-0 gr-left-[100%] gr-flex gr-flex-items-center">
+          <div class="gr-absolute gr-inset-y-0 gr-start-[100%] gr-flex gr-flex-items-center">
             <span class="gr-badge gr-m-2">снаружи</span>
           </div>
         </div>

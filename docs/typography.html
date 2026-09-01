@@ -247,44 +247,34 @@
 
 <h2>Выравнивание</h2>
 
-<p>Шесть классов <code>text-align</code>: четыре физических и два логических.</p>
+<p>Четыре класса <code>text-align</code>: центр, ширина и логические стороны строки.</p>
 
 <table>
   <tr><th>Класс</th><th>Значение</th><th>В RTL</th></tr>
-  <tr><td><code>.gr-text-left</code></td><td><code>text-align: left</code></td><td>слева</td></tr>
   <tr><td><code>.gr-text-center</code></td><td><code>text-align: center</code></td><td>по центру</td></tr>
-  <tr><td><code>.gr-text-right</code></td><td><code>text-align: right</code></td><td>справа</td></tr>
   <tr><td><code>.gr-text-justify</code></td><td><code>text-align: justify</code></td><td>по ширине</td></tr>
   <tr><td><code>.gr-text-start</code></td><td><code>text-align: start</code></td><td>справа</td></tr>
   <tr><td><code>.gr-text-end</code></td><td><code>text-align: end</code></td><td>слева</td></tr>
 </table>
 
 <p>
-  <code>start</code> и <code>end</code> — начало и конец строки, а не сторона
-  экрана: в LTR они совпадают с <code>left</code> и <code>right</code>,
-  в RTL меняются местами. Для текста, который может оказаться на арабском
-  или иврите, нужны именно они; <code>left</code> и <code>right</code>
-  остаются для случаев, где сторона выбрана буквально.
+  <code>start</code> и <code>end</code> — начало и конец строки, а не
+  сторона экрана: в LTR это левый и правый край, в RTL они меняются
+  местами сами. Физические <code>.gr-text-left</code> /
+  <code>.gr-text-right</code> удалены: сторона текста следует
+  за направлением письма, а буквальная сторона задаётся своим CSS.
 </p>
 
-<pre><code>&lt;p class="gr-text-left"&gt;По левому краю&lt;/p&gt;
+<pre><code>&lt;p class="gr-text-start"&gt;По началу строки&lt;/p&gt;
 &lt;p class="gr-text-center"&gt;По центру&lt;/p&gt;
-&lt;p class="gr-text-right"&gt;По правому краю&lt;/p&gt;
+&lt;p class="gr-text-end"&gt;По концу строки&lt;/p&gt;
 &lt;p class="gr-text-justify"&gt;По ширине с растяжением пробелов&lt;/p&gt;</code></pre>
 
 <div class="demo-block">
   <div class="demo-block-title">Результат</div>
   <div class="typo-demo-row">
-    <div class="typo-demo-label">.gr-text-left</div>
-    <div class="typo-demo-align-box gr-text-left">Этот текст выровнен по левому краю. Стандартное поведение для языков с письмом слева направо.</div>
-  </div>
-  <div class="typo-demo-row">
     <div class="typo-demo-label">.gr-text-center</div>
     <div class="typo-demo-align-box gr-text-center">Этот текст выровнен по центру. Используется для заголовков и коротких блоков.</div>
-  </div>
-  <div class="typo-demo-row">
-    <div class="typo-demo-label">.gr-text-right</div>
-    <div class="typo-demo-align-box gr-text-right">Этот текст выровнен по правому краю. Для RTL-языков или специальных случаев.</div>
   </div>
   <div class="typo-demo-row">
     <div class="typo-demo-label">.gr-text-justify</div>
@@ -547,8 +537,8 @@
   Адаптивный размер шрифта
 &lt;/p&gt;
 
-&lt;!-- На мобильных — по левому краю, от 1024px — по центру --&gt;
-&lt;h2 class="gr-text-left gr-text-center-lg"&gt;
+&lt;!-- На мобильных — по началу строки, от 1024px — по центру --&gt;
+&lt;h2 class="gr-text-start gr-text-center-lg"&gt;
   Адаптивное выравнивание
 &lt;/h2&gt;
 
@@ -566,9 +556,9 @@
     </p>
   </div>
   <div class="typo-demo-row">
-    <div class="typo-demo-label">.gr-text-left .gr-text-center-lg</div>
-    <div class="typo-demo-align-box gr-text-left gr-text-center-lg">
-      На мобильных — по левому краю. На десктопе (≥1024px) — по центру.
+    <div class="typo-demo-label">.gr-text-start .gr-text-center-lg</div>
+    <div class="typo-demo-align-box gr-text-start gr-text-center-lg">
+      На мобильных — по началу строки. На десктопе (≥1024px) — по центру.
     </div>
   </div>
   <div class="typo-demo-row">
@@ -832,6 +822,60 @@ $gr-weights: (
       </footer>
     </article>
   </div>
+</div>
+
+<h3>Ценовой блок: цена, старая цена, размер скидки</h3>
+
+<p>
+  Три величины в одной строке, и каждая своим приёмом. Цена — крупная
+  и плотная: <code>.gr-text-3xl .gr-font-bold .gr-leading-tight</code>.
+  Старая — тише и зачёркнута: <code>&lt;s&gt;</code>
+  с <code>.gr-line-through .gr-text-ink-secondary</code>. Размер скидки —
+  плашка <code>.gr-badge .gr-badge-danger</code>, то есть <em>слово</em>
+  «−25 %», а не только красный цвет. Ряд — <code>.gr-flex</code>
+  с выравниванием по базовой линии: цифры разного кегля обязаны стоять
+  на одной линии, а не по центру своих коробок.
+</p>
+
+<p>
+  <code>&lt;s&gt;</code>, а не <code>&lt;span&gt;</code>: элемент означает
+  «уже не актуально» — ровно то, что случилось со старой ценой. Зачёркивание
+  при этом остаётся признаком для глаза, поэтому перед числом стоит
+  <code>.gr-sr-only</code> со словом «старая цена»: скринридер линию
+  не объявляет, и без него обе цены прозвучали бы подряд без разницы.
+</p>
+
+<pre><code>&lt;p class="gr-flex gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0"&gt;
+  &lt;span class="gr-text-3xl gr-font-bold gr-leading-tight"&gt;12 990 ₽&lt;/span&gt;
+  &lt;s class="gr-line-through gr-text-ink-secondary"&gt;
+    &lt;span class="gr-sr-only"&gt;Старая цена &lt;/span&gt;17 320 ₽
+  &lt;/s&gt;
+  &lt;span class="gr-badge gr-badge-danger"&gt;−25 %&lt;/span&gt;
+&lt;/p&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Кегль, приглушённый цвет и плашка — три разных приёма на трёх величинах</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <p class="gr-flex gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0">
+      <span class="gr-text-3xl gr-font-bold gr-leading-tight">12 990 ₽</span>
+      <s class="gr-line-through gr-text-ink-secondary"><span class="gr-sr-only">Старая цена </span>17 320 ₽</s>
+      <span class="gr-badge gr-badge-danger">−25 %</span>
+    </p>
+    <p class="gr-flex gr-flex-items-baseline gr-flex-wrap gr-gap-sm gr-m-0">
+      <span class="gr-text-3xl gr-font-bold gr-leading-tight">2 450 ₽</span>
+      <span class="gr-text-sm gr-text-ink-secondary">за упаковку</span>
+    </p>
+  </div>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Классов <code>.gr-price</code> и <code>.gr-price-old</code>
+    здесь нет намеренно.</strong> Обе строки собираются из кегля, веса,
+    цвета чернил и плашки — всё это уже есть и работает в обеих темах.
+    Новое имя не добавило бы ни одного свойства, зато завело бы второй
+    способ сказать «крупный полужирный текст» и потребовало бы решать,
+    что такое цена в валюте без копеек, в рассрочку и за килограмм.
+  </p>
 </div>
 
 </main>

@@ -344,6 +344,105 @@
   &lt;button class="gr-btn"&gt;Отмена&lt;/button&gt;
 &lt;/div&gt;</code></pre>
 
+<h2>Слот под иконку</h2>
+
+<p>
+  Своего набора иконок Griffincss не везёт и не будет: набор — отдельный
+  продукт со своим темпом обновления и своей лицензией. Вместо набора
+  библиотека даёт слот и обещание, что иконка в нём встанет правильно
+  с любым набором. Отдельного класса <code>.gr-icon</code> для этого
+  не нужно — и это не экономия, а проверенный результат: всё, что слот
+  должен делать, уже делают сами компоненты.
+</p>
+
+<h3>Что обещает библиотека</h3>
+
+<table>
+  <tr><th>Обещание</th><th>Чем обеспечено</th></tr>
+  <tr><td>Иконку не нужно выравнивать</td><td><code>.gr-btn</code>, <code>.gr-badge</code>, <code>.gr-menu-item</code>, <code>.gr-nav-link</code> — это <code>flex</code> с <code>align-items: center</code> и своим <code>gap</code></td></tr>
+  <tr><td>Зазор между иконкой и текстом задан</td><td><code>gap: var(--gr-ui-gap)</code>; у плашки — половина от него</td></tr>
+  <tr><td>Иконка следует цвету текста</td><td>цвет наследуется; иконка обязана объявить <code>fill="currentColor"</code> или <code>stroke="currentColor"</code></td></tr>
+  <tr><td>Иконка следует кеглю</td><td>для глифа и иконочного шрифта — сама собой, это текст</td></tr>
+  <tr><td>Готовая коробка 1,25 em</td><td><code>.gr-alert-icon</code>, <code>.gr-toast-icon</code>, <code>.gr-menu-icon</code> — <code>flex: none</code> и фиксированный квадрат</td></tr>
+  <tr><td>Квадратная кнопка под одну иконку</td><td><code>.gr-btn-icon</code>; требует <code>aria-label</code></td></tr>
+</table>
+
+<h3>Чего библиотека ждёт от иконки</h3>
+
+<table>
+  <tr><th>Требование</th><th>Почему</th></tr>
+  <tr><td>Инлайновый <code>&lt;svg&gt;</code> объявляет свой размер сам</td><td>SVG без размеров берёт свои 300×150 px; утилиты размера в <code>em</code> в библиотеке нет, а <code>.gr-w-[1em]</code> — произвольное значение и требует подключённого <code>griffincss.js</code></td></tr>
+  <tr><td>Декоративная иконка скрыта от скринридера</td><td><code>aria-hidden="true"</code>: иначе читалка озвучит её вместе с текстом кнопки</td></tr>
+  <tr><td>Иконка без текста несёт <code>aria-label</code></td><td>у кнопки-иконки другого имени нет</td></tr>
+  <tr><td>Иконка — не единственный признак</td><td>то же правило, что у цвета: значок без подписи угадывается, а не читается</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Выравнивание по базовой линии внутри компонента утилитой
+    не задаётся.</strong> <code>.gr-flex-items-baseline</code> живёт в слое
+    <code>griffincss.core</code>, а <code>align-items: center</code>
+    компонента — в слое <code>griffincss.ui</code>, который идёт позже
+    и потому выигрывает. Ловушка та же, что у видимости: побеждает
+    не специфичность, а порядок слоёв. Практического неудобства тут нет —
+    в кнопке, плашке и пункте меню нужно ровно центрирование, — но знать
+    об этом стоит до того, как класс будет добавлен и молча не сработает.
+  </p>
+</div>
+
+<h3>Два набора, ни одного глифа в репозитории</h3>
+
+<p>
+  Примеры ниже показывают два распространённых способа подключить чужой
+  набор. Оба — без зависимости от Griffincss и без единого значка
+  в его составе: библиотека описывает слот, а не заполняет его.
+</p>
+
+<p>
+  <strong>Иконочный шрифт.</strong> Значок — символ, поэтому кегль
+  и цвет он берёт сам, а от разметки ему нужно только имя класса набора
+  и <code>aria-hidden</code>.
+</p>
+
+<pre><code>&lt;button class="gr-btn gr-btn-primary"&gt;
+  &lt;i class="bi bi-download" aria-hidden="true"&gt;&lt;/i&gt;
+  Скачать
+&lt;/button&gt;
+
+&lt;button class="gr-btn gr-btn-icon" aria-label="Настройки"&gt;
+  &lt;i class="bi bi-gear" aria-hidden="true"&gt;&lt;/i&gt;
+&lt;/button&gt;</code></pre>
+
+<p>
+  <strong>Спрайт из <code>&lt;svg&gt;</code>.</strong> Размер объявляется
+  атрибутами, цвет — <code>currentColor</code>. Атрибуты, а не класс:
+  без них SVG развернётся во все свои 300×150 px, и произойдёт это
+  ещё до того, как выполнится любой скрипт.
+</p>
+
+<pre><code>&lt;button class="gr-btn"&gt;
+  &lt;svg width="16" height="16" fill="currentColor" aria-hidden="true"&gt;
+    &lt;use href="icons.svg#download"&gt;&lt;/use&gt;
+  &lt;/svg&gt;
+  Скачать
+&lt;/button&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Слот работает и на символе: кегль и цвет наследуются, зазор даёт <code>gap</code> кнопки</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center">
+    <button class="gr-btn gr-btn-primary" type="button"><span aria-hidden="true">⬇</span> Скачать</button>
+    <button class="gr-btn" type="button"><span aria-hidden="true">✎</span> Изменить</button>
+    <button class="gr-btn gr-btn-sm" type="button"><span aria-hidden="true">⬇</span> Мелкая</button>
+    <button class="gr-btn gr-btn-lg" type="button"><span aria-hidden="true">⬇</span> Крупная</button>
+    <button class="gr-btn gr-btn-icon" type="button" aria-label="Настройки"><span aria-hidden="true">⚙</span></button>
+  </div>
+</div>
+
+<p>
+  Три размера кнопки в этом ряду — проверка обещания «иконка следует
+  кеглю»: ни на одной из них у значка нет своего класса размера.
+</p>
+
 <h2>Примеры использования</h2>
 
 <p>
@@ -383,22 +482,22 @@
   Иконка уточняет глагол: «⬇ Скачать», «+ Добавить». Кнопка уже
   выравнивает содержимое по центру — иконке хватает быть первым символом
   или <code>span</code>-ом внутри. В ряду действий формы у каждой кнопки
-  своя роль: опасное действие уводится влево и в <code>.gr-btn-ghost
-  .gr-text-danger</code>, пара «Отмена / Сохранить» дожимается вправо
-  через <code>.gr-ml-auto</code> — приём авто-маржина
+  своя роль: опасное действие уводится в начало строки и в <code>.gr-btn-ghost
+  .gr-text-danger</code>, пара «Отмена / Сохранить» дожимается к концу строки
+  через <code>.gr-ms-auto</code> — приём авто-маржина
   из <a href="spacing.html">Spacing</a>.
 </p>
 
 <pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center"&gt;
   &lt;button class="gr-btn gr-btn-ghost gr-text-danger"&gt;Удалить черновик&lt;/button&gt;
-  &lt;button class="gr-btn gr-ml-auto"&gt;Отмена&lt;/button&gt;
+  &lt;button class="gr-btn gr-ms-auto"&gt;Отмена&lt;/button&gt;
   &lt;button class="gr-btn gr-btn-primary"&gt;⬇ Сохранить&lt;/button&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Роли в ряду: опасное — влево и тихим, основное — вправо и залитым</div>
+  <div class="demo-block-title">Роли в ряду: опасное — в начале строки и тихим, основное — в конце и залитым</div>
   <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center">
     <button class="gr-btn gr-btn-ghost gr-text-danger" type="button">Удалить черновик</button>
-    <button class="gr-btn gr-ml-auto" type="button">Отмена</button>
+    <button class="gr-btn gr-ms-auto" type="button">Отмена</button>
     <button class="gr-btn gr-btn-primary" type="button">⬇ Сохранить</button>
   </div>
 </div>

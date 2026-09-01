@@ -67,3 +67,30 @@ test('auto-fit и auto-fill различаются только режимом �
     'кроме режима повтора правила обязаны совпадать',
   );
 });
+
+// 37b (открытый вопрос №2 Этапа 4): дорожка `1fr` не уже своего
+// содержимого — минимум у неё `auto`. Длинное слово, широкая таблица
+// или элемент с `white-space: nowrap` раздували колонку, и сетка
+// выезжала за контейнер. `minmax(0, 1fr)` снимает этот минимум:
+// содержимое прокручивается внутри дорожки, а не ломает раскладку.
+test('явные сетки не раздуваются содержимым', () => {
+  for (const cols of [1, 6, 12]) {
+    assert.match(
+      blockBody(`.gr-grid-${cols}`),
+      new RegExp(`grid-template-columns:\\s*repeat\\(${cols},\\s*minmax\\(0,\\s*1fr\\)\\)`),
+      `.gr-grid-${cols}`,
+    );
+  }
+});
+
+test('адаптивные явные сетки повторяют базовые', () => {
+  const responsive = CORE.match(/\.gr-grid-(?:\d+)-(?:sm|md|lg|xl)\s*\{[^}]*\}/g) || [];
+
+  assert.ok(responsive.length >= 48, `адаптивных явных сеток — ${responsive.length}`);
+
+  for (const rule of responsive) {
+    if (!/grid-template-columns/.test(rule)) continue;
+
+    assert.match(rule, /minmax\(0,\s*1fr\)/, rule);
+  }
+});

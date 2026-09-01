@@ -23,9 +23,9 @@
 
 <div class="hero">
   <h1>JS-рантайм</h1>
-  <p><code>griffincss.js</code> — компактный IIFE-скрипт (9 КБ, 3,6 КБ gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — 10 КБ gzip, а бандлом <code>griffincss-all.js</code> — 8,5 КБ одним файлом.</p>
+  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,1 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,7 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->8,6 КБ<!--/gr:size:bundle--> одним файлом.</p>
   <div class="hero-badges">
-    <span class="badge badge-accent">3,6 КБ gzip</span>
+    <span class="badge badge-accent"><!--gr:size:js-core-->3,7 КБ<!--/gr:size:js-core--> gzip</span>
     <span class="badge">IIFE</span>
     <span class="badge">Нет зависимостей</span>
     <span class="badge">Авто-инициализация</span>
@@ -41,7 +41,7 @@
   </div>
   <div class="feature-card">
     <h4>Генерация CSS</h4>
-    <p>Внедряет <code>&lt;style id="griffincss-dynamic"&gt;</code> с тремя секциями: FOUC guard, Grid Layouts и Grid Areas.</p>
+    <p>Внедряет <code>&lt;style id="griffincss-dynamic"&gt;</code> с тремя секциями: FOUC guard, Grid Layouts и Grid Areas. Это единственный лист, который библиотека создаёт из JS, — см. <a href="#csp">Строгий CSP</a>.</p>
   </div>
   <div class="feature-card">
     <h4>Класс на набор</h4>
@@ -131,7 +131,7 @@ Griffincss.parseLayout('hdr4-main4-side2_2-ftr4');
 <h3>Griffincss.version</h3>
 
 <pre><code>// Версия рантайма — строка, совпадающая с версией пакета griffincss-core.
-Griffincss.version;   // '0.21.4'</code></pre>
+Griffincss.version;   // '0.22.0'</code></pre>
 
 <h2>Валидация раскладок</h2>
 
@@ -177,6 +177,102 @@ Griffincss.version;   // '0.21.4'</code></pre>
     Griffincss.init();
   });
 &lt;/script&gt;</code></pre>
+
+<h2 id="csp">Строгий CSP</h2>
+
+<p>
+  <code>griffincss.js</code> — <strong>единственный файл библиотеки, который создаёт
+  <code>&lt;style&gt;</code></strong>. Ни <code>griffincss-theme.js</code>, ни
+  <code>griffincss-ui.js</code>, ни <code>griffincss-utils.js</code>, ни слой виджетов
+  <code>griffinjs.js</code> листов не заводят: им от политики нужен только
+  <code>script-src</code>. Поэтому весь разговор о <code>style-src</code> — про один файл.
+</p>
+
+<p>
+  Под политикой <code>style-src</code> без <code>'unsafe-inline'</code> браузер откажется
+  применять созданный скриптом лист. Страница останется на месте — контент виден, ресет,
+  компоненты и утилиты работают, — но раскладки <code>data-gr-layout</code> не сложатся:
+  именно их правила рантайм пишет в этот лист. Чтобы этого не случилось, рантайм переносит
+  на свой лист <code>nonce</code> со своего же тега <code>&lt;script&gt;</code>.
+</p>
+
+<h3>Готовая политика</h3>
+
+<pre><code>Content-Security-Policy:
+  default-src 'self';
+  script-src  'self' 'nonce-r4nd0m';
+  style-src   'self' 'nonce-r4nd0m'</code></pre>
+
+<pre><code>&lt;link rel="stylesheet" href="griffincss-core.css"&gt;
+&lt;script src="griffincss.js" nonce="r4nd0m"&gt;&lt;/script&gt;</code></pre>
+
+<p>
+  <code>r4nd0m</code> здесь — заглушка: настоящий <code>nonce</code> генерируется сервером
+  заново на каждый ответ и подставляется и в заголовок, и в атрибут тега. Значение рантайм
+  читает у <code>document.currentScript</code> в момент выполнения скрипта и больше нигде
+  не хранит: в текст сгенерированного CSS оно не попадает.
+</p>
+
+<h3>Что нужно политике при каждом варианте подключения</h3>
+
+<table>
+  <thead>
+    <tr><th>Что подключено</th><th>Что требуется от политики</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Только CSS-файлы (<code>&lt;link&gt;</code>)</td>
+      <td><code>style-src 'self'</code> или домен CDN. <code>'unsafe-inline'</code> не нужен</td>
+    </tr>
+    <tr>
+      <td><code>griffincss.js</code> — рантайм раскладок</td>
+      <td><code>script-src</code> для самого файла <strong>и</strong> <code>'nonce-…'</code>
+      в <code>style-src</code>, тот же <code>nonce</code> — атрибутом на теге</td>
+    </tr>
+    <tr>
+      <td><code>griffincss-all.js</code> — бандл</td>
+      <td>то же: внутри бандла тот же рантайм раскладок</td>
+    </tr>
+    <tr>
+      <td><code>griffincss-theme.js</code>, <code>griffincss-ui.js</code>,
+      <code>griffincss-utils.js</code></td>
+      <td>только <code>script-src</code>: <code>&lt;style&gt;</code> они не создают</td>
+    </tr>
+    <tr>
+      <td><code>griffinjs.js</code> — слой виджетов</td>
+      <td>только <code>script-src</code>: <code>&lt;style&gt;</code> слой не создаёт,
+      оформление приходит из <code>griffinjs.css</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Чем это проверить</h3>
+
+<p>
+  Заблокированный лист виден в консоли: все три движка называют нарушение и директиву —
+  Chromium пишет <em>«Applying inline style violates the following Content Security Policy
+  directive»</em>, Firefox — <em>«blocked an inline style (style-src-elem)»</em>, WebKit —
+  <em>«Refused to apply a stylesheet…»</em>. Тихо теряется не сообщение, а раскладка:
+  без строки в консоли по одному виду страницы догадаться трудно.
+</p>
+
+<p>Быстрая проверка в консоли — лист заведён и в нём есть правила:</p>
+
+<pre><code>var el = document.getElementById('griffincss-dynamic');
+el.sheet ? el.sheet.cssRules.length : 'лист заблокирован политикой';</code></pre>
+
+<div class="callout callout-warning">
+  <p><strong>Рантайм, подключённый сборщиком, <code>nonce</code> взять неоткуда.</strong>
+  <code>document.currentScript</code> есть только у настоящего тега
+  <code>&lt;script&gt;</code>; при импорте из бандла он <code>null</code>. Под строгой
+  политикой подключайте <code>griffincss.js</code> тегом — так, как показано выше.</p>
+</div>
+
+<div class="callout">
+  <p>Библиотека отвечает за свой код и говорит только о нём: какие директивы нужны её
+  файлам и почему. Безопасность приложения целиком — не её предмет, и аудита она
+  не заменяет.</p>
+</div>
 
 <h2>Авто-присвоение областей (Auto-Assign)</h2>
 
@@ -229,6 +325,9 @@ Griffincss.version;   // '0.21.4'</code></pre>
   /* FOUC guard */
   [data-gr-layout]:not(.gr-ready), … { opacity: 0; }
   [data-gr-layout].gr-ready, …      { opacity: 1; transition: opacity 0.3s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-gr-layout].gr-ready, …    { transition: none; }
+  }
 
   /* Grid Layouts */
   .gr-l-k7gi9w { … }
@@ -241,6 +340,26 @@ Griffincss.version;   // '0.21.4'</code></pre>
   .gr-area-hdr { grid-area: hdr; }
   /* end */
 }</code></pre>
+
+<div class="callout">
+  <p><strong>Открытие контейнера уважает <code>prefers-reduced-motion</code>.</strong>
+  Переход <code>opacity 0.3s</code> — видимое движение, и под настройкой
+  «уменьшить движение» его нет: содержимое появляется мгновенно.
+  Снимается анимация снятия защиты, а не сама защита.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong><code>.gr-ready</code> и <code>.gr-l-*</code> принадлежат рантайму.</strong>
+  Присвоение <code>className</code> целиком — так делают React и Vue при изменении
+  своего пропа — снимает с контейнера оба класса разом. Раскладка исчезает,
+  а FOUC-защита ловит элемент по атрибуту и оставляет его в <code>opacity: 0</code>:
+  пустое место без единой ошибки в консоли. Под <code>Griffincss.observe()</code>
+  рантайм это переживает — наблюдатель слушает и атрибут <code>class</code>,
+  замечает пропажу маркеров на разложенном контейнере и возвращает их,
+  не трогая классы, поставленные вами. Без наблюдателя возвращать их некому.
+  Подробнее — <a href="frameworks.html#6-klass-konteynera-raskladki-ne-vash">шестая
+  оговорка для фреймворков</a>.</p>
+</div>
 
 <div class="callout">
   <p><strong>Слой каскада.</strong> Весь вывод рантайма лежит в <code>@layer griffincss.core</code> —
@@ -299,9 +418,11 @@ app.innerHTML += '&lt;div data-gr-layout="a2b2"&gt;...&lt;/div&gt;';
 
 <div class="callout callout-warning">
   <p><strong>Наблюдение идёт за добавлением узлов, не за атрибутами.</strong>
-  Наблюдатель подписан на <code>childList</code> и <code>subtree</code>, поэтому смена
-  <code>data-gr-layout</code> на уже существующем элементе его не разбудит — вызовите
-  <code>Griffincss.refresh()</code> сами. Такой повторный проход безопасен: прежний класс
+  Наблюдатель подписан на <code>childList</code>, <code>subtree</code> и атрибут
+  <code>class</code>, поэтому смена <code>data-gr-layout</code> на уже существующем
+  элементе его не разбудит — вызовите <code>Griffincss.refresh()</code> сами.
+  Атрибут <code>class</code> в списке ровно за одним: заметить, что с разложенного
+  контейнера сняли <code>.gr-ready</code> или <code>.gr-l-*</code>, и вернуть их. Такой повторный проход безопасен: прежний класс
   <code>.gr-l-*</code> снимается, а выданные раньше <code>gr-area-*</code> переназначаются
   по новой раскладке (классы, проставленные в разметке вручную, остаются на месте).</p>
 </div>

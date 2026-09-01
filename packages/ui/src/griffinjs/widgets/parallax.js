@@ -15,7 +15,7 @@
 (function (G) {
   'use strict';
 
-  G.defineWidget('parallax', function (el) {
+  G.defineWidget('parallax', { needs: ['motion'] }, function (el) {
     var source = G.motion.viewport(el);
 
     return {

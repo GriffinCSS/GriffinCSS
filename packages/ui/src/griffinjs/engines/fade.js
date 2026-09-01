@@ -19,7 +19,7 @@
 (function (G) {
   'use strict';
 
-  G.defineEngine('fade', function (track, el) {
+  G.defineEngine('fade', { needs: ['gesture'] }, function (track, el) {
     var attrs = G.recorder();
     var gesture = null;
 

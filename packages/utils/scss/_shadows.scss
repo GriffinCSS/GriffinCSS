@@ -6,7 +6,7 @@
 // в отдельный --gr-shadow-color в формате HSL-компонент: в тёмной теме
 // (Этап 5) меняется одна переменная, а не шесть готовых теней.
 
-$gr-shadows: (xs, sm, md, lg, xl, 2xl, inner);
+$gr-shadows: (xs, sm, md, lg, xl, 2xl, inner) !default;
 
 @each $gr-name in $gr-shadows {
   .gr-shadow-#{$gr-name} {

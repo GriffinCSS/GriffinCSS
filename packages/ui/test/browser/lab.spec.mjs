@@ -18,7 +18,7 @@ test('слой подключён: window.GriffinJS с версией пакет
 
   await expect(page.locator('#gr-lab-status')).toHaveText(`GriffinJS v${VERSION}`);
   expect(await page.evaluate(() => window.GriffinJS.version)).toBe(VERSION);
-  expect(await page.evaluate(() => Object.keys(window.GriffinJS.widgets))).toEqual(['track', 'slider', 'gallery', 'parallax', 'megamenu', 'dropdown', 'tooltip', 'dialog', 'combobox']);
+  expect(await page.evaluate(() => Object.keys(window.GriffinJS.widgets))).toEqual(['track', 'slider', 'gallery', 'parallax', 'megamenu', 'dropdown', 'tooltip', 'dialog', 'combobox', 'range', 'sortable']);
   expect(errors).toEqual([]);
 });
 

@@ -295,6 +295,31 @@
   </div>
 </div>
 
+<h2>Сортируемая таблица</h2>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три типа значений в одной таблице; со скриптом — щелчок и <kbd>Enter</kbd> по заголовку <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Стенд сортируемой таблицы">
+    <table class="gr-table gr-table-hover" id="gr-lab-sortable" data-gr-sortable>
+      <caption>Заказы: текст, дата и сумма</caption>
+      <thead>
+        <tr>
+          <th scope="col" aria-sort="none">Город</th>
+          <th scope="col" aria-sort="none">Дата</th>
+          <th scope="col" aria-sort="none" class="gr-text-end">Сумма</th>
+          <th scope="col">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Пермь</td><td class="gr-whitespace-nowrap">2026-08-30</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="24800">24 800 ₽</td><td><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Перми</span></button></td></tr>
+        <tr><td>Ёлкино</td><td class="gr-whitespace-nowrap">2026-01-09</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="113200">113 200 ₽</td><td><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Ёлкина</span></button></td></tr>
+        <tr><td>Азов</td><td class="gr-whitespace-nowrap">2026-08-05</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="5900">5 900 ₽</td><td><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Азова</span></button></td></tr>
+        <tr><td>Яровое</td><td class="gr-whitespace-nowrap">2026-09-14</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="999">999 ₽</td><td><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Ярового</span></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <script>
   // Показание стенда: слой подключён или нет. Меняется только текст
   // бейджа — сам полигон от скрипта не зависит.

@@ -1,5 +1,5 @@
 /*!
- * GriffinJS — Core v0.21.4
+ * GriffinJS — Core v0.22.0
  * Опциональный слой виджетов с состоянием поверх Griffincss: слайдер,
  * галерея, лайтбокс, параллакс, мегаменю. Подключается одной строкой
  * и одним файлом; страница без него — законное и рабочее состояние.
@@ -9,9 +9,12 @@
  * на элементы с data-gr-<виджет> и ведёт их жизненный цикл: start()
  * поднимает всё, destroy() снимает всё до последнего атрибута.
  *
- * Остальные части ядра — options, registry, scanner, media, motion,
- * gesture, track — лежат отдельными файлами в этом же каталоге и
- * склеиваются в griffinjs-core.js в порядке списка сборки.
+ * В griffinjs-core.js склеивается только то, без чего не обходится ни один
+ * виджет: options, registry, scanner. Остальное из core/ — anchor, media,
+ * motion, gesture, track — общие части ВНЕ ядра (Этап 22): ими пользуется
+ * меньшинство, и каждая уезжает своим файлом griffinjs-<часть>.js. Что
+ * модуль из этого берёт, он объявляет сам — вторым аргументом defineWidget
+ * или needs(); start() сверяет объявленное со сборкой.
  *
  * От рантаймов ядра/ui/utils слой не зависит: у него свой глобал
  * window.GriffinJS, а не window.Griffincss — там слияние рантаймов
@@ -35,12 +38,18 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.21.4';
+  var VERSION = '0.22.0';
 
   // Реестры. Модуль зовёт defineEngine/defineWidget; ядро — единственное
   // место, которое знает, как их применить.
   var engines = {};
   var widgets = {};
+
+  // Зависимости модулей: имя → части, которые модуль берёт из G и которых
+  // может не оказаться в сборке «ядро + нужное». Объявляет их сам модуль —
+  // вторым аргументом defineWidget/defineEngine или needs() напрямую,
+  // если модуль ничего не регистрирует (лайтбокс).
+  var deps = {};
 
   // Участники жизненного цикла: {start, destroy} от registry, scanner и
   // прочих частей, которым нужно подписаться на документ и отписаться.
@@ -52,7 +61,18 @@
 
   var started = false;
 
-  function define(registry, kind, name, factory) {
+  // Объявление и чтение зависимостей: needs('slider', ['track', 'motion'])
+  // записывает, needs('slider') возвращает.
+  function needs(name, list) {
+    if (list) deps[name] = list;
+
+    return deps[name] || [];
+  }
+
+  function define(registry, kind, name, opts, factory) {
+    // Второй аргумент необязателен: define<X>(name, factory) — прежняя форма.
+    if (typeof opts === 'function') { factory = opts; opts = null; }
+
     if (typeof name !== 'string' || !name) {
       throw new Error('GriffinJS: ' + kind + ' без имени');
     }
@@ -63,17 +83,41 @@
       throw new Error('GriffinJS: ' + kind + ' «' + name + '» уже зарегистрирован');
     }
 
+    if (opts && opts.needs) needs(name, opts.needs);
+
     registry[name] = factory;
 
     return factory;
   }
 
-  function defineEngine(name, factory) {
-    return define(engines, 'движок', name, factory);
+  function defineEngine(name, opts, factory) {
+    return define(engines, 'движок', name, opts, factory);
   }
 
-  function defineWidget(name, factory) {
-    return define(widgets, 'виджет', name, factory);
+  function defineWidget(name, opts, factory) {
+    return define(widgets, 'виджет', name, opts, factory);
+  }
+
+  // Проверка сборки на старте: модуль подключён, а часть, которую он берёт
+  // из G, — нет. Предупреждение, а не отказ: модуль со страховкой
+  // (`if (G.anchor)`) продолжит работать урезанно. Молчать об этом нельзя —
+  // иначе отказ проявится у читателя страницы, а не при сборке.
+  function checkNeeds() {
+    var names = Object.keys(deps);
+
+    for (var i = 0; i < names.length; i++) {
+      var list = deps[names[i]];
+
+      for (var j = 0; j < list.length; j++) {
+        var dep = list[j];
+
+        // Зависимостью бывает и часть G (track, anchor), и целый модуль:
+        // галерея строится поверх слайдера.
+        if (!api[dep] && !widgets[dep] && !engines[dep]) {
+          warn('«' + names[i] + '» не работает без griffinjs-' + dep + '.js');
+        }
+      }
+    }
   }
 
   function use(part) {
@@ -261,6 +305,8 @@
 
     started = true;
 
+    checkNeeds();
+
     for (var i = 0; i < lifecycle.length; i++) {
       if (typeof lifecycle[i].start === 'function') lifecycle[i].start(api);
     }
@@ -306,6 +352,7 @@
     widgets: widgets,
     defineEngine: defineEngine,
     defineWidget: defineWidget,
+    needs: needs,
     use: use,
     mount: mount,
     unmount: unmount,

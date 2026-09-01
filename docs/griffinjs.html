@@ -39,7 +39,10 @@
     и семейство выпадающего: <a href="griffinjs-menus.html">мегаменю</a>
     плюс контроллеры дропдауна и подсказки на странице
     <a href="ui-overlays.html#griffinjs">«Слои поверх страницы»</a>, —
-    и <a href="griffinjs-overlays.html">окна и комбобокс</a>. Устройство
+    и <a href="griffinjs-overlays.html">окна и комбобокс</a>; закраску
+    ползунка и пару «от — до» слой добавляет форме —
+    <a href="ui-forms.html#griffinjs">«Формы»</a>, а сортировку строк —
+    таблице: <a href="ui-tables.html#griffinjs">«Таблицы»</a>. Устройство
     слоя — на странице <a href="griffinjs-architecture.html">«Архитектура»</a>.
     Инвентарь этапа собран; впереди приёмка по матрице устройств.
   </p>
@@ -63,6 +66,14 @@
   отключает автозапуск — как у остальных рантаймов библиотеки.
 </p>
 
+<p>
+  Слой поднимает и снимает виджеты сам, по <code>MutationObserver</code>,
+  и ему всё равно, кто вставил узел. Поэтому пакетов-обёрток под React
+  и Vue нет и не планируется: их работу делает сканер. Что при этом нужно
+  знать — оговорки жизненного цикла и готовый хук — на странице
+  <a href="frameworks.html">«Griffincss в React и Vue»</a>.
+</p>
+
 <h2>Два рода вещей</h2>
 
 <p>
@@ -71,7 +82,8 @@
   лайтбокса, параллакса, мегаменю, комбобокса — своя разметка и свои стили
   в <code>griffinjs.css</code>; как компонентов <code>ui</code> их не существует,
   и описываются они только в этом разделе. Контроллеры — модалка, панель,
-  дропдаун, подсказка — ничего не меняют в разметке существующих компонентов:
+  дропдаун, подсказка, ползунок, сортируемая таблица — ничего не меняют
+  в разметке существующих компонентов:
   скрипт добавляет к ним атрибуты и поведение, а описание живёт на странице
   компонента в подразделе «С подключённым <code>griffinjs.js</code>».
 </p>
@@ -95,6 +107,8 @@
   <tr><td><a href="ui-overlays.html#griffinjs">Дропдаун</a> <span class="badge">контроллер</span></td><td>роли меню, клавиатура menu button, <kbd>Esc</kbd> и щелчок мимо для <code>&lt;details&gt;</code>, позиция popover-панели без anchor positioning, наведение с задержкой</td><td><code>.gr-dropdown</code> как есть: <code>&lt;details&gt;</code>, popover или наведение из <code>ui</code></td></tr>
   <tr><td><a href="griffinjs-overlays.html">Окна</a> <span class="badge">контроллер</span></td><td><code>data-gr-open</code>, стек, блокировка прокрутки под окном (и на iOS), остановка видео, ajax-содержимое, hash с кнопкой «Назад»</td><td><code>.gr-modal</code> / <code>.gr-drawer</code> как есть: <code>showModal()</code> и <code>&lt;form method="dialog"&gt;</code></td></tr>
   <tr><td><a href="griffinjs-overlays.html#komboboks">Комбобокс</a></td><td>роли combobox/listbox, <code>aria-activedescendant</code>, дебаунс, отмена запроса, кеш, группы, подсветка, выбор</td><td>обычное поле в форме поиска</td></tr>
+  <tr><td><a href="ui-forms.html#griffinjs">Ползунок</a> <span class="badge">контроллер</span></td><td>доля пройденного пути — след до ручки красит CSS; пара «от — до» держит порядок значений и шлёт <code>griffin:change</code></td><td><code>.gr-range</code> как есть: ползунок работает, следа нет (в Firefox есть — его рисует платформа)</td></tr>
+  <tr><td><a href="ui-tables.html#griffinjs">Сортируемая таблица</a> <span class="badge">контроллер</span></td><td>круг <code>aria-sort</code> «нет → по возрастанию → по убыванию», стабильная перестановка строк, числа и ISO-даты числами, остальное — <code>Intl.Collator</code> с локалью документа, клавиатура на заголовке</td><td><code>.gr-table</code> как есть: порядок строк тот, что пришёл с сервера; указатель направления рисуется из <code>aria-sort</code> и без скрипта</td></tr>
   <tr><td><a href="ui-overlays.html#griffinjs">Подсказка</a> <span class="badge">контроллер</span></td><td>верхний слой (popover) по наведению с задержкой и по фокусу, позиция у якоря, <kbd>Esc</kbd></td><td><code>.gr-tooltip-anchor</code> как есть: <code>:hover</code> и <code>:focus-within</code> из <code>ui</code></td></tr>
 </table>
 
@@ -102,15 +116,51 @@
 
 <p>
   Кроме <code>griffinjs.js</code> целиком в <code>dist/</code> лежат
-  <code>griffinjs-core.js</code> и по файлу на движок и виджет —
-  подключаются после ядра в любом наборе. Одна общая часть вне ядра:
-  <code>griffinjs-anchor.js</code> — позиционирование у якоря, которое
-  нужно дропдауну и подсказке; в полном файле она уже есть. Размеры
-  по модулям — на странице <a href="griffinjs-architecture.html#modulnaya-sborka-i-razmery">«Архитектура»</a>.
+  <code>griffinjs-core.js</code>, по файлу на общую часть — дорожка
+  <code>track</code>, анимация <code>motion</code>, жест <code>gesture</code>,
+  медиазапросы <code>media</code>, позиционирование у якоря <code>anchor</code> —
+  и по файлу на каждый движок и виджет. В ядре осталось только то, без чего
+  не обходится ни один виджет; всё остальное подключается после него
+  и лишь тем, кому нужно. Размеры по модулям — на странице
+  <a href="griffinjs-architecture.html#modulnaya-sborka-i-razmery">«Архитектура»</a>.
+</p>
+
+<!-- gr:griffinjs-deps -->
+<p>
+  Весь слой одним файлом — <b>17,2 КБ gzip</b>. Но берут его обычно не целиком:
+  ядро, нужное любому набору, весит <b>2,6 КБ</b>, а остальное подключается
+  по потребности. Каждый модуль объявляет, что берёт из ядра, и таблица собрана
+  из этих объявлений при сборке — разойтись с кодом ей нечем.
+</p>
+
+<table>
+  <tr><th>Виджет</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
+  <tr><td><code>data-gr-track</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code></td><td>6,5 КБ</td></tr>
+  <tr><td><code>data-gr-slider</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code></td><td>7,6 КБ</td></tr>
+  <tr><td><code>data-gr-gallery</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code> + <code>griffinjs-gallery.js</code></td><td>7,9 КБ</td></tr>
+  <tr><td><code>data-gr-lightbox</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-lightbox.js</code></td><td>7,7 КБ</td></tr>
+  <tr><td><code>data-gr-parallax</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-parallax.js</code></td><td>3,4 КБ</td></tr>
+  <tr><td><code>data-gr-megamenu</code></td><td><code>griffinjs-media.js</code> + <code>griffinjs-megamenu.js</code></td><td>4,6 КБ</td></tr>
+  <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>4,7 КБ</td></tr>
+  <tr><td><code>data-gr-tooltip</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-tooltip.js</code></td><td>3,8 КБ</td></tr>
+  <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>3,9 КБ</td></tr>
+  <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>4,5 КБ</td></tr>
+  <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,1 КБ</td></tr>
+  <tr><td><code>data-gr-sortable</code></td><td><code>griffinjs-sortable.js</code></td><td>3,4 КБ</td></tr>
+</table>
+<!-- /gr:griffinjs-deps -->
+
+<p>
+  Порядок тегов свободный, кроме одного: <code>griffinjs-core.js</code> идёт
+  первым — он создаёт <code>window.GriffinJS</code>. Если в наборе чего-то
+  не хватает, слой скажет об этом в консоли при старте, а не молча
+  недоработает: <code>GriffinJS: «dropdown» не работает без
+  griffinjs-anchor.js</code>.
 </p>
 
 <pre><code>&lt;script src="griffinjs-core.js"&gt;&lt;/script&gt;
 &lt;script src="griffinjs-anchor.js"&gt;&lt;/script&gt;
+&lt;script src="griffinjs-media.js"&gt;&lt;/script&gt;
 &lt;script src="griffinjs-dropdown.js"&gt;&lt;/script&gt;
 &lt;script src="griffinjs-megamenu.js"&gt;&lt;/script&gt;</code></pre>
 

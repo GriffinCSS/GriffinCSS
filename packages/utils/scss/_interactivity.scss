@@ -1,7 +1,7 @@
 // Griffincss — Interactivity
 // Курсор, приём событий указателя, выделение текста, прокрутка.
 
-$gr-cursors: (pointer, default, text, move, grab, grabbing, wait, progress, help, not-allowed);
+$gr-cursors: (pointer, default, text, move, grab, grabbing, wait, progress, help, not-allowed) !default;
 
 @each $gr-value in $gr-cursors {
   .gr-cursor-#{$gr-value} { cursor: $gr-value; }

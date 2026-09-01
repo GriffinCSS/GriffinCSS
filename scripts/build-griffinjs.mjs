@@ -36,18 +36,18 @@ export const CORE = [
   'core/options.js',
   'core/registry.js',
   'core/scanner.js',
-  'core/media.js',
-  'core/motion.js',
-  'core/gesture.js',
-  'core/track.js',
 ];
 export const ENGINES = ['engines/scroll.js', 'engines/fade.js'];
-// Общие части вне ядра: подключаются перед виджетами, которым нужны.
-export const SHARED = ['core/anchor.js'];
+// Общие части вне ядра (Этап 22): подключаются перед виджетами, которым
+// нужны, а нужны они меньшинству — track трём виджетам из одиннадцати,
+// motion двум, gesture одному движку, media одному виджету. В ядре
+// остаётся то, без чего не обходится ни один виджет. Порядок — от лёгкого
+// к тяжёлому; загрузка их не требует, все обращения лежат внутри фабрик.
+export const SHARED = ['core/anchor.js', 'core/media.js', 'core/motion.js', 'core/gesture.js', 'core/track.js'];
 export const WIDGETS = [
   'widgets/slider.js', 'widgets/gallery.js', 'widgets/lightbox.js', 'widgets/parallax.js',
   'widgets/megamenu.js', 'widgets/dropdown.js', 'widgets/tooltip.js',
-  'widgets/dialog.js', 'widgets/combobox.js',
+  'widgets/dialog.js', 'widgets/combobox.js', 'widgets/range.js', 'widgets/sortable.js',
 ];
 
 const PREAMBLE = '/*! GriffinJS | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */';

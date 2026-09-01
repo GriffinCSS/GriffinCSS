@@ -307,9 +307,17 @@
 <pre><code>&lt;link rel="stylesheet" href="griffincss-core.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-styles.css"&gt;</code></pre>
 
+<p>Переключение из скрипта:</p>
+
+<pre><code>Griffincss.theme.style('strict');   // 'standard' | 'airy' | 'strict' | 'compact'
+Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA11y}</code></pre>
+
+<h3>Возьмите один стиль</h3>
+
 <p>
-  Кому нужен один стиль из трёх, собирает из SCSS — состав файла и состав
-  структурных правил в компонентах задаёт один и тот же список:
+  Продукту обычно нужен один стиль, а не четыре. Тому, кто собирает из SCSS,
+  состав задаёт один список — общий для файла оси и для структурных правил
+  в компонентах, разойтись им негде:
 </p>
 
 <pre><code>@use 'griffincss-core/scss/style-config' with ($gr-styles: (strict));
@@ -317,10 +325,134 @@
 @use 'griffincss-core/scss/griffincss-styles';
 @use 'griffincss-ui';</code></pre>
 
-<p>Переключение из скрипта:</p>
+<p>
+  Пустой список выключает ось целиком — ни блоков токенов в файле оси,
+  ни правил <code>[data-gr-style]</code> в компонентах:
+</p>
 
-<pre><code>Griffincss.theme.style('strict');   // 'standard' | 'airy' | 'strict' | 'compact'
-Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA11y}</code></pre>
+<pre><code>@use 'griffincss-core/scss/style-config' with ($gr-styles: ());</code></pre>
+
+<p>Что это даёт в байтах (brotli, замер сборкой):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><code>$gr-styles</code></th>
+      <th><code>griffincss-styles.css</code></th>
+      <th><code>griffincss-ui.css</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>по умолчанию — все три</td><td>1 566 Б</td><td>8 845 Б</td></tr>
+    <tr><td><code>(airy)</code></td><td>1 232 Б</td><td>8 774 Б</td></tr>
+    <tr><td><code>(strict)</code></td><td>971 Б</td><td>8 775 Б</td></tr>
+    <tr><td><code>(compact)</code></td><td>1 188 Б</td><td>8 780 Б</td></tr>
+    <tr><td><code>()</code> — ось выключена</td><td>796 Б<sup>*</sup></td><td>8 730 Б</td></tr>
+  </tbody>
+</table>
+
+<p>
+  <sup>*</sup> Файл при пустом списке не исчезает: 796 Б — общая часть оси,
+  правила-носители <code>[data-gr-style]</code> без единого блока токенов.
+  Ось не нужна — файл просто не подключают, и не приезжает ни байта.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Экономия здесь небольшая, и это честная цифра.</strong> Один стиль
+    вместо трёх — около 350 Б brotli в файле оси и ещё 70 Б в компонентах,
+    на фоне 18 КБ всего CSS библиотеки. Настоящий выбор проходит не между
+    одним стилем и тремя, а между «ось подключена» и «не подключена»:
+    <code>griffincss-styles.css</code> — отдельный файл, и тем, кому ось
+    не нужна, она не стоит ничего. Ради 350 байт ломать себе сборку
+    не стоит; ради того, чтобы не тянуть чужие стили в продукт, где выбран
+    один, — вполне.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong><code>standard</code> в список не входит и не должен.</strong>
+    Стандартный стиль — это базовые значения <code>:root</code> в ядре,
+    объявлять ему нечего: он работает и при <code>$gr-styles: ()</code>.
+    Значением атрибута он при этом остаётся —
+    <code>&lt;section data-gr-style="standard"&gt;</code> возвращает базовую
+    геометрию внутри страницы с другим стилем. Вписанный в список
+    <code>standard</code> роняет сборку с <code>@error</code>, как и любое
+    другое неизвестное имя: список знает ровно три —
+    <code>airy</code>, <code>strict</code>, <code>compact</code>.
+  </p>
+</div>
+
+<h3>Готовый файл на один стиль</h3>
+
+<p>
+  Тому, кто SCSS не компилирует — берёт файлы с CDN или из
+  <code>dist/</code>, — настроить список негде. Для него те же три
+  конфигурации собраны заранее, по файлу на стиль:
+</p>
+
+<pre><code>&lt;!-- все три стиля --&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-styles.css"&gt;
+
+&lt;!-- или один — вместо предыдущей строки, а не вдобавок к ней --&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.22.0/dist/griffincss-style-strict.css"&gt;</code></pre>
+
+<table>
+  <thead>
+    <tr><th>Файл</th><th>Стили</th><th>Вес</th><th>brotli</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>griffincss-styles.css</code></td><td>все три</td><td>13 360 Б</td><td>1 566 Б</td></tr>
+    <tr><td><code>griffincss-style-airy.css</code></td><td><code>airy</code></td><td>9 436 Б</td><td>1 232 Б</td></tr>
+    <tr><td><code>griffincss-style-strict.css</code></td><td><code>strict</code></td><td>6 997 Б</td><td>971 Б</td></tr>
+    <tr><td><code>griffincss-style-compact.css</code></td><td><code>compact</code></td><td>9 153 Б</td><td>1 188 Б</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Из npm те же файлы лежат в
+  <code>node_modules/griffincss-core/dist/</code>. Каждый из них —
+  <strong>замена</strong> <code>griffincss-styles.css</code>, а не добавка
+  к нему: общая часть оси входит в файл целиком, и два таких файла разом
+  привезут её дважды.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Структурные правила компонентов однофайловая сборка не трогает.</strong>
+    Правила <code>[data-gr-style]</code> в <code>griffincss-ui.css</code> —
+    другой пакет, и в готовом файле остаются все четыре стиля. Стоят они
+    115 Б brotli на всех, поэтому отдельных сборок компонентов ради них
+    не заводится: нужно отсечь и их — соберите <code>griffincss-ui</code>
+    из SCSS с тем же списком или пропустите готовый файл через
+    <code>npm run purge</code>.
+  </p>
+</div>
+
+<h3>Отсечение: за чужие стили можно не платить</h3>
+
+<p>
+  Собирать из SCSS ради одного стиля не обязательно. <code>npm run purge</code>
+  читает <code>data-gr-style</code> в разметке и выбрасывает правила и блоки
+  токенов остальных стилей — без единой настройки. Замер на странице
+  со стилем <code>compact</code>: <code>griffincss-styles.css</code>
+  1 564 → 1 365 Б brotli, структурные правила в <code>griffincss-ui.css</code>
+  2 717 → 2 644 Б. Если <code>data-gr-style</code> в разметке не встретился
+  вовсе, ось уходит целиком: 1 566 → 519 Б.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Стиль, который ставится в рантайме, скрипт не видит.</strong>
+    <code>Griffincss.theme.style('strict')</code> в файле с кодом найдётся
+    строковым литералом, а тот же вызов в инлайновом <code>&lt;script&gt;</code>
+    внутри HTML — нет. Имя такого стиля добавляется в safelist наравне
+    с классами: <code>npm run purge -- --safelist strict …</code>. Отчёт
+    называет и оставленные стили, и выброшенные — по нему и видно, что
+    safelist собран верно.
+  </p>
+</div>
 
 <div class="callout callout-warning">
   <p>
@@ -330,6 +462,12 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
     внутри <code>@scope</code> селектор требует носитель атрибута в области.
     Ось там действует на уровне токенов — скругления, плотность, тени и цвета
     работают полностью, — но шапка карточки не превращается в линию.
+  </p>
+  <p>
+    И порог браузеров у этих файлов выше: <code>@scope</code> требует
+    Chrome 118, Safari 17.4 и Firefox 146 против Chrome 99 и Firefox 97
+    у обычных сборок. Замер и метод — в разделе
+    <a href="compatibility.html#scoped">«Совместимость»</a>.
   </p>
 </div>
 

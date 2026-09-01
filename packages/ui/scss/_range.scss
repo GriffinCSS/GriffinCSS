@@ -1,0 +1,220 @@
+// Griffincss UI — Range
+// Ползунок на <input type="range">: фильтр цены в каталоге, громкость, доля.
+//
+//   <input class="gr-range" type="range" min="0" max="10000" step="100" value="4000">
+//
+// Свой модуль, а не строка в _form.scss: у ползунка шесть вендорных
+// псевдоэлементов, и каждый обязан быть объявлен ОТДЕЛЬНЫМ правилом.
+// Неизвестный селектор в группе делает невалидной всю группу: WebKit,
+// встретив ::-moz-range-thumb рядом со своим, выбросит правило целиком —
+// и бегунок останется системным в обоих движках. Три обычных поля
+// в таком соседстве потерялись бы.
+//
+// accent-color объявлен и не снимается. appearance: none забирает системную
+// отрисовку, но там, где она ещё не снята — режим принудительных цветов,
+// движок без поддержки псевдоэлементов, — акцент остаётся единственным,
+// что делает ползунок частью библиотеки.
+//
+// Заполненная часть дорожки. Firefox рисует её сам
+// (`::-moz-range-progress`) и без скрипта; у WebKit псевдоэлемента для неё
+// нет вовсе, и остаётся градиент — а градиенту нужна доля пройденного пути,
+// числа которой в CSS взять неоткуда. Её пишет виджет `range` слоя GriffinJS
+// одним свойством `--gr-progress`; без него закраска просто не появляется,
+// и ползунок остаётся полноценным.
+//
+// Чисто-CSS-приём тут проверен и отвергнут: тень бегунка, обрезанная
+// дорожкой с `overflow: hidden`, красит след без скрипта — но дорожка
+// обрезает и сам бегунок, и круглая ручка крупнее дорожки исчезает.
+// След без ручки не стоит ручки без следа.
+//
+// Пара «от — до» — `.gr-range-pair`: два обычных ползунка в одной ячейке
+// сетки. Дорожка и отрезок между ручками рисуются на самой обёртке, а не
+// наложением дорожек ползунков: полупрозрачная дорожка верхнего не закрыла бы
+// акцент нижнего, а лишь притенила бы его.
+
+.gr-range {
+  // Дорожка тоньше бегунка ровно настолько, чтобы бегунок читался ручкой,
+  // а не заглушкой в трубе. Обе величины в rem: режим для слабовидящих
+  // поднимает кегль корня, и ползунок растёт вместе с полем рядом.
+  --gr-range-track: 0.375rem;
+  --gr-range-thumb: 1.125rem;
+
+  // Доля пройденного пути в процентах — из --gr-progress, который пишет
+  // виджет слоя. Псевдоэлементы наследуют её отсюда: своего значения
+  // ни у одного из них нет, а перевод в проценты нужен всем сразу.
+  --gr-range-fill: calc(var(--gr-progress, 0) * 100%);
+
+  // Направление заливки — тоже ручкой, а не парой правил на каждый градиент:
+  // логической формы у градиента нет, а в RTL движок разворачивает сам
+  // ползунок. Свойство наследуется всеми дорожками сразу, включая пару.
+  --gr-range-dir: to right;
+
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+
+  // Высота элемента — по бегунку: он выступает за дорожку, и коробка меньше
+  // обрезала бы его сверху и снизу.
+  block-size: var(--gr-range-thumb);
+  margin: 0;
+  background-color: transparent;
+  accent-color: var(--gr-color-accent);
+  appearance: none;
+  cursor: pointer;
+}
+
+// --- Дорожка ----------------------------------------------------------------
+
+// Оттенок currentcolor, а не готовая поверхность: непрозрачный серый совпал бы
+// с одной из подложек, на которых ползунок может лежать, и исчез бы вместе
+// с ней. Тот же приём, что у .gr-progress.
+.gr-range::-webkit-slider-runnable-track {
+  block-size: var(--gr-range-track);
+  border-radius: var(--gr-radius-pill);
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+
+  // Заливка поверх дорожки: акцент до отметки, дальше — сама дорожка.
+  // Вторая точка каждого отрезка задана явно, поэтому переход резкий,
+  // а не растянутый на всю ширину.
+  background-image: linear-gradient(var(--gr-range-dir), var(--gr-color-accent) 0 var(--gr-range-fill), transparent 0);
+}
+
+.gr-range:dir(rtl),
+.gr-range-pair:dir(rtl) {
+  --gr-range-dir: to left;
+}
+
+.gr-range::-moz-range-track {
+  block-size: var(--gr-range-track);
+  border-radius: var(--gr-radius-pill);
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+}
+
+.gr-range::-moz-range-progress {
+  block-size: var(--gr-range-track);
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-accent);
+}
+
+// --- Бегунок ----------------------------------------------------------------
+
+// WebKit кладёт бегунок верхним краем на верхний край дорожки, поэтому его
+// поднимает отрицательный внешний отступ — половина разницы высот. Величина
+// считается, а не пишется числом: обе ручки может переопределить потребитель,
+// и центровка обязана поехать следом.
+.gr-range::-webkit-slider-thumb {
+  inline-size: var(--gr-range-thumb);
+  block-size: var(--gr-range-thumb);
+  margin-block-start: calc((var(--gr-range-track) - var(--gr-range-thumb)) / 2);
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-accent);
+  appearance: none;
+  transition: background-color var(--gr-transition);
+}
+
+// Firefox центрует бегунок сам, но рисует ему рамку — её и снимаем.
+.gr-range::-moz-range-thumb {
+  inline-size: var(--gr-range-thumb);
+  block-size: var(--gr-range-thumb);
+  border: 0;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-accent);
+  transition: background-color var(--gr-transition);
+}
+
+// --- Пара «от — до» ---------------------------------------------------------
+
+// Два ползунка в одной ячейке сетки. Дорожка и закрашенный отрезок —
+// на самой обёртке (::before в той же ячейке), а дорожки ползунков
+// прозрачны и служат только областью попадания.
+//
+// Наложением двух дорожек отрезок не собрать: дорожка полупрозрачна
+// намеренно — оттенок currentcolor ложится на любую подложку, — и верхняя
+// не закрыла бы акцент нижней, а лишь притенила бы его. Отсюда общая полоса:
+// у неё обе границы отрезка сразу, и прятать друг за другом нечего.
+.gr-range-pair {
+  // Толщина дорожки здесь на обёртке: в паре дорожка принадлежит ей,
+  // а не ползункам. Размер ручки по-прежнему на самих ползунках.
+  --gr-range-track: 0.375rem;
+  --gr-range-dir: to right;
+
+  display: grid;
+  align-items: center;
+}
+
+.gr-range-pair::before {
+  content: "";
+  grid-area: 1 / 1;
+  align-self: center;
+  block-size: var(--gr-range-track);
+  border-radius: var(--gr-radius-pill);
+  background-color: color-mix(in srgb, currentcolor 12%, transparent);
+
+  // Отрезок между ручками: доли пишет виджет range слоя. Без него обе
+  // равны нулю, отрезок вырождается в точку — и остаётся чистая дорожка.
+  background-image: linear-gradient(
+    var(--gr-range-dir),
+    transparent 0 calc(var(--gr-range-from, 0) * 100%),
+    var(--gr-color-accent) 0 calc(var(--gr-range-to, 0) * 100%),
+    transparent 0
+  );
+}
+
+// События — только ручкам: иначе верхний ползунок забирал бы себе щелчки
+// по всей дорожке, и до нижней ручки было бы не добраться.
+.gr-range-pair > .gr-range {
+  grid-area: 1 / 1;
+  pointer-events: none;
+}
+
+.gr-range-pair > .gr-range::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+
+.gr-range-pair > .gr-range::-moz-range-thumb {
+  pointer-events: auto;
+}
+
+// Дорожки самих ползунков в паре не рисуют ничего — включая родное
+// заполнение Firefox: каждый ползунок красил бы свой путь от начала шкалы,
+// а нужен отрезок между ручками.
+.gr-range-pair > .gr-range::-webkit-slider-runnable-track {
+  background: none;
+}
+
+.gr-range-pair > .gr-range::-moz-range-track {
+  background: none;
+}
+
+.gr-range-pair > .gr-range::-moz-range-progress {
+  background: none;
+}
+
+// --- Состояния --------------------------------------------------------------
+
+.gr-range:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+// Приглушается элемент целиком: у ползунка нет ни фона, ни границы, которые
+// можно было бы притушить по отдельности, а бегунок и дорожка обязаны
+// потускнеть вместе. Тот же приём, что у флажка.
+.gr-range:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+// Подсветка бегунка — только там, где указатель есть: на сенсорном экране
+// :hover залипает после касания. Подмешивается цвет чернил акцента, как
+// у кнопки, — насколько это темнее или светлее, решает тема.
+@media (hover: hover) {
+  .gr-range:hover:enabled::-webkit-slider-thumb {
+    background-color: color-mix(in srgb, var(--gr-color-accent) 85%, var(--gr-color-on-accent));
+  }
+
+  .gr-range:hover:enabled::-moz-range-thumb {
+    background-color: color-mix(in srgb, var(--gr-color-accent) 85%, var(--gr-color-on-accent));
+  }
+}

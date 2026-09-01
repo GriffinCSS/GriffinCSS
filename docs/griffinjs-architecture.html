@@ -146,8 +146,8 @@ GriffinJS.unmount(el, 'counter');</code></pre>
   <code>top/left</code>, переворот при нехватке места. CSS anchor positioning
   зависимостью не является, развилки <code>@supports</code> в слое нет:
   в Firefox и Chromium панель стоит одинаково. Эта часть лежит в
-  <code>core/</code>, но в <code>griffinjs-core.js</code> не входит — бюджет
-  ядра занят, а нужна она только дропдауну и подсказке.
+  <code>core/</code>, но в <code>griffinjs-core.js</code> не входит: нужна она
+  только дропдауну и подсказке — см. «Модульную сборку» ниже.
 </p>
 
 <h2>Контракт с CSS</h2>
@@ -185,21 +185,46 @@ GriffinJS.unmount(el, 'counter');</code></pre>
   и виджет — подключаются после ядра в любом наборе.
 </p>
 
+<p>
+  <strong>В ядре — только то, чем пользуются все</strong> (Этап 22).
+  Дорожка нужна трём виджетам из двенадцати, анимация — двум, жест —
+  одному движку, медиазапросы — одному виджету: держать их в ядре значило
+  бы брать плату со всех за то, чем пользуется меньшинство. Каждая такая
+  часть уезжает своим файлом, а <strong>что модуль из них берёт, он
+  объявляет сам</strong> — вторым аргументом <code>defineWidget</code>
+  (<code>{ needs: ['track', 'motion'] }</code>) или <code>G.needs()</code>,
+  если модуль ничего не регистрирует. На старте <code>start()</code> сверяет
+  объявленное со сборкой и предупреждает в консоли: отказ из-за забытого
+  файла обязан быть слышен, а не проявиться у читателя страницы. Новая общая
+  возможность кладётся в <code>SHARED</code> и переезжает в ядро, только
+  когда ею пользуются все. Таблица «виджет → что подключить» на странице
+  <a href="griffinjs.html#modulnaya-sborka">«Слой GriffinJS»</a> собрана
+  из этих объявлений при сборке.
+</p>
+
 <table>
   <tr><th>Файл</th><th>gzip</th><th>Состав</th></tr>
-  <tr><td><code>griffinjs-core.js</code></td><td>6,0 КБ</td><td>ядро, options, registry, scanner, media, motion, gesture, track</td></tr>
-  <tr><td><code>griffinjs-scroll.js</code> / <code>-fade.js</code></td><td>1,5 / 0,5</td><td>движки дорожки</td></tr>
-  <tr><td><code>griffinjs-anchor.js</code></td><td>0,9</td><td>позиционирование у якоря — перед <code>dropdown</code> и <code>tooltip</code></td></tr>
-  <tr><td><code>griffinjs-slider.js</code> / <code>-gallery.js</code> / <code>-lightbox.js</code> / <code>-parallax.js</code></td><td>1,6 / 0,7 / 1,7 / 0,3</td><td>семейство прокрутки и параллакс</td></tr>
-  <tr><td><code>griffinjs-megamenu.js</code> / <code>-dropdown.js</code> / <code>-tooltip.js</code></td><td>2,2 / 1,9 / 0,9</td><td>семейство выпадающего</td></tr>
-  <tr><td><code>griffinjs-dialog.js</code> / <code>-combobox.js</code></td><td>1,8 / 2,3</td><td>окна и комбобокс</td></tr>
-  <tr><td><strong><code>griffinjs.js</code></strong></td><td><strong>15,4 КБ</strong></td><td>всё вместе (бюджет 16); ядро + <code>scroll</code> + <code>slider</code> — 7,9 при бюджете 8</td></tr>
+  <tr><td><code>griffinjs-core.js</code></td><td><!--gr:size:griffinjs-core-->2,6 КБ<!--/gr:size:griffinjs-core--></td><td>ядро, options, registry, scanner — нужны каждому виджету</td></tr>
+  <tr><td><code>griffinjs-track.js</code> / <code>-motion.js</code> / <code>-gesture.js</code> / <code>-media.js</code> / <code>-anchor.js</code></td><td><!--gr:size:griffinjs-track:n-->2,5<!--/gr:size:griffinjs-track:n--> / <!--gr:size:griffinjs-motion:n-->1,0<!--/gr:size:griffinjs-motion:n--> / <!--gr:size:griffinjs-gesture:n-->1,0<!--/gr:size:griffinjs-gesture:n--> / <!--gr:size:griffinjs-media:n-->0,5<!--/gr:size:griffinjs-media:n--> / <!--gr:size:griffinjs-anchor:n-->0,8<!--/gr:size:griffinjs-anchor:n--></td><td>общие части вне ядра: дорожка, анимация, жест, медиазапросы, позиция у якоря</td></tr>
+  <tr><td><code>griffinjs-scroll.js</code> / <code>-fade.js</code></td><td><!--gr:size:griffinjs-scroll:n-->1,5<!--/gr:size:griffinjs-scroll:n--> / <!--gr:size:griffinjs-fade:n-->0,5<!--/gr:size:griffinjs-fade:n--></td><td>движки дорожки</td></tr>
+  <tr><td><code>griffinjs-slider.js</code> / <code>-gallery.js</code> / <code>-lightbox.js</code> / <code>-parallax.js</code></td><td><!--gr:size:griffinjs-slider:n-->1,6<!--/gr:size:griffinjs-slider:n--> / <!--gr:size:griffinjs-gallery:n-->0,8<!--/gr:size:griffinjs-gallery:n--> / <!--gr:size:griffinjs-lightbox:n-->1,7<!--/gr:size:griffinjs-lightbox:n--> / <!--gr:size:griffinjs-parallax:n-->0,3<!--/gr:size:griffinjs-parallax:n--></td><td>семейство прокрутки и параллакс</td></tr>
+  <tr><td><code>griffinjs-megamenu.js</code> / <code>-dropdown.js</code> / <code>-tooltip.js</code></td><td><!--gr:size:griffinjs-megamenu:n-->2,1<!--/gr:size:griffinjs-megamenu:n--> / <!--gr:size:griffinjs-dropdown:n-->1,8<!--/gr:size:griffinjs-dropdown:n--> / <!--gr:size:griffinjs-tooltip:n-->0,9<!--/gr:size:griffinjs-tooltip:n--></td><td>семейство выпадающего</td></tr>
+  <tr><td><code>griffinjs-dialog.js</code> / <code>-combobox.js</code> / <code>-range.js</code> / <code>-sortable.js</code></td><td><!--gr:size:griffinjs-dialog:n-->1,7<!--/gr:size:griffinjs-dialog:n--> / <!--gr:size:griffinjs-combobox:n-->2,4<!--/gr:size:griffinjs-combobox:n--> / <!--gr:size:griffinjs-range:n-->0,8<!--/gr:size:griffinjs-range:n--> / <!--gr:size:griffinjs-sortable:n-->1,2<!--/gr:size:griffinjs-sortable:n--></td><td>окна, комбобокс, ползунок и сортируемая таблица</td></tr>
+  <tr><td><strong><code>griffinjs.js</code></strong></td><td><strong><!--gr:size:griffinjs-->17,2 КБ<!--/gr:size:griffinjs--></strong></td><td>всё вместе (бюджет 17,4); ядро — <!--gr:size:griffinjs-core:n-->2,6<!--/gr:size:griffinjs-core:n--> при бюджете 2,8, набор слайдера — <!--gr:size:griffinjs-slider-set:n-->7,6<!--/gr:size:griffinjs-slider-set:n--> при бюджете 7,7</td></tr>
 </table>
 
 <p>
-  Ориентир — UIkit ≈ 40 КБ и Swiper ≈ 45 КБ gzip. Бюджеты проверяет
-  <code>check-dist</code>; слой в <code>griffincss-all.js</code> не входит
-  и в <code>JS_BUDGET</code> рантаймов не считается.
+  Ориентиры измерены 2026-08-30 (gzip уровня 9): <code>uikit.min.js</code> —
+  49,4 КБ, <code>uikit-core.min.js</code> — 33,1 КБ,
+  <code>swiper-bundle.min.js</code> — 41,0 КБ плюс 4,7 КБ своего CSS.
+  Слой легче полного UIkit в 2,8 раза на потолке, набор слайдера легче
+  связки Swiper в 5,9 раза. Запас полного файла, оставленный Этапом 28
+  под сортируемую таблицу, потрачен на неё же: виджет стоил 724 Б
+  из 926, остаток — 202 Б, и он больше ни под что не назван. У ядра
+  и набора слайдера запаса нет: рост в них не планируется, новая общая
+  возможность кладётся в общие модули, а не в ядро. Бюджеты проверяет <code>check-dist</code>; слой
+  в <code>griffincss-all.js</code> не входит и в бюджет рантаймов
+  не считается.
 </p>
 
 <h2>Проверка</h2>

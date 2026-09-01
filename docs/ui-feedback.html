@@ -24,11 +24,12 @@
 
 <div class="hero">
   <h1>Сообщения</h1>
-  <p>Всё, чем интерфейс отвечает на действие: сообщение о статусе, полоса выполнения, шкала, кольцо занятости и всплывающее уведомление. Статус везде читается словом, а не только цветом.</p>
+  <p>Всё, чем интерфейс отвечает на действие: сообщение о статусе, полоса выполнения, шкала, рейтинг, кольцо занятости и всплывающее уведомление. Значение везде читается словом, а не только цветом.</p>
   <div class="hero-badges">
     <span class="badge badge-accent">griffincss-ui</span>
     <span class="badge">packages/ui/scss/_alert.scss</span>
     <span class="badge">packages/ui/scss/_progress.scss</span>
+    <span class="badge">packages/ui/scss/_rating.scss</span>
     <span class="badge">packages/ui/scss/_spinner.scss</span>
     <span class="badge">packages/ui/scss/_toast.scss</span>
   </div>
@@ -278,6 +279,97 @@
   </p>
 </div>
 
+<h2>Рейтинг</h2>
+
+<table>
+  <tr><th>Класс или переменная</th><th>Назначение</th></tr>
+  <tr><td><code>.gr-rating</code></td><td>Пять знаков, залитых по оценке. Отображение, а не ввод</td></tr>
+  <tr><td><code>--gr-rating</code></td><td>Оценка числом от 0 до 5 на самом элементе; дробная рисуется частью знака</td></tr>
+  <tr><td><code>--gr-rating-symbol</code></td><td>Знак; по умолчанию звезда, записанная экранированием <code>"\2605"</code>. Токен ядра — свой глиф подставляется один раз на весь сайт</td></tr>
+  <tr><td><code>--gr-rating-color</code></td><td>Цвет залитого знака; по умолчанию поверхностный цвет предупреждения — янтарь, читаемый в обеих темах</td></tr>
+</table>
+
+<pre><code>&lt;span class="gr-rating" style="--gr-rating: 4.5" role="img" aria-label="4,5 из 5"&gt;&lt;/span&gt;
+&lt;span class="gr-text-sm gr-text-ink-secondary"&gt;4,5 — 128 отзывов&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Целая оценка, дробная и пустая</div>
+  <div class="gr-flex gr-flex-col gr-gap-sm">
+    <div class="gr-flex gr-flex-items-center gr-gap-sm">
+      <span class="gr-rating" style="--gr-rating: 5" role="img" aria-label="5 из 5"></span>
+      <span class="gr-text-sm gr-text-ink-secondary">5,0 — 128 отзывов</span>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-gap-sm">
+      <span class="gr-rating" style="--gr-rating: 4.5" role="img" aria-label="4,5 из 5"></span>
+      <span class="gr-text-sm gr-text-ink-secondary">4,5 — 64 отзыва</span>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-gap-sm">
+      <span class="gr-rating" style="--gr-rating: 3.2" role="img" aria-label="3,2 из 5"></span>
+      <span class="gr-text-sm gr-text-ink-secondary">3,2 — 9 отзывов</span>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-gap-sm">
+      <span class="gr-rating" role="img" aria-label="Оценок пока нет"></span>
+      <span class="gr-text-sm gr-text-ink-secondary">Оценок пока нет</span>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Оценка обязана быть и словом.</strong> Пять знаков — это цвет
+    и форма, то есть ровно то, что не переживает ни печать, ни программу
+    чтения с экрана. Поэтому элемент несёт <code>role="img"</code>
+    и <code>aria-label</code> вида «4,5 из 5», а рядом в примерах стоит
+    видимое число. Правило то же, что у сообщения о статусе: статус читается
+    словом, а не только цветом.
+  </p>
+</div>
+
+<pre><code>&lt;!-- свой знак и свой цвет — переопределением токенов, не правилами --&gt;
+&lt;span class="gr-rating gr-text-2xl"
+      style="--gr-rating: 4; --gr-rating-symbol: '&#9829;'; --gr-rating-color: var(--gr-color-danger)"
+      role="img" aria-label="4 из 5"&gt;&lt;/span&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Крупнее — утилитой кегля, другим знаком — токеном</div>
+  <div class="gr-flex gr-flex-items-center gr-gap">
+    <span class="gr-rating gr-text-2xl" style="--gr-rating: 4.5" role="img" aria-label="4,5 из 5"></span>
+    <span class="gr-rating gr-text-2xl" style="--gr-rating: 4; --gr-rating-symbol: '&#9829;'; --gr-rating-color: var(--gr-color-danger)" role="img" aria-label="4 из 5"></span>
+    <span class="gr-rating" style="--gr-rating: 2.5; --gr-rating-symbol: '&#9679;'; --gr-rating-color: var(--gr-color-accent)" role="img" aria-label="2,5 из 5"></span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Размера у рейтинга нет и не нужно.</strong> Знаки — текст, поэтому
+    он растёт от кегля: <code>.gr-text-2xl</code> на самом элементе или
+    на строке вокруг. Пара классов <code>.gr-rating-sm</code> /
+    <code>-lg</code> была бы третьим способом сказать то, что уже говорят
+    утилиты типографики.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Знак приходит переменной, а не картинкой.</strong> Своего
+    иконочного набора библиотека не везёт — вместо него она держит слот
+    и контракт к нему (<a href="ui-buttons.html">«Кнопки и ссылки»</a>),
+    а <code>--gr-rating-symbol</code> оставляет выбор глифа за проектом:
+    звезда, сердце, точка или знак из вашего иконочного шрифта. Ровно поэтому нельзя задать знакам
+    разрядку: интервал сдвигал бы границу заливки на целое число промежутков,
+    и половина пятого знака перестала бы приходиться на 90 % ширины. Просвет
+    рисует сам глиф.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Модуль показывает оценку, но не принимает её.</strong> Ввод — это
+    пять контролов, наведение, обход с клавиатуры и текущее значение формы:
+    поведение, а не оформление. Собирается оно из <code>.gr-radio</code>
+    в <code>&lt;fieldset&gt;</code> и остаётся за потребителем; притворяться,
+    что модуль умеет ввод, значило бы выдать картинку за поле.
+  </p>
+</div>
+
 <h2>Кольцо занятости</h2>
 
 <table>
@@ -523,7 +615,7 @@ Griffincss.ui.toast('Черновик сохранён', { status: 'success', ti
 <!--
   Живые области объявлены в разметке и пустые: программа чтения с экрана
   следит за изменениями ВНУТРИ aria-live, а не за появлением самой области.
-  Регион для левого верхнего угла намеренно не объявлен — кнопка «В другом
+  Регион верхнего угла начала строки (top-start) намеренно не объявлен — кнопка «В другом
   углу» показывает запасной путь, когда рантайм создаёт область сам.
 -->
 <div class="gr-toast-region gr-toast-region-bottom-end" role="status" aria-live="polite"></div>
@@ -541,7 +633,7 @@ document.addEventListener('click', function (event) {
     success: ['Изменения вступят в силу через минуту', { status: 'success', title: 'Сохранено', icon: '✓' }],
     warning: ['Осталось 5 % места на диске', { status: 'warning', title: 'Внимание', icon: '!' }],
     danger: ['Не удалось отправить форму — проверьте связь', { status: 'danger', title: 'Ошибка', icon: '✕', timeout: 0 }],
-    corner: ['Этот приехал в левый верхний угол', { position: 'top-start', title: 'Угол', status: 'info' }]
+    corner: ['Этот приехал в верхний угол начала строки', { position: 'top-start', title: 'Угол', status: 'info' }]
   };
 
   var demo = demos[trigger.getAttribute('data-toast')];

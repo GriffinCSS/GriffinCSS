@@ -183,6 +183,45 @@ export function extractClasses(text, { js = false } = {}) {
   return found;
 }
 
+// --- ось оформления ---------------------------------------------------------
+
+// Стилей четыре, странице нужен один, и правила `[data-gr-style="X"]`
+// по классам от прочих не отличить: класс в них как раз используемый.
+// Поэтому ось идёт своим множеством — значениями атрибута из разметки.
+const STYLE_ATTR = /data-gr-style\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}|([^\s>]+))/g;
+
+// `[data-gr-style]` — блок токенов, `[data-gr-style="compact"]` — правила
+// одного стиля. Значение возвращается без кавычек, безымянный — как null.
+const STYLE_IN_SELECTOR = /\[data-gr-style(?:[~^$*|]?=("[^"]*"|'[^']*'|[^\]]*))?\]/g;
+
+export function extractStyles(text) {
+  const found = new Set();
+
+  for (const match of text.matchAll(STYLE_ATTR)) {
+    addTokens(match[1] ?? match[2] ?? match[3] ?? match[4] ?? '', found);
+  }
+
+  return found;
+}
+
+function stylesInPart(part) {
+  return [...part.matchAll(STYLE_IN_SELECTOR)].map(([, value]) =>
+    (value === undefined ? null : value.replace(/^["']|["']$/g, '')));
+}
+
+function declaredStyles(nodes, found = new Set()) {
+  for (const node of nodes) {
+    if (node.type === 'at') declaredStyles(node.children, found);
+    if (node.type !== 'rule') continue;
+
+    for (const value of stylesInPart(node.selector)) {
+      if (value !== null) found.add(value);
+    }
+  }
+
+  return found;
+}
+
 // --- safelist ---------------------------------------------------------------
 
 // `gr-mt-*` — шаблон, `/^gr-/` — регулярное выражение, остальное —
@@ -228,7 +267,7 @@ function keyframesName(prelude) {
   return match ? match[1].trim().replace(/^['"]|['"]$/g, '') : null;
 }
 
-function filterNodes(nodes, isKept, counters) {
+function filterNodes(nodes, isKept, counters, axis) {
   const result = [];
 
   for (const node of nodes) {
@@ -238,7 +277,7 @@ function filterNodes(nodes, isKept, counters) {
     }
 
     if (node.type === 'at') {
-      const children = filterNodes(node.children, isKept, counters);
+      const children = filterNodes(node.children, isKept, counters, axis);
 
       // Опустевший @media не остаётся: пустой блок — это байты,
       // за которые пользователь платит ни за что.
@@ -248,7 +287,10 @@ function filterNodes(nodes, isKept, counters) {
     }
 
     const parts = splitSelector(node.selector).filter((part) =>
-      classesInPart(part).every((cls) => isKept(cls)),
+      classesInPart(part).every((cls) => isKept(cls))
+      // Безымянный `[data-gr-style]` держит токены всех стилей: он нужен,
+      // пока уцелел хоть один, и не нужен, если ось не встретилась вовсе.
+      && stylesInPart(part).every((value) => (value === null ? axis.used : axis.keep(value))),
     );
 
     if (!parts.length) {
@@ -292,15 +334,28 @@ function filterKeyframes(nodes, used, isKept, counters) {
   return result.filter((node) => node.type !== 'at' || node.children.length);
 }
 
-export function purge(css, used, { safelist = [] } = {}) {
+export function purge(css, used, { safelist = [], styles = null } = {}) {
   const safe = safelistMatcher(safelist);
   const isKept = (name) => used.has(name) || safe(name);
   const counters = { kept: 0, dropped: 0 };
 
-  const filtered = filterNodes(parse(css), isKept, counters);
+  const tree = parse(css);
+
+  // styles = null — про разметку ничего не известно (вызов из чужого кода
+  // без этой опции): ось не трогаем, отсекать по незнанию нельзя.
+  const declared = [...declaredStyles(tree)];
+  const keep = styles ? (value) => styles.has(value) || safe(value) : () => true;
+  const axis = { keep, used: !styles || declared.some(keep) };
+
+  const filtered = filterNodes(tree, isKept, counters, axis);
   const nodes = filterKeyframes(filtered, animationNames(filtered), isKept, counters);
 
-  return { css: stringify(nodes), kept: counters.kept, dropped: counters.dropped };
+  return {
+    css: stringify(nodes),
+    kept: counters.kept,
+    dropped: counters.dropped,
+    styles: { kept: declared.filter(keep), dropped: declared.filter((value) => !keep(value)) },
+  };
 }
 
 // --- CLI --------------------------------------------------------------------
@@ -364,15 +419,18 @@ function main(argv) {
 
   const files = options.content.flatMap((target) => collectFiles(resolve(target)));
   const used = new Set();
+  const styles = new Set();
 
   for (const file of files) {
+    const text = readFileSync(file, 'utf8');
     const js = JS_EXT.has(extname(file).toLowerCase());
 
-    for (const cls of extractClasses(readFileSync(file, 'utf8'), { js })) used.add(cls);
+    for (const cls of extractClasses(text, { js })) used.add(cls);
+    for (const value of extractStyles(text)) styles.add(value);
   }
 
   const source = readFileSync(resolve(options.css), 'utf8');
-  const result = purge(source, used, { safelist: options.safelist });
+  const result = purge(source, used, { safelist: options.safelist, styles });
 
   if (options.out) writeFileSync(resolve(options.out), result.css);
   else process.stdout.write(result.css);
@@ -388,6 +446,19 @@ function main(argv) {
     `purge: ${kb(source.length)} → ${kb(result.css.length)}` +
       ` (gzip ${gzip(source)} → ${gzip(result.css)} Б, brotli ${brotli(source)} → ${brotli(result.css)} Б)`,
   );
+
+  // Ось оформления: тот, кто отсекает неиспользуемое, перестаёт платить
+  // за три стиля из четырёх — но только если стиль стоит в разметке.
+  if (result.styles.kept.length || result.styles.dropped.length) {
+    const kept = result.styles.kept.length ? result.styles.kept.join(', ') : 'ни одного — в разметке нет data-gr-style';
+
+    console.error(`purge: ось оформления — оставлено: ${kept}` +
+      (result.styles.dropped.length ? `; выброшено: ${result.styles.dropped.join(', ')}` : ''));
+
+    if (!result.styles.kept.length) {
+      console.error('purge: стиль, который ставится в рантайме (el.dataset.grStyle), укажите в --safelist');
+    }
+  }
 
   if (!options.safelist.length) {
     console.error('purge: safelist пуст — классы, которые собираются в рантайме, отсечены вместе с остальными');

@@ -2,7 +2,7 @@
 // Прозрачность, вписывание медиа и пропорции блока.
 
 // Прозрачность
-$gr-opacities: (0: 0, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1);
+$gr-opacities: (0: 0, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1) !default;
 
 @each $gr-step, $gr-value in $gr-opacities {
   .gr-opacity-#{$gr-step} { opacity: $gr-value; }

@@ -26,6 +26,47 @@
   <p>Уникальная система описания CSS Grid раскладок через компактный строковый формат. JS-рантайм автоматически парсит атрибуты и генерирует CSS на лету.</p>
 </div>
 
+<h2>Две дорожки, одна строка</h2>
+
+<p>
+  Одна и та же строка <code>a3b4-c2d5</code> раскладывается двумя
+  независимыми способами, и оба входят в <code>griffincss-core</code>.
+  Выбор — ваш, не библиотеки.
+</p>
+
+<div class="gr-grid-1 gr-grid-2-md">
+  <div>
+    <p><strong>Рантайм — атрибут в разметке.</strong> Ничего собирать не нужно,
+    раскладка появляется по мере разбора страницы.</p>
+<pre><code>&lt;script src="griffincss.js"&gt;&lt;/script&gt;
+
+&lt;div data-gr-layout="a3b4-c2d5"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+  </div>
+  <div>
+    <p><strong>Компилтайм — миксин в SCSS.</strong> Ни строки JS на странице,
+    имя класса задаёте вы.</p>
+<pre><code>@use 'griffincss-core/scss/grid-parser' as p;
+
+@include p.gr-grid-layout('a3b4-c2d5', $name: 'page');
+
+&lt;div class="gr-l-page"&gt;
+  &lt;div class="gr-area-a"&gt;A&lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+  </div>
+</div>
+
+<p>
+  Обе дают один и тот же CSS — это держит тест, сверяющий их вывод
+  побайтово. Разница одна: <strong>без JS раскладка из миксина есть,
+  из атрибута — нет, и контент при этом виден</strong> — защиту от FOUC
+  ставит сам рантайм, в статическом CSS её нет. Миксин разобран ниже,
+  в разделе <a href="#scss-miksiny-kompiltaym">«SCSS-миксины»</a>.
+</p>
+
 <h2>Формат раскладки</h2>
 
 <p>
@@ -74,8 +115,8 @@
 .gr-l-k7gi9w {
   display: grid;
   grid-template-areas: "a a a b b b b" "c c d d d d d";
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(2, auto);
+  grid-template-columns: var(--gr-l-cols, repeat(7, minmax(0, 1fr)));
+  grid-template-rows: var(--gr-l-rows, repeat(2, auto));
 }
 .gr-area-a { grid-area: a; }
 .gr-area-b { grid-area: b; }
@@ -167,6 +208,94 @@
 <div class="callout callout-warning">
   <p><strong>Важно:</strong> область на нескольких строках должна занимать одинаковые колонки во всех рядах (прямоугольник). Это фундаментальное ограничение CSS Grid. L-образные и T-образные формы недопустимы.</p>
 </div>
+
+<h2>Ширины треков</h2>
+
+<p>
+  Строка раскладки описывает области, а не ширины: <code>a3b4</code> значит
+  «три доли одному, четыре другому», и по умолчанию все семь дорожек равны.
+  Это её единственный довод — читать её должно быть легче, чем
+  <code>grid-template-areas</code>. Ширины задаются там, где им и место, —
+  в CSS, двумя свойствами:
+</p>
+
+<table>
+  <tr><th>Свойство</th><th>Значение по умолчанию</th></tr>
+  <tr><td><code>--gr-l-cols</code></td><td><code>repeat(<i>число колонок</i>, minmax(0, 1fr))</code></td></tr>
+  <tr><td><code>--gr-l-rows</code></td><td><code>repeat(<i>число рядов</i>, auto)</code></td></tr>
+</table>
+
+<p>
+  Работает на обеих дорожках — и у рантайма, и у миксина: свойство читает
+  само правило раскладки, а кто его написал, значения не имеет.
+</p>
+
+<pre><code>&lt;!-- Фиксированная боковая колонка и резиновая основная --&gt;
+&lt;div data-gr-layout="a1b1" style="--gr-l-cols: 12rem 1fr"&gt;
+  &lt;div class="gr-area-a"&gt;Меню&lt;/div&gt;
+  &lt;div class="gr-area-b"&gt;Содержимое&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">--gr-l-cols: 12rem 1fr</div>
+  <div data-gr-layout="a1b1" style="--gr-l-cols: 12rem 1fr">
+    <div class="gr-area-a dg-a demo-grid-item">A (12rem)</div>
+    <div class="gr-area-b dg-b demo-grid-item">B (остаток)</div>
+  </div>
+</div>
+
+<pre><code>&lt;!-- Колонка с вилкой ширины: не уже 12rem и не шире 20rem --&gt;
+&lt;div data-gr-layout="a1b1" style="--gr-l-cols: minmax(12rem, 20rem) 1fr"&gt;…&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">--gr-l-cols: minmax(12rem, 20rem) 1fr</div>
+  <div data-gr-layout="a1b1" style="--gr-l-cols: minmax(12rem, 20rem) 1fr">
+    <div class="gr-area-a dg-a demo-grid-item">A (12–20rem)</div>
+    <div class="gr-area-b dg-b demo-grid-item">B (остаток)</div>
+  </div>
+</div>
+
+<pre><code>&lt;!-- Ряды: шапка и подвал по содержимому, середина забирает остаток --&gt;
+&lt;div data-gr-layout="a1-b1-c1" style="--gr-l-rows: auto 1fr auto; height: 12rem"&gt;…&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">--gr-l-rows: auto 1fr auto</div>
+  <div data-gr-layout="a1-b1-c1" style="--gr-l-rows: auto 1fr auto; height: 12rem">
+    <div class="gr-area-a dg-a demo-grid-item">Шапка</div>
+    <div class="gr-area-b dg-b demo-grid-item">Середина (остаток)</div>
+    <div class="gr-area-c dg-c demo-grid-item">Подвал</div>
+  </div>
+</div>
+
+<p>
+  У миксина то же самое — свойство пишется рядом с классом, который он завёл:
+</p>
+
+<pre><code>@include gr.gr-grid-layout('a1b1', $name: 'shell');
+
+.gr-l-shell {
+  --gr-l-cols: 12rem 1fr;
+}</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Число треков обязано совпадать со строкой раскладки.</strong>
+    В <code>a3b4</code> семь колонок, значит и в <code>--gr-l-cols</code>
+    их семь. Меньше — недостающие браузер дорисует неявными дорожками
+    по <code>auto</code>, больше — лишние останутся пустыми. Молчания здесь
+    нет: раскладка ломается видимо, а вычисленное значение
+    <code>grid-template-columns</code> показывает DevTools. Сторожа в рантайме
+    нет намеренно — он читал бы вычисленные стили каждого контейнера,
+    и эта цена выше цены ошибки.
+  </p>
+</div>
+
+<p>
+  Значение по умолчанию — <code>minmax(0, 1fr)</code>, а не <code>1fr</code>:
+  доля не бывает уже своего содержимого, и одно длинное слово или широкая
+  таблица раздували бы дорожку, вынося сетку за контейнер. С нулевым
+  минимумом содержимое прокручивается внутри дорожки, а раскладка стоит.
+</p>
 
 <h2>Адаптивные раскладки</h2>
 
@@ -391,14 +520,14 @@
   <div class="demo-block-title">Сторона картинки — перестановка букв в строке раскладки</div>
   <div class="gr-flex gr-flex-col gr-gap">
     <div data-gr-layout="txt1-img1" data-gr-layout-md="txt1img1">
-      <div class="gr-area-txt card-demo gr-text-left">
+      <div class="gr-area-txt card-demo gr-text-start">
         <h4 class="gr-m-0 gr-mb-1">Быстрый старт</h4>
         <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">Текст слева, картинка справа.</p>
       </div>
       <div class="gr-area-img dg-b demo-grid-item">Картинка</div>
     </div>
     <div data-gr-layout="txt1-img1" data-gr-layout-md="img1txt1">
-      <div class="gr-area-txt card-demo gr-text-left">
+      <div class="gr-area-txt card-demo gr-text-start">
         <h4 class="gr-m-0 gr-mb-1">Гибкие темы</h4>
         <p class="gr-m-0 gr-text-xs gr-text-ink-secondary">А здесь стороны поменялись — <code>img1txt1</code>.</p>
       </div>

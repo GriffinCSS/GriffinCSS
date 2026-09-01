@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 const PAGES = [
   '/docs/griffinjs.html', '/docs/griffinjs-slides.html', '/docs/griffinjs-parallax.html',
   '/docs/griffinjs-menus.html', '/docs/griffinjs-overlays.html', '/docs/griffinjs-architecture.html',
-  '/docs/griffinjs-lab.html', '/docs/ui-overlays.html', '/docs/ui-nav.html',
+  '/docs/griffinjs-lab.html', '/docs/ui-overlays.html', '/docs/ui-nav.html', '/docs/ui-forms.html',
 ];
 
 // Заблокированный самим тестом griffinjs.js Chromium честно записывает

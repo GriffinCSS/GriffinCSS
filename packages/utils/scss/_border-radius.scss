@@ -38,8 +38,8 @@
 }
 
 // Предопределённые радиусы (шаг 0.25rem, от 0 до 16 = 4rem)
-$gr-radius-base: 0.25rem;
-$gr-radius-max: 16;
+$gr-radius-base: 0.25rem !default;
+$gr-radius-max: 16 !default;
 
 @for $i from 0 through $gr-radius-max {
   $val: $i * $gr-radius-base;

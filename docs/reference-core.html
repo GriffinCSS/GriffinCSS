@@ -112,9 +112,19 @@
 <pre><code>.gr-l-k7gi9w {
   display: grid;
   grid-template-areas: "a a a b b b b" "c c d d d d d";
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(2, auto);
+  grid-template-columns: var(--gr-l-cols, repeat(7, minmax(0, 1fr)));
+  grid-template-rows: var(--gr-l-rows, repeat(2, auto));
 }</code></pre>
+
+<p>Ширины дорожек задаются двумя свойствами — строка раскладки остаётся про области:</p>
+
+<table>
+  <tr><th>Свойство</th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>--gr-l-cols</code></td><td><code>repeat(<i>N</i>, minmax(0, 1fr))</code></td><td>Ширины колонок раскладки. Число треков обязано совпадать со строкой: недостающие браузер дорисует неявными по <code>auto</code>, лишние останутся пустыми — это видно в раскладке и в DevTools</td></tr>
+  <tr><td><code>--gr-l-rows</code></td><td><code>repeat(<i>M</i>, auto)</code></td><td>Высоты рядов раскладки. То же условие по числу треков</td></tr>
+</table>
+
+<p>Свойства читает само правило раскладки, поэтому работают обе дорожки — и рантайм, и миксин <code>gr-grid-layout()</code>. Подробнее — <a href="core-grid.html#shiriny-trekov">«Ширины треков»</a>.</p>
 
 <p>Хеш считается по <strong>набору</strong> раскладок элемента (базовой и всех адаптивных), поэтому два контейнера с одинаковым <code>data-gr-layout</code>, но разной адаптивностью не мешают друг другу.</p>
 

@@ -38,7 +38,7 @@
     else container.scrollLeft = target;
   }
 
-  G.defineWidget('gallery', function (el, opts) {
+  G.defineWidget('gallery', { needs: ['track', 'slider'] }, function (el, opts) {
     var thumbsEl = el.querySelector('.gr-gallery-thumbs');
     var slider = G.widgets.slider(el, opts, G);
     var track = slider.track;

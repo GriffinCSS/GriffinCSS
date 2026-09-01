@@ -17,7 +17,7 @@ $gr-text-sizes: (
   4xl:  2.25rem,
   5xl:  3rem,
   6xl:  3.75rem
-);
+) !default;
 
 @each $name, $size in $gr-text-sizes {
   .gr-text-#{$name} { font-size: $size; }
@@ -45,7 +45,7 @@ $gr-text-rel-steps: (
   xl:   4px,
   2xl:  6px,
   3xl:  8px
-);
+) !default;
 
 @each $gr-name, $gr-delta in $gr-text-rel-steps {
   .gr-text-rel-#{$gr-name} {
@@ -70,19 +70,17 @@ $gr-weights: (
   "bold":       700,
   "extrabold":  800,
   "black":      900
-);
+) !default;
 
 @each $name, $weight in $gr-weights {
   .gr-font-#{$name} { font-weight: $weight; }
 }
 
 // Text alignment
-// left/right буквальны и остаются такими: их выбирают, когда сторона
-// действительно нужна физическая. Разворот по направлению письма даёт
-// пара start/end — в LTR она совпадает с left/right, в RTL меняется местами.
-.gr-text-left    { text-align: left; }
+// Стороны — только логические: start — начало строки, end — конец,
+// в RTL они меняются местами сами. Физические left/right удалены
+// Этапом 36 вместе с остальными односторонними классами.
 .gr-text-center  { text-align: center; }
-.gr-text-right   { text-align: right; }
 .gr-text-justify { text-align: justify; }
 .gr-text-start   { text-align: start; }
 .gr-text-end     { text-align: end; }
@@ -99,7 +97,7 @@ $gr-leading: (
   normal: 1.5,
   relaxed: 1.625,
   loose:  2
-);
+) !default;
 
 @each $name, $value in $gr-leading {
   .gr-leading-#{$name} { line-height: $value; }
@@ -189,9 +187,7 @@ $gr-leading: (
   }
 
   // Text alignment responsive
-  .gr-text-left#{$suffix}    { text-align: left; }
   .gr-text-center#{$suffix}  { text-align: center; }
-  .gr-text-right#{$suffix}   { text-align: right; }
   .gr-text-justify#{$suffix} { text-align: justify; }
   .gr-text-start#{$suffix}   { text-align: start; }
   .gr-text-end#{$suffix}     { text-align: end; }

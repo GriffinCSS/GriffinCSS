@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
 <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/ui/dist/griffinjs.js"></script>
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
 </head>
@@ -23,11 +25,12 @@
 
 <div class="hero">
   <h1>Формы</h1>
-  <p>Поля, метки, подсказки, флажки, переключатели и сегментный выбор. Ни один элемент не подменяется другим: класс ставится на сам <code>&lt;input&gt;</code> или <code>&lt;select&gt;</code>.</p>
+  <p>Поля, метки, подсказки, флажки, переключатели, сегментный выбор и ползунок. Ни один элемент не подменяется другим: класс ставится на сам <code>&lt;input&gt;</code> или <code>&lt;select&gt;</code>.</p>
   <div class="hero-badges">
     <span class="badge badge-accent">griffincss-ui</span>
     <span class="badge">packages/ui/scss/_form.scss</span>
     <span class="badge">packages/ui/scss/_choice.scss</span>
+    <span class="badge">packages/ui/scss/_range.scss</span>
   </div>
 </div>
 
@@ -39,7 +42,10 @@
   <tr><td><code>.gr-label</code></td><td>Метка поля</td></tr>
   <tr><td><code>.gr-hint</code></td><td>Пояснение под полем</td></tr>
   <tr><td><code>.gr-error</code></td><td>Сообщение об ошибке</td></tr>
-  <tr><td><code>.gr-input</code></td><td>Однострочное поле любого типа</td></tr>
+  <tr><td><code>.gr-success</code></td><td>Подпись о принятом значении: пара к <code>.gr-error</code></td></tr>
+  <tr><td><code>.gr-required</code></td><td>Звёздочка обязательности вручную — для групп; у поля с <code>required</code> она появляется сама</td></tr>
+  <tr><td><code>.gr-input</code></td><td>Однострочное поле любого типа — включая <code>date</code>, <code>time</code> и <code>color</code>: ни один селектор семьи не ограничен типом</td></tr>
+  <tr><td><code>.gr-input-no-spin</code></td><td>Числовое поле без системных стрелок шага: в счётчике количества шагают кнопки рядом. Клавиатурный шаг <kbd>↑</kbd> / <kbd>↓</kbd> остаётся</td></tr>
   <tr><td><code>.gr-textarea</code></td><td>Многострочное; тянется только по вертикали</td></tr>
   <tr><td><code>.gr-select</code></td><td>Выпадающий список; стрелка своя, отбита от края поля</td></tr>
 </table>
@@ -115,6 +121,8 @@
   <tr><td>Фокус с клавиатуры</td><td><code>:focus-visible</code></td><td>Акцентная граница и контур <code>--gr-focus-width</code></td></tr>
   <tr><td>Ошибка после ввода</td><td><code>:user-invalid</code></td><td>Красная граница</td></tr>
   <tr><td>Ошибка от сервера</td><td><code>[aria-invalid="true"]</code></td><td>То же самое</td></tr>
+  <tr><td>Принято сервером</td><td><code>[aria-invalid="false"]</code></td><td>Граница цвета успеха</td></tr>
+  <tr><td>Обязательное поле</td><td><code>.gr-field:has([required])</code></td><td>Звёздочка после текста метки</td></tr>
   <tr><td>Недоступно</td><td><code>:disabled</code></td><td>Утопленный фон, приглушённый текст, курсор <code>not-allowed</code></td></tr>
   <tr><td>Только чтение</td><td><code>:read-only</code></td><td>Фон поверхности; поле остаётся выделяемым и копируемым</td></tr>
 </table>
@@ -126,6 +134,71 @@
     По <code>:invalid</code> форма покраснела бы целиком до того, как человек
     успел что-то напечатать. <code>:user-invalid</code> срабатывает только
     после того, как поле тронули и покинули.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Почему успех не парен ошибке псевдоклассом.</strong>
+    <code>:user-valid</code> браузер ставит любому непустому полю без
+    ограничений: поле «Комментарий» без <code>pattern</code> и
+    <code>required</code> валидно с первой введённой буквы. Форма зеленела бы
+    сама собой по мере заполнения и превращалась в светофор. Поэтому успех
+    показывается только по <code>[aria-invalid="false"]</code> — а его ставит
+    та же серверная проверка, что ставит и <code>"true"</code>.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Отвергнуто, принято, обязательно</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="demo-inn">ИНН</label>
+      <input class="gr-input" id="demo-inn" type="text" value="7707083893" aria-invalid="true" aria-describedby="demo-inn-err">
+      <span class="gr-error" id="demo-inn-err">Такой ИНН не найден в реестре.</span>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-promo2">Промокод</label>
+      <input class="gr-input" id="demo-promo2" type="text" value="OSEN30" aria-invalid="false" aria-describedby="demo-promo2-ok">
+      <span class="gr-success" id="demo-promo2-ok">Скидка 30 % применена к заказу.</span>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-phone">Телефон</label>
+      <input class="gr-input" id="demo-phone" type="tel" required aria-describedby="demo-phone-hint">
+      <span class="gr-hint" id="demo-phone-hint">Обязательное поле — по нему свяжется курьер.</span>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-field"&gt;
+  &lt;label class="gr-label" for="promo"&gt;Промокод&lt;/label&gt;
+  &lt;input class="gr-input" id="promo" type="text" value="OSEN30"
+         aria-invalid="false" aria-describedby="promo-ok"&gt;
+  &lt;span class="gr-success" id="promo-ok"&gt;Скидка 30 % применена к заказу.&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-field"&gt;
+  &lt;label class="gr-label" for="phone"&gt;Телефон&lt;/label&gt;
+  &lt;input class="gr-input" id="phone" type="tel" required aria-describedby="phone-hint"&gt;
+  &lt;span class="gr-hint" id="phone-hint"&gt;Обязательное поле — по нему свяжется курьер.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Звёздочка декоративна.</strong> Обязательность объявляет атрибут
+    <code>required</code>: его читает и платформа, и скринридер, и проверка
+    формы. Звёздочка лишь показывает её глазами — и появляется от того же
+    атрибута, без класса в разметке. Цвет и знак не заменяют слова: в примере
+    выше обязательность продублирована подсказкой, как того же требует правило
+    «статус читается словом» от сообщений.
+  </p>
+  <p>
+    Группе, где обязательность лежит не на одном контроле — набор флажков
+    в <code>&lt;fieldset&gt;</code>, из которого нужно выбрать хотя бы один, —
+    звёздочка ставится вручную: <code>&lt;legend class="gr-label
+    gr-required"&gt;</code>. Атрибута, выражающего такое условие, в платформе нет.
   </p>
 </div>
 
@@ -190,6 +263,135 @@
   &lt;span class="gr-input-addon"&gt;₽&lt;/span&gt;
   &lt;input class="gr-input" type="number" aria-label="Сумма"&gt;
 &lt;/div&gt;</code></pre>
+
+<h2>Выбор даты и времени</h2>
+
+<p>
+  Своего выбора даты в библиотеке нет, и это не пробел: его закрывает
+  нативное <code>&lt;input type="date"&gt;</code>. Локализация, разбор
+  введённого, клавиатура, работа со скринридером и мобильный календарь
+  там уже есть — и сделаны платформой лучше, чем их сделал бы виджет
+  на разметке. Библиотеке остаётся оформить поле, и она это делает
+  без единого нового класса: <code>.gr-input</code> работает на дате
+  ровно так же, как на тексте.
+</p>
+
+<p>
+  Ни один селектор семьи не ограничен типом поля, поэтому дате и времени
+  достаются и рамка с фоном, и фокус, и <code>:user-invalid</code>,
+  и <code>[aria-invalid]</code>, и <code>:disabled</code>, и оба размера,
+  и группа с аддонами.
+</p>
+
+<pre><code>&lt;div class="gr-field"&gt;
+  &lt;label class="gr-label" for="from"&gt;Дата заезда&lt;/label&gt;
+  &lt;input class="gr-input" id="from" type="date" required
+         min="2026-01-01" aria-describedby="from-hint"&gt;
+  &lt;span class="gr-hint" id="from-hint"&gt;Не раньше начала года.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Дата, время и диапазон — та же семья классов, что у текстового поля</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="demo-from">Дата заезда</label>
+      <input class="gr-input" id="demo-from" type="date" value="2026-09-01" aria-describedby="demo-from-hint">
+      <span class="gr-hint" id="demo-from-hint">Календарь открывает сам браузер.</span>
+    </div>
+
+    <div class="gr-flex gr-gap-sm">
+      <div class="gr-field gr-flex-1 gr-min-w-0">
+        <label class="gr-label" for="demo-time">Время</label>
+        <input class="gr-input" id="demo-time" type="time" value="14:30">
+      </div>
+      <div class="gr-field gr-flex-1 gr-min-w-0">
+        <label class="gr-label" for="demo-month">Месяц</label>
+        <input class="gr-input" id="demo-month" type="month" value="2026-09">
+      </div>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-bad">Дата в прошлом</label>
+      <input class="gr-input" id="demo-bad" type="date" value="2020-01-01" aria-invalid="true" aria-describedby="demo-bad-err">
+      <span class="gr-error" id="demo-bad-err">Дата не может быть в прошлом.</span>
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-dis">Недоступно</label>
+      <input class="gr-input" id="demo-dis" type="date" value="2026-09-01" disabled>
+    </div>
+  </div>
+</div>
+
+<h3>Плата</h3>
+
+<p>
+  Нативное поле — не «замена похуже», но и не бесплатное решение. Что
+  именно вы отдаёте, лучше знать до того, как макет разойдётся
+  с результатом.
+</p>
+
+<table>
+  <tr><th>Чего нельзя</th><th>Подробность</th></tr>
+  <tr><td>Стилизовать календарь</td><td>Выпадающая панель рисуется вне страницы средствами браузера. CSS-хуков к ней нет ни в одном движке — ни к сетке дней, ни к заголовку, ни к кнопкам месяцев</td></tr>
+  <tr><td>Задать формат и порядок полей</td><td>Их определяет локаль браузера, а не <code>lang</code> документа. Читатель с английской локалью увидит <code>mm/dd/yyyy</code> на русской странице, и это правильно: формат — его настройка, а не ваша</td></tr>
+  <tr><td>Покрасить заготовку пустого поля</td><td><code>mm/dd/yyyy</code> в пустом поле — не <code>::placeholder</code>, а часть редактора значения. Приглушённый цвет <code>.gr-input::placeholder</code> до неё не достаёт</td></tr>
+  <tr><td>Управлять значком календаря</td><td>В Blink это <code>::-webkit-calendar-picker-indicator</code>, в Firefox — свой орган управления, в Safari его нет вовсе. Косметика на нём покупает один движок из трёх</td></tr>
+  <tr><td>Рассчитывать на зеркалирование в RTL</td><td>Blink порядок полей не зеркалит, Firefox и WebKit зеркалят</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Высота выровнена, но не везде до нуля.</strong> Внутренний
+    редактор значения в Blink и WebKit несёт свои вертикальные отступы,
+    и поле даты оказывалось выше соседнего текстового. Два правила
+    в <code>_form.scss</code> снимают эти отступы, и на осях оформления
+    по умолчанию, <code>airy</code> и <code>strict</code> расхождение
+    в трёх движках равно нулю. Под предустановкой <code>compact</code>
+    остаток есть: 2 px в WebKit и 0,75 px у <code>type="time"</code>
+    в Blink — вдвое меньше, чем было, но не ноль. Firefox совпадает
+    везде и точно. Замер — <code>npm run test:browser</code>.
+  </p>
+</div>
+
+<h3>Диапазон «от — до»</h3>
+
+<p>
+  Пара дат — это два поля и одно правило между ними, которое библиотека
+  не берёт на себя: границу задаёт разметка через <code>min</code>
+  и <code>max</code>, а согласовать их между собой — дело формы.
+  Платформа проверит введённое и сама пометит поле недействительным.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-gap-sm"&gt;
+  &lt;div class="gr-field gr-flex-1 gr-min-w-0"&gt;
+    &lt;label class="gr-label" for="a"&gt;С&lt;/label&gt;
+    &lt;input class="gr-input" id="a" type="date" max="2026-12-31"&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-field gr-flex-1 gr-min-w-0"&gt;
+    &lt;label class="gr-label" for="b"&gt;По&lt;/label&gt;
+    &lt;input class="gr-input" id="b" type="date" max="2026-12-31"&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<p>
+  <code>.gr-min-w-0</code> на колонках обязателен, а не для красоты:
+  у флекс-элемента минимальная ширина по умолчанию равна ширине
+  содержимого, а собственная ширина поля даты в Blink — около 154 px.
+  Без него пара полей не сожмётся ниже своей суммы и уведёт страницу
+  вбок на узком экране.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    Числовой диапазон — другая задача и решается иначе: у ползунка пара
+    «от — до» держит порядок значений сама, потому что там между ручками
+    есть физическая связь. Это подраздел
+    <a href="#griffinjs">«С подключённым <code>griffinjs.js</code>»</a>
+    ниже. У двух дат такой связи нет: они независимы, и навязывать им
+    порядок значило бы решать за форму.
+  </p>
+</div>
 
 <h2>Флажок, радиокнопка, переключатель</h2>
 
@@ -277,14 +479,84 @@
   </p>
 </div>
 
+<h2>Ползунок</h2>
+
+<p>
+  <code>.gr-range</code> — оформление обычного
+  <code>&lt;input type="range"&gt;</code>: фильтр цены в каталоге, громкость,
+  доля. Элемент не подменяется и здесь: клавиатура, шаг, <code>min</code>,
+  <code>max</code> и участие в форме остаются платформенными.
+</p>
+
+<table>
+  <tr><th>Ручка</th><th>По умолчанию</th><th>Что задаёт</th></tr>
+  <tr><td><code>--gr-range-track</code></td><td><code>0.375rem</code></td><td>Толщину дорожки</td></tr>
+  <tr><td><code>--gr-range-thumb</code></td><td><code>1.125rem</code></td><td>Размер бегунка и высоту элемента</td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Обычный, изменённой толщины и недоступный</div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="demo-range-volume">Громкость</label>
+      <input class="gr-range" id="demo-range-volume" type="range" min="0" max="100" value="65">
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-range-thin">Дорожка тоньше, бегунок крупнее</label>
+      <input class="gr-range" id="demo-range-thin" type="range" min="0" max="100" value="30" style="--gr-range-track: 0.25rem; --gr-range-thumb: 1.5rem">
+    </div>
+
+    <div class="gr-field">
+      <label class="gr-label" for="demo-range-off">Недоступно</label>
+      <input class="gr-range" id="demo-range-off" type="range" min="0" max="100" value="50" disabled>
+    </div>
+  </div>
+</div>
+
+<pre><code>&lt;label class="gr-label" for="volume"&gt;Громкость&lt;/label&gt;
+&lt;input class="gr-range" id="volume" type="range" min="0" max="100" value="65"&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Шесть вендорных псевдоэлементов, каждый — своим правилом.</strong>
+    Неизвестный селектор в группе делает невалидной всю группу: WebKit,
+    встретив <code>::-moz-range-thumb</code> рядом со своим, выбросит правило
+    целиком, и бегунок останется системным в обоих движках. При этом
+    <code>accent-color</code> не снимается — он единственное, что делает
+    ползунок частью библиотеки там, где <code>appearance: none</code> ещё
+    не применён.
+  </p>
+  <p>
+    Заполненную часть дорожки Firefox рисует сам
+    (<code>::-moz-range-progress</code>) и без скрипта. У WebKit
+    псевдоэлемента для неё нет вовсе: там след рисует градиент, а градиенту
+    нужна доля пройденного пути — число, которого в CSS взять неоткуда.
+    Его пишет виджет <code>range</code> слоя
+    <a href="griffinjs.html">GriffinJS</a> одним свойством
+    <code>--gr-progress</code>; как это выглядит — в
+    <a href="#griffinjs">подразделе о слое</a> внизу страницы.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Чисто-CSS-приём проверен и отвергнут.</strong> Тень бегунка,
+    обрезанная дорожкой с <code>overflow: hidden</code>, красит след без
+    единой строки скрипта — но та же обрезка съедает и сам бегунок: круглая
+    ручка крупнее дорожки просто исчезает. След без ручки не стоит ручки
+    без следа, поэтому закраска у WebKit опциональна, а вид ползунка — нет.
+  </p>
+</div>
+
 <h2>Примеры использования</h2>
 
 <p>
   Целые формы уже разобраны в соседних главах: экран входа —
   на <a href="sizing.html">Sizing</a>, ритм стопки полей —
-  на <a href="spacing.html">Spacing</a>. Здесь — три сюжета про сами
-  контролы: ошибка, которую видно и слышно, поисковая строка с аддоном
-  и страница настроек на тогглах.
+  на <a href="spacing.html">Spacing</a>. Здесь — сюжеты про сами
+  контролы: ошибка, которую видно и слышно, поисковая строка с аддоном,
+  страница настроек на тогглах, фильтр цены и счётчик количества.
 </p>
 
 <h3>Ошибка от сервера: видно и слышно</h3>
@@ -368,9 +640,287 @@
   </div>
 </div>
 
+<h3>Фильтр цены в каталоге</h3>
+
+<p>
+  Ползунок задаёт верхнюю границу, поле рядом показывает и принимает то же
+  число: одно значение, два способа его ввести. Ни один из них не главный —
+  и связывает их та пара строк скрипта, которую пишет потребитель.
+  Библиотеке здесь принадлежит только вид: <code>.gr-range</code>,
+  <code>.gr-input-group</code> с аддоном валюты и <code>.gr-field</code>
+  как обёртка.
+</p>
+
+<pre><code>&lt;div class="gr-field"&gt;
+  &lt;label class="gr-label" for="price"&gt;Цена, до&lt;/label&gt;
+  &lt;input class="gr-range" id="price" type="range" min="0" max="20000" step="500" value="8000"&gt;
+  &lt;div class="gr-input-group"&gt;
+    &lt;input class="gr-input gr-input-sm" id="price-num" type="number" value="8000" aria-label="Цена, до"&gt;
+    &lt;span class="gr-input-addon gr-input-sm"&gt;₽&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Ползунок и поле показывают одно значение</div>
+  <div class="gr-field" style="max-width: 20rem">
+    <label class="gr-label" for="forms-demo-price">Цена, до</label>
+    <input class="gr-range" id="forms-demo-price" type="range" min="0" max="20000" step="500" value="8000"
+           oninput="document.getElementById('forms-demo-price-num').value = this.value">
+    <div class="gr-input-group">
+      <input class="gr-input gr-input-sm" id="forms-demo-price-num" type="number" min="0" max="20000" step="500" value="8000" aria-label="Цена, до"
+             oninput="document.getElementById('forms-demo-price').value = this.value">
+      <span class="gr-input-addon gr-input-sm">₽</span>
+    </div>
+  </div>
+</div>
+
+<h2 id="griffinjs">С подключённым <code>griffinjs.js</code></h2>
+
+<div class="callout">
+  <p>
+    Всё выше работает без скрипта. Этот подраздел — о том, что добавляет
+    ползунку опциональный слой <a href="griffinjs.html">GriffinJS</a>:
+    разметка и классы те же, скрипт читает <code>data-gr-range</code>
+    и пишет на каждую ручку одно свойство — <code>--gr-progress</code>,
+    долю пройденного пути от <code>min</code> до <code>max</code>. Рисует
+    по ней CSS модуля. Набор для этого — <code>griffinjs-core.js</code>
+    плюс <code>griffinjs-range.js</code>, <b><!--gr:size:griffinjs-range-set-->3,1 КБ<!--/gr:size:griffinjs-range-set--> gzip</b>.
+  </p>
+</div>
+
+<h3>Закраска пройденного пути</h3>
+
+<p>
+  Один атрибут на самом ползунке. Без скрипта у WebKit след не появляется,
+  а сам ползунок работает как работал; в Firefox след есть в обоих случаях —
+  его рисует платформа.
+</p>
+
+<pre><code>&lt;input class="gr-range" type="range" min="0" max="100" value="65" data-gr-range&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Дорожка до ручки закрашена акцентом <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-fill">Громкость</label>
+    <input class="gr-range" id="forms-demo-fill" type="range" min="0" max="100" value="65" data-gr-range>
+  </div>
+</div>
+
+<h3>Пара «от — до»</h3>
+
+<p>
+  <code>.gr-range-pair</code> — два обычных ползунка в одной ячейке сетки.
+  Дорожка и закрашенный отрезок принадлежат самой обёртке, а ползунки
+  отдают ей всё, кроме ручек: наложением отрезок не собрать — дорожка
+  полупрозрачна намеренно, оттенок <code>currentcolor</code> ложится
+  на любую подложку, и верхняя дорожка не закрыла бы акцент нижней,
+  а лишь притенила бы его.
+</p>
+
+<p>
+  Скрипту остаётся порядок значений: ручка, которую тянут за чужую границу,
+  толкает вторую перед собой. Пересечься им нельзя — отрезок между ними
+  вывернулся бы наизнанку. Без скрипта пара выглядит серой дорожкой
+  с двумя ручками, и обе работают — мышью и с клавиатуры.
+</p>
+
+<pre><code>&lt;div class="gr-range-pair" data-gr-range&gt;
+  &lt;input class="gr-range" type="range" min="0" max="20000" step="500" value="4000" aria-label="Цена от"&gt;
+  &lt;input class="gr-range" type="range" min="0" max="20000" step="500" value="12000" aria-label="Цена до"&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Фильтр цены «от — до»: закрашен отрезок между ручками <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-pair-from">Цена, ₽</label>
+    <div class="gr-range-pair" data-gr-range>
+      <input class="gr-range" id="forms-demo-pair-from" type="range" min="0" max="20000" step="500" value="4000" aria-label="Цена от">
+      <input class="gr-range" id="forms-demo-pair-to" type="range" min="0" max="20000" step="500" value="12000" aria-label="Цена до">
+    </div>
+    <span class="gr-hint" id="forms-demo-pair-out">4000 — 12000 ₽</span>
+  </div>
+</div>
+
+<p>
+  Подпись под парой ведёт разметка страницы, а не библиотека: числа рядом
+  с фильтром у каждого каталога свои — валюта, разряды, «плюс» на верхней
+  границе. Слой сообщает о каждом движении событием
+  <code>griffin:change</code> на обёртке; в нём уже наведён порядок, поэтому
+  слушать его, а не <code>input</code> самих ползунков, — единственный
+  надёжный способ показать числа: свой обработчик на ползунке отработает
+  раньше толчка второй ручки и покажет значения до него.
+</p>
+
+<pre><code>pair.addEventListener('griffin:change', (e) =&gt; {
+  out.textContent = `${e.detail.from} — ${e.detail.to} ₽`;
+});</code></pre>
+
+<h3>Счётчик количества в корзине</h3>
+
+<p>
+  «Минус — число — плюс» собирается из того же <code>.gr-input-group</code>,
+  что и поисковая строка: кнопки по краям, поле посередине,
+  <code>.gr-text-center</code> ставит число в середину.
+  Поле — настоящий <code>&lt;input type="number"&gt;</code> с
+  <code>min</code>, <code>max</code> и <code>step</code>: количество уезжает
+  вместе с формой, а на телефоне <code>inputmode="numeric"</code> открывает
+  цифровую клавиатуру. Кнопкам нужен <code>aria-label</code> — «плюс»
+  и «минус» знаками скринридер прочитает как пунктуацию.
+</p>
+
+<p>
+  Прибавляют и убавляют <strong>родные методы поля</strong> —
+  <code>stepUp()</code> и <code>stepDown()</code>: они уважают
+  <code>min</code>, <code>max</code> и <code>step</code>, поэтому ниже
+  единицы счётчик не уйдёт и выше сотни не поднимется. Библиотеке для этого
+  добавлять нечего — кнопке остаётся позвать метод у соседа. Счётчики
+  в демонстрации рабочие, нажмите.
+</p>
+
+<p>
+  Системные стрелки у поля при этом снимает
+  <code>.gr-input-no-spin</code>: рядом с парой кнопок они второй орган
+  управления тем же числом — вдвое мельче «плюса» и вплотную к нему.
+  Класс, а не автоматика по соседству с кнопкой: разметка нигде
+  не говорит, что кнопка рядом шаговая, и группа «число + Применить»
+  осталась бы без единственного способа шагнуть мышью. Клавиатуры это
+  не касается — <kbd>↑</kbd> и <kbd>↓</kbd> шагают по значению и без
+  видимых стрелок.
+</p>
+
+<pre><code>&lt;div class="gr-input-group" style="max-width: 9rem"&gt;
+  &lt;button class="gr-btn" type="button" aria-label="Убрать одну штуку"
+          onclick="this.nextElementSibling.stepDown()"&gt;−&lt;/button&gt;
+  &lt;input class="gr-input gr-input-no-spin gr-text-center" type="number"
+         inputmode="numeric" value="1" min="1" max="99" aria-label="Количество"&gt;
+  &lt;button class="gr-btn" type="button" aria-label="Добавить одну штуку"
+          onclick="this.previousElementSibling.stepUp()"&gt;+&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Кнопки рабочие: <code>stepUp()</code> и <code>stepDown()</code> у самого поля</div>
+  <div class="gr-input-group" style="max-width: 9rem">
+    <button class="gr-btn" type="button" aria-label="Убрать одну штуку" onclick="this.nextElementSibling.stepDown()">−</button>
+    <input class="gr-input gr-input-no-spin gr-text-center" type="number" inputmode="numeric" value="1" min="1" max="99" aria-label="Количество">
+    <button class="gr-btn" type="button" aria-label="Добавить одну штуку" onclick="this.previousElementSibling.stepUp()">+</button>
+  </div>
+</div>
+
+<h3>Счётчик у границы: кнопка гаснет сама</h3>
+
+<p>
+  Счётчик выше на единице не гаснет: <code>stepDown()</code> просто не даёт
+  значению уйти ниже <code>min</code>, а кнопка остаётся нажимаемой
+  и молчащей. Для корзины этого мало — «минус» на единице должен выглядеть
+  недоступным. Гасит его ваш код: библиотека про остатки на складе
+  и про минимальную партию ничего не знает.
+</p>
+
+<p>
+  Ниже — тот же счётчик с <code>max="5"</code>, чтобы граница была в двух
+  нажатиях, и с делегированным обработчиком на всю группу вместо двух
+  атрибутов: в списке товаров счётчиков десятки, и вешать на каждый
+  по паре обработчиков незачем. Он же шлёт <code>change</code> —
+  сами шаговые методы события не шлют.
+</p>
+
+<pre><code>function grQty(group) {
+  const input = group.querySelector('input');
+  const minus = group.querySelector('[data-step="-1"]');
+  const plus  = group.querySelector('[data-step="1"]');
+
+  const sync = () =&gt; {
+    minus.disabled = Number(input.value) &lt;= Number(input.min);
+    plus.disabled  = Number(input.value) &gt;= Number(input.max);
+  };
+
+  group.addEventListener('click', (event) =&gt; {
+    const button = event.target.closest('[data-step]');
+    if (!button) return;
+
+    button.dataset.step === '1' ? input.stepUp() : input.stepDown();
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
+  input.addEventListener('input', sync);
+  input.addEventListener('change', sync);
+  sync();
+}</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Дойдите до 1 или до 5 — кнопка на этом краю погаснет</div>
+  <div class="gr-flex gr-gap gr-flex-wrap gr-flex-items-center">
+    <div class="gr-input-group" style="max-width: 9rem" data-demo-qty>
+      <button class="gr-btn" type="button" aria-label="Убрать одну штуку" data-step="-1">−</button>
+      <input class="gr-input gr-input-no-spin gr-text-center" type="number" inputmode="numeric" value="1" min="1" max="5" aria-label="Количество">
+      <button class="gr-btn" type="button" aria-label="Добавить одну штуку" data-step="1">+</button>
+    </div>
+    <output class="gr-text-sm gr-text-ink-secondary" id="forms-demo-qty-out">событие change: пока не было</output>
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Событие <code>change</code> шаговые методы не шлют.</strong>
+    Это поведение платформы, а не недосмотр: значение меняет скрипт,
+    а не пользователь. Если на количество подписан пересчёт корзины,
+    пошлите событие сами — как в примере выше; подпись рядом со счётчиком
+    слушает именно его. В первом примере обработчики стоят прямо
+    в разметке: так блок остаётся самодостаточным при копировании,
+    и с него удобно начинать.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    Класса <code>.gr-qty</code> здесь нет по тем же причинам, что
+    <code>.gr-price</code> и <code>.gr-sticker</code>: он был бы именем
+    для готовой группы, а не новым CSS. Единственное, чего не хватало
+    по-настоящему, — <code>.gr-input-no-spin</code>: снять системные
+    стрелки композицией утилит нельзя.
+  </p>
+</div>
+
 </main>
 </div>
 
   <script src="nav.js"></script>
+  <script>
+    // Счётчик количества с гашением кнопок на границе. Ровно тот код,
+    // что показан в примере: библиотека даёт группе вид, а границы
+    // и события — работа страницы.
+    document.querySelectorAll('[data-demo-qty]').forEach(function (group) {
+      var input = group.querySelector('input');
+      var minus = group.querySelector('[data-step="-1"]');
+      var plus = group.querySelector('[data-step="1"]');
+      var out = document.getElementById('forms-demo-qty-out');
+
+      function sync() {
+        minus.disabled = Number(input.value) <= Number(input.min);
+        plus.disabled = Number(input.value) >= Number(input.max);
+      }
+
+      group.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-step]');
+        if (!button) return;
+
+        if (button.dataset.step === '1') input.stepUp();
+        else input.stepDown();
+
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+
+      input.addEventListener('input', sync);
+      input.addEventListener('change', function () {
+        sync();
+        out.textContent = 'событие change: количество ' + input.value;
+      });
+
+      sync();
+    });
+
+    // Подпись под парой «от — до»: значения берутся из события слоя, где
+    // порядок уже наведён. Обработчик на самом ползунке отработал бы раньше
+    // толчка второй ручки и показал бы значения до него.
+    document.getElementById('forms-demo-pair-from').closest('.gr-range-pair')
+      .addEventListener('griffin:change', (e) => {
+        document.getElementById('forms-demo-pair-out').textContent = `${e.detail.from} — ${e.detail.to} ₽`;
+      });
+  </script>
 </body>
 </html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Совместимость — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Совместимость</h1>
+  <p>Порог браузеров — названное решение, а не умолчание: четыре возможности современного CSS, минимальные версии, измеренная доля с датой и методом и честное описание того, что видит браузер ниже порога.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent">замер 2026-08-30</span>
+    <span class="badge">npm run coverage</span>
+    <span class="badge">caniuse-lite</span>
+  </div>
+</div>
+
+<h2 id="porog">Порог: четыре возможности</h2>
+
+<p>
+  Griffincss стоит на каскадных слоях, контейнерных запросах,
+  <code>:has()</code> и <code>@scope</code>. Слои несёт каждый собранный
+  файл — на них держится вся специфичность библиотеки; остальные три
+  требуются только тем сборкам, что перечислены в таблице.
+</p>
+
+<table>
+  <tr>
+    <th>Возможность</th>
+    <th>Минимальные версии</th>
+    <th>Требуется для</th>
+    <th>В мире</th>
+    <th>В России</th>
+  </tr>
+  <tr>
+    <td>Каскадные слои</td>
+    <td>Chrome 99 · Edge 99 · Firefox 97 · Safari 15.4</td>
+    <td>все файлы CSS и правила, которые пишет JS-рантайм</td>
+    <td class="gr-whitespace-nowrap">95,3 %</td>
+    <td><span class="gr-whitespace-nowrap">96,8 %</span><br><span class="gr-text-sm gr-text-ink-secondary">от измеримого трафика; сырая цифра — 64,5 %, потому что <code>caniuse-lite</code> атрибутирует по РФ только 66,7 %</span></td>
+  </tr>
+  <tr>
+    <td>Контейнерные запросы</td>
+    <td>Chrome 105 · Edge 105 · Firefox 110 · Safari 16.0</td>
+    <td>утилиты с суффиксом <code>-c*</code>, <code>.gr-cq</code> ядра, <code>data-gr-layout-c*</code> рантайма</td>
+    <td class="gr-whitespace-nowrap">94,0 %</td>
+    <td><span class="gr-whitespace-nowrap">95,6 %</span><br><span class="gr-text-sm gr-text-ink-secondary">от измеримого трафика; сырая цифра — 63,7 % при атрибуции 66,7 %</span></td>
+  </tr>
+  <tr>
+    <td><code>:has()</code></td>
+    <td>Chrome 105 · Edge 105 · Firefox 121 · Safari 15.4</td>
+    <td><code>griffincss-ui.css</code>: поле с <code>:disabled</code>, метка обязательного поля, подсказка</td>
+    <td class="gr-whitespace-nowrap">94,1 %</td>
+    <td><span class="gr-whitespace-nowrap">95,0 %</span><br><span class="gr-text-sm gr-text-ink-secondary">от измеримого трафика; сырая цифра — 63,3 % при атрибуции 66,7 %</span></td>
+  </tr>
+  <tr>
+    <td><code>@scope</code></td>
+    <td>Chrome 118 · Edge 118 · Firefox 146 · Safari 17.4</td>
+    <td>только <code>griffincss-ui-scoped.css</code> и <code>griffincss-utils-scoped.css</code></td>
+    <td class="gr-whitespace-nowrap">90,0 %</td>
+    <td><span class="gr-whitespace-nowrap">83,8 %</span><br><span class="gr-text-sm gr-text-ink-secondary">от измеримого трафика; сырая цифра — 55,9 % при атрибуции 66,7 %</span></td>
+  </tr>
+</table>
+
+<h2 id="staryy-brauzer">Что происходит на старом браузере</h2>
+
+<p>
+  Браузер, не знающий <code>@layer</code>, пропускает не одно правило,
+  а весь блок целиком — то есть всю библиотеку. Слои несут и собранные
+  файлы, и правила, которые JS-рантайм создаёт для <code>data-gr-layout</code>:
+  рантайм отработает без ошибок, вставит <code>&lt;style&gt;</code>,
+  и браузер его проигнорирует.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Страница остаётся читаемой, но не оформленной.</strong>
+    Текст, ссылки, поля и кнопки на месте и работают: разметка семантическая,
+    контент не спрятан за скриптом. Но не будет ни сеток, ни компонентов,
+    ни отступов, ни тем — документ выглядит как HTML без CSS.
+    Ошибки в консоли при этом нет: игнорирование неизвестного правила —
+    штатное поведение CSS, и отлаживать здесь нечего.
+  </p>
+</div>
+
+<p>
+  Ниже порога <code>:has()</code> или контейнерных запросов картина другая
+  и куда мягче: не применяется та часть правил, что их использует.
+  Без <code>:has()</code> поле не подсветит отключённое состояние, без
+  контейнерных запросов утилиты с суффиксом <code>-c*</code> не сработают —
+  остальное оформление остаётся на месте.
+</p>
+
+<h2 id="dolya">Доля, дата и метод</h2>
+
+<p>
+  Цифры выше — замер <strong>2026-08-30</strong> командой
+  <code>npm run coverage</code>: это обёртка над
+  <code>browserslist --coverage</code> на данных <code>caniuse-lite</code>.
+  Постоянной зависимости у проекта нет, пакет тянется разово через
+  <code>npx</code>; без сети скрипт падает с объяснением, а не печатает
+  устаревшее. Пересчитать таблицу — одна команда, и дата замера стоит
+  рядом с цифрой именно затем, чтобы расхождение было видно.
+</p>
+
+<pre><code>npm run coverage</code></pre>
+
+<p>
+  <strong>Про российскую цифру.</strong> <code>caniuse-lite</code>
+  атрибутирует по России 66,7 % трафика: браузеры без версионной статистики
+  в его данные не попадают вовсе, а это прежде всего Яндекс.Браузер.
+  Он построен на Chromium и каскадные слои поддерживает. Поэтому сырые
+  64,5 % — нижняя граница, а не оценка: от измеримой доли поддержка
+  составляет 96,8 %. Цитировать сырую цифру без этой оговорки —
+  значит утверждать, что треть российской аудитории увидит страницу
+  без стилей, а это неправда.
+</p>
+
+<h2 id="scoped">Сборки <code>-scoped</code>: порог выше</h2>
+
+<p>
+  Файлы <code>griffincss-ui-scoped.css</code> и
+  <code>griffincss-utils-scoped.css</code> обёрнуты в
+  <code>@scope (.griffin)</code> — они нужны тем, кто подмешивает библиотеку
+  в чужую вёрстку и хочет ограничить её областью. Порог у них
+  принципиально другой: <strong>Firefox 146</strong> — это осень 2025 года,
+  и мировая доля падает с 95,3 % до 90,0 %, а измеримая российская —
+  с 96,8 % до 83,8 %.
+</p>
+
+<p>
+  Одним предложением на все файлы это не описывается, поэтому строка
+  отдельная: обычные сборки порога <code>@scope</code> не требуют,
+  и выбор <code>-scoped</code> — это осознанная плата за изоляцию.
+  Что именно теряет scoped-сборка помимо порога, разобрано в разделе
+  <a href="style-presets.html">«Стратегии оформления»</a>.
+</p>
+
+<h2 id="proverka">Проверить у себя</h2>
+
+<p>
+  Библиотека не везёт ни баннера, ни детекта: это решение приложения,
+  а не CSS-пакета. Если баннер нужен вам — вот весь код. Наличие
+  <code>CSSLayerBlockRule</code> проверяется объектной моделью, потому что
+  <code>CSS.supports</code> отвечает про свойства и селекторы, а не про
+  at-правила:
+</p>
+
+<pre><code>var ok = typeof CSSLayerBlockRule !== 'undefined'          // каскадные слои
+      &amp;&amp; CSS.supports('selector(:has(*))')                 // :has()
+      &amp;&amp; CSS.supports('container-type: inline-size');      // контейнерные запросы
+
+document.documentElement.dataset.grSupported = ok ? 'yes' : 'no';</code></pre>
+
+<p>
+  Третья строка ставит атрибут на <code>&lt;html&gt;</code> — дальше баннер
+  показывается обычным CSS-правилом
+  <code>[data-gr-supported="no"] .my-banner { display: block }</code>.
+  Проверять <code>@scope</code> отдельно имеет смысл только тем, кто
+  подключил <code>-scoped</code>-файлы:
+  <code>CSS.supports('selector(:scope)')</code> для этого не годится
+  и ответит <code>true</code> где угодно — здесь работает
+  <code>typeof CSSScopeRule !== 'undefined'</code>.
+</p>
+
+<h2 id="chego-net">Чего не будет</h2>
+
+<table>
+  <tr><th>Просьба</th><th>Ответ</th></tr>
+  <tr>
+    <td>Сборка без каскадных слоёв</td>
+    <td>Нет. Это не снятие обёрток <code>@layer</code>, а пересмотр специфичности всей библиотеки: слои позволяют утилите с одним классом побеждать компонент с двумя. Без них порядок ломается — прецедент известен по <code>.gr-hidden</code> против <code>.gr-flex-md</code>. Второй артефакт со своим прогоном тестов ради нескольких процентов трафика на браузерах, где нет и <code>:has()</code>, библиотека не потянет.</td>
+  </tr>
+  <tr>
+    <td>Развилки <code>@supports</code> под каждую возможность</td>
+    <td>Нет. Запасная ветка на каждую возможность удвоила бы вывод, который получают все, ради сред, которых у целевой аудитории нет.</td>
+  </tr>
+  <tr>
+    <td>Полифилы и запасные раскладки</td>
+    <td>Нет. Порог назван и измерен; проект, которому нужны браузеры ниже него, эта библиотека не обслуживает — и лучше знать это до подключения, чем после.</td>
+  </tr>
+</table>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -44,8 +44,8 @@ test('адаптивность — только суффиксом, префик
   assert.ok(utils.includes('.gr-mx-auto-lg{'), 'авто-маржины тоже должны иметь суффикс');
 });
 
-test('адаптивные варианты есть у всех четырнадцати свойств спейсинга', () => {
-  const props = ['m', 'p', 'mt', 'mr', 'mb', 'ml', 'pt', 'pr', 'pb', 'pl', 'mx', 'my', 'px', 'py'];
+test('адаптивные варианты есть у всех свойств спейсинга', () => {
+  const props = ['m', 'p', 'mt', 'mb', 'pt', 'pb', 'ms', 'me', 'ps', 'pe', 'mx', 'my', 'px', 'py'];
 
   for (const prop of props) {
     for (const bp of ['sm', 'md', 'lg', 'xl']) {
@@ -147,7 +147,7 @@ test('равномерный .gr-p-* объявляет --gr-p и выводит
 });
 
 test('осевые и односторонние отступы --gr-p не трогают', () => {
-  for (const prop of ['px', 'py', 'pt', 'pr', 'pb', 'pl']) {
+  for (const prop of ['px', 'py', 'pt', 'pb', 'ps', 'pe']) {
     const rule = utils.match(new RegExp(`\\.gr-${prop}-4\\{[^}]*\\}`))[0];
 
     assert.ok(!rule.includes('--gr-p'), `${prop}: асимметричный отступ каскаду скруглений не годится`);
@@ -201,30 +201,42 @@ test('логические отступы start/end есть у margin и paddin
   }
 });
 
-test('физические ml/mr остаются: их удаление — ломающее изменение', () => {
-  assert.ok(utils.includes('.gr-ml-4{margin-left:1rem}'), '.gr-ml-4 исчез');
-  assert.ok(utils.includes('.gr-mr-4{margin-right:1rem}'), '.gr-mr-4 исчез');
-  assert.ok(utils.includes('.gr-pl-4{padding-left:1rem}'), '.gr-pl-4 исчез');
-  assert.ok(utils.includes('.gr-pr-4{padding-right:1rem}'), '.gr-pr-4 исчез');
-});
-
-test('у логических отступов адаптивных вариантов нет — это плата за бюджет', () => {
-  for (const prop of ['ms', 'me', 'ps', 'pe']) {
+// Этап 36: единственное запланированное ломающее изменение проведено.
+// Физические односторонние классы сняты; замену даёт логическая пара,
+// адаптивная по всей шкале. Постоянный инвариант держит и check-dist.
+test('физических односторонних отступов не осталось', () => {
+  for (const prop of ['ml', 'mr', 'pl', 'pr']) {
     assert.ok(
-      !new RegExp(`\\.gr-${prop}-\\d+-(sm|md|lg|xl)\\{`).test(utils),
-      `.gr-${prop}-*-<bp> вернулся: 240 селекторов бюджетом не обеспечены`,
+      !new RegExp(`\\.gr-${prop}-(?:\\d|auto)`).test(utils),
+      `.gr-${prop}-* вернулся: физические отступы удалены Этапом 36`,
     );
   }
 });
 
-// 13b: логическое выравнивание текста. Классы .gr-text-left/.gr-text-right
-// остаются буквальными — их выбирают именно за буквальность, — а разворот
-// по направлению письма даёт пара .gr-text-start / .gr-text-end.
+// Этап 36: адаптивные варианты добавлены. Без них снятие физических классов
+// забрало бы у потребителя односторонний отступ от брейкпоинта, а не перевело
+// его на логический. Шкала обязана совпадать с физической ступень в ступень.
+test('логические отступы имеют адаптивные варианты по всей шкале', () => {
+  for (const prop of ['ms', 'me', 'ps', 'pe']) {
+    for (const step of SPACING_STEPS) {
+      for (const bp of ['sm', 'md', 'lg', 'xl']) {
+        assert.ok(utils.includes(`.gr-${prop}-${step}-${bp}{`), `нет .gr-${prop}-${step}-${bp}`);
+      }
+    }
+  }
+
+  assert.ok(utils.includes('.gr-ms-auto-md{'), 'нет адаптивного .gr-ms-auto');
+  assert.ok(utils.includes('.gr-me-auto-lg{'), 'нет адаптивного .gr-me-auto');
+});
+
+// 13b → 36b: выравнивание текста только логическое. Пара
+// .gr-text-start / .gr-text-end разворачивается по направлению письма;
+// физические .gr-text-left / .gr-text-right удалены Этапом 36.
 test('выравнивание текста имеет логическую пару start/end', () => {
   assert.ok(utils.includes('.gr-text-start{text-align:start}'), 'нет .gr-text-start');
   assert.ok(utils.includes('.gr-text-end{text-align:end}'), 'нет .gr-text-end');
-  assert.ok(utils.includes('.gr-text-left{text-align:left}'), '.gr-text-left обязан остаться физическим');
-  assert.ok(utils.includes('.gr-text-right{text-align:right}'), '.gr-text-right обязан остаться физическим');
+  assert.ok(!utils.includes('.gr-text-left'), '.gr-text-left вернулся: физическое выравнивание удалено Этапом 36');
+  assert.ok(!utils.includes('.gr-text-right'), '.gr-text-right вернулся: физическое выравнивание удалено Этапом 36');
 
   for (const bp of ['sm', 'md', 'lg', 'xl']) {
     assert.ok(utils.includes(`.gr-text-start-${bp}{text-align:start}`), `нет .gr-text-start-${bp}`);
@@ -241,10 +253,12 @@ test('.gr-list-none снимает маркерный отступ с той с�
   assert.ok(!rule.includes('padding-left'), 'физический padding-left вернулся');
 });
 
-// 13b: привязка к краям. Осевые классы сворачиваются в логическую пару —
-// обе стороны у них равны, поэтому направление письма ничего не меняет,
-// а вывод становится короче. Односторонние остаются физическими: кнопка
-// «закрыть» в углу окна обязана держаться угла, а не начала строки.
+// 13b → 36b: привязка к краям. Осевые классы сворачиваются в логическую
+// пару — обе стороны у них равны, поэтому направление письма ничего
+// не меняет, а вывод становится короче. Односторонние left/right удалены
+// Этапом 36 вместе с остальными физическими; привязку к строке дают
+// start/end, верх и низ остаются top/bottom — блочная ось в RTL
+// не разворачивается.
 test('осевая привязка к краям объявляет логические оси', () => {
   assert.ok(utils.includes('.gr-inset-x-0{inset-inline:0}'), '.gr-inset-x-0 не переведён на inset-inline');
   assert.ok(utils.includes('.gr-inset-y-0{inset-block:0}'), '.gr-inset-y-0 не переведён на inset-block');
@@ -256,13 +270,14 @@ test('у привязки к краям есть логическая пара s
   assert.ok(utils.includes('.gr-start-auto{inset-inline-start:auto}'), 'нет .gr-start-auto');
   assert.ok(utils.includes('.gr-end-auto{inset-inline-end:auto}'), 'нет .gr-end-auto');
 
-  assert.ok(utils.includes('.gr-left-0{left:0}'), '.gr-left-0 обязан остаться физическим');
-  assert.ok(utils.includes('.gr-right-0{right:0}'), '.gr-right-0 обязан остаться физическим');
+  assert.ok(!/\.gr-left-(?:0|auto)/.test(utils), '.gr-left-* вернулся: физическая привязка удалена Этапом 36');
+  assert.ok(!/\.gr-right-(?:0|auto)/.test(utils), '.gr-right-* вернулся: физическая привязка удалена Этапом 36');
 });
 
-// 13b: границы. Осевые сворачиваются в border-inline/border-block —
+// 13b → 36b: границы. Осевые сворачиваются в border-inline/border-block —
 // пара сторон с одинаковым значением, направление письма ей безразлично.
-// Односторонние l/r остаются, логическую пару дают s/e.
+// Односторонние стороны — только логические s/e; физические l/r удалены
+// Этапом 36 (t/b остаются: блочная ось не разворачивается).
 test('осевые границы объявляют логическую ось одним свойством', () => {
   const width = 'var(--gr-border-width, 1px) solid var(--gr-color-border)';
 
@@ -279,8 +294,9 @@ test('у границ по сторонам есть логическая пар
     assert.ok(utils.includes(`.gr-border-${key}-2{${prop}:2px solid`), `нет .gr-border-${key}-2`);
   }
 
-  assert.ok(utils.includes('.gr-border-l{border-left:'), '.gr-border-l обязан остаться физическим');
-  assert.ok(utils.includes('.gr-border-r{border-right:'), '.gr-border-r обязан остаться физическим');
+  assert.ok(!utils.includes('.gr-border-l{'), '.gr-border-l вернулся: физические стороны границ удалены Этапом 36');
+  assert.ok(!utils.includes('.gr-border-r{'), '.gr-border-r вернулся: физические стороны границ удалены Этапом 36');
+  assert.ok(!/\.gr-border-[lr]-\d/.test(utils), 'ширины физических сторон границ вернулись');
 });
 
 // Этап 14: контейнерные варианты. Суффикс отличается от оконного одной
@@ -325,12 +341,11 @@ test('остальные модули контейнерных варианто�
   }
 });
 
-test('логические отступы не получили и контейнерных вариантов', () => {
+test('контейнерные варианты приехали к логическим отступам вместе с оконными', () => {
   for (const prop of ['ms', 'me', 'ps', 'pe']) {
-    assert.ok(
-      !new RegExp(`\\.gr-${prop}-\\d+-c(sm|md|lg|xl)\\{`).test(utils),
-      `.gr-${prop}-* обзавёлся контейнерным вариантом — это те же 240 селекторов`,
-    );
+    for (const bp of ['csm', 'cmd', 'clg', 'cxl']) {
+      assert.ok(utils.includes(`.gr-${prop}-4-${bp}{`), `нет .gr-${prop}-4-${bp}`);
+    }
   }
 });
 
@@ -408,4 +423,161 @@ test('scoped-сборка несёт относительные размеры',
     scoped.includes('.gr-text-rel-sm{font-size:calc(1em - 2px)}'),
     'относительные размеры не доехали до scoped-сборки',
   );
+});
+
+// Этап 32: утилиты спроса — трансформации, фильтры, градиенты.
+//
+// Три группы добавлены БЕЗ адаптивных и контейнерных вариантов. Довод
+// и прецедент те же, что у логических отступов выше: эффект наведения
+// не меняется от ширины окна, а множитель девять съел бы весь бюджет
+// утилит целиком. Инвариант держится тестом, потому что «-md» дописывается
+// к группе одной строкой @each и незаметно проходит ревью.
+const DEMAND_GROUPS = [
+  'scale', 'rotate', 'translate-x', 'translate-y', 'hover',
+  'blur', 'grayscale', 'brightness', 'contrast', 'saturate',
+  'gradient-to', 'from', 'via', 'to',
+].join('|');
+
+test('модули спроса доехали до обеих сборок утилит', () => {
+  for (const [css, build] of [[utils, 'обычной'], [scoped, 'scoped']]) {
+    assert.ok(css.includes('.gr-scale-105{'), `трансформаций нет в ${build} сборке`);
+    assert.ok(css.includes('.gr-blur-2{'), `фильтров нет в ${build} сборке`);
+    assert.ok(css.includes('.gr-gradient-to-r{'), `градиентов нет в ${build} сборке`);
+  }
+});
+
+test('у групп спроса нет ни адаптивных, ни контейнерных суффиксов', () => {
+  const suffixed = new RegExp(`\\.gr-(?:${DEMAND_GROUPS})-[\\w-]*-c?(?:sm|md|lg|xl)\\{`, 'g');
+  const found = [...utils.matchAll(suffixed)].map((m) => m[0]);
+
+  assert.deepEqual(
+    found,
+    [],
+    'суффикс брейкпоинта у групп спроса запрещён: с ним группа растёт примерно вдевятеро',
+  );
+});
+
+// Вырезает блоки @media (hover: hover) целиком, считая скобки: внутри
+// лежат обычные правила, и regex по строке на них не годится.
+function withoutHoverMedia(css) {
+  const open = '@media(hover: hover){';
+  let out = css;
+
+  for (;;) {
+    const at = out.indexOf(open);
+    if (at === -1) return out;
+
+    let depth = 0;
+    let i = at + open.length - 1;
+
+    for (; i < out.length; i += 1) {
+      if (out[i] === '{') depth += 1;
+      else if (out[i] === '}' && (depth -= 1) === 0) break;
+    }
+
+    out = out.slice(0, at) + out.slice(i + 1);
+  }
+}
+
+test('наведение в утилитах объявлено только под (hover: hover)', () => {
+  assert.ok(utils.includes('@media(hover: hover){'), 'блока (hover: hover) в утилитах нет вовсе');
+
+  const outside = withoutHoverMedia(utils);
+
+  assert.ok(
+    !outside.includes(':hover'),
+    'наведение вне (hover: hover) залипает после касания на сенсорном экране',
+  );
+});
+
+test('трансформация складывается из раздельных свойств, а не из transform', () => {
+  assert.ok(utils.includes('.gr-scale-105{scale:1.05}'), 'нет .gr-scale-105 на свойстве scale');
+  assert.ok(utils.includes('.gr-rotate-6{rotate:6deg}'), 'нет .gr-rotate-6 на свойстве rotate');
+  assert.ok(utils.includes('.gr-rotate--6{rotate:-6deg}'), 'нет поворота в обратную сторону');
+
+  const group = new RegExp('\\.gr-(?:scale|rotate|translate-[xy]|hover)-[\\w-]*\\{[^}]*transform:');
+
+  assert.ok(!group.test(utils), 'общее свойство transform затирает соседние классы группы');
+});
+
+// Обе оси сдвига пишутся в одно свойство translate, поэтому значение идёт
+// настраиваемыми свойствами. Ноль по соседней оси обязателен: --gr-tx
+// наследуется, и вложенный .gr-translate-y-1 без сброса уехал бы вбок
+// вслед за предком.
+test('сдвиг по осям складывается, а не затирается', () => {
+  assert.ok(
+    packed.includes('.gr-translate-x-2{--gr-tx:0.5rem;--gr-ty:0;translate:var(--gr-tx) var(--gr-ty)}'),
+    'нет .gr-translate-x-2 со сбросом соседней оси',
+  );
+  assert.ok(
+    packed.includes('.gr-translate-y--2{--gr-tx:0;--gr-ty:-0.5rem;translate:var(--gr-tx) var(--gr-ty)}'),
+    'нет .gr-translate-y--2 со сбросом соседней оси',
+  );
+});
+
+test('подъём по наведению идёт через ось сдвига, а не поверх неё', () => {
+  assert.ok(
+    packed.includes('.gr-hover-lift{--gr-tx:0;--gr-ty:0;translate:var(--gr-tx) var(--gr-ty)}'),
+    '.gr-hover-lift не подключён к собирающему свойству translate',
+  );
+  assert.ok(
+    packed.includes('.gr-hover-lift:hover{--gr-ty:-0.25rem}'),
+    'подъём обязан двигать только свою ось, иначе теряется горизонтальный сдвиг',
+  );
+});
+
+test('фильтры собираются одним правилом и не затирают друг друга', () => {
+  assert.ok(packed.includes('.gr-blur-2{--gr-blur:4px}'), 'нет .gr-blur-2 на --gr-blur');
+  assert.ok(packed.includes('.gr-grayscale-100{--gr-grayscale:1}'), 'нет .gr-grayscale-100');
+
+  const filter = packed.match(/\{--gr-blur:0;[^}]*filter:blur\(var\(--gr-blur\)\)[^}]*\}/);
+
+  assert.ok(filter, 'нет собирающего правила filter со сбросом наследуемых значений');
+  assert.ok(
+    packed.indexOf(filter[0]) < packed.indexOf('.gr-blur-2{'),
+    'сброс обязан идти до классов-значений',
+  );
+});
+
+// Пустая карта ступеней не выводит ни классов, ни своей функции
+// в собирающем правиле: контраст и насыщенность включаются
+// переопределением карты и по умолчанию не стоят ни байта.
+test('невыведенная группа фильтров не оставляет следа в собирающем правиле', () => {
+  const filter = packed.match(/filter:blur\(var\(--gr-blur\)\)[^};]*/)[0];
+
+  for (const fn of ['contrast', 'saturate']) {
+    assert.ok(!filter.includes(`${fn}(`), `${fn} в значении есть, а классов нет — байты впустую`);
+    assert.ok(!utils.includes(`.gr-${fn}-`), `.gr-${fn}-* выведен при пустой карте`);
+  }
+});
+
+test('градиент берёт цвет из тех же переменных, что и цветовые утилиты', () => {
+  assert.ok(packed.includes('.gr-from-primary{--gr-from:hsl(var(--gr-hsl-primary))}'), 'нет .gr-from-primary');
+  assert.ok(packed.includes('.gr-to-danger{--gr-to:hsl(var(--gr-hsl-danger))}'), 'нет .gr-to-danger');
+  assert.ok(packed.includes('.gr-via-success{--gr-via:hsl(var(--gr-hsl-success)),}'), 'нет .gr-via-success');
+
+  // Своей палитры у группы нет: каждый цвет градиента обязан приходить
+  // из переменной --gr-hsl-*, которой красятся .gr-bg-* и .gr-text-*.
+  for (const rule of packed.match(/\.gr-(?:from|via|to)-[\w-]+\{[^}]*\}/g) || []) {
+    assert.match(rule, /hsl\(var\(--gr-hsl-[\w-]+\)\)/, `свой цвет мимо палитры: ${rule}`);
+  }
+});
+
+// Средняя точка вставляется в тот же linear-gradient, а не заводит второй:
+// незаданная --gr-via подставляется пустотой через фолбэк var(--gr-via, ),
+// поэтому за две точки не платят те, кому хватает двух.
+test('средняя точка градиента вставляется в набор, а не отдельным правилом', () => {
+  const collector = packed.match(/\{--gr-from:transparent;--gr-via:initial;--gr-to:transparent;background-image:linear-gradient\(var\(--gr-gradient-dir\), var\(--gr-from\), var\(--gr-via, \) var\(--gr-to\)\)\}/);
+
+  assert.ok(collector, 'нет собирающего правила градиента со сбросом трёх точек');
+  assert.ok(
+    packed.indexOf(collector[0]) < packed.indexOf('.gr-from-primary{'),
+    'сброс обязан идти до классов-цветов, иначе они не доживут до каскада',
+  );
+});
+
+test('атрибутных селекторов в утилитах нет', () => {
+  // [class*=gr-blur] поймал бы чужие классы потребителя и не пережил бы
+  // отсечение неиспользуемого: перечень селекторов только явный.
+  assert.ok(!/\[class[*^~|$]?=/.test(utils), 'атрибутный селектор по имени класса в утилитах');
 });

@@ -1,0 +1,80 @@
+// Griffincss — Gradients
+// Направление линейного градиента и три точки: from / via / to.
+//
+// Суффиксов брейкпоинта и контейнера у модуля НЕТ и не будет — довод тот же,
+// что у трансформаций и фильтров.
+//
+// Своей палитры у группы нет: цвет берётся из тех же карт, что и .gr-bg-*,
+// то есть из переменных --gr-hsl-*. Перенастроенная палитра меняет градиенты
+// вместе со всем остальным, а не отдельно от него.
+
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:string';
+@use 'palette';
+
+// Направление. Ключевые слова физические: градиент — геометрия фона,
+// а не строка текста, и от направления письма не разворачивается.
+$gr-gradient-directions: (
+  r: to right,
+  l: to left,
+  t: to top,
+  b: to bottom,
+  br: to bottom right,
+  tr: to top right
+) !default;
+
+// Цвета точек. Отдельная карта, а не вся палитра целиком: восемь цветов
+// на три точки — это 24 класса, а вся палитра акцентов дала бы 54 и вывела
+// utils за бюджет. Своей палитры у группы при этом нет: значения берутся
+// из тех же карт, что и .gr-bg-*, по именам.
+//
+// Имя, которого в палитре не оказалось, молча пропускается: перенастроивший
+// $gr-accents под свой бренд не получит .gr-from-primary, ссылающийся
+// в пустоту. Нужны свои имена — переопределяется $gr-gradient-colors,
+// механизм от этого не меняется.
+$_gr-picked: ("white", "black", primary, secondary, success, warning, danger, info);
+$_gr-colors: ();
+
+@each $gr-name in $_gr-picked {
+  $_gr-hsl: map.get(palette.$gr-grays, $gr-name);
+
+  @if not $_gr-hsl {
+    $_gr-hsl: map.get(palette.$gr-accents, $gr-name);
+  }
+
+  @if $_gr-hsl {
+    $_gr-colors: map.set($_gr-colors, $gr-name, $_gr-hsl);
+  }
+}
+
+$gr-gradient-colors: $_gr-colors !default;
+
+// Перечень направлений — он же перечень селекторов собирающего правила.
+$_gr-gradients: ();
+
+@each $gr-key, $gr-value in $gr-gradient-directions {
+  $_gr-gradients: list.append($_gr-gradients, string.unquote('.gr-gradient-to-#{$gr-key}'), comma);
+}
+
+// Собирающее правило. Прозрачные концы — не украшение, а сброс
+// наследования: настраиваемые свойства наследуются, и вложенный градиент
+// без своих точек перекрасился бы цветами предка. Правило стоит ДО
+// классов-значений: специфичность у них одна, решает порядок.
+#{$_gr-gradients} {
+  --gr-from: transparent;
+  --gr-via: initial;
+  --gr-to: transparent;
+
+  background-image: linear-gradient(var(--gr-gradient-dir), var(--gr-from), var(--gr-via, ) var(--gr-to));
+}
+
+@each $gr-key, $gr-value in $gr-gradient-directions {
+  .gr-gradient-to-#{$gr-key} { --gr-gradient-dir: #{$gr-value}; }
+}
+
+@each $gr-name, $gr-hsl in $gr-gradient-colors {
+  .gr-from-#{$gr-name} { --gr-from: hsl(#{$gr-hsl}); }
+  .gr-via-#{$gr-name} { --gr-via: hsl(#{$gr-hsl}),; }
+  .gr-to-#{$gr-name} { --gr-to: hsl(#{$gr-hsl}); }
+}

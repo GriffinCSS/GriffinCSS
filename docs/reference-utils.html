@@ -12,6 +12,18 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<style>
+@layer griffincss.docs {
+  /* Три колонки в узкой ленте рвут `_typography.scss` и `$gr-text-sizes`
+     посередине слова: имена не переносятся, а описание забирает остаток
+     ширины. На телефоне таблица уезжает в свою прокрутку (обёртку ставит
+     nav.js), и без min-width последняя колонка сжималась бы до слова
+     в строке. */
+  .vars-table { min-width: 36rem; }
+  .vars-table code { white-space: nowrap; }
+  .vars-table td:last-child { width: 100%; }
+}
+</style>
 </head>
 <body>
 
@@ -146,15 +158,17 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p><strong>В scoped-сборке структурных правил нет.</strong> <code>griffincss-ui-scoped.css</code> ограничен областью <code>.griffin</code>, а атрибут стоит на <code>&lt;html&gt;</code>: внутри <code>@scope</code> селектор требует носитель атрибута в области. Ось там действует на уровне токенов — скругления, плотность, тени и цвета работают полностью, — но шапка карточки не превращается в линию.</p>
 
+<p><strong>И порог браузеров у scoped-сборок выше.</strong> <code>@scope</code> требует Chrome 118, Safari 17.4 и Firefox 146 — это осень 2025 года, тогда как обычные сборки живут с Chrome 99 и Firefox 97. Цифры и метод замера — в разделе <a href="compatibility.html#scoped">«Совместимость»</a>.</p>
+
 <h2>Направление письма / Writing direction</h2>
 
-<p>Утилиты, работающие вдоль строки, существуют в двух видах: <strong>физическом</strong> и <strong>логическом</strong>. Физический класс называет сторону экрана и держится её при любом направлении письма. Логический называет сторону <em>строки</em> — <code>start</code> и <code>end</code> — и разворачивается сам, когда на элементе или предке стоит <code>dir="rtl"</code>. Правил на <code>[dir]</code> в библиотеке нет и не нужно: логические свойства разворачивает браузер.</p>
+<p>Утилиты, работающие вдоль строки, — <strong>логические</strong>: класс называет сторону <em>строки</em> — <code>start</code> и <code>end</code> — и разворачивается сам, когда на элементе или предке стоит <code>dir="rtl"</code>. Правил на <code>[dir]</code> в библиотеке нет и не нужно: логические свойства разворачивает браузер. Физические односторонние классы удалены; таблица соответствия для старой разметки:</p>
 
 <table>
-  <tr><th>Физический</th><th>Логический</th><th>Свойство логического</th></tr>
+  <tr><th>Было (удалено)</th><th>Стало</th><th>Свойство</th></tr>
   <tr><td><code>.gr-ml-{n}</code> / <code>.gr-mr-{n}</code></td><td><code>.gr-ms-{n}</code> / <code>.gr-me-{n}</code></td><td><code>margin-inline-start</code> / <code>-end</code></td></tr>
   <tr><td><code>.gr-pl-{n}</code> / <code>.gr-pr-{n}</code></td><td><code>.gr-ps-{n}</code> / <code>.gr-pe-{n}</code></td><td><code>padding-inline-start</code> / <code>-end</code></td></tr>
-  <tr><td><code>.gr-ml-auto</code> / <code>.gr-mr-auto</code></td><td><code>.gr-ms-auto</code> / <code>.gr-me-auto</code></td><td><code>margin-inline-start: auto</code></td></tr>
+  <tr><td><code>.gr-ml-auto</code> / <code>.gr-mr-auto</code></td><td><code>.gr-ms-auto</code> / <code>.gr-me-auto</code></td><td><code>margin-inline-start</code> / <code>-end</code>: <code>auto</code></td></tr>
   <tr><td><code>.gr-text-left</code> / <code>.gr-text-right</code></td><td><code>.gr-text-start</code> / <code>.gr-text-end</code></td><td><code>text-align: start</code> / <code>end</code></td></tr>
   <tr><td><code>.gr-left-0</code> / <code>.gr-right-0</code></td><td><code>.gr-start-0</code> / <code>.gr-end-0</code></td><td><code>inset-inline-start</code> / <code>-end</code></td></tr>
   <tr><td><code>.gr-border-l</code> / <code>.gr-border-r</code></td><td><code>.gr-border-s</code> / <code>.gr-border-e</code></td><td><code>border-inline-start</code> / <code>-end</code></td></tr>
@@ -162,9 +176,9 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p>Осевые классы — <code>.gr-mx-{n}</code>, <code>.gr-px-{n}</code>, <code>.gr-inset-x-0</code>, <code>.gr-border-x</code> и их вертикальные пары — записаны логическими сокращениями (<code>margin-inline</code>, <code>inset-inline</code>, <code>border-inline</code>, <code>border-block</code>). Обе стороны у них получают одно значение, поэтому направление письма результата не меняет, а объявлений выводится вдвое меньше.</p>
 
-<p><strong>Почему физические классы остались.</strong> Их удаление сломало бы разметку, которая на них уже написана. Кроме того, физическая сторона иногда нужна буквально: кнопка «закрыть» в углу окна обязана держаться угла, а не начала строки. Рекомендация простая: <strong>если сторона выбрана из-за текста — берите логический класс, если из-за геометрии экрана — физический.</strong></p>
+<p><strong>Почему удалены, а не оставлены рядом.</strong> Пара из физического и логического класса на каждую сторону удваивала селекторы, а разметка на <code>.gr-ml-*</code> не разворачивалась в RTL. Замена по таблице — один-в-один, суффиксы брейкпоинтов переносятся как есть: <code>.gr-ml-4-md</code> → <code>.gr-ms-4-md</code>. Сторона, нужная буквально, — угол окна у кнопки «закрыть» — задаётся своим CSS: за геометрию экрана утилиты вдоль строки больше не отвечают. Верх и низ (<code>t</code>/<code>b</code>) остаются физическими: блочная ось в RTL не разворачивается.</p>
 
-<p><strong>Ограничение:</strong> у логических <code>ms</code>/<code>me</code>/<code>ps</code>/<code>pe</code> и <code>start</code>/<code>end</code> в позиционировании нет адаптивных вариантов с суффиксом брейкпоинта. Полный набор стоил бы 240 селекторов и +1086 Б gzip — вшестеро больше бюджета, отведённого этапу. Когда отступ вдоль строки должен меняться по ширине окна, остаются осевые <code>.gr-mx-4-md</code> и физические <code>.gr-ml-4-md</code>. У <code>.gr-text-start</code> / <code>.gr-text-end</code> адаптивные варианты <strong>есть</strong>: два класса на четырёх брейкпоинтах стоят десяти селекторов.</p>
+<p><strong>Адаптивные варианты есть у всей логической шкалы:</strong> <code>ms</code>/<code>me</code>/<code>ps</code>/<code>pe</code> несут и оконные (<code>.gr-ms-4-md</code>), и контейнерные (<code>.gr-ms-4-cmd</code>) суффиксы — наравне с <code>.gr-text-start-md</code>. У <code>start</code>/<code>end</code> в позиционировании адаптивных вариантов нет, как не было их и у физической привязки.</p>
 
 <p>Размеры (<code>width</code>, <code>height</code>, <code>min-*</code>, <code>max-*</code>) намеренно оставлены физическими: <code>direction: rtl</code> инлайн-ось не переставляет — это делает только <code>writing-mode</code>, а вертикального письма библиотека не поддерживает.</p>
 
@@ -176,14 +190,13 @@ document.addEventListener('griffincss:themechange', function (e) {
   <tr><th>Класс</th><th>Значение</th></tr>
   <tr><td><code>.gr-m-{n}</code></td><td>margin</td></tr>
   <tr><td><code>.gr-p-{n}</code></td><td>padding</td></tr>
-  <tr><td><code>.gr-mt-{n}</code>, <code>.gr-mr-{n}</code>, <code>.gr-mb-{n}</code>, <code>.gr-ml-{n}</code></td><td>По сторонам, физические</td></tr>
-  <tr><td><code>.gr-pt-{n}</code>, <code>.gr-pr-{n}</code>, <code>.gr-pb-{n}</code>, <code>.gr-pl-{n}</code></td><td>По сторонам, физические</td></tr>
+  <tr><td><code>.gr-mt-{n}</code>, <code>.gr-mb-{n}</code>, <code>.gr-pt-{n}</code>, <code>.gr-pb-{n}</code></td><td>Верх и низ, физические</td></tr>
   <tr><td><code>.gr-ms-{n}</code>, <code>.gr-me-{n}</code>, <code>.gr-ps-{n}</code>, <code>.gr-pe-{n}</code></td><td>По сторонам строки, логические</td></tr>
   <tr><td><code>.gr-mx-{n}</code>, <code>.gr-my-{n}</code>, <code>.gr-px-{n}</code>, <code>.gr-py-{n}</code></td><td>По осям (<code>margin-inline</code>, <code>padding-inline</code>)</td></tr>
-  <tr><td><code>.gr-mx-auto</code>, <code>.gr-ml-auto</code>, <code>.gr-mr-auto</code>, <code>.gr-ms-auto</code>, <code>.gr-me-auto</code></td><td>Авто-маржины</td></tr>
+  <tr><td><code>.gr-mx-auto</code>, <code>.gr-ms-auto</code>, <code>.gr-me-auto</code></td><td>Авто-маржины</td></tr>
 </table>
 
-<p>Адаптивные варианты — суффиксом: <code>.gr-m-4-sm</code>, <code>.gr-p-8-md</code>, <code>.gr-mx-auto-lg</code>. Есть у всех четырнадцати физических и осевых свойств и у авто-маржинов <code>mx</code>/<code>ml</code>/<code>mr</code>. У логических <code>ms</code>/<code>me</code>/<code>ps</code>/<code>pe</code> их нет — см. «Направление письма».</p>
+<p>Адаптивные варианты — суффиксом: <code>.gr-m-4-sm</code>, <code>.gr-p-8-md</code>, <code>.gr-mx-auto-lg</code>, <code>.gr-ms-4-md</code>. Есть у всех свойств шкалы и у всех авто-маржинов, включая логические.</p>
 
 <h2>Произвольные значения / Arbitrary values</h2>
 
@@ -198,7 +211,7 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p><strong>Без JS не работает и работать не может.</strong> Класса <code>.gr-mt-[13px]</code> в собранном CSS нет — правило создаётся рантаймом в момент, когда он видит элемент, и уезжает в тот же слой <code>griffincss.utils</code>. Не выполнился скрипт — отступа нет. Поэтому произвольным значением задаётся оформление, а не то, от чего зависит читаемость страницы; шкала <code>.gr-mt-4</code> работает всегда и остаётся основным способом.</p>
 
-<p>Свойства, которые понимает рантайм: отступы (<code>m</code>, <code>mt</code>, <code>mr</code>, <code>mb</code>, <code>ml</code>, <code>ms</code>, <code>me</code>, <code>mx</code>, <code>my</code> и те же с <code>p</code>), <code>gr-radius-</code>, <code>gr-gap-</code>, размеры (<code>w</code>, <code>h</code>, <code>min-w</code>, <code>max-w</code>, <code>min-h</code>, <code>max-h</code>), смещения (<code>top</code>, <code>right</code>, <code>bottom</code>, <code>left</code>, <code>inset</code>) и <code>gr-z-</code>. Набор объявлений повторяет статический класс один в один: <code>.gr-p-[13px]</code>, как и <code>.gr-p-4</code>, пишет и <code>--gr-p</code>, и <code>padding</code>, поэтому каскад скруглений видит зазор в обоих случаях.</p>
+<p>Свойства, которые понимает рантайм: отступы (<code>m</code>, <code>mt</code>, <code>mb</code>, <code>ms</code>, <code>me</code>, <code>mx</code>, <code>my</code> и те же с <code>p</code>), <code>gr-radius-</code>, <code>gr-gap-</code>, размеры (<code>w</code>, <code>h</code>, <code>min-w</code>, <code>max-w</code>, <code>min-h</code>, <code>max-h</code>), смещения (<code>top</code>, <code>bottom</code>, логические <code>start</code>, <code>end</code>, <code>inset</code>) и <code>gr-z-</code>. Набор объявлений повторяет статический класс один в один: <code>.gr-p-[13px]</code>, как и <code>.gr-p-4</code>, пишет и <code>--gr-p</code>, и <code>padding</code>, поэтому каскад скруглений видит зазор в обоих случаях.</p>
 
 <p>У <code>gr-text-</code> произвольного варианта нет намеренно: <code>.gr-text-2xl</code> — кегль, <code>.gr-text-white</code> — цвет, и <code>.gr-text-[13px]</code> пришлось бы угадывать.</p>
 
@@ -227,20 +240,20 @@ document.addEventListener('griffincss:themechange', function (e) {
 <table>
   <tr><th>Группа</th><th>Классы</th></tr>
   <tr><td><strong>Ширина</strong></td><td><code>.gr-border</code> (1px), <code>.gr-border-0</code>, <code>.gr-border-2</code>, <code>.gr-border-4</code>, <code>.gr-border-8</code></td></tr>
-  <tr><td><strong>Стороны</strong></td><td><code>.gr-border-t</code> / <code>r</code> / <code>b</code> / <code>l</code>, логические <code>.gr-border-s</code> / <code>e</code></td></tr>
+  <tr><td><strong>Стороны</strong></td><td><code>.gr-border-t</code> / <code>b</code>, логические <code>.gr-border-s</code> / <code>e</code></td></tr>
   <tr><td><strong>Оси</strong></td><td><code>.gr-border-x</code> (<code>border-inline</code>), <code>.gr-border-y</code> (<code>border-block</code>)</td></tr>
-  <tr><td><strong>Сторона заданной ширины</strong></td><td><code>.gr-border-{t,r,b,l,s,e,x,y}-{0,2,4,8}</code> — например <code>.gr-border-l-4</code></td></tr>
+  <tr><td><strong>Сторона заданной ширины</strong></td><td><code>.gr-border-{t,b,s,e,x,y}-{0,2,4,8}</code> — например <code>.gr-border-s-4</code></td></tr>
   <tr><td><strong>Стиль</strong></td><td><code>.gr-border-solid</code> / <code>dashed</code> / <code>dotted</code> / <code>double</code> / <code>none</code></td></tr>
 </table>
 
 <p>Каждый класс ширины самодостаточен — задаёт и стиль, и <code>var(--gr-color-border)</code>, поэтому <code>.gr-border-2</code> виден сам по себе. Класс цвета из Colors подключается поверх: <code>class="gr-border-2 gr-border-primary"</code>.</p>
 
-<p>Ширину у отдельной стороны задаёт свой класс — <code>.gr-border-l-4</code>, а не пара <code>.gr-border-l</code> + <code>.gr-border-4</code>: класс ширины пишет сокращённое свойство <code>border</code> и сбрасывает вместе с ним все четыре стороны.</p>
+<p>Ширину у отдельной стороны задаёт свой класс — <code>.gr-border-s-4</code>, а не пара <code>.gr-border-s</code> + <code>.gr-border-4</code>: класс ширины пишет сокращённое свойство <code>border</code> и сбрасывает вместе с ним все четыре стороны.</p>
 
-<pre><code>&lt;blockquote class="gr-border-l-4 gr-border-danger gr-pl-4"&gt;Цитата&lt;/blockquote&gt;
+<pre><code>&lt;blockquote class="gr-border-s-4 gr-border-danger gr-ps-4"&gt;Цитата&lt;/blockquote&gt;
 
-&lt;!-- то же самое, но полоска перейдёт вправо в тексте справа налево --&gt;
-&lt;blockquote class="gr-border-s-4 gr-border-danger gr-ps-4"&gt;Цитата&lt;/blockquote&gt;</code></pre>
+&lt;!-- в тексте справа налево та же полоска сама перейдёт вправо --&gt;
+&lt;blockquote dir="rtl" class="gr-border-s-4 gr-border-danger gr-ps-4"&gt;اقتباس&lt;/blockquote&gt;</code></pre>
 
 <h2>Shadows (<code>scss/_shadows.scss</code>)</h2>
 
@@ -260,7 +273,7 @@ document.addEventListener('griffincss:themechange', function (e) {
 <table>
   <tr><th>Группа</th><th>Классы</th></tr>
   <tr><td><strong>Схема</strong></td><td><code>.gr-static</code> / <code>relative</code> / <code>absolute</code> / <code>fixed</code> / <code>sticky</code></td></tr>
-  <tr><td><strong>Края</strong></td><td><code>.gr-inset-0</code>, <code>.gr-inset-auto</code>, <code>.gr-inset-x-0</code> (<code>inset-inline</code>), <code>.gr-inset-y-0</code> (<code>inset-block</code>), <code>.gr-top-0</code> … <code>.gr-left-auto</code></td></tr>
+  <tr><td><strong>Края</strong></td><td><code>.gr-inset-0</code>, <code>.gr-inset-auto</code>, <code>.gr-inset-x-0</code> (<code>inset-inline</code>), <code>.gr-inset-y-0</code> (<code>inset-block</code>), <code>.gr-top-0</code> / <code>.gr-bottom-0</code> и <code>-auto</code>, логические <code>.gr-start-0</code> / <code>.gr-end-0</code> и <code>-auto</code></td></tr>
   <tr><td><strong>Края строки</strong></td><td><code>.gr-start-0</code>, <code>.gr-end-0</code>, <code>.gr-start-auto</code>, <code>.gr-end-auto</code> — логические</td></tr>
   <tr><td><strong>Наложение</strong></td><td><code>.gr-z-0</code> … <code>.gr-z-50</code> (шаг 10), <code>.gr-z-auto</code></td></tr>
 </table>
@@ -276,6 +289,49 @@ document.addEventListener('griffincss:themechange', function (e) {
   <tr><td><strong>Точка кадра</strong></td><td><code>.gr-object-pos-center</code> / <code>top</code> / <code>right</code> / <code>bottom</code> / <code>left</code></td></tr>
   <tr><td><strong>Пропорции</strong></td><td><code>.gr-aspect-square</code> / <code>video</code> / <code>wide</code> / <code>portrait</code> / <code>auto</code></td></tr>
 </table>
+
+<h2>Filters (<code>scss/_filters.scss</code>)</h2>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th></tr>
+  <tr><td><strong>Размытие</strong></td><td><code>.gr-blur-1</code> / <code>2</code> / <code>3</code> / <code>4</code> — 2, 4, 8 и 16 px</td></tr>
+  <tr><td><strong>Обесцвечивание</strong></td><td><code>.gr-grayscale-50</code> / <code>100</code></td></tr>
+  <tr><td><strong>Яркость</strong></td><td><code>.gr-brightness-75</code> / <code>90</code> / <code>110</code> / <code>125</code></td></tr>
+  <tr><td><strong>Сброс</strong></td><td><code>.gr-filter-none</code> — снимает фильтр целиком</td></tr>
+</table>
+
+<p>Все функции живут в одном свойстве <code>filter</code>, поэтому класс задаёт настраиваемое свойство (<code>--gr-blur</code>, <code>--gr-grayscale</code>, <code>--gr-brightness</code>), а собирающее правило склеивает их в значение. Без этого <code>.gr-blur-2</code> и <code>.gr-grayscale-100</code> на одном элементе затирали бы друг друга. Нейтральные значения в том же правиле снимают наследование: вложенный <code>.gr-grayscale-100</code> не перенимает размытие предка.</p>
+
+<div class="callout">
+  <p><strong>Контраст и насыщенность машинерия поддерживает, но по умолчанию не выводит.</strong> Спрос на них ниже, а три группы Этапа 32 и без них выбирают бюджет утилит. Пустая карта стоит ноль байт; непустая включает и классы, и функцию в собирающем правиле:</p>
+  <pre><code>@include meta.load-css('griffincss-utils/scss/filters', $with: (
+  "gr-saturations": (0: 0, 150: 1.5),
+  "gr-contrasts": (75: 0.75, 125: 1.25)
+));</code></pre>
+  <p>Получите <code>.gr-saturate-0</code>, <code>.gr-saturate-150</code>, <code>.gr-contrast-75</code>, <code>.gr-contrast-125</code>.</p>
+</div>
+
+<div class="callout callout-warning">
+  <p><strong>Размытие большого блока стоит кадров.</strong> <code>filter: blur()</code> заставляет браузер растеризовать элемент отдельным слоем и размывать его каждый кадр; на слабом устройстве размытая подложка во весь экран заметно роняет прокрутку. Размывайте маленькое и статичное, а не большое и движущееся.</p>
+</div>
+
+<h2>Gradients (<code>scss/_gradients.scss</code>)</h2>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th></tr>
+  <tr><td><strong>Направление</strong></td><td><code>.gr-gradient-to-r</code> / <code>l</code> / <code>t</code> / <code>b</code> / <code>br</code> / <code>tr</code></td></tr>
+  <tr><td><strong>Начало</strong></td><td><code>.gr-from-white</code>, <code>.gr-from-black</code>, <code>.gr-from-primary</code>, <code>secondary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>info</code></td></tr>
+  <tr><td><strong>Середина</strong></td><td><code>.gr-via-*</code> — те же восемь имён</td></tr>
+  <tr><td><strong>Конец</strong></td><td><code>.gr-to-*</code> — те же восемь имён</td></tr>
+</table>
+
+<p>Класс направления обязателен: он и рисует градиент. Незаданные концы прозрачны, поэтому <code>.gr-gradient-to-t .gr-from-black</code> — это готовая подложка под подпись на фотографии. Средняя точка необязательна и не стоит ничего, пока не задана: <code>--gr-via</code> подставляется в тот же <code>linear-gradient</code> пустотой.</p>
+
+<p>Своей палитры у группы нет: цвета берутся из тех же карт, что и <code>.gr-bg-*</code>, то есть из переменных <code>--gr-hsl-*</code>. Восемь имён вместо восемнадцати — плата за бюджет: три точки на всю палитру акцентов дали бы 54 класса. Нужны остальные оттенки — переопределите <code>$gr-gradient-colors</code>. Имя, которого в палитре нет, молча пропускается, поэтому перенастроенный под свой бренд <code>$gr-accents</code> не оставит классов, ссылающихся в пустоту.</p>
+
+<div class="callout callout-warning">
+  <p><strong>Суффиксов брейкпоинта нет ни у фильтров, ни у градиентов</strong> — как и у трансформаций. <code>.gr-blur-2-md</code> и <code>.gr-gradient-to-r-lg</code> не существуют: декоративный фон не меняется от ширины окна, а девятикратная группа не помещается в бюджет утилит.</p>
+</div>
 
 <h2>Interactivity (<code>scss/_interactivity.scss</code>)</h2>
 
@@ -300,6 +356,26 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p>Библиотеки анимаций (fade, slide, pulse) в Griffincss нет намеренно: это задача уровня приложения. При <code>prefers-reduced-motion: reduce</code> переходы сжимаются до <code>0.01ms</code>, вращение замедляется до 3 секунд.</p>
 
+<h2>Transforms (<code>scss/_transforms.scss</code>)</h2>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th></tr>
+  <tr><td><strong>Масштаб</strong></td><td><code>.gr-scale-95</code> / <code>100</code> / <code>105</code> / <code>110</code></td></tr>
+  <tr><td><strong>Поворот</strong></td><td><code>.gr-rotate-3</code> / <code>6</code> / <code>12</code> / <code>45</code> / <code>90</code> и та же пятёрка со знаком минус: <code>.gr-rotate--3</code> … <code>.gr-rotate--90</code></td></tr>
+  <tr><td><strong>Сдвиг</strong></td><td><code>.gr-translate-x-1</code> / <code>2</code>, <code>.gr-translate-y-1</code> / <code>2</code> и те же со знаком: <code>.gr-translate-y--1</code></td></tr>
+  <tr><td><strong>Наведение</strong></td><td><code>.gr-hover-lift</code> — подъём на 0,25 rem, <code>.gr-hover-grow</code> — увеличение до 1,03</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <p><strong>Суффиксов брейкпоинта у группы нет и не будет.</strong> <code>.gr-scale-105-md</code> не существует — как не существует <code>.gr-radius-4-md</code>. Довод тот же: эффект наведения не меняется от ширины окна, а адаптивные и контейнерные варианты умножили бы группу примерно вдевятеро и съели бы весь бюджет утилит. Нужен масштаб от ширины — это свой <code>@media</code> в вашем CSS, одно правило вместо девяноста.</p>
+</div>
+
+<p>Трансформация собирается из <strong>раздельных</strong> свойств <code>scale</code>, <code>rotate</code> и <code>translate</code>, а не из общего <code>transform</code>: три класса на одном элементе складываются, не затирая друг друга. Обе оси сдвига живут в одном свойстве <code>translate</code>, поэтому значение приходит через <code>--gr-tx</code> и <code>--gr-ty</code>, а нулём по соседней оси снимается наследование.</p>
+
+<p><code>:hover</code> объявлен только внутри <code>@media (hover: hover)</code> — на сенсорном экране наведение залипает после касания. Переход у обоих классов свой, поэтому они работают в одиночку; при <code>prefers-reduced-motion: reduce</code> он сжимается до <code>0.01ms</code>.</p>
+
+<p>Учтите: <code>.gr-transition-transform</code> из модуля <a href="animations.html">Transitions</a> анимирует свойство <code>transform</code> и на раздельные <code>scale</code> / <code>rotate</code> / <code>translate</code> не действует. Для них берут <code>.gr-transition</code> (все свойства) или пишут своё правило.</p>
+
 <h2>Typography (<code>scss/_typography.scss</code>)</h2>
 
 <p>Шрифтовые утилиты: размер, насыщенность, выравнивание, межстрочный интервал, трансформация, декор, переносы, семейства. Все классы имеют адаптивные варианты с суффиксами <code>-sm</code>, <code>-md</code>, <code>-lg</code>, <code>-xl</code> — кроме относительных размеров, см. ниже.</p>
@@ -309,7 +385,7 @@ document.addEventListener('griffincss:themechange', function (e) {
   <tr><td><strong>Размер</strong></td><td><code>.gr-text-xs</code> … <code>.gr-text-6xl</code> (12px … 60px)</td></tr>
   <tr><td><strong>Относительный размер</strong></td><td><code>.gr-text-rel-xs</code> … <code>.gr-text-rel-3xl</code> (<code>calc(1em - 4px)</code> … <code>calc(1em + 8px)</code>)</td></tr>
   <tr><td><strong>Насыщенность</strong></td><td><code>.gr-font-thin</code> (100) … <code>.gr-font-black</code> (900)</td></tr>
-  <tr><td><strong>Выравнивание</strong></td><td><code>.gr-text-left</code> / <code>center</code> / <code>right</code> / <code>justify</code>, логические <code>.gr-text-start</code> / <code>end</code></td></tr>
+  <tr><td><strong>Выравнивание</strong></td><td><code>.gr-text-center</code> / <code>justify</code>, логические <code>.gr-text-start</code> / <code>end</code></td></tr>
   <tr><td><strong>Трансформация</strong></td><td><code>.gr-uppercase</code> / <code>lowercase</code> / <code>capitalize</code></td></tr>
   <tr><td><strong>Интервал</strong></td><td><code>.gr-leading-tight</code> (1.25) … <code>.gr-leading-loose</code> (2)</td></tr>
   <tr><td><strong>Декор</strong></td><td><code>.gr-underline</code> / <code>no-underline</code> / <code>line-through</code></td></tr>
@@ -466,6 +542,133 @@ Griffincss.utils.observe(node);        // наблюдать за поддере
 Griffincss.utils.stop();               // снять всё наблюдение</code></pre>
 
 <p>Без скрипта работают первый уровень и его прямые дети: вложенные контейнеры без явного <code>--gr-r</code> остаются квадратными.</p>
+
+<h2 id="svoya-palitra">Своя палитра и своя шкала</h2>
+
+<p>Всё, что задаёт <strong>состав</strong> вывода утилит, помечено <code>!default</code>: собирающий библиотеку из исходников меняет палитру и шкалы, не правя файлы пакета. Вычисляемые значения не помечены намеренно — переопределять производную от уже переопределяемого значит завести второй источник правды.</p>
+
+<table class="vars-table">
+  <tr><th>Файл</th><th>Переменная</th><th>Что задаёт</th></tr>
+  <tr><td><code>_palette.scss</code></td><td><code>$gr-grays</code></td><td>Нейтральная шкала: имена <code>.gr-bg-gray-*</code> и переменная-источник</td></tr>
+  <tr><td><code>_palette.scss</code></td><td><code>$gr-accents</code></td><td>Акценты: имена <code>.gr-bg-primary</code> и соседей</td></tr>
+  <tr><td><code>_typography.scss</code></td><td><code>$gr-text-sizes</code></td><td>Шкала кегля <code>.gr-text-xs</code> … <code>.gr-text-6xl</code> вместе с адаптивными и контейнерными вариантами</td></tr>
+  <tr><td><code>_typography.scss</code></td><td><code>$gr-text-rel-steps</code></td><td>Относительные ступени <code>.gr-text-rel-*</code></td></tr>
+  <tr><td><code>_typography.scss</code></td><td><code>$gr-weights</code></td><td>Насыщенность <code>.gr-font-*</code></td></tr>
+  <tr><td><code>_typography.scss</code></td><td><code>$gr-leading</code></td><td>Межстрочный интервал <code>.gr-leading-*</code></td></tr>
+  <tr><td><code>_spacing.scss</code></td><td><code>$gr-spacing-base</code></td><td>Шаг шкалы отступов</td></tr>
+  <tr><td><code>_spacing.scss</code></td><td><code>$gr-spacing-steps</code></td><td>Ступени <code>.gr-m-*</code>, <code>.gr-p-*</code> и всей их родни</td></tr>
+  <tr><td><code>_sizing.scss</code></td><td><code>$gr-widths</code></td><td>Ширины <code>.gr-w-*</code>, включая дробные</td></tr>
+  <tr><td><code>_sizing.scss</code></td><td><code>$gr-heights</code></td><td>Высоты <code>.gr-h-*</code></td></tr>
+  <tr><td><code>_borders.scss</code></td><td><code>$gr-border-sides</code></td><td>Стороны <code>.gr-border-t</code> … <code>.gr-border-e</code></td></tr>
+  <tr><td><code>_borders.scss</code></td><td><code>$gr-border-axes</code></td><td>Оси <code>.gr-border-x</code>, <code>.gr-border-y</code></td></tr>
+  <tr><td><code>_border-radius.scss</code></td><td><code>$gr-radius-base</code></td><td>Шаг шкалы скруглений</td></tr>
+  <tr><td><code>_border-radius.scss</code></td><td><code>$gr-radius-max</code></td><td>Верхняя ступень <code>.gr-radius-*</code></td></tr>
+  <tr><td><code>_effects.scss</code></td><td><code>$gr-opacities</code></td><td>Ступени <code>.gr-opacity-*</code></td></tr>
+  <tr><td><code>_position.scss</code></td><td><code>$gr-positions</code></td><td>Схемы <code>.gr-relative</code>, <code>.gr-sticky</code> и соседи</td></tr>
+  <tr><td><code>_shadows.scss</code></td><td><code>$gr-shadows</code></td><td>Ступени <code>.gr-shadow-*</code></td></tr>
+  <tr><td><code>_filters.scss</code></td><td><code>$gr-blurs</code></td><td>Ступени <code>.gr-blur-*</code></td></tr>
+  <tr><td><code>_filters.scss</code></td><td><code>$gr-grayscales</code></td><td>Ступени <code>.gr-grayscale-*</code></td></tr>
+  <tr><td><code>_filters.scss</code></td><td><code>$gr-brightnesses</code></td><td>Ступени <code>.gr-brightness-*</code></td></tr>
+  <tr><td><code>_filters.scss</code></td><td><code>$gr-contrasts</code></td><td>Ступени <code>.gr-contrast-*</code>; по умолчанию карта пуста</td></tr>
+  <tr><td><code>_filters.scss</code></td><td><code>$gr-saturations</code></td><td>Ступени <code>.gr-saturate-*</code>; по умолчанию карта пуста</td></tr>
+  <tr><td><code>_gradients.scss</code></td><td><code>$gr-gradient-directions</code></td><td>Направления <code>.gr-gradient-to-*</code></td></tr>
+  <tr><td><code>_gradients.scss</code></td><td><code>$gr-gradient-colors</code></td><td>Цвета точек <code>.gr-from-*</code>, <code>.gr-via-*</code>, <code>.gr-to-*</code></td></tr>
+  <tr><td><code>_transforms.scss</code></td><td><code>$gr-scales</code></td><td>Ступени <code>.gr-scale-*</code></td></tr>
+  <tr><td><code>_transforms.scss</code></td><td><code>$gr-rotations</code></td><td>Ступени поворота: каждая даёт пару классов со знаком</td></tr>
+  <tr><td><code>_transforms.scss</code></td><td><code>$gr-translates</code></td><td>Ступени сдвига <code>.gr-translate-*</code></td></tr>
+  <tr><td><code>_interactivity.scss</code></td><td><code>$gr-cursors</code></td><td>Курсоры <code>.gr-cursor-*</code></td></tr>
+</table>
+
+<p>Список закрыт инвариантом: переменная верхнего уровня в публичном модуле утилит обязана нести <code>!default</code> либо запись в явном списке исключений с причиной. Новая карта без пометки роняет <code>npm test</code>.</p>
+
+<h3>Своя точка входа вместо готовой</h3>
+
+<p>Модули утилит выводят CSS, поэтому <code>@use … with</code> рядом с готовой точкой входа делает не то, чего от него ждут: модуль попадает в вывод <strong>дважды</strong>, и первый экземпляр оказывается <em>вне слоя</em> <code>griffincss.utils</code> — то есть выигрывает у всей остальной библиотеки. Замер такой сборки — 14 952 Б gzip против 14 931 Б у правильной с той же палитрой: вторая копия почти целиком сжимается в обратную ссылку, и по весу ловушку не заметить вовсе. Ломает она не вес, а каскад: незаслоённая копия выигрывает и у остальной библиотеки, и у вашего собственного CSS в слоях.</p>
+
+<pre><code>// НЕ ТАК: два экземпляра модуля, первый вне слоёв
+@use 'griffincss-utils/scss/colors' with ($gr-accents: (…));
+@use 'griffincss-utils/scss/griffincss-utils';</code></pre>
+
+<p>Рабочая форма — своя точка входа: тот же список модулей, что в <code>packages/utils/scss/griffincss-utils.scss</code>, но у тех, чей состав меняется, стоит <code>$with</code>. Имена переменных внутри <code>$with</code> пишутся строками, без <code>$</code>.</p>
+
+<h3>Обе половины: карта и переменные под неё</h3>
+
+<p>Карта задаёт <strong>имена классов</strong> и то, из какой переменной берётся цвет; сами <code>--gr-hsl-*</code> приходят из темы ядра. Переопределив карту и не заведя переменных, вы получите классы, ссылающиеся в пустоту. Поэтому пример из одной половины — ловушка, и ниже их две.</p>
+
+<pre><code>// my-griffincss-utils.scss — своя точка входа вместо готовой
+@use 'sass:meta';
+
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+@layer griffincss.utils {
+  @include meta.load-css('griffincss-core/scss/tokens');
+  @include meta.load-css('griffincss-core/scss/theme');
+  @include meta.load-css('griffincss-utils/scss/keyframes');
+  @include meta.load-css('griffincss-utils/scss/animations');
+  @include meta.load-css('griffincss-utils/scss/border-radius');
+  @include meta.load-css('griffincss-utils/scss/borders');
+
+  // ПЕРВАЯ ПОЛОВИНА: свои имена классов и свой источник цвета.
+  @include meta.load-css('griffincss-utils/scss/colors', $with: (
+    "gr-accents": (
+      brand:       var(--gr-hsl-brand),
+      brand-dark:  var(--gr-hsl-brand-dark),
+      danger:      var(--gr-hsl-danger)
+    )
+  ));
+
+  @include meta.load-css('griffincss-utils/scss/effects');
+  @include meta.load-css('griffincss-utils/scss/filters');
+  @include meta.load-css('griffincss-utils/scss/gradients');
+  @include meta.load-css('griffincss-utils/scss/interactivity');
+  @include meta.load-css('griffincss-utils/scss/position');
+  @include meta.load-css('griffincss-utils/scss/shadows');
+  @include meta.load-css('griffincss-utils/scss/sizing');
+  @include meta.load-css('griffincss-utils/scss/spacing');
+  @include meta.load-css('griffincss-utils/scss/transforms');
+  @include meta.load-css('griffincss-utils/scss/typography');
+  @include meta.load-css('griffincss-utils/scss/visibility');
+}
+
+// ВТОРАЯ ПОЛОВИНА: переменные, на которые ссылается карта.
+// Без неё .gr-bg-brand в CSS выйдет, но покажет пустоту:
+// hsl(var(--gr-hsl-brand)) не из чего вычислить.
+// --gr-hsl-danger объявлять не нужно — он приходит из темы ядра.
+:root {
+  --gr-hsl-brand:      262, 83%, 58%;
+  --gr-hsl-brand-dark: 262, 83%, 45%;
+}</code></pre>
+
+<pre><code>sass my-griffincss-utils.scss my-griffincss-utils.css \
+  --load-path=node_modules --style=compressed --no-source-map</code></pre>
+
+<p>Результат: <code>.gr-bg-brand</code>, <code>.gr-text-brand-dark</code>, <code>.gr-border-danger</code> и ни одного <code>.gr-bg-primary</code>. Вес — 14 974 Б gzip против 15 394 Б у обычной сборки: восемнадцать акцентов сменились тремя, серая шкала осталась на месте. Градиенты подстроились сами — <code>.gr-from-primary</code> исчез вместе с акцентом, остались <code>.gr-from-white</code>, <code>.gr-from-black</code> и <code>.gr-from-danger</code>.</p>
+
+<div class="callout callout-warning">
+  <p><strong>Готовую точку входа при этом не подключают.</strong> Модуль, загруженный с <code>$with</code>, не может быть загружен раньше — а <code>griffincss-utils.scss</code> загрузит его без настройки. Свой файл заменяет готовый, а не дополняет его. Для <code>-scoped</code>-сборки копируется <code>griffincss-utils-scoped.scss</code>: там те же модули, но внутри <code>@scope (.griffin)</code>.</p>
+</div>
+
+<h3>Сократить шкалу</h3>
+
+<p>Второй сценарий и самый частый у того, кто борется за вес: состав не заменяют, а урезают. Три строки — половина ступеней отступа, восемь ступеней скругления из шестнадцати, четыре кегля из десяти:</p>
+
+<pre><code>@include meta.load-css('griffincss-utils/scss/border-radius', $with: (
+  "gr-radius-max": 8
+));
+@include meta.load-css('griffincss-utils/scss/spacing', $with: (
+  "gr-spacing-steps": (0, 1, 2, 4, 8)
+));
+@include meta.load-css('griffincss-utils/scss/typography', $with: (
+  "gr-text-sizes": (sm: 0.875rem, base: 1rem, lg: 1.25rem, 2xl: 1.5rem)
+));</code></pre>
+
+<p>Замер: <strong>14 945 → 10 876 Б</strong> gzip (−27,2 %), классов 2490 → 1546. Шкала кегля тянет за собой адаптивные и контейнерные варианты, поэтому платит за себя больше остальных; после размена Этапа 36 то же делает и шкала отступов — логические классы несут полные адаптивные наборы.</p>
+
+<p>Целая группа убирается ещё проще — строкой <code>@include</code> меньше: не нужны тени, не подключайте <code>shadows</code>. Отсечение неиспользуемого (<code>npm run purge</code>) решает ту же задачу по факту разметки; переопределение решает её по решению, до сборки.</p>
+
+<div class="callout">
+  <p><strong>Рантайм тут ни при чём.</strong> Переопределение на компилтайме меняет состав и имена классов в CSS. Рантайм утилит (<code>griffincss-utils.js</code>) разбирает произвольные значения <code>gr-*-[…]</code> и каскад скруглений по своей таблице, которая читается из исходников пакета при сборке. Это два несвязанных механизма: урезав шкалу <code>$gr-spacing-steps</code>, вы не отнимете у рантайма <code>gr-p-[13px]</code>, а переименовав акценты — не научите его новым именам.</p>
+</div>
 
 <hr>
 

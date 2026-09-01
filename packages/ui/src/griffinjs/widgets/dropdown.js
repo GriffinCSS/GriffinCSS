@@ -70,7 +70,7 @@
     return document.activeElement === node;
   }
 
-  G.defineWidget('dropdown', function (el, opts) {
+  G.defineWidget('dropdown', { needs: ['anchor'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();
     var events = G.listeners();

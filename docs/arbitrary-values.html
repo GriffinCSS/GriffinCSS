@@ -91,15 +91,15 @@
 
 <table>
   <tr><th>Класс</th><th>Свойство</th></tr>
-  <tr><td><code>.gr-m-[…]</code>, <code>.gr-mt-[…]</code>, <code>.gr-mr-[…]</code>, <code>.gr-mb-[…]</code>, <code>.gr-ml-[…]</code></td><td><code>margin</code> и стороны</td></tr>
+  <tr><td><code>.gr-m-[…]</code>, <code>.gr-mt-[…]</code>, <code>.gr-mb-[…]</code></td><td><code>margin</code>, верх и низ</td></tr>
   <tr><td><code>.gr-ms-[…]</code>, <code>.gr-me-[…]</code>, <code>.gr-mx-[…]</code>, <code>.gr-my-[…]</code></td><td>логические и осевые маржины</td></tr>
-  <tr><td><code>.gr-p-[…]</code>, <code>.gr-pt-[…]</code>, <code>.gr-pr-[…]</code>, <code>.gr-pb-[…]</code>, <code>.gr-pl-[…]</code></td><td><code>padding</code> и стороны</td></tr>
+  <tr><td><code>.gr-p-[…]</code>, <code>.gr-pt-[…]</code>, <code>.gr-pb-[…]</code></td><td><code>padding</code>, верх и низ</td></tr>
   <tr><td><code>.gr-ps-[…]</code>, <code>.gr-pe-[…]</code>, <code>.gr-px-[…]</code>, <code>.gr-py-[…]</code></td><td>логические и осевые паддинги</td></tr>
   <tr><td><code>.gr-radius-[…]</code></td><td><code>--gr-r</code> + <code>border-radius</code></td></tr>
   <tr><td><code>.gr-gap-[…]</code></td><td><code>gap</code></td></tr>
   <tr><td><code>.gr-w-[…]</code>, <code>.gr-h-[…]</code></td><td><code>width</code>, <code>height</code></td></tr>
   <tr><td><code>.gr-min-w-[…]</code>, <code>.gr-max-w-[…]</code>, <code>.gr-min-h-[…]</code>, <code>.gr-max-h-[…]</code></td><td>минимумы и максимумы</td></tr>
-  <tr><td><code>.gr-top-[…]</code>, <code>.gr-right-[…]</code>, <code>.gr-bottom-[…]</code>, <code>.gr-left-[…]</code>, <code>.gr-inset-[…]</code></td><td>смещения позиционирования</td></tr>
+  <tr><td><code>.gr-top-[…]</code>, <code>.gr-bottom-[…]</code>, <code>.gr-start-[…]</code>, <code>.gr-end-[…]</code>, <code>.gr-inset-[…]</code></td><td>смещения; <code>start</code>/<code>end</code> — логические, вдоль строки</td></tr>
   <tr><td><code>.gr-z-[…]</code></td><td><code>z-index</code></td></tr>
 </table>
 
@@ -196,7 +196,7 @@
 <p>
   Шкала привязки к краям знает только <code>0</code> и <code>auto</code> —
   наружу за край она не выходит. Отрицательные смещения
-  <code>.gr-top-[-0.5rem] .gr-right-[-0.5rem]</code> выносят бейдж-счётчик
+  <code>.gr-top-[-0.5rem] .gr-end-[-0.5rem]</code> выносят бейдж-счётчик
   наполовину за угол кнопки — как у иконки уведомлений. Родителю —
   <code>.gr-relative .gr-w-fit</code>. Остальные выносы за край — колонка
   целиком снаружи, ярлык на ребре — разобраны в «Выносе за край»
@@ -205,13 +205,13 @@
 
 <pre><code>&lt;span class="gr-relative gr-w-fit gr-inline-block"&gt;
   &lt;button class="gr-btn gr-btn-secondary"&gt;Уведомления&lt;/button&gt;
-  &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]"&gt;3&lt;/span&gt;
+  &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-end-[-0.5rem]"&gt;3&lt;/span&gt;
 &lt;/span&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">За край выводят отрицательные <code>.gr-top-[…]</code>/<code>.gr-right-[…]</code></div>
+  <div class="demo-block-title">За край выводят отрицательные <code>.gr-top-[…]</code>/<code>.gr-end-[…]</code></div>
   <span class="gr-relative gr-w-fit gr-inline-block">
     <button class="gr-btn gr-btn-secondary" type="button">Уведомления</button>
-    <span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-right-[-0.5rem]">3</span>
+    <span class="gr-badge gr-badge-danger gr-absolute gr-top-[-0.5rem] gr-end-[-0.5rem]">3</span>
   </span>
 </div>
 

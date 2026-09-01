@@ -61,35 +61,34 @@
 <table>
   <tr><th>Класс</th><th>CSS</th></tr>
   <tr><td><code>.gr-border-t</code></td><td><code>border-top: 1px solid …</code></td></tr>
-  <tr><td><code>.gr-border-r</code></td><td><code>border-right: 1px solid …</code></td></tr>
   <tr><td><code>.gr-border-b</code></td><td><code>border-bottom: 1px solid …</code></td></tr>
-  <tr><td><code>.gr-border-l</code></td><td><code>border-left: 1px solid …</code></td></tr>
   <tr><td><code>.gr-border-s</code></td><td><code>border-inline-start: 1px solid …</code> — начало строки</td></tr>
   <tr><td><code>.gr-border-e</code></td><td><code>border-inline-end: 1px solid …</code> — конец строки</td></tr>
   <tr><td><code>.gr-border-x</code></td><td><code>border-inline</code> — обе стороны строки</td></tr>
   <tr><td><code>.gr-border-y</code></td><td><code>border-block</code> — сверху и снизу</td></tr>
-  <tr><td><code>.gr-border-{t,r,b,l,s,e,x,y}-{0,2,4,8}</code></td><td>Та же сторона или ось заданной ширины: <code>.gr-border-l-4</code>, <code>.gr-border-s-4</code>, <code>.gr-border-y-2</code>, <code>.gr-border-t-0</code></td></tr>
+  <tr><td><code>.gr-border-{t,b,s,e,x,y}-{0,2,4,8}</code></td><td>Та же сторона или ось заданной ширины: <code>.gr-border-s-4</code>, <code>.gr-border-y-2</code>, <code>.gr-border-t-0</code></td></tr>
 </table>
 
 <div class="callout">
   <p>
     <strong><code>s</code> и <code>e</code> — логические стороны.</strong>
-    В LTR они совпадают с <code>l</code> и <code>r</code>, в RTL меняются
-    местами: полоска цитаты <code>.gr-border-s-4</code> в арабском тексте
+    В LTR это левый и правый край, в RTL они меняются местами:
+    полоска цитаты <code>.gr-border-s-4</code> в арабском тексте
     окажется справа, там же, где начинается строка. Физические
-    <code>l</code> и <code>r</code> оставлены для случаев, где сторона
-    выбрана буквально. Осевые <code>x</code> и <code>y</code> одинаковы
-    в обоих направлениях — у них обе стороны получают одно значение.
+    <code>l</code> и <code>r</code> удалены вместе с остальными
+    односторонними классами сторон. Осевые <code>x</code>
+    и <code>y</code> одинаковы в обоих направлениях — у них обе стороны
+    получают одно значение.
   </p>
 </div>
 
 <div class="callout">
   <p>
-    Ширину у стороны задаёт отдельный класс — <code>.gr-border-l-4</code>,
-    а не пара <code>.gr-border-l</code> + <code>.gr-border-4</code>. Класс
+    Ширину у стороны задаёт отдельный класс — <code>.gr-border-s-4</code>,
+    а не пара <code>.gr-border-s</code> + <code>.gr-border-4</code>. Класс
     ширины пишет сокращённое свойство <code>border</code> и вместе с ним
     сбрасывает все четыре стороны, поэтому такая пара даёт рамку целиком,
-    а не толстую линию слева.
+    а не толстую линию у начала строки.
   </p>
 </div>
 
@@ -124,14 +123,14 @@
     <div class="gr-border gr-p-4 gr-radius-2">gr-border</div>
     <div class="gr-border-2 gr-border-primary gr-p-4 gr-radius-2">gr-border-2 gr-border-primary</div>
     <div class="gr-border-2 gr-border-dashed gr-border-success gr-p-4 gr-radius-2">gr-border-dashed gr-border-success</div>
-    <div class="gr-border-l-4 gr-border-danger gr-p-4">gr-border-l-4 gr-border-danger</div>
+    <div class="gr-border-s-4 gr-border-danger gr-p-4">gr-border-s-4 gr-border-danger</div>
   </div>
 </div>
 
 <pre><code>&lt;div class="gr-border gr-radius-2 gr-p-4"&gt;Обычная рамка&lt;/div&gt;
 &lt;div class="gr-border-2 gr-border-primary"&gt;Акцентная рамка в 2px&lt;/div&gt;
 &lt;div class="gr-border-2 gr-border-dashed gr-border-success"&gt;Пунктир&lt;/div&gt;
-&lt;blockquote class="gr-border-l-4 gr-border-danger gr-pl-4"&gt;Цитата&lt;/blockquote&gt;</code></pre>
+&lt;blockquote class="gr-border-s-4 gr-border-danger gr-ps-4"&gt;Цитата&lt;/blockquote&gt;</code></pre>
 
 <div class="callout">
   <p>

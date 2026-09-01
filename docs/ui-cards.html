@@ -227,7 +227,8 @@
 
 <p>
   Квадратное фото, бейдж скидки в углу — <code>.gr-absolute .gr-top-0
-  .gr-right-0</code> внутри карточки (она уже <code>relative</code>
+  .gr-end-0</code> (край логический: под <code>dir="rtl"</code> стикер
+  уезжает к левому краю обложки сам) внутри карточки (она уже <code>relative</code>
   не всегда — интерактивной делать не будем, кнопка своя, поэтому
   обёртке фото — <code>.gr-relative</code>). Цена — пара «старая
   зачёркнутая тише + новая жирнее»: <code>.gr-line-through
@@ -239,7 +240,7 @@
 <pre><code>&lt;article class="gr-card"&gt;
   &lt;div class="gr-relative"&gt;
     &lt;img class="gr-card-media gr-aspect-square gr-object-cover" src="chair.jpg" alt="Кресло «Дюна»"&gt;
-    &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2"&gt;−30%&lt;/span&gt;
+    &lt;span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-end-0 gr-m-2"&gt;−30%&lt;/span&gt;
   &lt;/div&gt;
   &lt;div class="gr-card-body gr-flex gr-flex-col"&gt;
     &lt;h3 class="gr-text-base gr-mb-1"&gt;Кресло «Дюна»&lt;/h3&gt;
@@ -256,7 +257,7 @@
     <article class="gr-card">
       <div class="gr-relative">
         <img class="gr-card-media gr-aspect-square gr-object-cover" alt="Кресло «Дюна»" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23ece6db'/%3E%3Crect%20y='150'%20width='280'%20height='50'%20fill='%23ddd3c2'/%3E%3Cpath%20d='M92%20148v-70a14%2014%200%200%201%2014-14h68a14%2014%200%200%201%2014%2014v70z'%20fill='%23b06a4e'/%3E%3Crect%20x='84'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3Crect%20x='180'%20y='96'%20width='16'%20height='52'%20rx='8'%20fill='%2394553d'/%3E%3C/svg%3E">
-        <span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-right-0 gr-m-2">−30%</span>
+        <span class="gr-badge gr-badge-danger gr-absolute gr-top-0 gr-end-0 gr-m-2">−30%</span>
       </div>
       <div class="gr-card-body gr-flex gr-flex-col">
         <h4 class="gr-m-0 gr-text-base gr-mb-1">Кресло «Дюна»</h4>
@@ -277,7 +278,7 @@
     <article class="gr-card">
       <div class="gr-relative">
         <img class="gr-card-media gr-aspect-square gr-object-cover" alt="Полка «Норд»" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20280%20200'%20width='280'%20height='200'%3E%3Crect%20width='280'%20height='200'%20fill='%23e9e4da'/%3E%3Crect%20x='60'%20y='70'%20width='160'%20height='10'%20rx='3'%20fill='%23927a56'/%3E%3Crect%20x='60'%20y='120'%20width='160'%20height='10'%20rx='3'%20fill='%23927a56'/%3E%3Crect%20x='80'%20y='90'%20width='14'%20height='30'%20fill='%23b06a4e'/%3E%3Crect%20x='104'%20y='84'%20width='10'%20height='36'%20fill='%23546a8a'/%3E%3C/svg%3E">
-        <span class="gr-badge gr-absolute gr-top-0 gr-right-0 gr-m-2">New</span>
+        <span class="gr-badge gr-absolute gr-top-0 gr-end-0 gr-m-2">New</span>
       </div>
       <div class="gr-card-body gr-flex gr-flex-col gr-flex-1">
         <h4 class="gr-m-0 gr-text-base gr-mb-1">Полка «Норд»</h4>

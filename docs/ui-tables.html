@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
 <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<script src="../packages/ui/dist/griffinjs.js"></script>
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
 </head>
@@ -282,10 +284,10 @@
   </div>
 </div>
 
-<h3>Прайс-лист с числами по правому краю</h3>
+<h3>Прайс-лист с числами в конце строки</h3>
 
 <p>
-  Счёт, спецификация, отчёт: две-три колонки, числа выровнены вправо
+  Счёт, спецификация, отчёт: две-три колонки, числа выровнены в конец строки
   (<code>.gr-text-end</code> — мелочь, без которой разряды не совпадают
   и колонку невозможно сканировать взглядом), плотность —
   <code>.gr-table-compact</code>, итог — <code>tfoot</code>
@@ -319,6 +321,202 @@
     </tfoot>
   </table>
 </div>
+
+<h2 id="griffinjs">С подключённым <code>griffinjs.js</code></h2>
+
+<div class="callout">
+  <p>
+    Всё выше работает без скрипта. Этот подраздел — о том, что добавляет
+    таблице опциональный слой <a href="griffinjs.html">GriffinJS</a>:
+    сортировку строк по столбцу. Разметка и классы те же, скрипт читает
+    <code>data-gr-sortable</code> и пишет только состояния: сортировку —
+    в <code>aria-sort</code> на заголовке, а к ней <code>tabindex</code>
+    на сортируемых заголовках и <code>data-gr-state</code> на самой
+    таблице — признак того, что скрипт поднялся; на нём в CSS держатся
+    курсор и подсказка «столбец сортируется». Набор для этого —
+    <code>griffinjs-core.js</code> плюс <code>griffinjs-sortable.js</code>,
+    <b><!--gr:size:griffinjs-sortable-set-->3,4 КБ<!--/gr:size:griffinjs-sortable-set--> gzip</b>.
+  </p>
+</div>
+
+<p>
+  <strong>Сортировка появилась не потому, что её попросили.</strong>
+  В списке того, чего здесь не будет (<code>TODO.md</code> в репозитории), сортировка
+  таблицы и выбор даты стояли рядом с одним доводом — «это приложение,
+  а не разметка». Для выбора даты довод верен: модель состояния, календарь,
+  локали, клавиатура, мобильный ввод. Для сортировки он не работает: это
+  перестановка строк по признаку, который уже объявлен в разметке,
+  с <code>aria-sort</code> в качестве состояния и <code>Intl.Collator</code>
+  в качестве сравнения. Ни модели, ни хранилища, ни сети. Пересмотрен
+  один довод, а не решение «экосистемы не будет».
+</p>
+
+<h3>Что обязательно, а что нет</h3>
+
+<table>
+  <tr><th>Атрибут</th><th>Где</th><th>Зачем</th></tr>
+  <tr><td><code>data-gr-sortable</code></td><td>на <code>&lt;table&gt;</code></td><td><strong>Обязателен.</strong> Включает виджет</td></tr>
+  <tr><td><code>aria-sort="none"</code></td><td>на <code>&lt;th&gt;</code> в <code>&lt;thead&gt;</code></td><td><strong>Обязателен на каждом сортируемом столбце.</strong> Заголовок без него не сортируется — у колонки действий сортировать нечего</td></tr>
+  <tr><td><code>aria-sort="ascending"</code><br><code>aria-sort="descending"</code></td><td>там же</td><td>Необязателен. Так таблица говорит, что её уже отсортировал сервер: строки виджет не трогает, а первое нажатие даёт разворот — в обе стороны, и по возрастанию, и по убыванию</td></tr>
+  <tr><td><code>data-gr-sort-value</code></td><td>на <code>&lt;td&gt;</code></td><td>Необязателен. Значение для сравнения, когда текст ячейки отформатирован для человека: «24 800 ₽», «вчера», «★★★★☆»</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Состояние живёт в <code>aria-sort</code> и больше нигде</strong> —
+    ни в классе, ни в своём атрибуте данных. Одно место читают все четверо:
+    человек через программу чтения, указатель направления в CSS, сам виджет
+    и сервер, если сортирует он. Второй источник правды разошёлся бы
+    с первым на третьем нажатии.
+  </p>
+</div>
+
+<pre><code>&lt;table class="gr-table gr-table-hover" data-gr-sortable&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col" aria-sort="none"&gt;Город&lt;/th&gt;
+      &lt;th scope="col" aria-sort="none"&gt;Дата&lt;/th&gt;
+      &lt;th scope="col" aria-sort="none" class="gr-text-end"&gt;Сумма&lt;/th&gt;
+      &lt;th scope="col"&gt;Действия&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Пермь&lt;/td&gt;
+      &lt;td&gt;2026-08-30&lt;/td&gt;
+      &lt;td class="gr-text-end" data-gr-sort-value="24800"&gt;24 800 ₽&lt;/td&gt;
+      &lt;td&gt;…&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Три типа значений в одной таблице; нажмите заголовок трижды <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Заказы с сортировкой">
+    <table class="gr-table gr-table-hover" data-gr-sortable>
+      <caption>Заказы: текст, дата и сумма</caption>
+      <thead>
+        <tr>
+          <th scope="col" aria-sort="none">Город</th>
+          <th scope="col" aria-sort="none">Дата</th>
+          <th scope="col" aria-sort="none" class="gr-text-end">Сумма</th>
+          <th scope="col" class="gr-text-end">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Пермь</td><td class="gr-whitespace-nowrap">2026-08-30</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="24800">24 800 ₽</td><td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Перми</span></button></td></tr>
+        <tr><td>Ёлкино</td><td class="gr-whitespace-nowrap">2026-01-09</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="113200">113 200 ₽</td><td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Ёлкина</span></button></td></tr>
+        <tr><td>Азов</td><td class="gr-whitespace-nowrap">2026-08-05</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="5900">5 900 ₽</td><td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Азова</span></button></td></tr>
+        <tr><td>Яровое</td><td class="gr-whitespace-nowrap">2026-09-14</td><td class="gr-text-end gr-whitespace-nowrap" data-gr-sort-value="999">999 ₽</td><td class="gr-text-end"><button class="gr-btn gr-btn-icon gr-btn-ghost" type="button">✎<span class="gr-sr-only">Правка заказа из Ярового</span></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h3>Как сравниваются значения</h3>
+
+<p>
+  Значение берётся из <code>data-gr-sort-value</code>, а если атрибута нет —
+  из текста ячейки. Тип столбца решается один раз, по всем его ячейкам сразу:
+  сравнение «числа с числом, буквы с буквами» на каждой паре не давало бы
+  порядка вовсе.
+</p>
+
+<table>
+  <tr><th>Что в столбце</th><th>Как сравнивается</th></tr>
+  <tr><td>Числа: <code>9</code>, <code>-3</code>, <code>12.5</code></td><td>Числами. Текстом «10» меньше «9», и столбец чисел стал бы бесполезным. Форматированное число — разряды пробелом, десятичная запятая, знак валюты — числом не считается: «1,234» в английской записи это тысячи, в русской — единицы, и угадывать значило бы отвечать неверно молча. Для него и нужен <code>data-gr-sort-value</code></td></tr>
+  <tr><td>Даты в ISO: <code>2026-08-30</code></td><td>Датами. Другой формат — <code>31.08.2026</code>, «вчера» — сравнится как текст: для него и нужен <code>data-gr-sort-value</code></td></tr>
+  <tr><td>Всё остальное</td><td><code>Intl.Collator</code> с локалью из <code>lang</code> документа. Если тег локали непригоден — <code>lang="ru_RU"</code> вместо <code>ru-RU</code> приходит туда из серверной локали, — сравнение идёт по умолчанию движка: терять из-за этого сортировку целиком виджет не станет</td></tr>
+  <tr><td>Пустые ячейки</td><td>Уходят в конец в обе стороны: пустая ячейка не значит «меньше всех», а наверху списка заслоняла бы данные, ради которых столбец и сортируют</td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Локаль решает больше, чем кажется.</strong> В Юникоде «Ё» стоит
+    перед «А» (U+0401 против U+0410), поэтому сравнение кодами символов
+    поднимает «Ёлку» выше «Апельсина». Коллатор с русской локалью ставит её
+    туда, где её ищут глазами, — между «Апельсином» и «Яблоком». Локаль
+    берётся из <code>lang</code> документа, то есть из того же места,
+    откуда её берут перенос слов и проверка орфографии.
+  </p>
+  <p>
+    <strong>Сортировка стабильная.</strong> Строки с одинаковым значением
+    сохраняют порядок, в котором пришли, — и при развороте тоже. Без этого
+    повторное нажатие перемешивало бы равные строки, и таблица выглядела бы
+    сломанной.
+  </p>
+</div>
+
+<h3>Нажатие, клавиатура и круг из трёх состояний</h3>
+
+<p>
+  Нажатие на заголовок ведёт <code>aria-sort</code> по кругу: <b>нет →
+  по возрастанию → по убыванию → нет</b>. Третье нажатие возвращает порядок,
+  в котором таблица пришла: отменить сортировку иначе нечем, кроме
+  перезагрузки страницы. Отсортированным при этом объявлен ровно один
+  столбец — у соседнего <code>aria-sort</code> возвращается в <code>none</code>.
+</p>
+
+<p>
+  Круг замыкается только там, где порядок навёл сам виджет. У столбца,
+  который объявил сервер, «снять сортировку» вернуло бы <em>тот же самый</em>
+  порядок: нажатие выглядело бы сломанным, а <code>aria-sort</code> сообщал бы
+  «не отсортирована» об отсортированной таблице. Поэтому первое нажатие
+  по такому столбцу — всегда разворот, а круг начинается после него.
+</p>
+
+<p>
+  С клавиатуры заголовок доступен так же, как мышью: под скриптом он получает
+  <code>tabindex="0"</code>, а <kbd>Enter</kbd> и <kbd>Пробел</kbd> делают
+  то же, что щелчок (прокрутка страницы пробелом при этом не срабатывает —
+  иначе таблица уезжала бы из виду в момент сортировки). Если вы предпочитаете
+  разметку по образцу WAI-ARIA и ставите в заголовок свою
+  <code>&lt;button&gt;</code>, виджет это видит: своего <code>tabindex</code>
+  он тогда не добавляет, чтобы <kbd>Tab</kbd> не останавливался на одной
+  ячейке дважды, а щелчок по кнопке всплывает до таблицы сам.
+</p>
+
+<h3>Без скрипта</h3>
+
+<p>
+  Таблица остаётся таблицей. Заголовок не получает ни <code>tabindex</code>,
+  ни курсора-указателя: предлагать нажатие, которое ничего не сделает,
+  нельзя. Указатель направления при этом остаётся —
+  <strong>он рисуется из <code>aria-sort</code>, а не из скрипта,</strong>
+  и потому одинаково работает у таблицы, отсортированной сервером. Правило
+  живёт в <code>_table.scss</code> — в компоненте, а не в
+  <code>griffinjs.css</code>: серверу для <code>aria-sort</code> слой
+  не нужен.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    Плата названа: <code>aria-sort="none"</code> в разметке без скрипта
+    означает «столбец сортируемый», а сортировать его будет нечем. Если
+    страница отдаётся без <code>griffinjs.js</code> и без серверной
+    сортировки — атрибут ставить не нужно, и таблица не пообещает лишнего.
+  </p>
+</div>
+
+<h3>Предел виджета</h3>
+
+<p>
+  Виджет <strong>не делает</strong> пагинации, фильтрации, серверной
+  сортировки, выбора строк, изменения ширины колонок и не запоминает
+  выбранный порядок между заходами. Каждый пункт выглядит на полчаса
+  работы — и каждый превращает перестановку строк в приложение, у которого
+  появляются модель состояния, хранилище и сеть. Своего события виджет
+  по той же причине не шлёт: обработчику здесь нечего делать, кроме
+  перечисленного.
+</p>
+
+<p>
+  Что осталось за границей и решается разметкой: сортировка идёт по первому
+  <code>&lt;tbody&gt;</code>, объединённые ячейки (<code>colspan</code>)
+  в шапке сдвигают счёт столбцов, а сортировать по строке-заголовку
+  (<code>&lt;th&gt;</code> внутри <code>&lt;tbody&gt;</code>) виджет
+  не умеет. Таблицы, которым нужно больше, — это уже таблица-приложение,
+  и её место в коде потребителя.
+</p>
 
 </main>
 </div>

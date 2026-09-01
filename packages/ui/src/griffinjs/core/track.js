@@ -567,7 +567,7 @@
 
   // Дорожка без органов управления — тоже виджет: data-gr-track на
   // scroll-snap-контейнере даёт клавиатуру, aria и событие изменения.
-  G.defineWidget('track', function (el, opts) {
+  G.defineWidget('track', { needs: ['motion'] }, function (el, opts) {
     return track(el, opts);
   });
 })(typeof window !== 'undefined' && window.GriffinJS ? window.GriffinJS : require('./griffinjs-core.js'));

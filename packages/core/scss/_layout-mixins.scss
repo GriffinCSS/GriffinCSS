@@ -48,8 +48,8 @@ $gr-default-layer: 'griffincss.core' !default;
   #{$selector} {
     display: grid;
     grid-template-areas: fn.gr-grid-areas($grid);
-    grid-template-columns: repeat(fn.gr-grid-columns($grid), 1fr);
-    grid-template-rows: repeat(fn.gr-grid-rows($grid), auto);
+    grid-template-columns: var(--gr-l-cols, repeat(fn.gr-grid-columns($grid), minmax(0, 1fr)));
+    grid-template-rows: var(--gr-l-rows, repeat(fn.gr-grid-rows($grid), auto));
   }
 
   $names: fn.gr-area-names($grid);

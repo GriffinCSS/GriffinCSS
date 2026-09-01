@@ -89,7 +89,7 @@
     return document.activeElement === node;
   }
 
-  G.defineWidget('megamenu', function (el, opts) {
+  G.defineWidget('megamenu', { needs: ['media'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();
     var events = G.listeners();

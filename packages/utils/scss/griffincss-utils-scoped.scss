@@ -27,11 +27,14 @@
     @include meta.load-css('borders');
     @include meta.load-css('colors');
     @include meta.load-css('effects');
+    @include meta.load-css('filters');
+    @include meta.load-css('gradients');
     @include meta.load-css('interactivity');
     @include meta.load-css('position');
     @include meta.load-css('shadows');
     @include meta.load-css('sizing');
     @include meta.load-css('spacing');
+    @include meta.load-css('transforms');
     @include meta.load-css('typography');
     @include meta.load-css('visibility');
   }

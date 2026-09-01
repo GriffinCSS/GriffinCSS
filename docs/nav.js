@@ -37,7 +37,8 @@
         { href: 'index.html#features',     text: 'Возможности' },
         { href: 'index.html#advantages',   text: 'Достоинства' },
         { href: 'index.html#limitations',  text: 'Ограничения' },
-        { href: 'index.html#quickstart',   text: 'Быстрый старт' }
+        { href: 'index.html#quickstart',   text: 'Быстрый старт' },
+        { href: 'compatibility.html',      text: 'Совместимость' }
       ]
     },
     {
@@ -102,7 +103,8 @@
       links: [
         { href: 'runtime.html',            text: 'JS-рантайм' },
         { href: 'runtime.html#api',        text: 'API' },
-        { href: 'arbitrary-values.html',   text: 'Произвольные значения' }
+        { href: 'arbitrary-values.html',   text: 'Произвольные значения' },
+        { href: 'frameworks.html',         text: 'React и Vue' }
       ]
     },
     {
@@ -173,7 +175,7 @@
     ? window.Griffincss.theme.get()
     : { theme: 'auto', a11y: false, style: 'standard' };
 
-  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.21.4</span></a>';
+  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.22.0</span></a>';
 
   html += '<div class="sidebar-controls">';
   html += '<fieldset class="gr-segmented gr-w-full" aria-label="Цветовая тема">';
@@ -570,6 +572,9 @@
   var langOf = function (text) {
     var t = text.trim();
 
+    // Политика — HTTP-заголовок, а не CSS: точки с запятой и буква
+    // в начале иначе увели бы её в ветку ниже.
+    if (/^Content-Security-Policy:/.test(t)) return 'Заголовок';
     if (t.charAt(0) === '<') return 'HTML';
     if (/^\s*(@use|@forward|@mixin|@include|\$[\w-]+\s*:)/m.test(t)) return 'SCSS';
     if (/\b(function|var |const |let |=>|Griffincss\.)/.test(t)) return 'JS';

@@ -76,6 +76,7 @@
   <div class="hero-badges">
     <span class="badge badge-accent">Опциональный модуль</span>
     <span class="badge">scss/modules/_colors.scss</span>
+    <span class="badge">_gradients.scss</span>
     <span class="badge">~160 классов</span>
   </div>
 </div>
@@ -331,6 +332,79 @@
   </div>
 </div>
 
+<h2>Градиенты</h2>
+
+<p>
+  Линейный градиент собирается из двух половин: класс направления рисует его,
+  классы точек задают цвета. Своей палитры у группы нет — цвет берётся
+  из тех же переменных <code>--gr-hsl-*</code>, что и <code>.gr-bg-*</code>,
+  поэтому перенастроенная палитра перекрашивает градиенты вместе со всем
+  остальным.
+</p>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th></tr>
+  <tr><td><strong>Направление</strong></td><td><code>.gr-gradient-to-r</code> (вправо), <code>-l</code>, <code>-t</code>, <code>-b</code>, <code>-br</code> (вправо-вниз), <code>-tr</code> (вправо-вверх)</td></tr>
+  <tr><td><strong>Начало</strong></td><td><code>.gr-from-primary</code> / <code>secondary</code> / <code>success</code> / <code>warning</code> / <code>danger</code> / <code>info</code> / <code>white</code> / <code>black</code></td></tr>
+  <tr><td><strong>Середина</strong></td><td><code>.gr-via-*</code> — те же восемь имён</td></tr>
+  <tr><td><strong>Конец</strong></td><td><code>.gr-to-*</code> — те же восемь имён</td></tr>
+</table>
+
+<p>
+  <strong>Незаданный конец прозрачен.</strong> Это не заглушка, а рабочий
+  приём: <code>.gr-gradient-to-t .gr-from-black</code> — уже готовая подложка
+  под подпись поверх фотографии, и второй класс цвета ей не нужен. Средняя
+  точка необязательна и, пока не задана, не стоит ничего.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Направление плюс точки: два класса — уже градиент</div>
+  <div class="gr-grid-1 gr-grid-3-md gr-gap">
+    <div class="gr-radius-2 gr-p-6 gr-text-white gr-text-center gr-gradient-to-br gr-from-primary gr-to-info">
+      <code class="gr-text-sm">.gr-gradient-to-br<br>.gr-from-primary .gr-to-info</code>
+    </div>
+    <div class="gr-radius-2 gr-p-6 gr-text-white gr-text-center gr-gradient-to-r gr-from-danger gr-via-warning gr-to-success">
+      <code class="gr-text-sm">.gr-gradient-to-r<br>.gr-from-danger .gr-via-warning .gr-to-success</code>
+    </div>
+    <div class="gr-radius-2 gr-p-6 gr-text-white gr-text-center gr-bg-secondary gr-gradient-to-t gr-from-black">
+      <code class="gr-text-sm">.gr-bg-secondary<br>.gr-gradient-to-t .gr-from-black</code>
+    </div>
+  </div>
+</div>
+
+<p>
+  Восемь имён вместо восемнадцати — плата за бюджет: три точки на всю палитру
+  акцентов дали бы 54 класса и вывели <code>griffincss-utils.css</code>
+  за потолок. Нужны <code>-light</code> и <code>-dark</code>-оттенки —
+  либо переопределите <code>$gr-gradient-colors</code> в своей точке входа
+  (см. <a href="reference-utils.html#svoya-palitra">справочник</a>), либо
+  задайте цвет прямо: <code>--gr-from</code>, <code>--gr-via</code>
+  и <code>--gr-to</code> — обычные настраиваемые свойства.
+</p>
+
+<pre><code>&lt;div class="gr-gradient-to-r" style="--gr-from: hsl(var(--gr-hsl-primary-light)); --gr-to: hsl(var(--gr-hsl-primary-dark))"&gt;…&lt;/div&gt;</code></pre>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Суффиксов брейкпоинта у градиентов нет и не будет.</strong>
+    <code>.gr-gradient-to-r-md</code> не существует — как не существует
+    <code>.gr-scale-105-md</code>. Декоративный фон не меняется от ширины
+    окна, а адаптивные и контейнерные варианты умножили бы группу примерно
+    вдевятеро и съели бы весь бюджет утилит.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Градиент — это <code>background-image</code>, а не
+    <code>background-color</code>.</strong> Поэтому он ложится поверх
+    <code>.gr-bg-*</code> и не конфликтует с ним: цвет фона остаётся видимым
+    там, где градиент прозрачен, — на этом и держится третий пример выше.
+    Текст на градиенте нужно проверять на контраст в обеих его точках:
+    белые буквы, читаемые на тёмном конце, на светлом пропадают.
+  </p>
+</div>
+
 <h2>Семантические токены</h2>
 
 <p>
@@ -392,19 +466,30 @@ a:hover {
   <p><strong>Точечная кастомизация.</strong> Не нужно переопределять все переменные. Измените только <code>--gr-hsl-primary</code> — и все классы <code>.gr-bg-primary</code>, <code>.gr-text-primary</code>, <code>.gr-border-primary</code> подхватят новый цвет автоматически.</p>
 </div>
 
+<h2>Своя палитра на компилтайме</h2>
+
+<p>Всё выше — кастомизация без пересборки: имена классов остаются, меняются значения. Собирающий библиотеку из исходников может пойти дальше и заменить <strong>сам состав</strong>: карты <code>$gr-grays</code> и <code>$gr-accents</code> помечены <code>!default</code>, поэтому вместо восемнадцати акцентов в CSS выйдут ровно те, что нужны проекту.</p>
+
+<div class="callout callout-warning">
+  <p><strong>Половин две, и обе обязательны.</strong> Карта задаёт имена классов и то, <em>из какой переменной</em> берётся цвет. Сами <code>--gr-hsl-*</code> приходят из темы ядра. Переопределив карту и не заведя переменных, вы получите <code>.gr-bg-brand</code>, ссылающийся в пустоту: <code>hsl(var(--gr-hsl-brand))</code> не из чего вычислить.</p>
+</div>
+
+<p>Полный пример с обеими половинами, замером и разбором частой ошибки — <a href="reference-utils.html#svoya-palitra">Справочник утилит, «Своя палитра и своя шкала»</a>.</p>
+
 <h2>SCSS-реализация</h2>
 
 <pre><code>// _colors.scss — все классы генерируются циклами @each
+// !default: обе карты переопределяются при сборке из исходников
 
 $gr-grays: (
   "white": var(--gr-hsl-white), gray-50: var(--gr-hsl-gray-50),
   ... gray-900, "black"
-);
+) !default;
 
 $gr-accents: (
   primary: var(--gr-hsl-primary), primary-light: ..., primary-dark: ...,
   secondary, success, warning, danger, info (+ light/dark каждого)
-);
+) !default;
 
 // Фоновые утилиты
 @each $name, $hsl in $gr-grays {
@@ -439,6 +524,53 @@ $gr-accents: (
   с отступами, бордерами и компонентами ui — и то, как токены сами
   перекрашивают собранное при смене темы.
 </p>
+
+<h3>Декоративный фон секции</h3>
+
+<p>
+  Первый экран или блок «Призыв к действию»: вместо плоской заливки —
+  переход между двумя соседями по цветовому кругу. Диагональ
+  <code>.gr-gradient-to-br</code> читается живее горизонтали, а пара
+  <code>primary → info</code> держит один температурный ряд. Текст поверх
+  берёт <code>.gr-text-white</code>, вторичный — его же
+  с <code>.gr-opacity-75</code>; кнопка инвертируется в белую с акцентным
+  текстом, чтобы не спорить с фоном.
+</p>
+
+<p>
+  Подпись поверх фотографии собирается тем же механизмом, но без второго
+  цвета: <code>.gr-gradient-to-t .gr-from-black</code> — чёрный снизу,
+  прозрачный сверху. Слой лежит поверх снимка и под текстом, и буквы
+  читаются на любом кадре, не затемняя картинку целиком.
+</p>
+
+<pre><code>&lt;section class="gr-radius-3 gr-p-8 gr-text-center gr-gradient-to-br gr-from-primary gr-to-info gr-text-white"&gt;
+  &lt;h2 class="gr-mt-0 gr-mb-2"&gt;Попробуйте на своём проекте&lt;/h2&gt;
+  &lt;p class="gr-opacity-75 gr-mb-4"&gt;Установка — одна строка&lt;/p&gt;
+  &lt;button class="gr-btn gr-bg-white gr-text-primary"&gt;Начать&lt;/button&gt;
+&lt;/section&gt;
+
+&lt;!-- подпись поверх фотографии: один цвет и прозрачный конец --&gt;
+&lt;figure class="gr-relative gr-radius-3 gr-overflow-hidden"&gt;
+  &lt;img class="gr-w-full gr-aspect-video gr-object-cover" src="cover.jpg" alt=""&gt;
+  &lt;figcaption class="gr-absolute gr-inset-x-0 gr-bottom-0 gr-p-4 gr-text-white gr-gradient-to-t gr-from-black"&gt;
+    Хребет Кодар, июль
+  &lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Слева — <code>.gr-gradient-to-br .gr-from-primary .gr-to-info</code>, справа — <code>.gr-gradient-to-t .gr-from-black</code> поверх кадра</div>
+  <div class="gr-grid-1 gr-grid-2-md gr-gap">
+    <section class="gr-radius-3 gr-p-8 gr-text-center gr-gradient-to-br gr-from-primary gr-to-info gr-text-white">
+      <h4 class="gr-m-0 gr-text-2xl gr-mb-2">Попробуйте на своём проекте</h4>
+      <p class="gr-m-0 gr-opacity-75 gr-mb-4">Установка — одна строка</p>
+      <button class="gr-btn gr-bg-white gr-text-primary" type="button">Начать</button>
+    </section>
+    <figure class="gr-relative gr-radius-3 gr-overflow-hidden gr-m-0">
+      <img class="gr-w-full gr-aspect-video gr-object-cover" alt="Горный хребет" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%23a8bcd4'/%3E%3Cpath%20d='M0%20240l120-150%2090%20110%2080-130%20110%20170z'%20fill='%235d7b9c'/%3E%3Ccircle%20cx='330'%20cy='50'%20r='26'%20fill='%23f7f2e8'/%3E%3C/svg%3E">
+      <figcaption class="gr-absolute gr-inset-x-0 gr-bottom-0 gr-p-4 gr-text-white gr-gradient-to-t gr-from-black">Хребет Кодар, июль</figcaption>
+    </figure>
+  </div>
+</div>
 
 <h3>Статусные пары: бледный фон + тёмный текст</h3>
 
@@ -483,7 +615,8 @@ $gr-accents: (
   <code>.gr-dot-*</code> из ui рядом с текстом — флекс с мелким зазором
   выравнивает их по центру строки. На аватаре та же точка становится
   индикатором «онлайн» через позиционирование: <code>.gr-absolute
-  .gr-bottom-0 .gr-right-0</code> в правом нижнем углу родителя
+  .gr-bottom-0 .gr-end-0</code> в нижнем углу у конца строки родителя
+  (в LTR — правом)
   с <code>.gr-relative</code> — цвет здесь работает вместе
   с <a href="position.html">Position</a>.
 </p>
@@ -496,7 +629,7 @@ $gr-accents: (
 &lt;!-- индикатор на аватаре --&gt;
 &lt;span class="gr-relative gr-w-fit"&gt;
   &lt;span class="gr-avatar"&gt;АК&lt;/span&gt;
-  &lt;span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-right-0"&gt;&lt;/span&gt;
+  &lt;span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-end-0"&gt;&lt;/span&gt;
 &lt;/span&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Точка в строке — флекс; точка на аватаре — <code>.gr-absolute</code> в углу</div>
@@ -506,7 +639,7 @@ $gr-accents: (
     <span class="gr-flex gr-flex-items-center gr-gap-sm"><span class="gr-dot gr-dot-danger"></span> Ошибка</span>
     <span class="gr-relative gr-w-fit">
       <span class="gr-avatar">АК</span>
-      <span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-right-0"></span>
+      <span class="gr-dot gr-dot-success gr-absolute gr-bottom-0 gr-end-0"></span>
     </span>
   </div>
 </div>
@@ -567,7 +700,7 @@ $gr-accents: (
 <p>
   Активный пункт сайдбара или фильтра собирается из трёх слоёв: нейтральная
   подложка <code>.gr-bg-gray-100</code>, цветной текст
-  <code>.gr-text-primary .gr-font-semibold</code> и цветной маркер слева —
+  <code>.gr-text-primary .gr-font-semibold</code> и цветной маркер у начала строки (в LTR — слева) —
   <code>.gr-border-s-4 .gr-border-primary</code>. Ховер-вариантов у утилит
   нет намеренно: наведение — дело компонентов
   (<a href="ui-nav.html"><code>.gr-nav</code></a>) или одной строки своего

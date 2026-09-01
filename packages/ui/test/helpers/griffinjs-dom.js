@@ -60,6 +60,11 @@ class Element extends base.MockElement {
   get id() { return this.getAttribute('id') || ''; }
   set id(value) { this.setAttribute('id', value); }
 
+  // input.value: в браузере это живое значение, в моке — зеркало атрибута.
+  // Виджету ползунка достаточно: он и читает, и пишет одно и то же свойство.
+  get value() { return this.getAttribute('value') || ''; }
+  set value(v) { this.setAttribute('value', String(v)); }
+
   // innerHTML в моке — строка без разбора: тест проверяет, что именно
   // вставлено, а не как оно распарсилось.
   get innerHTML() { return this._html || ''; }

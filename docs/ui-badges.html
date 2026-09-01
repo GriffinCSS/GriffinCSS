@@ -197,9 +197,11 @@
 <p>
   Плашки, точки и аватары — приправа, а не блюдо: они живут в таблицах,
   меню и заголовках. Часть сценариев уже разобрана по соседству — статус
-  в <a href="ui-tables.html">строке таблицы</a>, метка
-  на <a href="ui-cards.html">фото товара</a>, счётчик
-  <a href="arbitrary-values.html">за углом кнопки</a>. Здесь — ещё три.
+  в <a href="ui-tables.html">строке таблицы</a>, счётчик
+  <a href="arbitrary-values.html">за углом кнопки</a>. Здесь — ещё четыре;
+  последний доводит до конца <a href="ui-cards.html">карточку товара</a>
+  с соседней страницы: стопка стикеров поверх обложки и логический край,
+  который разворачивается под <code>dir="rtl"</code> сам.
 </p>
 
 <h3>Счётчики в боковом меню</h3>
@@ -280,6 +282,75 @@
   <div class="demo-block-title">Один класс, два кегля: плашка меряет себя в <code>em</code></div>
   <h3 class="gr-m-0 gr-mb-2 gr-text-2xl">Отчёты <span class="gr-badge gr-badge-accent">Beta</span></h3>
   <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Раздел «Отчёты» <span class="gr-badge gr-badge-accent">Beta</span> открыт всем пользователям.</p>
+</div>
+
+<h3>Стикеры на фото товара</h3>
+
+<p>
+  Скидка, новинка, «нет в наличии» — это те же плашки, положенные поверх
+  обложки. Медиа заворачивается в <code>.gr-relative</code> (сама
+  <code>.gr-card</code> позиционирования не задаёт — оно нужно не всякой
+  карточке), а стопка стикеров встаёт в угол:
+  <code>.gr-absolute .gr-top-0 .gr-start-0 .gr-p-2</code>, внутри —
+  <code>.gr-flex-col .gr-flex-items-start .gr-gap-sm</code>, чтобы вторая
+  плашка не растягивалась по ширине первой.
+</p>
+
+<p>
+  Край — <strong>логический</strong>: <code>.gr-start-0</code>;
+  физических классов сторон в библиотеке больше нет. Под
+  <code>dir="rtl"</code> стикер уезжает
+  к правому краю обложки сам, без единого правила на <code>[dir]</code>, —
+  ровно то, ради чего логические утилиты в библиотеке и появились.
+  Отступ от угла даёт <code>.gr-p-2</code> на самой стопке: у плашки его
+  быть не должно, иначе она перестанет годиться в строку текста.
+</p>
+
+<pre><code>&lt;article class="gr-card"&gt;
+  &lt;div class="gr-relative"&gt;
+    &lt;img class="gr-card-media gr-aspect-square gr-object-cover" src="…" alt=""&gt;
+    &lt;div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm"&gt;
+      &lt;span class="gr-badge gr-badge-danger"&gt;−25 %&lt;/span&gt;
+      &lt;span class="gr-badge gr-badge-success"&gt;Хит&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="gr-card-body"&gt;Рюкзак «Каппадокия», 22 л&lt;/div&gt;
+&lt;/article&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Стопка стикеров в логическом углу обложки</div>
+  <div class="gr-flex gr-gap gr-flex-wrap">
+    <article class="gr-card" style="max-width:220px">
+      <div class="gr-relative">
+        <img class="gr-card-media gr-aspect-square gr-object-cover" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23546a8a'/%3E%3Ccircle%20cx='150'%20cy='120'%20r='60'%20fill='%23f7f2e8'/%3E%3Crect%20x='90'%20y='180'%20width='120'%20height='80'%20rx='16'%20fill='%233c4f6b'/%3E%3C/svg%3E">
+        <div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm">
+          <span class="gr-badge gr-badge-danger">−25 %</span>
+          <span class="gr-badge gr-badge-success">Хит</span>
+        </div>
+      </div>
+      <div class="gr-card-body gr-text-sm">Рюкзак «Каппадокия», 22 л</div>
+    </article>
+    <article class="gr-card" dir="rtl" style="max-width:220px">
+      <div class="gr-relative">
+        <img class="gr-card-media gr-aspect-square gr-object-cover" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%236a5a8a'/%3E%3Ccircle%20cx='150'%20cy='120'%20r='60'%20fill='%23f7f2e8'/%3E%3Crect%20x='90'%20y='180'%20width='120'%20height='80'%20rx='16'%20fill='%234b3f6b'/%3E%3C/svg%3E">
+        <div class="gr-absolute gr-top-0 gr-start-0 gr-p-2 gr-flex gr-flex-col gr-flex-items-start gr-gap-sm">
+          <span class="gr-badge gr-badge-danger">٪۲۵−</span>
+        </div>
+      </div>
+      <div class="gr-card-body gr-text-sm">حقيبة ظهر «كابادوكيا»</div>
+    </article>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Та же карточка под <code>dir="rtl"</code> — справа.</strong>
+    Разметка у обеих одна и та же, ни одного дополнительного класса:
+    <code>.gr-start-0</code> — это <code>inset-inline-start</code>, и сторону
+    ему выбирает направление письма. Класс <code>.gr-sticker</code> здесь
+    не заведён по той же причине, по какой не заведён <code>.gr-price</code>:
+    он был бы вторым <code>.gr-badge</code> — с теми же цветами, тем же
+    <code>em</code>-кеглем и тем же скруглением, — но под новым именем.
+  </p>
 </div>
 
 </main>

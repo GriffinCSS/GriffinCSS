@@ -1,68 +1,41 @@
 // Griffincss — Color Utilities
 // HSL-based palette with background, text, and border utilities
+//
+// Карты палитры вынесены в _palette.scss: те же имена нужны градиентам.
+// Форвард сохраняет публичную настройку — @use 'griffincss-utils/scss/colors'
+// with ($gr-accents: …) настраивает именно их.
 
-// Neutral gray scale
-$gr-grays: (
-  "white":   var(--gr-hsl-white),
-  gray-50:  var(--gr-hsl-gray-50),
-  gray-100: var(--gr-hsl-gray-100),
-  gray-200: var(--gr-hsl-gray-200),
-  gray-300: var(--gr-hsl-gray-300),
-  gray-400: var(--gr-hsl-gray-400),
-  gray-500: var(--gr-hsl-gray-500),
-  gray-600: var(--gr-hsl-gray-600),
-  gray-700: var(--gr-hsl-gray-700),
-  gray-800: var(--gr-hsl-gray-800),
-  gray-900: var(--gr-hsl-gray-900),
-  "black":   var(--gr-hsl-black)
-);
-
-// Accent colors
-$gr-accents: (
-  primary:          var(--gr-hsl-primary),
-  primary-light:    var(--gr-hsl-primary-light),
-  primary-dark:     var(--gr-hsl-primary-dark),
-  secondary:        var(--gr-hsl-secondary),
-  secondary-light:  var(--gr-hsl-secondary-light),
-  secondary-dark:   var(--gr-hsl-secondary-dark),
-  success:          var(--gr-hsl-success),
-  success-light:    var(--gr-hsl-success-light),
-  success-dark:     var(--gr-hsl-success-dark),
-  warning:          var(--gr-hsl-warning),
-  warning-light:    var(--gr-hsl-warning-light),
-  warning-dark:     var(--gr-hsl-warning-dark),
-  danger:           var(--gr-hsl-danger),
-  danger-light:     var(--gr-hsl-danger-light),
-  danger-dark:      var(--gr-hsl-danger-dark),
-  info:             var(--gr-hsl-info),
-  info-light:       var(--gr-hsl-info-light),
-  info-dark:        var(--gr-hsl-info-dark)
-);
+// Форвард стоит ПЕРЕД use: настройка снаружи (@use 'colors' with (…))
+// проходит через него, а @use подхватывает уже настроенный модуль.
+// В обратном порядке palette грузится ненастроенным, и настройка падает
+// сообщением «This module was already loaded».
+@forward 'palette';
+@use 'palette';
 
 // Background utilities
-@each $name, $hsl in $gr-grays {
+@each $name, $hsl in palette.$gr-grays {
   .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
 }
 
-@each $name, $hsl in $gr-accents {
+@each $name, $hsl in palette.$gr-accents {
   .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
 }
 
 // Text color utilities
-@each $name, $hsl in $gr-grays {
+@each $name, $hsl in palette.$gr-grays {
   .gr-text-#{$name} { color: hsl(#{$hsl}); }
 }
 
-@each $name, $hsl in $gr-accents {
+@each $name, $hsl in palette.$gr-accents {
   .gr-text-#{$name} { color: hsl(#{$hsl}); }
 }
 
 // Border color utilities
-@each $name, $hsl in $gr-grays {
+@each $name, $hsl in palette.$gr-grays {
   .gr-border-#{$name} { border-color: hsl(#{$hsl}); }
 }
 
-@each $name, $hsl in $gr-accents {
+@each $name, $hsl in palette.$gr-accents {
   .gr-border-#{$name} { border-color: hsl(#{$hsl}); }
 }
 

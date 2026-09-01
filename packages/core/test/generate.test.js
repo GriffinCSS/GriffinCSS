@@ -34,8 +34,8 @@ test('CSS одной раскладки соответствует эталон�
     .gr-l-hero {
       display: grid;
       grid-template-areas: "a a b b";
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(1, auto);
+      grid-template-columns: var(--gr-l-cols, repeat(4, minmax(0, 1fr)));
+      grid-template-rows: var(--gr-l-rows, repeat(1, auto));
     }
     .gr-l-hero > [class*="gr-area-"]:not(.gr-area-a):not(.gr-area-b) {
       display: none;
@@ -51,8 +51,8 @@ test('ряды разной длины паддятся точками', () => {
   const css = normalizeCss(runtimeCSS({ 'data-gr-layout': 'a2-b1' }));
 
   assert.ok(css.includes('grid-template-areas:"a a" "b ."'), css);
-  assert.ok(css.includes('grid-template-columns:repeat(2,1fr)'), css);
-  assert.ok(css.includes('grid-template-rows:repeat(2,auto)'), css);
+  assert.ok(css.includes('grid-template-columns:var(--gr-l-cols,repeat(2,minmax(0,1fr)))'), css);
+  assert.ok(css.includes('grid-template-rows:var(--gr-l-rows,repeat(2,auto))'), css);
 });
 
 // Дефект ⑥: диапазоны строились арифметикой `-1px`, поэтому ломались
@@ -99,6 +99,20 @@ test('раскладка без базового варианта начинае
 
   assert.ok(css.includes('@media (width>=768px)'), css);
   assert.ok(!css.includes('width<768px'), css);
+});
+
+// 37b: ширины треков задаются в CSS, а не строкой раскладки. Строка
+// остаётся про области — это её единственный довод; треки описывает
+// свойство, которое видно в DevTools. Дорожки проверяются обе: правка
+// одной из них развела бы `data-gr-layout` и `gr-grid-layout()`.
+test('треки раскладки читаются из --gr-l-cols и --gr-l-rows', () => {
+  const runtime = normalizeCss(runtimeCSS({ 'data-gr-layout': 'a2b2' }));
+  const mixin = normalizeCss(mixinCSS("@include gr.gr-grid-layout('a2b2', $name: 'hero');"));
+
+  for (const css of [runtime, mixin]) {
+    assert.ok(css.includes('grid-template-columns:var(--gr-l-cols,repeat(4,minmax(0,1fr)))'), css);
+    assert.ok(css.includes('grid-template-rows:var(--gr-l-rows,repeat(1,auto))'), css);
+  }
 });
 
 // Дефект ⑤: компилтайм-миксин и рантайм должны давать один и тот же CSS.

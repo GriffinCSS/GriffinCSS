@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { setupDom, el, generatedCSS, MockMutationObserver } = require('./helpers/dom');
+const { setupDom, el, generatedCSS, cssSection, MockMutationObserver } = require('./helpers/dom');
 const { compileScss } = require('./helpers/css');
 
 const PKG = require('../package.json');
@@ -40,6 +40,22 @@ test('FOUC-защиту ставит рантайм', () => {
   assert.ok(container.classList.contains('gr-ready'), 'обработанный контейнер открыт');
 });
 
+// 37a: FOUC-защита открывала контейнер переходом 0,3 с — заметным
+// движением, которое пользователь с `prefers-reduced-motion: reduce`
+// просил не показывать. Появление содержимого остаётся мгновенным.
+test('FOUC-защита уважает reduced-motion', () => {
+  const container = el('div', { 'data-gr-layout': 'a1b1' });
+  const { doc, griffin } = setupDom(el('body', {}, [container]));
+
+  griffin.init();
+
+  const guard = cssSection(doc, 'FOUC guard');
+
+  assert.ok(guard.includes('@media (prefers-reduced-motion: reduce)'), guard);
+  assert.ok(/prefers-reduced-motion[\s\S]*transition: none/.test(guard), guard);
+  assert.ok(guard.includes('transition: opacity 0.3s ease'), 'обычный переход остался на месте');
+});
+
 // 2h: каскад скруглений перешёл на чистый CSS.
 test('рантайм не трогает inline-стили .gr-radius', () => {
   const card = el('div', { class: 'gr-radius' });
@@ -69,6 +85,77 @@ test('observe перерисовывает только свой корень', 
 
   assert.ok(added.classList.contains('gr-ready'), 'добавленный в корень контейнер обработан');
   assert.ok(!outside.classList.contains('gr-ready'), 'элемент вне корня не трогается');
+});
+
+// 37a: перерисовка фреймворка присваивает className целиком, и с узла
+// слетают .gr-ready и .gr-l-<хеш>. Раскладка исчезает, а FOUC-защита
+// держит контейнер в opacity: 0 — наблюдение за childList такую мутацию
+// не видит. Воспроизведено в браузере: packages/ui/test/browser/reframe.spec.mjs.
+test('перезапись className контейнера возвращает маркеры', async () => {
+  const root = el('div');
+  const box = el('div', { 'data-gr-layout': 'a1b1' }, [el('div'), el('div')]);
+  const { griffin } = setupDom(el('body', {}, [root]));
+
+  root.appendChild(box);
+  griffin.init();
+  griffin.observe(root);
+
+  const layoutClass = box.classList.items.find((c) => c.startsWith('gr-l-'));
+
+  assert.ok(layoutClass, 'контейнер разложен до перезаписи');
+
+  box.className = 'foo';
+  MockMutationObserver.instances[0].fireAttribute(box);
+
+  await sleep(60);
+
+  assert.ok(box.classList.contains('gr-ready'), 'контейнер снова открыт');
+  assert.ok(box.classList.contains(layoutClass), 'класс раскладки вернулся');
+  assert.ok(box.classList.contains('foo'), 'класс фреймворка не тронут');
+});
+
+// Риск 2 плана: возврат класса — сам мутация атрибута. Если ответ
+// «работа есть» опирается на oldValue, а не на текущее состояние узла,
+// перерисовка вызывает саму себя без конца.
+test('возврат маркеров не зацикливает перерисовку', async () => {
+  const root = el('div');
+  const box = el('div', { 'data-gr-layout': 'a1b1' }, [el('div'), el('div')]);
+  const { griffin } = setupDom(el('body', {}, [root]));
+
+  root.appendChild(box);
+  griffin.init();
+  griffin.observe(root);
+
+  const observer = MockMutationObserver.instances[0];
+
+  // Наблюдатель откладывает перерисовку таймером: заведённый таймер
+  // и есть ответ «работа есть». Считаем их, а не перерисовки.
+  const scheduled = () => {
+    const real = global.setTimeout;
+    let count = 0;
+
+    global.setTimeout = (fn, ms) => { count += 1; return real(fn, ms); };
+
+    try {
+      observer.fireAttribute(box);
+    } finally {
+      global.setTimeout = real;
+    }
+
+    return count;
+  };
+
+  box.className = 'foo';
+
+  assert.equal(scheduled(), 1, 'потеря маркеров будит наблюдатель');
+
+  await sleep(60);
+
+  assert.ok(box.classList.contains('gr-ready'), 'маркеры вернулись');
+
+  // Та же запись по восстановленному узлу — работы больше нет.
+  // Иначе возврат класса будил бы сам себя без конца.
+  assert.equal(scheduled(), 0, 'по целому контейнеру перерисовка не назначается');
 });
 
 test('серия мутаций даёт одну перерисовку', async () => {

@@ -10,13 +10,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'purge.mjs');
 const DOCS = path.join(ROOT, 'docs');
 const UTILS_CSS = path.join(ROOT, 'packages', 'utils', 'dist', 'griffincss-utils.css');
 
-const load = () => import(SCRIPT);
+// Абсолютный путь под Windows (`C:\…`) не специфер модуля: буква диска
+// читается как протокол. Импорт идёт через file:-URL — так тест проходит
+// на всех платформах.
+const load = () => import(pathToFileURL(SCRIPT).href);
 
 // Классы всех оставшихся селекторов: то, за что пользователь платит после
 // отсечения. Берутся из разобранного дерева, а не из текста файла: точка
@@ -204,5 +208,83 @@ test('скрипт печатает счётчики и отдаёт CSS в фа
     assert.ok(written.length > 0, 'записан пустой файл');
   } finally {
     fs.rmSync(out, { force: true });
+  }
+});
+
+// --- ось оформления (Этап 22) ------------------------------------------------
+//
+// Стилей четыре, странице нужен один. Правила `[data-gr-style="X"]` неотличимы
+// от прочих по классам — класс в них как раз используемый, — поэтому ось
+// проверяется отдельным множеством: значениями атрибута из разметки.
+
+const AXIS = '[data-gr-style]{--gr-gap:1rem}[data-gr-style=compact] .gr-btn{padding:0}[data-gr-style=airy] .gr-btn{padding:2rem}';
+
+test('ось оформления: правило чужого стиля выбрасывается, своего — остаётся', async () => {
+  const { purge } = await load();
+  const result = purge(AXIS, new Set(['gr-btn']), { styles: new Set(['compact']) });
+
+  assert.ok(result.css.includes('[data-gr-style=compact]'), 'выброшен используемый стиль');
+  assert.ok(!result.css.includes('[data-gr-style=airy]'), 'остался стиль, которого в разметке нет');
+});
+
+test('ось оформления: блок токенов остаётся, пока хоть один стиль используется', async () => {
+  const { purge } = await load();
+  const kept = purge(AXIS, new Set(['gr-btn']), { styles: new Set(['airy']) });
+
+  assert.ok(kept.css.includes('[data-gr-style]{'), 'блок токенов выброшен при используемой оси');
+
+  // Ось не встретилась вовсе — не нужны ни токены, ни правила стилей.
+  const gone = purge(AXIS, new Set(['gr-btn']), { styles: new Set() });
+
+  assert.ok(!gone.css.includes('data-gr-style'), 'ось осталась, хотя в разметке её нет: ' + gone.css);
+  assert.ok(gone.css.length === 0 || !gone.css.includes('{}'), 'остался пустой блок');
+});
+
+test('ось оформления: значение из рантайма сохраняется через safelist', async () => {
+  const { purge } = await load();
+  const result = purge(AXIS, new Set(['gr-btn']), { styles: new Set(), safelist: ['airy'] });
+
+  assert.ok(result.css.includes('[data-gr-style=airy]'), 'safelist не сохранил стиль');
+  assert.ok(result.css.includes('[data-gr-style]{'), 'safelist не сохранил блок токенов');
+  assert.ok(!result.css.includes('[data-gr-style=compact]'), 'safelist сохранил лишний стиль');
+});
+
+test('ось оформления: без сведений о разметке правила оси не трогаются', async () => {
+  const { purge } = await load();
+  const result = purge(AXIS, new Set(['gr-btn']));
+
+  assert.ok(result.css.includes('[data-gr-style=airy]'), 'ось отсечена без данных о ней');
+});
+
+test('ось оформления: значение читается из атрибута разметки', async () => {
+  const { extractStyles } = await load();
+  const found = extractStyles('<html data-gr-style="compact"><div data-gr-style=airy></div>');
+
+  assert.ok(found.has('compact'), 'значение в кавычках не найдено');
+  assert.ok(found.has('airy'), 'значение без кавычек не найдено');
+});
+
+test('ось оформления: отчёт называет оставленные и выброшенные стили', async () => {
+  const out = path.join(__dirname, '..', 'dist', 'purge-axis-output.css');
+  const page = path.join(__dirname, '..', 'dist', 'purge-axis-page.html');
+  const css = path.join(__dirname, '..', 'dist', 'purge-axis.css');
+
+  try {
+    fs.writeFileSync(page, '<html data-gr-style="compact"><button class="gr-btn">Кнопка</button></html>');
+    fs.writeFileSync(css, AXIS);
+
+    const run = spawnSync(process.execPath, [SCRIPT, '--css', css, '--out', out, page], { encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.match(run.stderr, /ось оформления/, 'об оси в отчёте ни слова: ' + run.stderr);
+    assert.match(run.stderr, /compact/, 'оставленный стиль не назван: ' + run.stderr);
+    assert.match(run.stderr, /airy/, 'выброшенный стиль не назван: ' + run.stderr);
+
+    const written = fs.readFileSync(out, 'utf8');
+
+    assert.ok(written.includes('[data-gr-style=compact]'), 'нужный стиль выброшен');
+    assert.ok(!written.includes('[data-gr-style=airy]'), 'лишний стиль остался');
+  } finally {
+    for (const file of [out, page, css]) fs.rmSync(file, { force: true });
   }
 });

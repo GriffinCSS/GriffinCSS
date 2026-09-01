@@ -43,7 +43,7 @@
     return false;
   }
 
-  G.defineWidget('tooltip', function (el, opts) {
+  G.defineWidget('tooltip', { needs: ['anchor'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();
     var events = G.listeners();

@@ -28,11 +28,11 @@
     Компактная, расширяемая, без лишнего кода. Описывайте сложные сетки одной строкой.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">v0.21.4</span>
+    <span class="badge badge-accent">v0.22.0</span>
     <span class="badge">Dart Sass</span>
     <span class="badge">CSS Grid</span>
     <span class="badge">Flexbox</span>
-    <span class="badge">JS 9,9 КБ gzip</span>
+    <span class="badge">JS <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> gzip</span>
     <span class="badge">MIT</span>
   </div>
 </div>
@@ -111,11 +111,11 @@
   </tr>
   <tr>
     <td>Только современные браузеры</td>
-    <td>CSS Grid, Flexbox, CSS custom properties. IE11 не поддерживается.</td>
+    <td>Каскадные слои, контейнерные запросы, <code>:has()</code>, а в сборках <code>-scoped</code> ещё и <code>@scope</code>. Порог — Chrome 99, Firefox 97, Safari 15.4 и выше; ниже него страница остаётся читаемой, но не оформленной. Минимальные версии по каждой возможности, измеренная доля и дата замера — <a href="compatibility.html">«Совместимость»</a>.</td>
   </tr>
   <tr>
     <td>Ограниченный набор утилит</td>
-    <td>Ядро (<code>griffincss-core</code>) — только сетка, флекс и отступы между ячейками. Спейсинг, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность и переходы живут в <code>griffincss-utils</code>, а элементы интерфейса — в <code>griffincss-ui</code>. Виджетов с состоянием — карусели, таблицы с сортировкой, выбора даты — в библиотеке нет и не планируется: это другая задача.</td>
+    <td>Ядро (<code>griffincss-core</code>) — только сетка, флекс и отступы между ячейками. Спейсинг, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность и переходы живут в <code>griffincss-utils</code>, а элементы интерфейса — в <code>griffincss-ui</code>. Виджеты с состоянием — слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица — вынесены в опциональный слой <a href="griffinjs.html">GriffinJS</a> внутри <code>griffincss-ui</code>; страница без него остаётся рабочей. Выбор даты закрывает нативное поле в оформлении библиотеки — <a href="ui-forms.html">«Формы»</a>.</td>
   </tr>
   <tr>
     <td>Авто-присвоение по базовому layout</td>
@@ -157,8 +157,8 @@
 .gr-l-k7gi9w {
   display: grid;
   grid-template-areas: "a a a b b b b" "c c d d d d d";
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(2, auto);
+  grid-template-columns: var(--gr-l-cols, repeat(7, minmax(0, 1fr)));
+  grid-template-rows: var(--gr-l-rows, repeat(2, auto));
 }</code></pre>
 
 <h3>3. Адаптивная раскладка</h3>

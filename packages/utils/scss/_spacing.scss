@@ -34,33 +34,31 @@ $gr-spacing-steps: (0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16) !default;
     }
 
 
+    // Верх и низ — физические и остаются: блочная ось в RTL
+    // не разворачивается. Односторонние left/right удалены Этапом 36:
+    // начало и конец строки задают логические ms/me/ps/pe ниже.
     .gr-mt-#{$i}#{$suffix} { margin-top: $val; }
-    .gr-mr-#{$i}#{$suffix} { margin-right: $val; }
     .gr-mb-#{$i}#{$suffix} { margin-bottom: $val; }
-    .gr-ml-#{$i}#{$suffix} { margin-left: $val; }
 
     .gr-pt-#{$i}#{$suffix} { padding-top: $val; }
-    .gr-pr-#{$i}#{$suffix} { padding-right: $val; }
     .gr-pb-#{$i}#{$suffix} { padding-bottom: $val; }
-    .gr-pl-#{$i}#{$suffix} { padding-left: $val; }
 
     // Логические односторонние отступы: start — начало строки, end — конец.
     // В LTR совпадают с left/right, в RTL меняются местами сами, без правил
     // на [dir] и :dir().
     //
-    // Адаптивных вариантов у них нет намеренно. Полный набор — 12 ступеней
-    // на четырёх свойствах и пяти брейкпоинтах, 240 селекторов и +1086 Б
-    // gzip; переход mx/px на одно свойство компенсирует из них 123 Б.
-    // Ступени сохранены все до одной — класс заменяется на логический
-    // один-в-один, — а платой за это стал отказ от суффикса брейкпоинта:
-    // так прирост держится в 240 Б gzip, а raw-размер файла даже падает.
-    @if $suffix == '' {
-      .gr-ms-#{$i} { margin-inline-start: $val; }
-      .gr-me-#{$i} { margin-inline-end: $val; }
+    // Адаптивные и контейнерные варианты добавлены Этапом 36: без них
+    // снятие физических классов забрало бы у потребителя односторонний
+    // отступ от брейкпоинта, а не перевело его на логический. Прирост
+    // замерен честной сборкой — +1 527 Б gzip при расчёте +1 645 правкой
+    // собранного файла: селекторы те же 400, но вперемешку со шкалой
+    // обратные ссылки gzip короче. Вместе с удалением физических
+    // классов размен уходит в минус.
+    .gr-ms-#{$i}#{$suffix} { margin-inline-start: $val; }
+    .gr-me-#{$i}#{$suffix} { margin-inline-end: $val; }
 
-      .gr-ps-#{$i} { padding-inline-start: $val; }
-      .gr-pe-#{$i} { padding-inline-end: $val; }
-    }
+    .gr-ps-#{$i}#{$suffix} { padding-inline-start: $val; }
+    .gr-pe-#{$i}#{$suffix} { padding-inline-end: $val; }
 
     // Осевые — одно логическое свойство вместо пары физических: в LTR
     // результат тот же, в RTL корректный, а объявлений вдвое меньше.
@@ -84,25 +82,15 @@ $gr-spacing-steps: (0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16) !default;
     margin-inline: auto;
   }
 
-  .gr-ml-auto#{$suffix} {
-    margin-left: auto;
-  }
-
-  .gr-mr-auto#{$suffix} {
-    margin-right: auto;
-  }
-
   // Прижатие к краю строки, а не к стороне экрана: в RTL .gr-ms-auto
-  // отодвигает элемент вправо, .gr-me-auto — влево. Суффикса брейкпоинта
-  // нет по той же причине, что и у остальных логических классов.
-  @if $suffix == '' {
-    .gr-ms-auto {
-      margin-inline-start: auto;
-    }
+  // отодвигает элемент вправо, .gr-me-auto — влево. Суффикс брейкпоинта —
+  // как у всей шкалы, с Этапа 36.
+  .gr-ms-auto#{$suffix} {
+    margin-inline-start: auto;
+  }
 
-    .gr-me-auto {
-      margin-inline-end: auto;
-    }
+  .gr-me-auto#{$suffix} {
+    margin-inline-end: auto;
   }
 }
 

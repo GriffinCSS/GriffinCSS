@@ -51,8 +51,8 @@
     Единственное исключение — закрытие окна щелчком по подложке: этого
     <code>&lt;dialog&gt;</code> не умеет, и его добавляет опциональный
     <code>griffincss-ui.js</code>. Он подключён на этой странице, включается
-    атрибутом на самом окне и весит 0,8 КБ gzip без комментариев (файл
-    не минифицируется — как и рантайм ядра).
+    атрибутом на самом окне и стоит <!--gr:size:js-ui-->2,9 КБ<!--/gr:size:js-ui--> gzip — вместе
+    со всем остальным поведением компонентов.
   </p>
 </div>
 
@@ -337,8 +337,8 @@
 <div class="demo-block">
   <div class="demo-block-title">Четыре стороны. Пояса — те же, что у модалки</div>
   <div class="gr-flex gr-gap gr-flex-wrap">
-    <button class="gr-btn" type="button" data-open="drawer-start">Слева</button>
-    <button class="gr-btn" type="button" data-open="drawer-end">Справа</button>
+    <button class="gr-btn" type="button" data-open="drawer-start">С начала строки</button>
+    <button class="gr-btn" type="button" data-open="drawer-end">С конца строки</button>
     <button class="gr-btn" type="button" data-open="drawer-top">Сверху</button>
     <button class="gr-btn" type="button" data-open="drawer-bottom">Снизу</button>
   </div>

@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.21.4
+- **Version:** 0.22.0
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -31,7 +31,8 @@ npm run check          # lint + build + test
 # Compiler: Dart Sass (sass package, ^1.101.0)
 # Output:
 #   packages/core/dist/griffincss-core.css, griffincss-reset.css,
-#                       griffincss-styles.css, griffincss.js, griffincss-theme.js
+#                       griffincss-styles.css, griffincss-style-{airy,strict,compact}.css,
+#                       griffincss.js, griffincss-theme.js
 #   packages/ui/dist/griffincss-ui.css, griffincss-ui-scoped.css
 #   packages/utils/dist/griffincss-utils.css, griffincss-utils-scoped.css
 ```
@@ -72,6 +73,16 @@ structural rules reach `griffincss-ui.css` — `griffincss-ui` peer-depends on t
 reads the list by package path, so the two cannot diverge. `()` switches the axis off
 entirely.
 
+Consumers who do not compile SCSS have no place to set that list, so the same three
+configurations are prebuilt: `griffincss-style-airy.css`, `-strict`, `-compact`, one style
+each, produced by `scripts/build-styles.mjs` from the very same entry point (`build:style-files`
+in `packages/core`). Each file **replaces** `griffincss-styles.css` rather than adding to it —
+the shared part of the axis is inside every one of them. They cover tokens only; the
+structural rules in `griffincss-ui.css` are another package and stay complete there (115 B
+brotli for all four styles). `check-dist.mjs` guards each file against carrying another
+style's selectors — the failure mode of a forgotten configuration is a silent copy of the
+full file.
+
 `packages/ui/scss/_style-rules.scss` holds every structural rule of the axis and is loaded
 **only** by `griffincss-ui.scss`. Inside `@scope (.griffin)` a selector is implicitly
 prefixed with `:scope`, so `[data-gr-style="strict"] .gr-card-header` would require the
@@ -100,7 +111,7 @@ theme are excluded from the scope for the same class of reason. `check-dist.mjs`
 | Core reset | `packages/core/scss/_reset.scss` | Opt-in, separate entry point — not part of `griffincss-core.css` |
 | Core styles | `packages/core/scss/_styles.scss`, `_style-values.scss`, `_style-config.scss`, `_metrics.scss` | Opt-in `data-gr-style` axis, separate entry point `griffincss-styles.scss` → layer `griffincss.style` |
 | SCSS Functions | `packages/core/scss/_functions.scss` | `gr-parse-layout`, `gr-parse-segment`, `gr-split-rows`, `gr-grid-areas`, `gr-grid-columns`, `gr-grid-rows`, `gr-area-names`, `gr-strip-unit`, `gr-rem` — validation rules mirror the runtime |
-| Utils package | `packages/utils/scss/_spacing.scss`, `_sizing.scss`, `_typography.scss`, `_colors.scss`, `_borders.scss`, `_border-radius.scss`, `_shadows.scss`, `_position.scss`, `_effects.scss`, `_visibility.scss`, `_interactivity.scss`, `_animations.scss`, `_keyframes.scss` | Opt-in utility classes |
+| Utils package | `packages/utils/scss/_spacing.scss`, `_sizing.scss`, `_typography.scss`, `_colors.scss`, `_borders.scss`, `_border-radius.scss`, `_shadows.scss`, `_position.scss`, `_effects.scss`, `_visibility.scss`, `_interactivity.scss`, `_animations.scss`, `_keyframes.scss`, `_transforms.scss`, `_filters.scss`, `_gradients.scss`, `_palette.scss` | Opt-in utility classes |
 | UI package | `packages/ui/scss/_button.scss`, `_link.scss`, `_form.scss`, `_choice.scss`, `_card.scss`, `_table.scss`, `_alert.scss`, `_badge.scss`, `_avatar.scss` (wave 8a — static), `_nav.scss`, `_breadcrumb.scss`, `_menu.scss`, `_dropdown.scss`, `_accordion.scss`, `_tabs.scss`, `_modal.scss`, `_drawer.scss`, `_tooltip.scss`, `_pagination.scss` (wave 8b — navigation and disclosure) | Opt-in interface components; no library JS in either wave |
 | Entry points | `griffincss-core.scss`, `griffincss-reset.scss`, `griffincss-ui.scss`, `griffincss-ui-scoped.scss`, `griffincss-utils.scss`, `griffincss-utils-scoped.scss` | `@use` the partials; the scoped variants wrap the add-on in `@scope (.griffin)` via `meta.load-css()` |
 | JS Runtime | `packages/core/src/griffincss.js` (27 KB raw, 3.3 KB gzip minified, IIFE) | DOM-scanning grid parser, auto-hide, auto-assign, responsive ranges |
@@ -122,7 +133,7 @@ Every build declares the same order and puts all of its output inside one layer:
 | `griffincss.core` | `griffincss-core.css`, `gr-grid-layout()` output, all runtime CSS |
 | `griffincss.ui` | `griffincss-ui.css`, `griffincss-ui-scoped.css` |
 | `griffincss.utils` | `griffincss-utils.css`, `griffincss-utils-scoped.css` |
-| `griffincss.style` | `griffincss-styles.css` — tokens only, never a class |
+| `griffincss.style` | `griffincss-styles.css`, `griffincss-style-{airy,strict,compact}.css` — tokens only, never a class |
 
 Components outrank the core so `.gr-card` with its own `display: flex` does not lose to
 `.gr-flex`; utilities outrank components so `.gr-mb-0` on a card beats its own `margin-bottom`.
@@ -158,7 +169,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.21.4)
+### JS Runtime Key Features (v0.22.0)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
@@ -260,7 +271,7 @@ Invariants and the reader-facing architecture: `docs/griffinjs-architecture.html
 | `griffinjs-slider.js` / `-gallery.js` / `-lightbox.js` / `-parallax.js` | 1.6 / 0.7 / 1.7 / 0.3 KB | scrolling family and parallax |
 | `griffinjs-megamenu.js` / `-dropdown.js` / `-tooltip.js` | 2.2 / 1.9 / 0.9 KB | dropping family |
 | `griffinjs-dialog.js` / `-combobox.js` | 1.8 / 2.3 KB | dialog controller and combobox |
-| **`griffinjs.js`** | **15.4 KB** | everything; budget 16 KB |
+| **`griffinjs.js`** | **16.1 KB** | everything; budget 16.5 KB |
 | core + scroll + slider | 7.9 KB | minimal slider set; budget 8 KB |
 | `griffinjs.css` | — | track, gallery, lightbox, megamenu, controllers (dropdown, tooltip, dialog states), combobox |
 
@@ -341,6 +352,10 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 | `packages/utils/scss/_shadows.scss` | `.gr-shadow-*` over `--gr-shadow-*` tokens declared in the core `_tokens.scss` |
 | `packages/utils/scss/_position.scss` | Position (responsive), inset (axes logical, sides physical plus `start`/`end`), z-index |
 | `packages/utils/scss/_effects.scss` | Opacity, object-fit/position, aspect-ratio |
+| `packages/utils/scss/_transforms.scss` | Scale, rotate (both signs), translate on both axes, `.gr-hover-lift` / `.gr-hover-grow`. Separate `scale`/`rotate`/`translate` properties, never a shared `transform`; both translate axes go through `--gr-tx`/`--gr-ty`, and the zero on the other axis is what cancels custom-property inheritance. No breakpoint suffix — see gotcha 33 |
+| `packages/utils/scss/_filters.scss` | Blur, grayscale, brightness through one collecting `filter` rule over `--gr-blur` and friends; neutral values in that rule cancel inheritance (gotcha 34). `$gr-contrasts` and `$gr-saturations` ship as empty maps: a non-empty one adds both the classes and its function to the collecting rule. No breakpoint suffix |
+| `packages/utils/scss/_gradients.scss` | Six directions plus `from`/`via`/`to` over eight colours of the shared palette. The middle stop is spliced into the same `linear-gradient` through an empty `var(--gr-via, )` fallback, so a two-stop gradient pays nothing for it. No breakpoint suffix |
+| `packages/utils/scss/_palette.scss` | `$gr-grays` and `$gr-accents` — maps only, no CSS. Two modules need them (`_colors.scss`, `_gradients.scss`), and `@use 'colors'` from a second module would re-emit the whole colour block. `_colors.scss` forwards it (forward BEFORE use), so `@use 'colors' with ($gr-accents: …)` still configures it |
 | `packages/utils/scss/_interactivity.scss` | Cursor, pointer-events, `.gr-user-select-*`, scroll-behavior |
 | `packages/utils/scss/_animations.scss` | Transition properties, durations, `.gr-animate-spin`; all under `prefers-reduced-motion` |
 | `packages/utils/scss/_keyframes.scss` | `@keyframes gr-spin` — separate file so the scoped build can emit it outside `@scope` |
@@ -518,3 +533,27 @@ from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
    the dark system theme would take its `2.6` back on paper. Animations are stopped
    in `_animations.scss`, last block of the module. Only element-level defaults —
    colours on `body`, `<details>`, page breaks — belong in `_reset.scss`.
+33. **Three utils groups carry no breakpoint suffix at all** — transforms, filters and
+   gradients. `.gr-scale-105-md` does not exist, and neither do `.gr-blur-2-lg` or
+   `.gr-gradient-to-r-xl`. The precedent is the logical spacing of Stage 13 (gotcha 28):
+   a card lifts under the cursor the same way at every window width, and window plus
+   container variants would multiply the group about ninefold — 65 classes would become
+   roughly 600, several times the whole budget the stage was given. The rule is written
+   in the modules, in three docs pages and in `packages/utils/test/utils.test.js`, which
+   fails the build on any `-sm`/`-md`/`-lg`/`-xl`/`-c*` suffix in those groups: one `@each`
+   over the breakpoint map is all it takes to add them back by accident.
+34. **A custom property that feeds a collecting rule must be reset in that rule.**
+   `--gr-blur`, `--gr-tx` and `--gr-from` are ordinary custom properties, so they
+   inherit. The collecting rule therefore declares the neutral value for every property
+   it reads — `--gr-blur: 0`, `--gr-tx: 0`, `--gr-from: transparent` — and sits *before*
+   the value classes: specificity is equal and source order decides. Without it a
+   `.gr-grayscale-100` nested inside a `.gr-blur-4` would inherit the ancestor's blur
+   and show a plausible-looking wrong picture rather than a visible refusal. `@property`
+   with `inherits: false` would do the same job, but it costs bytes in all three packages'
+   `:root` block, and core has 74 B of headroom.
+35. **The form of a collecting rule is a measurement, not a style.** Shared selector list
+   versus repeating the declaration in every class: transforms are cheaper repeated
+   (15 733 B vs 15 749 B for the whole file), filters are cheaper with the list
+   (15 733 B vs 15 757 B). The rule of thumb the numbers gave: a short declaration
+   repeated over few rules compresses to nothing, while a long one over many rules is
+   worth writing once. Measure before changing either.

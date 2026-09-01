@@ -1,0 +1,78 @@
+// Griffincss — Transforms
+// Масштаб, поворот, сдвиг по осям и наведение с подъёмом.
+//
+// Суффиксов брейкпоинта и контейнера у модуля НЕТ и не будет. Довод и
+// прецедент те же, что у логических отступов в _spacing.scss: карточка
+// подскакивает под курсором одинаково на любой ширине окна, а девять
+// вариантов на класс съели бы бюджет утилит целиком.
+//
+// Свойства раздельные — scale, rotate, translate, а не общий transform:
+// три класса на одном элементе складываются, не затирая друг друга.
+
+// Масштаб: ключ — проценты в имени класса, значение — множитель.
+// Ступень 100 нужна, чтобы снять масштаб, доставшийся от другого класса.
+$gr-scales: (95: 0.95, 100: 1, 105: 1.05, 110: 1.1) !default;
+
+// Поворот в градусах. Каждая ступень даёт пару классов: .gr-rotate-6
+// и .gr-rotate--6 — знак пишется в имени так же, как в значении.
+$gr-rotations: (3, 6, 12, 45, 90) !default;
+
+// Сдвиг: ключ — ступень шкалы отступов, значение — длина. Тоже парами,
+// со знаком: подъём карточки — это .gr-translate-y--1.
+$gr-translates: (1: 0.25rem, 2: 0.5rem) !default;
+
+@each $gr-step, $gr-value in $gr-scales {
+  .gr-scale-#{$gr-step} { scale: $gr-value; }
+}
+
+@each $gr-deg in $gr-rotations {
+  .gr-rotate-#{$gr-deg} { rotate: #{$gr-deg}deg; }
+  .gr-rotate--#{$gr-deg} { rotate: -#{$gr-deg}deg; }
+}
+
+// Обе оси сдвига живут в одном свойстве translate, поэтому значение
+// приходит настраиваемыми свойствами: иначе .gr-translate-x-2
+// и .gr-translate-y-1 затёрли бы друг друга.
+//
+// Ноль по соседней оси — не украшение, а сброс наследования:
+// настраиваемые свойства наследуются, и вложенный .gr-translate-y-1
+// без сброса уехал бы вбок вслед за предком.
+//
+// Объявление повторяется в каждом классе, а не выносится в общий список
+// селекторов. Это решено замером, а не вкусом: на тринадцати правилах
+// общий список стоит 316 Б gzip против 300 Б у повтора — одинаковый
+// хвост правила сжимается лучше, чем перечисление разных селекторов.
+@mixin gr-shift($gr-x, $gr-y) {
+  --gr-tx: #{$gr-x};
+  --gr-ty: #{$gr-y};
+
+  translate: var(--gr-tx) var(--gr-ty);
+}
+
+@each $gr-step, $gr-value in $gr-translates {
+  .gr-translate-x-#{$gr-step} { @include gr-shift($gr-value, 0); }
+  .gr-translate-x--#{$gr-step} { @include gr-shift(-$gr-value, 0); }
+  .gr-translate-y-#{$gr-step} { @include gr-shift(0, $gr-value); }
+  .gr-translate-y--#{$gr-step} { @include gr-shift(0, -$gr-value); }
+}
+
+.gr-hover-lift { @include gr-shift(0, 0); }
+
+// Наведение. Только под (hover: hover) — действующее правило проекта:
+// на сенсорном экране :hover залипает после касания и снимается лишь
+// касанием в другом месте.
+//
+// Подъём идёт через --gr-ty, а не через translate напрямую: карточка,
+// уже сдвинутая по горизонтали, не теряет свой сдвиг под курсором.
+// Переход объявлен здесь же — класс обязан работать в одиночку.
+@media (hover: hover) {
+  .gr-hover-lift,
+  .gr-hover-grow { transition: translate var(--gr-transition), scale var(--gr-transition); }
+  .gr-hover-lift:hover { --gr-ty: -0.25rem; }
+  .gr-hover-grow:hover { scale: 1.03; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-hover-lift,
+  .gr-hover-grow { transition-duration: 0.01ms; }
+}

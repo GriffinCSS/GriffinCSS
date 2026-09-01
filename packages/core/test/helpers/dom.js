@@ -100,12 +100,28 @@ class MockElement {
     return this.classList.toString();
   }
 
+  // Присваивание целиком — то, что делает фреймворк при изменении пропа
+  // className: прежний список токенов не дополняется, а заменяется.
+  set className(value) {
+    this.classList.items = String(value).split(/\s+/).filter(Boolean);
+  }
+
   get id() {
     return this.getAttribute('id') || '';
   }
 
   set id(value) {
     this.setAttribute('id', value);
+  }
+
+  // nonce — IDL-свойство, а не атрибут: браузер прячет содержимое
+  // атрибута после разбора, и рантайм читает именно свойство.
+  get nonce() {
+    return this.getAttribute('nonce') || '';
+  }
+
+  set nonce(value) {
+    this.setAttribute('nonce', value);
   }
 
   getAttribute(name) {
@@ -250,6 +266,13 @@ class MockMutationObserver {
     if (this.disconnected) return;
 
     this.callback([{ addedNodes: nodes }], this);
+  }
+
+  // Правка атрибута: настоящая запись всегда несёт и пустой addedNodes.
+  fireAttribute(target, name = 'class') {
+    if (this.disconnected) return;
+
+    this.callback([{ type: 'attributes', attributeName: name, target, addedNodes: [] }], this);
   }
 }
 

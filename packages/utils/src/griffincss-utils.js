@@ -1,5 +1,5 @@
 /*!
- * Griffincss Utils — Runtime v0.21.4
+ * Griffincss Utils — Runtime v0.22.0
  * Достраивает то, чего статический CSS выразить не может.
  * Пишется руками и не компилируется — правится этот файл.
  */
@@ -23,7 +23,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.21.4';
+  var VERSION = '0.22.0';
 
   // Таблица правил выводится из SCSS-карт скриптом scripts/sync-rule-table.mjs.
   // Правьте карты в SCSS, а не этот блок: npm run sync -- --fix перепишет его.
@@ -275,6 +275,14 @@
   // а `.gr-text-white` — цвет, и `.gr-text-[13px]` пришлось бы угадывать.
   // Угадывать рантайм не будет.
   //
+  // Физических односторонних свойств в таблице нет с Этапа 36: таблица
+  // повторяет статические классы один в один, а статические удалены.
+  // Привязку к строке произвольным значением дают gr-start-/gr-end- —
+  // логическая пара, заведённая взамен gr-left-/gr-right- тем же этапом:
+  // удаление без пары забрало бы возможность, а не перевело её. Верх
+  // и низ (mt/mb, pt/pb, top/bottom) — физические по устройству
+  // и остаются.
+  //
   // Запись единая — `свойство:{}` в каждой строке, даже там, где
   // объявление одно. Короткая форма замерена и отвергнута: gzip
   // повторение съедает сам, и выигрыш в 11 Б не стоит второй формы
@@ -282,18 +290,14 @@
   var PROPS = {
     'gr-m-': 'margin:{}',
     'gr-mt-': 'margin-top:{}',
-    'gr-mr-': 'margin-right:{}',
     'gr-mb-': 'margin-bottom:{}',
-    'gr-ml-': 'margin-left:{}',
     'gr-ms-': 'margin-inline-start:{}',
     'gr-me-': 'margin-inline-end:{}',
     'gr-mx-': 'margin-inline:{}',
     'gr-my-': 'margin-top:{};margin-bottom:{}',
     'gr-p-': '--gr-p:{};padding:var(--gr-p)',
     'gr-pt-': 'padding-top:{}',
-    'gr-pr-': 'padding-right:{}',
     'gr-pb-': 'padding-bottom:{}',
-    'gr-pl-': 'padding-left:{}',
     'gr-ps-': 'padding-inline-start:{}',
     'gr-pe-': 'padding-inline-end:{}',
     'gr-px-': 'padding-inline:{}',
@@ -307,9 +311,9 @@
     'gr-min-h-': 'min-height:{}',
     'gr-max-h-': 'max-height:{}',
     'gr-top-': 'top:{}',
-    'gr-right-': 'right:{}',
     'gr-bottom-': 'bottom:{}',
-    'gr-left-': 'left:{}',
+    'gr-start-': 'inset-inline-start:{}',
+    'gr-end-': 'inset-inline-end:{}',
     'gr-inset-': 'inset:{}',
     'gr-z-': 'z-index:{}'
   };

@@ -23,10 +23,12 @@
 
 <div class="hero">
   <h1>Effects</h1>
-  <p>Прозрачность, вписывание картинок и пропорции блока.</p>
+  <p>Прозрачность, вписывание картинок, пропорции блока, трансформации и фильтры.</p>
   <div class="hero-badges">
     <span class="badge badge-accent">Опциональный модуль</span>
     <span class="badge">packages/utils/scss/_effects.scss</span>
+    <span class="badge">_transforms.scss</span>
+    <span class="badge">_filters.scss</span>
   </div>
 </div>
 
@@ -104,14 +106,205 @@
 <pre><code>&lt;!-- обложка карточки: место под неё занято сразу --&gt;
 &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius-3" src="…" alt=""&gt;</code></pre>
 
+<h2>Трансформации</h2>
+
+<p>
+  Масштаб, поворот и сдвиг. Три <strong>раздельных</strong> CSS-свойства —
+  <code>scale</code>, <code>rotate</code>, <code>translate</code>, — а не общий
+  <code>transform</code>: классы складываются на одном элементе, не затирая
+  друг друга. <code>.gr-scale-105 .gr-rotate--3</code> даёт и увеличение,
+  и наклон; на общем <code>transform</code> второй класс стёр бы первый.
+</p>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th><th>CSS</th></tr>
+  <tr><td><strong>Масштаб</strong></td><td><code>.gr-scale-95</code> / <code>100</code> / <code>105</code> / <code>110</code></td><td><code>scale: 0.95 … 1.1</code></td></tr>
+  <tr><td><strong>Поворот</strong></td><td><code>.gr-rotate-3</code> / <code>6</code> / <code>12</code> / <code>45</code> / <code>90</code></td><td><code>rotate: 3deg …</code></td></tr>
+  <tr><td><strong>Поворот назад</strong></td><td><code>.gr-rotate--3</code> … <code>.gr-rotate--90</code></td><td><code>rotate: -3deg …</code></td></tr>
+  <tr><td><strong>Сдвиг</strong></td><td><code>.gr-translate-x-1</code> / <code>2</code>, <code>.gr-translate-y-1</code> / <code>2</code> и те же со знаком минус</td><td><code>translate: 0.25rem 0</code> …</td></tr>
+  <tr><td><strong>Наведение</strong></td><td><code>.gr-hover-lift</code>, <code>.gr-hover-grow</code></td><td>подъём на 0,25 rem и увеличение до 1,03</td></tr>
+</table>
+
+<p>
+  Знак пишется в имени так же, как в значении: <code>.gr-rotate--6</code> —
+  это <code>rotate: -6deg</code>, вторая чёрточка и есть минус. Обе оси сдвига
+  живут в одном свойстве <code>translate</code>, поэтому значение идёт через
+  <code>--gr-tx</code> и <code>--gr-ty</code>, а ноль по соседней оси снимает
+  наследование: вложенный <code>.gr-translate-y-1</code> не уедет вбок вслед
+  за предком.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Суффиксов брейкпоинта у трансформаций, фильтров и градиентов нет
+    и не будет.</strong> <code>.gr-scale-105-md</code>, <code>.gr-blur-2-lg</code>,
+    <code>.gr-gradient-to-r-xl</code> не существуют — как не существует
+    <code>.gr-radius-4-md</code>. Довод тот же: карточка подскакивает под курсором
+    одинаково на любой ширине окна, а адаптивные и контейнерные варианты
+    умножили бы группу примерно вдевятеро и съели бы весь бюджет утилит.
+    Нужен масштаб от ширины — это одно правило <code>@media</code> в вашем CSS
+    вместо девяноста классов в чужой библиотеке.
+  </p>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Раздельные свойства складываются: масштаб, поворот и сдвиг на одном элементе</div>
+  <div class="gr-flex gr-flex-wrap gr-gap-lg gr-flex-items-center gr-py-6">
+    <span class="gr-bg-primary gr-text-white gr-radius-2 gr-px-4 gr-py-2">без класса</span>
+    <span class="gr-bg-primary gr-text-white gr-radius-2 gr-px-4 gr-py-2 gr-scale-110">.gr-scale-110</span>
+    <span class="gr-bg-secondary gr-text-white gr-radius-2 gr-px-4 gr-py-2 gr-rotate--6">.gr-rotate--6</span>
+    <span class="gr-bg-info gr-text-white gr-radius-2 gr-px-4 gr-py-2 gr-scale-105 gr-rotate-6">.gr-scale-105 .gr-rotate-6</span>
+    <span class="gr-bg-success gr-text-white gr-radius-2 gr-px-4 gr-py-2 gr-translate-y--2">.gr-translate-y--2</span>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <code>.gr-transition-transform</code> из модуля
+    <a href="animations.html">Transitions</a> анимирует свойство
+    <code>transform</code> и на раздельные <code>scale</code> /
+    <code>rotate</code> / <code>translate</code> не действует — это разные
+    свойства, а не одно. Поэтому переход у <code>.gr-hover-lift</code>
+    и <code>.gr-hover-grow</code> объявлен внутри самих классов: они работают
+    в одиночку. Для своих сочетаний берут <code>.gr-transition</code>
+    (все свойства) либо пишут своё правило.
+  </p>
+</div>
+
+<h2>Фильтры</h2>
+
+<p>
+  Размытие, обесцвечивание и яркость. Все функции живут в одном свойстве
+  <code>filter</code>, поэтому класс задаёт настраиваемое свойство,
+  а собирающее правило склеивает их в значение: <code>.gr-blur-2</code>
+  и <code>.gr-grayscale-100</code> на одном элементе работают вместе,
+  а не по очереди.
+</p>
+
+<table>
+  <tr><th>Группа</th><th>Классы</th><th>CSS</th></tr>
+  <tr><td><strong>Размытие</strong></td><td><code>.gr-blur-1</code> / <code>2</code> / <code>3</code> / <code>4</code></td><td><code>blur(2px)</code> … <code>blur(16px)</code></td></tr>
+  <tr><td><strong>Обесцвечивание</strong></td><td><code>.gr-grayscale-50</code> / <code>100</code></td><td><code>grayscale(0.5)</code> / <code>grayscale(1)</code></td></tr>
+  <tr><td><strong>Яркость</strong></td><td><code>.gr-brightness-75</code> / <code>90</code> / <code>110</code> / <code>125</code></td><td><code>brightness(0.75)</code> … <code>brightness(1.25)</code></td></tr>
+  <tr><td><strong>Сброс</strong></td><td><code>.gr-filter-none</code></td><td><code>filter: none</code></td></tr>
+</table>
+
+<p>
+  Контраст и насыщенность модуль умеет, но по умолчанию не выводит: спрос
+  на них ниже, а место в бюджете утилит кончилось. Включаются одной строкой
+  в своей точке входа — см.
+  <a href="reference-utils.html">справочник по утилитам</a>.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Фильтры складываются: <code>.gr-blur-1 .gr-grayscale-100</code> — и то, и другое</div>
+  <div class="gr-grid-2 gr-grid-4-md gr-gap">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2" alt="Исходник без фильтра" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23b06a4e'/%3E%3Ccircle%20cx='220'%20cy='80'%20r='34'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20300l100-130%2090%2080%2050-60%2060%2070z'%20fill='%2394553d'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2 gr-blur-2" alt="Тот же кадр с размытием" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23b06a4e'/%3E%3Ccircle%20cx='220'%20cy='80'%20r='34'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20300l100-130%2090%2080%2050-60%2060%2070z'%20fill='%2394553d'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2 gr-grayscale-100" alt="Тот же кадр в чёрно-белом" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23b06a4e'/%3E%3Ccircle%20cx='220'%20cy='80'%20r='34'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20300l100-130%2090%2080%2050-60%2060%2070z'%20fill='%2394553d'/%3E%3C/svg%3E">
+    <img class="gr-min-w-0 gr-w-full gr-aspect-square gr-object-cover gr-radius-2 gr-blur-1 gr-grayscale-100 gr-brightness-110" alt="Тот же кадр: размытие, обесцвечивание и яркость сразу" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20300%20300'%20width='300'%20height='300'%3E%3Crect%20width='300'%20height='300'%20fill='%23b06a4e'/%3E%3Ccircle%20cx='220'%20cy='80'%20r='34'%20fill='%23f7f2e8'/%3E%3Cpath%20d='M0%20300l100-130%2090%2080%2050-60%2060%2070z'%20fill='%2394553d'/%3E%3C/svg%3E">
+  </div>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Размытие большого блока стоит кадров.</strong> <code>filter: blur()</code>
+    заставляет браузер растеризовать элемент отдельным слоем и пересчитывать
+    размытие при каждой перерисовке. Размытая фотография во весь экран заметно
+    роняет прокрутку на слабом устройстве — размывайте маленькое и статичное,
+    а не большое и движущееся. И помните: любой <code>filter</code>, даже
+    нейтральный, создаёт содержащий блок для <code>position: fixed</code>
+    внутри элемента.
+  </p>
+</div>
+
 <h2>Примеры использования</h2>
 
 <p>
   Три свойства модуля — пропорции, вписывание и прозрачность — почти всегда
   работают троицей и в связке с позиционированием: рамка держит формат,
-  <code>cover</code> кадрирует, прозрачность строит слои. Рецепты ниже —
-  ходовые медиа-задачи, где эта троица закрывает всё.
+  <code>cover</code> кадрирует, прозрачность строит слои. Трансформации
+  и фильтры добавляют к этому реакцию на курсор и обработку кадра. Рецепты
+  ниже — ходовые медиа-задачи, где всё это закрывает работу целиком.
 </p>
+
+<h3>Наведение на карточку</h3>
+
+<p>
+  Самая частая задача группы: под курсором карточка чуть приподнимается,
+  показывая, что она кликабельна. Один класс — <code>.gr-hover-lift</code>;
+  переход и <code>@media (hover: hover)</code> уже внутри него, поэтому
+  на сенсорном экране эффект не залипает после касания, а при
+  <code>prefers-reduced-motion: reduce</code> сжимается до неразличимого.
+  Второй класс, <code>.gr-hover-grow</code>, делает то же увеличением —
+  их можно ставить вместе, потому что двигают они разные свойства.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-md gr-gap"&gt;
+  &lt;article class="gr-card gr-hover-lift"&gt;…&lt;/article&gt;
+  &lt;article class="gr-card gr-hover-lift"&gt;…&lt;/article&gt;
+  &lt;article class="gr-card gr-hover-lift gr-hover-grow"&gt;…&lt;/article&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Наведите курсор: <code>.gr-hover-lift</code> у первых двух, у третьей ещё и <code>.gr-hover-grow</code></div>
+  <div class="gr-grid-1 gr-grid-3-md gr-gap">
+    <article class="gr-card gr-hover-lift">
+      <div class="gr-card-body">
+        <h4 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-1">Подъём</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Сдвиг на 0,25 rem вверх — ровно столько, чтобы заметить.</p>
+      </div>
+    </article>
+    <article class="gr-card gr-hover-lift">
+      <div class="gr-card-body">
+        <h4 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-1">Тот же класс</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Ничего, кроме <code>.gr-hover-lift</code>, добавлять не нужно.</p>
+      </div>
+    </article>
+    <article class="gr-card gr-hover-lift gr-hover-grow">
+      <div class="gr-card-body">
+        <h4 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-1">Подъём и рост</h4>
+        <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Два класса двигают разные свойства и складываются.</p>
+      </div>
+    </article>
+  </div>
+</div>
+
+<h3>Размытая подложка</h3>
+
+<p>
+  Фотография уходит на второй план, а текст поверх остаётся читаемым:
+  снимок кладётся слоем <code>.gr-absolute .gr-inset-0</code>
+  с <code>.gr-blur-3</code>, сверху — затемнение
+  <code>.gr-bg-black .gr-opacity-25</code>, и только потом контент.
+  Размытие здесь работает вместо второго затемняющего слоя: детали фона
+  перестают спорить с буквами, а цвет остаётся.
+</p>
+
+<div class="callout">
+  <p>
+    Размытый слой обязан быть <strong>крупнее рамки</strong> — иначе по краям
+    видна полупрозрачная кайма: <code>blur</code> размазывает и границу
+    картинки тоже. В примере это <code>.gr-scale-110</code> на самом снимке;
+    обрезает лишнее <code>.gr-overflow-hidden</code> на родителе.
+  </p>
+</div>
+
+<pre><code>&lt;section class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8"&gt;
+  &lt;img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover gr-blur-3 gr-scale-110" src="cover.jpg" alt=""&gt;
+  &lt;div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-25"&gt;&lt;/div&gt;
+  &lt;div class="gr-relative gr-text-white"&gt;…&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Фон — <code>.gr-blur-3 .gr-scale-110</code>, текст поверх остаётся резким</div>
+  <section class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8 gr-text-center">
+    <img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover gr-blur-3 gr-scale-110" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%237d97b8'/%3E%3Cpath%20d='M0%20240l120-140%2090%20100%2080-120%20110%20160z'%20fill='%23516b8c'/%3E%3Ccircle%20cx='330'%20cy='50'%20r='28'%20fill='%23f7f2e8'/%3E%3C/svg%3E">
+    <div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-25"></div>
+    <div class="gr-relative gr-text-white">
+      <h4 class="gr-m-0 gr-text-2xl gr-mb-2">Маршрут дня</h4>
+      <p class="gr-m-0">Фон размыт, буквы — нет</p>
+    </div>
+  </section>
+</div>
 
 <h3>Ровная сетка превью из разнокалиберных фото</h3>
 
@@ -147,8 +340,8 @@
   кадр — <code>.gr-object-cover</code>, а всё поверх — слоями
   из <a href="position.html">Position</a>. Кнопка Play — слой
   <code>.gr-absolute .gr-inset-0 .gr-grid-place-center</code> с белой
-  капсулой; длительность — бейдж в правом нижнем углу:
-  <code>.gr-absolute .gr-bottom-0 .gr-right-0</code> на чёрном фоне
+  капсулой; длительность — бейдж в нижнем углу у конца строки:
+  <code>.gr-absolute .gr-bottom-0 .gr-end-0</code> на чёрном фоне
   с <code>.gr-opacity-75</code>. Настоящий встраиваемый ролик держится
   той же рамкой: <code>iframe</code> с <code>.gr-w-full .gr-h-full</code>
   внутри блока <code>.gr-aspect-video</code>.
@@ -159,7 +352,7 @@
   &lt;div class="gr-absolute gr-inset-0 gr-grid-place-center"&gt;
     &lt;button class="gr-btn gr-bg-white gr-text-primary gr-radius-full gr-shadow-lg"&gt;▶ Смотреть&lt;/button&gt;
   &lt;/div&gt;
-  &lt;span class="gr-absolute gr-bottom-0 gr-right-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs"&gt;2:47&lt;/span&gt;
+  &lt;span class="gr-absolute gr-bottom-0 gr-end-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs"&gt;2:47&lt;/span&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Рамка — <code>.gr-aspect-video</code>, кнопка и бейдж — слои Position</div>
@@ -168,7 +361,7 @@
     <div class="gr-absolute gr-inset-0 gr-grid-place-center">
       <button class="gr-btn gr-bg-white gr-text-primary gr-radius-full gr-shadow-lg" type="button">▶ Смотреть</button>
     </div>
-    <span class="gr-absolute gr-bottom-0 gr-right-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs">2:47</span>
+    <span class="gr-absolute gr-bottom-0 gr-end-0 gr-m-2 gr-bg-black gr-text-white gr-opacity-75 gr-radius-1 gr-px-2 gr-py-1 gr-text-xs">2:47</span>
   </div>
 </div>
 
@@ -212,28 +405,36 @@
 
 <p>
   Секция «Нам доверяют»: логотипы клиентов не должны спорить с брендом
-  страницы, поэтому весь ряд приглушается <code>.gr-opacity-50</code>.
-  Ряд — знакомый кластер <code>.gr-flex .gr-flex-wrap .gr-gap-lg
-  .gr-flex-items-center</code>. Возврат цвета по ховеру — переход
-  <code>.gr-transition-opacity</code> из модуля
-  <a href="animations.html">Animations</a> плюс одна строка своего CSS
-  на <code>:hover</code>; ч/б-версии логотипов (grayscale) утилитами
-  не делаются — это тоже свой CSS.
+  страницы, поэтому весь ряд приглушается парой
+  <code>.gr-opacity-50 .gr-grayscale-100</code> — тише и по яркости,
+  и по цвету. Ряд — знакомый кластер <code>.gr-flex .gr-flex-wrap
+  .gr-gap-lg .gr-flex-items-center</code>.
 </p>
 
+<p>
+  Возврат цвета по наведению — одна строка своего CSS, и правит она
+  <strong>переменную, а не свойство</strong>: собирающее правило фильтров
+  читает <code>--gr-grayscale</code>, поэтому спор за <code>filter</code>
+  в каскаде не начинается вовсе.
+</p>
+
+<pre><code>@media (hover: hover) {
+  .logo:hover { --gr-grayscale: 0; }
+}</code></pre>
+
 <pre><code>&lt;div class="gr-flex gr-flex-wrap gr-gap-lg gr-flex-items-center gr-flex-center"&gt;
-  &lt;img class="gr-opacity-50 gr-transition-opacity" src="logo-a.svg" alt="Компания А"&gt;
-  &lt;img class="gr-opacity-50 gr-transition-opacity" src="logo-b.svg" alt="Компания Б"&gt;
+  &lt;img class="logo gr-opacity-50 gr-grayscale-100 gr-transition" src="logo-a.svg" alt="Компания А"&gt;
+  &lt;img class="logo gr-opacity-50 gr-grayscale-100 gr-transition" src="logo-b.svg" alt="Компания Б"&gt;
   …
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Ряд логотипов на <code>.gr-opacity-50</code> — тише страницы</div>
+  <div class="demo-block-title">Ряд логотипов на <code>.gr-opacity-50 .gr-grayscale-100</code> — тише страницы и по яркости, и по цвету</div>
   <div class="gr-flex gr-flex-wrap gr-gap-lg gr-flex-items-center gr-flex-center gr-py-4">
-    <span class="gr-opacity-50 gr-text-xl gr-font-black">ACME</span>
-    <span class="gr-opacity-50 gr-text-xl gr-font-black gr-italic">vertex</span>
-    <span class="gr-opacity-50 gr-text-xl gr-font-black">NORD</span>
-    <span class="gr-opacity-50 gr-text-xl gr-font-black gr-font-serif">Olive&amp;Co</span>
-    <span class="gr-opacity-50 gr-text-xl gr-font-black">Δelta</span>
+    <span class="gr-opacity-50 gr-grayscale-100 gr-text-xl gr-font-black">ACME</span>
+    <span class="gr-opacity-50 gr-grayscale-100 gr-text-xl gr-font-black gr-italic">vertex</span>
+    <span class="gr-opacity-50 gr-grayscale-100 gr-text-xl gr-font-black">NORD</span>
+    <span class="gr-opacity-50 gr-grayscale-100 gr-text-xl gr-font-black gr-font-serif">Olive&amp;Co</span>
+    <span class="gr-opacity-50 gr-grayscale-100 gr-text-xl gr-font-black">Δelta</span>
   </div>
 </div>
 

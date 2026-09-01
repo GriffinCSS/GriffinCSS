@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.21.4
+ * Griffincss — Runtime Grid Parser v0.22.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.21.4';
+  var VERSION = '0.22.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -91,6 +91,7 @@
 
   // === Состояние ===
   var styleEl = null;
+  var nonce = '';        // nonce тега <script>: пропуск под строгим CSP
   var generatedSets = {};   // ключ набора раскладок → имя класса
   var generatedAreas = {};  // имя области → CSS уже выдан
   var layoutCSS = '';
@@ -248,6 +249,9 @@
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = STYLE_ID;
+        // Без nonce строгая политика style-src молча выбрасывает
+        // содержимое листа: раскладки теряются, ошибки в консоли нет.
+        if (nonce) styleEl.nonce = nonce;
         document.head.appendChild(styleEl);
       }
     }
@@ -256,6 +260,11 @@
 
   // Защита от FOUC живёт в рантайме, а не в статическом CSS:
   // без выполненного JS правила нет и контент виден.
+  //
+  // Открытие контейнера — переход 0,3 с, то есть видимое движение.
+  // При prefers-reduced-motion: reduce перехода нет: содержимое
+  // появляется сразу. Скрытие остаётся — снимается не защита,
+  // а анимация её снятия.
   function foucGuardCSS() {
     var hidden = [];
     var shown = [];
@@ -266,8 +275,12 @@
       shown.push(attr + '.gr-ready');
     }
 
+    var open = shown.join(',\n');
+
     return hidden.join(',\n') + ' {\n  opacity: 0;\n}\n'
-      + shown.join(',\n') + ' {\n  opacity: 1;\n  transition: opacity 0.3s ease;\n}\n';
+      + open + ' {\n  opacity: 1;\n  transition: opacity 0.3s ease;\n}\n'
+      + '@media (prefers-reduced-motion: reduce) {\n'
+      + open + ' {\n  transition: none;\n}\n}\n';
   }
 
   // Правило в буфер слоя — один раз по ключу. Ключ, а не текст правила:
@@ -328,8 +341,8 @@
     return selector + ' {\n'
       + '  display: grid;\n'
       + '  grid-template-areas: ' + areaRows.join(' ') + ';\n'
-      + '  grid-template-columns: repeat(' + cols + ', 1fr);\n'
-      + '  grid-template-rows: repeat(' + rows + ', auto);\n'
+      + '  grid-template-columns: var(--gr-l-cols, repeat(' + cols + ', minmax(0, 1fr)));\n'
+      + '  grid-template-rows: var(--gr-l-rows, repeat(' + rows + ', auto));\n'
       + '}\n';
   }
 
@@ -441,7 +454,10 @@
   // собственных копий тех же ста строк.
   //
   // spec: { delay, hasWork(mutations), handleAdded(nodes) → dirty,
-  //         flush(), refresh(root) }
+  //         flush(), refresh(root), attributeFilter? }
+  //
+  // attributeFilter — список атрибутов, чья правка тоже будит наблюдатель.
+  // Без него наблюдение идёт только за childList, как было до Этапа 37.
   //
   // Без MutationObserver оба наблюдателя молча бездействуют: рантайм
   // в таком окружении работает разовыми проходами.
@@ -473,7 +489,14 @@
         }, spec.delay);
       });
 
-      entry.observer.observe(root, { childList: true, subtree: true });
+      var options = { childList: true, subtree: true };
+
+      if (spec.attributeFilter) {
+        options.attributes = true;
+        options.attributeFilter = spec.attributeFilter;
+      }
+
+      entry.observer.observe(root, options);
       observers.push(entry);
     }
 
@@ -824,7 +847,20 @@
     return dirty;
   }
 
-  function hasLayoutAdditions(mutations) {
+  // Есть ли рантайму работа после порции мутаций. Причин две: пришёл
+  // новый контейнер (childList) и с уже разложенного слетели маркеры
+  // (class).
+  //
+  // Второе — перезапись className фреймворком (Этап 37a): React и Vue
+  // считают className своим и присваивают его целиком при изменении
+  // пропа. С узла слетают .gr-ready и .gr-l-<хеш>: раскладка исчезает,
+  // а FOUC-защита ловит элемент по атрибуту и оставляет его в opacity: 0
+  // навсегда. Наблюдение за childList такую мутацию не видит.
+  //
+  // Ответ читается по текущему состоянию узла, а не по oldValue: возврат
+  // класса — сам мутация атрибута, и на ней ответ обязан быть «работы
+  // нет», иначе перерисовка вызывала бы саму себя без конца.
+  function hasWork(mutations) {
     for (var i = 0; i < mutations.length; i++) {
       var added = mutations[i].addedNodes;
 
@@ -837,6 +873,17 @@
 
         if (node.querySelectorAll && node.querySelectorAll(LAYOUT_SELECTOR).length > 0) return true;
       }
+
+      // Цель без записи — контейнер ещё не обработан; это забота ветки
+      // выше. Цель мутации childList проверку проходит тем же путём:
+      // потерявший маркеры контейнер требует работы, кто бы ни разбудил.
+      var el = mutations[i].target;
+      var record = el && el.nodeType === 1 && hasLayoutAttr(el) ? recordOf(el) : null;
+
+      if (!record) continue;
+
+      if (!el.classList.contains('gr-ready')) return true;
+      if (record.layoutClass && !el.classList.contains(record.layoutClass)) return true;
     }
 
     return false;
@@ -846,7 +893,9 @@
   // машинерией, которую _scanner отдаёт рантаймам-надстройкам.
   var scanner = createScanner({
     delay: REFRESH_DELAY,
-    hasWork: hasLayoutAdditions,
+    attributeFilter: ['class'],
+    hasWork: hasWork,
+
     handleAdded: handleAdded,
     flush: flushCSS,
     refresh: refresh
@@ -904,6 +953,10 @@
       var script = document.currentScript;
       if (script && script.getAttribute('data-auto') === 'false') autoInit = false;
       if (script && script.getAttribute('data-stream') === 'false') streaming = false;
+      // Свойство, а не атрибут: содержимое атрибута браузер прячет
+      // после разбора. Читается здесь, потому что позже
+      // document.currentScript уже null.
+      if (script) nonce = script.nonce || '';
     } catch (e) { /* currentScript недоступен */ }
 
     if (!autoInit) return;

@@ -64,7 +64,7 @@
   .gr-grid-#{$cols} {
     display: grid;
     gap: var(--gr-gap);
-    grid-template-columns: repeat(#{$cols}, 1fr);
+    grid-template-columns: repeat(#{$cols}, minmax(0, 1fr));
   }
 }
 
@@ -84,7 +84,7 @@
       .gr-grid-#{$cols}-#{$bp-name} {
         display: grid;
         gap: var(--gr-gap);
-        grid-template-columns: repeat(#{$cols}, 1fr);
+        grid-template-columns: repeat(#{$cols}, minmax(0, 1fr));
       }
     }
   }

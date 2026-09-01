@@ -35,15 +35,53 @@ Node 20 закончилась 30.04.2026.
 
 ## Как предложить изменение
 
+### Сначала — про устройство репозитория
+
+Публичный репозиторий — **собранное дерево**, а не рабочее. Его историю
+пишет скрипт выпуска: один коммит на версию, без промежуточных шагов,
+поэтому `git log` здесь короткий, а `git blame` показывает не автора
+строки, а номер выпуска, в котором она появилась. Собранные файлы
+(`packages/*/dist/**`, `docs/index.json`, `docs/search-index.js`)
+генерируются сборкой — править их руками бессмысленно, следующий выпуск
+перезапишет.
+
+Знать это нужно ровно за одним: **правьте исходники, а не артефакты.**
+Исходники здесь настоящие и полные — `packages/*/scss/`, `packages/*/src/`,
+`packages/*/test/`, `docs/*.html`, — и `npm run check` в публичном дереве
+проходит целиком, вместе с тестами.
+
+### Порядок
+
 1. **Заведите issue** до начала работы, если правка не тривиальна. Опишите
    задачу и предполагаемое решение — это дешевле, чем переписывать готовый код.
 2. **Создайте ветку** от `main`. Имя ветки — латиницей, по схеме
    `<тип>/<краткое-описание>`: `feat/dark-theme`, `fix/layout-collision`.
 3. **Сделайте изменение** минимальным по объёму и совпадающим по стилю
-   с соседним кодом.
+   с соседним кодом. Артефакты сборки в коммит не кладите: диффа по ним
+   всё равно не будет — они пересобираются.
 4. **Проверьте** его (см. раздел «Проверка»).
 5. **Откройте pull request** в `main` с описанием: что изменилось, зачем,
    как проверено.
+
+### Что происходит с принятым PR
+
+Слиться в публичное дерево напрямую он не может: следующий выпуск
+перезаписал бы его целиком. Поэтому принятый патч **переносится
+в рабочий репозиторий с сохранением авторства** — `git format-patch`
+на вашей ветке, `git am` на моей стороне, автор коммита остаётся ваш.
+Дальше изменение живёт как обычный коммит: попадает в следующий выпуск,
+и вместе с ним — обратно в публичное дерево, уже собранным.
+
+Что это значит на практике:
+
+- PR закрывается, а не сливается, — и в комментарии указывается коммит
+  выпуска, в котором изменение вышло;
+- имя автора остаётся в истории и упоминается в `CHANGELOG.md`;
+- между принятием и выпуском проходит время: выпуски редкие, изменения
+  копятся.
+
+Если такой порядок не подходит — предложение в issue тоже работает,
+и код в его теле никто не выбрасывает.
 
 ---
 
@@ -74,6 +112,7 @@ Node 20 закончилась 30.04.2026.
 - [Новый SCSS-модуль](#creating-a-new-griffincss-scss-module)
 - [Правка существующего SCSS](#editing-griffincss-scss)
 - [Правка JS-рантайма](#editing-griffincss-js-runtime)
+- [Слой GriffinJS: куда класть общую часть](#слой-griffinjs-куда-класть-общую-часть)
 
 Архитектурный справочник — [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -175,7 +214,7 @@ Add an example to `docs/demo.html` demonstrating the new module's classes.
 | SCSS mixins/functions | `gr-{kebab-case}()` | `gr-grid-layout()`, `gr-rem()` |
 | CSS custom properties | `--gr-{kebab-case}` | `--gr-gap`, `--gr-radius` |
 | Responsive suffix | `-{sm,md,lg,xl}` | `.gr-hidden-md`, `.gr-flex-col-lg` |
-| Logical side | `-s` / `-e` next to physical `-l` / `-r` | `.gr-ms-4`, `.gr-border-e` |
+| Logical side | `-s` / `-e` — the only one-sided inline form (no `-l` / `-r`) | `.gr-ms-4`, `.gr-border-e` |
 
 The prefix form `.gr-md\:p-8` was removed in v0.7.0. The library has exactly one
 responsive syntax: the suffix.
@@ -191,21 +230,24 @@ which makes the output smaller rather than larger.
 A physical property is allowed, but it needs a reason written in a comment next
 to it. Two reasons are known to be good:
 
-- **The side is geometric, not textual.** A close button in the corner of a window
-  must hold the corner, so `.gr-left-0` is left in any writing direction. Same for
-  `object-position` — it frames the picture, not the text.
-- **The class already exists with a physical name.** `.gr-ml-*` cannot be
-  redefined into `margin-inline-start`: markup that says `ml` chose the left side
-  on purpose. Add the logical sibling next to it instead — that is how Stage 13
-  paired `ms`/`me` with `ml`/`mr` and `start`/`end` with `left`/`right`.
+- **The axis does not flip.** The block axis never turns under `dir="rtl"`,
+  so `top`/`bottom`, `mt`/`mb`, `pt`/`pb` and `border-t`/`border-b` keep their
+  physical names. Same for `object-position` — it frames the picture, not
+  the text.
+- **One-sided inline utilities are logical-only.** The physical siblings —
+  `.gr-ml-*`/`.gr-mr-*`, `.gr-text-left`/`-right`, `.gr-left-*`/`.gr-right-*`,
+  `.gr-border-l`/`-r` — were removed by the library's one planned breaking
+  change, and `check-dist` fails the build if such a class reappears.
+  A side that must stay physical (a close button holding the corner of
+  a window) is the consumer's own CSS, not a utility class.
 
 `width` and `height` are *not* on this list. `direction: rtl` does not swap the
 inline axis — only `writing-mode` does — so `inline-size` buys nothing while the
 library has no vertical writing support, and costs six bytes in every rule.
 
-Both classes belong in the same module and in the same documentation table, with
-the RTL column filled in. A logical class the reader cannot find is a class nobody
-uses.
+Logical and physical classes of one module belong in the same documentation
+table, with the RTL column filled in. A logical class the reader cannot find
+is a class nobody uses.
 
 ### A utility whose value someone else needs
 
@@ -629,6 +671,51 @@ The same rules live in `packages/core/scss/_functions.scss` (`@error` instead of
 | `data-gr-layout` | Base grid layout (no breakpoint) |
 | `data-gr-layout-{sm,md,lg,xl}` | Responsive grid layout by **window** width (`@media`) |
 | `data-gr-layout-c{sm,md,lg,xl}` | Responsive grid layout by **container** width (`@container`) — the nearest ancestor with `container-type`, i.e. an ancestor carrying `.gr-cq`. The runtime never adds `.gr-cq` itself: inline-size containment forced onto someone else's markup breaks the page silently |
+
+---
+
+## Слой GriffinJS: куда класть общую часть
+
+Правило появилось в Этапе 22, когда 70 % ядра слоя обслуживало меньшинство
+виджетов: дорожка была нужна трём виджетам из одиннадцати, анимация — двум,
+жест — одному движку, медиазапросы — одному виджету. Ядро при этом весило
+6,3 КБ gzip, и взять один лёгкий виджет стоило почти столько же, сколько
+взять пять.
+
+**Новая общая возможность кладётся в `SHARED`, а не в `CORE`.** Списки —
+в `scripts/build-griffinjs.mjs`. В `CORE` она переезжает только тогда, когда
+ею пользуются все: иначе за неё платит и тот, кому она не нужна, — включая
+того, кто собрал набор из двух файлов ради одной подсказки.
+
+**Модуль объявляет, что берёт из ядра.** Вторым аргументом регистрации или
+`G.needs()`, если модуль ничего не регистрирует:
+
+```js
+G.defineWidget('slider', { needs: ['track', 'motion'] }, function (el, opts) { … });
+G.defineEngine('fade', { needs: ['gesture'] }, function (track, el) { … });
+G.needs('lightbox', ['track']);   // контроллер: регистрирует не виджет, а подписку
+```
+
+Зависимостью бывает и другой модуль: `gallery` строится поверх `slider`.
+Обращение к чужой части **только внутри фабрики** — на уровне загрузки файла
+её может ещё не быть.
+
+Зачем это нужно: виджет, который берёт `G.track` и не объявил его, прекрасно
+работает в полном `griffinjs.js` и молча ломается у того, кто собрал набор
+руками. Отказ тихий и проявляется у читателя страницы, а не при сборке.
+Поэтому:
+
+- `start()` сверяет объявленное с тем, что есть в сборке, и предупреждает
+  в консоли — предупреждает, а не отказывает: виджеты со страховкой
+  (`if (G.anchor)`) продолжают работать урезанно;
+- `packages/ui/test/griffinjs-standalone.test.js` сверяет `needs` с кодом,
+  поднимает каждый виджет на его наборе и проверяет, что набор без части
+  говорит об этом вслух;
+- таблица «виджет → что подключить» в документации **генерируется** из тех же
+  объявлений: `npm run sync-griffinjs -- --fix`. Руками её не правят.
+
+Подробности слоя — [«Архитектура GriffinJS»](docs/griffinjs-architecture.html):
+инвентарь модулей, инварианты и таблица «виджет → что подключить».
 
 ---
 

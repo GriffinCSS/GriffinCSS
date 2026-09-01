@@ -252,6 +252,7 @@
   };
 
   G.lightbox = api;
+  G.needs('lightbox', ['track']);
   G.on('click', '[' + ATTR + ']', onClick);
   G.use({ destroy: teardown });
 })(typeof window !== 'undefined' && window.GriffinJS ? window.GriffinJS : require('../core/griffinjs-core.js'));
