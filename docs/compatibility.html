@@ -31,14 +31,16 @@
   </div>
 </div>
 
-<h2 id="porog">Порог: четыре возможности</h2>
+<h2 id="porog">Порог: четыре возможности и одна мягкая</h2>
 
 <p>
   Griffincss стоит на каскадных слоях, контейнерных запросах,
   <code>:has()</code> и <code>subgrid</code>. Слои несёт
   каждый собранный файл — на них держится вся специфичность библиотеки;
   остальные три требуются только тем сборкам и утилитам, что перечислены
-  в таблице.
+  в таблице. Пятая строка — <code>field-sizing</code> — порога
+  не задаёт: без неё поле лишь не растёт само, и это единственная
+  возможность в таблице, у которой отказ ничего не ломает.
 </p>
 
 <p>
@@ -77,6 +79,13 @@
     <td><code>griffincss-ui.css</code>: поле с <code>:disabled</code>, метка обязательного поля, подсказка</td>
     <td class="gr-whitespace-nowrap">94,1 %</td>
     <td><span class="gr-whitespace-nowrap">95,0 %</span><br><span class="gr-text-sm gr-text-ink-secondary">от измеримого трафика; сырая цифра — 63,3 % при атрибуции 66,7 %</span></td>
+  </tr>
+  <tr>
+    <td><code>field-sizing</code></td>
+    <td>Chrome 123 · Edge 123 · Firefox 152 · Safari 26.2</td>
+    <td>только автовысота <code>.gr-textarea</code> в <code>griffincss-ui.css</code>; ниже порога правило отброшено — высота прежняя, ручка <code>resize</code> на месте</td>
+    <td class="gr-whitespace-nowrap">—</td>
+    <td>—<br><span class="gr-text-sm gr-text-ink-secondary">в <code>caniuse-lite</code> свойства нет, и <code>npm run coverage</code> его не меряет; версии — по данным MDN</span></td>
   </tr>
   <tr>
     <td><code>subgrid</code> (!)</td>

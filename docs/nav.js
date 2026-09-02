@@ -94,8 +94,10 @@
         { href: 'griffinjs-parallax.html', text: 'Параллакс' },
         { href: 'griffinjs-menus.html',    text: 'Меню' },
         { href: 'griffinjs-overlays.html', text: 'Окна и комбобокс' },
+        { href: 'griffinjs-fields.html',   text: 'Поля форм' },
         { href: 'griffinjs-architecture.html', text: 'Архитектура' },
-        { href: 'griffinjs-lab.html',      text: 'Полигон' }
+        { href: 'griffinjs-lab.html',      text: 'Полигон' },
+        { href: 'griffinjs-fields-lab.html', text: 'Полигон полей' }
       ]
     },
     {

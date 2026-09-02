@@ -73,9 +73,13 @@
 
 // --- Поля -------------------------------------------------------------------
 
+// .gr-file стоит в общих правилах семьи, а не в своём наборе: файловому
+// полю нужны те же рамка, фон, кегль, фокус, :user-invalid и :disabled,
+// и второй список селекторов стоил бы байтов, не добавляя ничего.
 .gr-input,
 .gr-textarea,
-.gr-select {
+.gr-select,
+.gr-file {
   --gr-control-h: var(--gr-control-height);
 
   display: block;
@@ -97,8 +101,16 @@
 
 // Многострочное поле выше однострочного и тянется только по вертикали:
 // горизонтальное растягивание ломает колонку разметки.
+//
+// Высота — по содержимому (field-sizing: content): поле растёт вместе
+// с текстом от min-block-size, предел задаёт автор через max-block-size.
+// Ноль байт JS. Ручке resize это не мешает: после ручного растягивания
+// браузер держит заданную высоту, и автовысота уступает ей. Без поддержки
+// свойство отбрасывается, и поле остаётся прежним — фиксированная высота
+// и ручка; порог назван в docs/compatibility.html.
 .gr-textarea {
   min-block-size: calc(var(--gr-control-h) * 2);
+  field-sizing: content;
   resize: vertical;
 }
 
@@ -146,7 +158,8 @@
 
 .gr-input:focus-visible,
 .gr-textarea:focus-visible,
-.gr-select:focus-visible {
+.gr-select:focus-visible,
+.gr-file:focus-visible {
   border-color: var(--gr-color-accent);
   outline: var(--gr-focus-width) solid var(--gr-color-focus);
   outline-offset: 1px;
@@ -158,9 +171,11 @@
 .gr-input:user-invalid,
 .gr-textarea:user-invalid,
 .gr-select:user-invalid,
+.gr-file:user-invalid,
 .gr-input[aria-invalid="true"],
 .gr-textarea[aria-invalid="true"],
-.gr-select[aria-invalid="true"] {
+.gr-select[aria-invalid="true"],
+.gr-file[aria-invalid="true"] {
   border-color: var(--gr-color-danger);
 }
 
@@ -177,7 +192,8 @@
 
 .gr-input:disabled,
 .gr-textarea:disabled,
-.gr-select:disabled {
+.gr-select:disabled,
+.gr-file:disabled {
   border-color: var(--gr-color-border);
   background-color: var(--gr-color-surface-sunken);
   color: var(--gr-color-text-disabled);
@@ -187,6 +203,84 @@
 .gr-input:read-only:not(:disabled),
 .gr-textarea:read-only:not(:disabled) {
   background-color: var(--gr-color-surface);
+}
+
+// --- Файловое поле -----------------------------------------------------------
+
+// <input type="file"> — поле семьи: рамка, фон, кегль, фокус, :user-invalid
+// и :disabled приходят из общих правил выше. Своё у него одно — кнопка
+// выбора: псевдоэлемент ::file-selector-button оформляется малой кнопкой
+// и отбивается от имени файла. Мультивыбор даёт атрибут multiple, и без
+// скрипта поле показывает число выбранных само; список с удалением
+// по одному — слой GriffinJS (griffinjs-fields.js).
+// Центровка по вертикали — арифметикой, а не флексом и не vertical-align:
+// middle. Внутреннюю раскладку файлового поля браузер держит у себя, flex
+// на самом поле до кнопки не достаёт, а middle равняет кнопку по середине
+// строчных букв, и она садится ниже центра на пару пикселей. Поэтому
+// строка — во всю внутреннюю высоту поля, кнопка — заданной высоты
+// с равными отступами сверху и снизу, выровненная по верху строки:
+// отступ + кнопка + отступ равны строке, и центр совпадает по построению.
+// Имя файла центрирует та же строка. Все три размера поля — из --gr-control-h.
+.gr-file {
+  --gr-file-inset: 0.25rem;
+  --gr-file-button: calc(var(--gr-control-h) - 2 * var(--gr-border-width) - 2 * var(--gr-file-inset));
+
+  padding-block: 0;
+  padding-inline-start: var(--gr-file-inset);
+  line-height: calc(var(--gr-control-h) - 2 * var(--gr-border-width));
+  cursor: pointer;
+}
+
+// Радиус кнопки чуть меньше радиуса поля, чтобы вписаться в его угол;
+// на нулевом радиусе не уходит в минус.
+.gr-file::file-selector-button {
+  box-sizing: border-box;
+  block-size: var(--gr-file-button);
+  margin-block: var(--gr-file-inset);
+  margin-inline: 0 var(--gr-control-padding-x);
+  padding-block: 0;
+  padding-inline: calc(var(--gr-control-padding-x) * 0.7);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: max(0px, calc(var(--gr-radius) - 0.125rem));
+  background-color: var(--gr-color-surface-raised);
+  color: var(--gr-color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: calc(var(--gr-file-button) - 2 * var(--gr-border-width));
+  vertical-align: top;
+  cursor: pointer;
+}
+
+// Зона перетаскивания: подпись-обёртка вокруг того же поля. Без скрипта —
+// просто крупная кнопка выбора: щелчок по подписи открывает выбор файла,
+// перетаскивание принимает сама платформа только на поле. Со скриптом
+// data-gr-file="drop" зона принимает файлы целиком и подсвечивается
+// состоянием over. Центрирование — тот же приём, что у .gr-flex-center.
+.gr-file-drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gr-ui-gap);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-block-size: 8rem;
+  padding: var(--gr-gap);
+  border: 2px dashed var(--gr-color-border-strong);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-color-text-secondary);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--gr-transition), background-color var(--gr-transition);
+}
+
+.gr-file-drop > .gr-file {
+  inline-size: auto;
+}
+
+.gr-file-drop[data-gr-state="over"] {
+  border-color: var(--gr-color-accent);
+  background-color: hsl(var(--gr-hsl-accent), 8%);
 }
 
 // --- Поле даты и времени -----------------------------------------------------

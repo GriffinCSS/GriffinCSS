@@ -1,0 +1,23 @@
+// GriffinJS — одноразовый код
+// Ряд ячеек по одному знаку. Разметка — виджета, поэтому и вид ячеек
+// задаётся здесь, а не в семье .gr-input: без скрипта они тоже ячейки,
+// заполняемые вручную, и выглядеть обязаны так же.
+//
+//   <div class="gr-otp" role="group" aria-label="Код из СМС" data-gr-otp>
+//     <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1"> ×6
+//   </div>
+
+.gr-otp {
+  display: inline-flex;
+  gap: var(--gr-ui-gap);
+}
+
+// Квадрат со стороной в высоту поля; знак по центру и крупнее обычного —
+// его один, и разглядывать его придётся.
+.gr-otp-cell {
+  inline-size: var(--gr-control-h);
+  padding-inline: 0;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}

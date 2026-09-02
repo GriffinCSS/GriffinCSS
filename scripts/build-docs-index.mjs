@@ -46,6 +46,7 @@ const SKIP = new Set(['stream-off.html', 'slow.html', '404.html']);
 // Полигон GriffinJS — стенд для браузерных тестов, а не раздел документации:
 // та же причина, что у stream-off.html.
 SKIP.add('griffinjs-lab.html');
+SKIP.add('griffinjs-fields-lab.html');
 
 // Слой GriffinJS: классы griffinjs.css попадают в индекс наравне с классами
 // компонентов, а атрибуты data-gr-<виджет> слоя — отдельной группой: их

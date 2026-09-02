@@ -14,9 +14,17 @@
 //   griffinjs-<модуль>.js — каждый движок и виджет отдельно;
 //   griffinjs.css         — стили слоя из packages/ui/scss/griffinjs/.
 //
-// Скрипт живёт только в Dev до фазы 21h: в список разрешённого
-// release-public.mjs он не входит, а команда build:griffinjs снимается
-// из package.json пакета ui при сборке публичного дерева.
+// Второй бандл (Этап 38) — расширенные поля форм:
+//   griffinjs-fields.js   — все поля одним файлом, БЕЗ ядра: ядро пишет
+//                           window.GriffinJS без проверки, и второе ядро
+//                           на странице затёрло бы первое. Подключается
+//                           после griffinjs.js или griffinjs-core.js;
+//   griffinjs-<поле>.js   — каждое поле отдельно;
+//   griffinjs-countries.js — таблица стран для поля телефона: данные
+//                           отдельно от механизма, подключаются по желанию;
+//   griffinjs-fields.css  — стили полей из packages/ui/scss/griffinjs/fields/.
+// В griffinjs.js поля не входят ни одним байтом: за них платит только тот,
+// кто их подключил.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -49,6 +57,22 @@ export const WIDGETS = [
   'widgets/megamenu.js', 'widgets/dropdown.js', 'widgets/tooltip.js',
   'widgets/dialog.js', 'widgets/combobox.js', 'widgets/range.js', 'widgets/sortable.js',
 ];
+// Поля форм — второй бандл (Этап 38). Порядок значим: маска — фундамент,
+// на ней стоят телефон, дата и одноразовый код, поэтому она идёт первой.
+export const FIELDS = [
+  'fields/mask.js',
+  'fields/phone.js',
+  'fields/datetime.js',
+  'fields/file.js',
+  'fields/rating.js',
+  'fields/otp.js',
+  'fields/counter.js',
+  'fields/validate.js',
+];
+// Таблица стран — данные, а не виджет: ISO2, код, маска. В бандл полей
+// не входит и лежит своим файлом со своим потолком: набор со своим темпом
+// обновления библиотека не сопровождает вместе с кодом.
+export const COUNTRIES = 'fields/countries.js';
 
 const PREAMBLE = '/*! GriffinJS | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */';
 
@@ -82,17 +106,25 @@ async function main() {
   sizes.push(['griffinjs', await pack([...CORE, ...ENGINES, ...SHARED, ...WIDGETS], 'griffinjs')]);
   sizes.push(['griffinjs-core', await pack(CORE, 'griffinjs-core')]);
 
-  for (const rel of [...ENGINES, ...SHARED, ...WIDGETS]) {
+  // Поля — тем же способом, что виджеты, но в свой файл: полный griffinjs.js
+  // их не содержит, и его вес от этого списка не зависит.
+  sizes.push(['griffinjs-fields', await pack(FIELDS, 'griffinjs-fields')]);
+  sizes.push(['griffinjs-countries', await pack([COUNTRIES], 'griffinjs-countries')]);
+
+  for (const rel of [...ENGINES, ...SHARED, ...WIDGETS, ...FIELDS]) {
     const name = `griffinjs-${moduleName(rel)}`;
 
     sizes.push([name, await pack([rel], name)]);
   }
 
   // Стили — тем же sass и с теми же флагами, что у griffincss-ui.css.
-  execFileSync('npx', [
-    'sass', join(scss, 'griffinjs.scss'), join(dist, 'griffinjs.css'),
-    '--load-path=' + join(root, 'node_modules'), '--style=compressed', '--no-source-map',
-  ], { cwd: root, stdio: 'inherit' });
+  // Стили полей — отдельным файлом по той же причине, что и скрипт.
+  for (const [entry, out] of [['griffinjs.scss', 'griffinjs.css'], ['fields/fields.scss', 'griffinjs-fields.css']]) {
+    execFileSync('npx', [
+      'sass', join(scss, entry), join(dist, out),
+      '--load-path=' + join(root, 'node_modules'), '--style=compressed', '--no-source-map',
+    ], { cwd: root, stdio: 'inherit' });
+  }
 
   // Пустой вывод при успехе — как у остальной сборки. Размеры печатает
   // check-dist, здесь они нужны только при явном запросе.

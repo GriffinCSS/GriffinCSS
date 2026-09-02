@@ -11,7 +11,10 @@
 <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs-fields.css">
 <script src="../packages/ui/dist/griffinjs.js"></script>
+<script src="../packages/ui/dist/griffinjs-fields.js"></script>
+<script src="../packages/ui/dist/griffinjs-countries.js"></script>
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
 </head>
@@ -46,7 +49,7 @@
   <tr><td><code>.gr-required</code></td><td>Звёздочка обязательности вручную — для групп; у поля с <code>required</code> она появляется сама</td></tr>
   <tr><td><code>.gr-input</code></td><td>Однострочное поле любого типа — включая <code>date</code>, <code>time</code> и <code>color</code>: ни один селектор семьи не ограничен типом</td></tr>
   <tr><td><code>.gr-input-no-spin</code></td><td>Числовое поле без системных стрелок шага: в счётчике количества шагают кнопки рядом. Клавиатурный шаг <kbd>↑</kbd> / <kbd>↓</kbd> остаётся</td></tr>
-  <tr><td><code>.gr-textarea</code></td><td>Многострочное; тянется только по вертикали</td></tr>
+  <tr><td><code>.gr-textarea</code></td><td>Многострочное; растёт по содержимому (<code>field-sizing: content</code>: Chrome 123, Firefox 152, Safari 26.2) от двух строк до <code>max-block-size</code>, если его задать; тянется ручкой только по вертикали. Где свойства нет — высота прежняя</td></tr>
   <tr><td><code>.gr-select</code></td><td>Выпадающий список; стрелка своя, отбита от края поля</td></tr>
 </table>
 
@@ -264,16 +267,20 @@
   &lt;input class="gr-input" type="number" aria-label="Сумма"&gt;
 &lt;/div&gt;</code></pre>
 
-<h2>Выбор даты и времени</h2>
+<h2 id="vybor-daty-i-vremeni">Выбор даты и времени</h2>
 
 <p>
-  Своего выбора даты в библиотеке нет, и это не пробел: его закрывает
-  нативное <code>&lt;input type="date"&gt;</code>. Локализация, разбор
-  введённого, клавиатура, работа со скринридером и мобильный календарь
-  там уже есть — и сделаны платформой лучше, чем их сделал бы виджет
-  на разметке. Библиотеке остаётся оформить поле, и она это делает
-  без единого нового класса: <code>.gr-input</code> работает на дате
-  ровно так же, как на тексте.
+  Ответ по умолчанию — нативное <code>&lt;input type="date"&gt;</code>,
+  и это не пробел. Локализация, разбор введённого, клавиатура, работа
+  со скринридером и мобильный календарь там уже есть — и сделаны
+  платформой лучше, чем их сделал бы виджет на разметке. Библиотеке
+  остаётся оформить поле, и она это делает без единого нового класса:
+  <code>.gr-input</code> работает на дате ровно так же, как на тексте.
+  Второй путь — виджет <code>data-gr-datetime</code> из второго бандла
+  слоя — существует и назван ниже, в подразделе
+  <a href="#griffinjs-fields">«С подключённым <code>griffinjs-fields.js</code>»</a>,
+  вместе со своей платой; заменой нативного поля он не является:
+  на телефоне он и сам уступает системному календарю.
 </p>
 
 <p>
@@ -389,7 +396,8 @@
     есть физическая связь. Это подраздел
     <a href="#griffinjs">«С подключённым <code>griffinjs.js</code>»</a>
     ниже. У двух дат такой связи нет: они независимы, и навязывать им
-    порядок значило бы решать за форму.
+    порядок значило бы решать за форму. Диапазон дат одним контролом
+    не делает и виджет второго бандла — это приложение, а не поле.
   </p>
 </div>
 
@@ -874,6 +882,106 @@
     по-настоящему, — <code>.gr-input-no-spin</code>: снять системные
     стрелки композицией утилит нельзя.
   </p>
+</div>
+
+<h2 id="griffinjs-fields">С подключённым <code>griffinjs-fields.js</code></h2>
+
+<div class="callout">
+  <p>
+    Второй бандл слоя — восемь полей, которых у платформы нет. Разметка
+    та же семья <code>.gr-field</code>, у каждого поля есть база без
+    скрипта, а <code>griffinjs.js</code> от них не растёт ни на байт:
+    файл подключают только те, кому он нужен, после <code>griffinjs.js</code>
+    или <code>griffinjs-core.js</code>. Набор «ядро + anchor + поля» —
+    <b><!--gr:size:griffinjs-fields-set-->12,1 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>.
+    Здесь — четыре поля, которые чаще всего стоят в форме рядом;
+    остальные и подробности — на странице
+    <a href="griffinjs-fields.html">«Поля форм»</a>.
+  </p>
+</div>
+
+<h3>Телефон: код страны и маска</h3>
+
+<p>
+  Список кодов — из разметки или из таблицы стран
+  <code>griffinjs-countries.js</code>; имя страны и флаг — у платформы,
+  в языке страницы. Без скрипта — <code>type="tel"</code> и тот же список
+  в группе.
+</p>
+
+<pre><code>&lt;div class="gr-input-group" data-gr-phone="country: ru"&gt;
+  &lt;select class="gr-select" name="code" aria-label="Код страны"&gt;&lt;/select&gt;
+  &lt;input class="gr-input" type="tel" name="phone" autocomplete="tel-national"&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Состав из таблицы стран <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-phone-field">Телефон</label>
+    <div class="gr-input-group" data-gr-phone="country: ru">
+      <select class="gr-select" name="code" aria-label="Код страны"></select>
+      <input class="gr-input" id="forms-demo-phone-field" type="tel" name="phone" autocomplete="tel-national">
+    </div>
+  </div>
+</div>
+
+<h3>Дата: второй путь и его плата</h3>
+
+<p>
+  Разметка — то же нативное поле, что выше. На тач-устройстве виджет
+  её не трогает: системный календарь остаётся, и решает это
+  <code>pointerType</code> каждого события. На указателе мыши тип
+  подменяется на <code>text</code>, надевается маска по локали
+  из <code>lang</code> документа — формат наконец ваш, а не браузера, —
+  открывается панель, а ISO уходит в скрытый спутник с прежним именем.
+  Плата: на текстовом поле платформа не проверяет <code>min</code>
+  и <code>max</code> — проверяет виджет через <code>setCustomValidity</code>,
+  сообщение о границах берёт у платформы, о невозможной дате — своё.
+</p>
+
+<pre><code>&lt;input class="gr-input" type="date" name="from" min="2026-01-01" required data-gr-datetime&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">На компьютере — маска и панель, на телефоне — системный календарь <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-date-field">Дата заезда</label>
+    <input class="gr-input" id="forms-demo-date-field" type="date" name="from" value="2026-09-01" min="2026-01-01" max="2026-12-31" data-gr-datetime aria-describedby="forms-demo-date-field-hint">
+    <span class="gr-hint" id="forms-demo-date-field-hint">В пределах 2026 года.</span>
+  </div>
+</div>
+
+<h3>Счётчик символов</h3>
+
+<pre><code>&lt;textarea class="gr-textarea" maxlength="200" data-gr-counter="format: {left} из {max}"&gt;&lt;/textarea&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Остаток к пределу после поля, с <code>aria-live</code> <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-counter-field">Комментарий</label>
+    <textarea class="gr-textarea" id="forms-demo-counter-field" maxlength="120" data-gr-counter="format: {left} из {max}; near: 0.2" placeholder="До 120 знаков"></textarea>
+  </div>
+</div>
+
+<h3>Сводка ошибок вместо пузыря</h3>
+
+<pre><code>&lt;form data-gr-validate&gt;
+  …
+  &lt;button class="gr-btn gr-btn-primary" type="submit"&gt;Отправить&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Все непройденные поля одним списком, ссылками к полям <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <form class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem" data-gr-validate onsubmit="return false">
+    <div class="gr-field">
+      <label class="gr-label" for="forms-demo-v-name">Имя</label>
+      <input class="gr-input" id="forms-demo-v-name" name="name" type="text" required minlength="2">
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="forms-demo-v-mail">Почта</label>
+      <input class="gr-input" id="forms-demo-v-mail" name="mail" type="email" required>
+    </div>
+    <div><button class="gr-btn gr-btn-primary" type="submit">Отправить</button></div>
+  </form>
 </div>
 
 </main>

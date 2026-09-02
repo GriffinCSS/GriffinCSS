@@ -1,0 +1,25 @@
+// GriffinJS — счётчик символов
+// Подпись с остатком к maxlength. Узел создаёт скрипт сразу после поля,
+// поэтому без него этих правил не видно; сам предел действует и без них.
+//
+// Тем же кеглем, что .gr-hint: подпись стоит в той же колонке .gr-field
+// и обязана читаться как часть поля. Табличные цифры — чтобы остаток
+// не «дышал» по ширине на каждой букве.
+
+.gr-counter {
+  align-self: flex-end;
+  color: var(--gr-color-text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+// Остаток на исходе и предел достигнут — цветом и только цветом: цифра
+// рядом уже говорит то же словами, второго признака ей не нужно.
+.gr-counter[data-gr-state="near"] {
+  color: var(--gr-color-warning);
+}
+
+.gr-counter[data-gr-state="full"] {
+  color: var(--gr-color-danger);
+}

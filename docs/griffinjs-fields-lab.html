@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Полигон полей GriffinJS — Griffincss</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs-fields.css">
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+<!-- Оба файла слоя разом — правильный сценарий, и он обязан работать:
+     griffinjs.js создаёт ядро, griffinjs-fields.js регистрирует в нём поля. -->
+<script src="../packages/ui/dist/griffinjs.js"></script>
+<script src="../packages/ui/dist/griffinjs-fields.js"></script>
+<script src="../packages/ui/dist/griffinjs-countries.js"></script>
+<script>
+  // Полигон в RTL: ?dir=rtl — направление ставится до раскладки, как
+  // на настоящей странице на арабском или иврите.
+  if (/[?&]dir=rtl\b/.test(location.search)) document.documentElement.setAttribute('dir', 'rtl');
+</script>
+</head>
+<body>
+
+<div class="gr-flex docs-layout">
+
+<nav class="sidebar"></nav>
+
+<main class="content gr-flex-1">
+
+<div class="hero">
+  <h1>Полигон полей GriffinJS</h1>
+  <p>Расширенные поля форм второго бандла на одном экране — предмет браузерных тестов на трёх движках. Второй прогон идёт с отключённым <code>griffinjs-fields.js</code>: каждое поле обязано оставаться рабочим и так — это база без скрипта, условие приёмки.</p>
+  <div class="hero-badges">
+    <span class="badge badge-accent" id="gr-lab-status">griffinjs.js не подключён</span>
+    <span class="badge" id="gr-lab-fields">griffinjs-fields.js не подключён</span>
+    <span class="badge">docs/griffinjs-fields-lab.html</span>
+  </div>
+</div>
+
+<h2>Маска</h2>
+
+<p>
+  Формат — строка токенов: <code>0</code> цифра, <code>a</code> буква,
+  <code>A</code> буква в верхнем регистре, <code>*</code> буква или цифра,
+  <code>?</code> — необязательный хвост, <code>\</code> — знак буквально.
+  Без скрипта поле остаётся полем: <code>pattern</code> и
+  <code>inputmode</code> — платформенные, и проверяет их платформа. Со
+  скриптом <code>data-gr-mask</code> помогает вводить: литералы подставляются
+  сами, каретка встаёт за введённым знаком, из формата берётся подсказка.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Телефон, номерной знак и время <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-mask-phone">Телефон</label>
+      <input class="gr-input" id="gr-lab-mask-phone" type="tel" pattern="\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}" data-gr-mask="+7 (000) 000-00-00" aria-describedby="gr-lab-mask-phone-hint">
+      <span class="gr-hint" id="gr-lab-mask-phone-hint">Десять цифр после кода.</span>
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-mask-plate">Номерной знак</label>
+      <input class="gr-input" id="gr-lab-mask-plate" type="text" data-gr-mask="A 000 AA?-000" placeholder="А 123 ВС-77">
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-mask-time">Время</label>
+      <input class="gr-input" id="gr-lab-mask-time" type="text" inputmode="numeric" pattern="[0-2]\d:[0-5]\d" data-gr-mask="format: 00:00" value="1430">
+    </div>
+  </div>
+</div>
+
+<h2>Телефон</h2>
+
+<p>
+  Код страны в <code>&lt;select&gt;</code>, номер по маске выбранной страны.
+  Состав — из разметки: <code>value</code> кода, <code>data-gr-iso</code>
+  и <code>data-gr-format</code> на каждой позиции; пустой список заполняется
+  из <code>griffinjs-countries.js</code>. Имя страны и флаг — у платформы,
+  в языке страницы. База без скрипта — <code>type="tel"</code>
+  и тот же список кодов в группе.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Состав из разметки: три страны <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="gr-lab-phone">Телефон</label>
+    <div class="gr-input-group" id="gr-lab-phone-group" data-gr-phone>
+      <select class="gr-select" id="gr-lab-phone-code" name="code" aria-label="Код страны">
+        <option value="+7" data-gr-iso="RU" data-gr-format="(000) 000-00-00" selected>RU +7</option>
+        <option value="+375" data-gr-iso="BY" data-gr-format="(00) 000-00-00">BY +375</option>
+        <option value="+380" data-gr-iso="UA" data-gr-format="(00) 000-00-00">UA +380</option>
+      </select>
+      <input class="gr-input" id="gr-lab-phone" type="tel" name="phone" autocomplete="tel-national">
+    </div>
+  </div>
+</div>
+
+<div class="demo-block">
+  <div class="demo-block-title">Состав из таблицы: пустой список и <code>country: kz</code> <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="gr-lab-phone-table">Телефон</label>
+    <div class="gr-input-group" id="gr-lab-phone-table-group" data-gr-phone="country: kz">
+      <select class="gr-select" id="gr-lab-phone-table-code" name="code2" aria-label="Код страны"></select>
+      <input class="gr-input" id="gr-lab-phone-table" type="tel" name="phone2">
+    </div>
+  </div>
+</div>
+
+<h2>Дата и время</h2>
+
+<p>
+  Разметка несёт нативное поле, и без скрипта форма работает как сегодня.
+  На тач-устройстве виджет её не трогает — системный календарь остаётся;
+  на указателе мыши тип подменяется на <code>text</code>, надевается маска
+  по локали, ISO уходит в скрытый спутник с прежним именем, а границы
+  <code>min</code>/<code>max</code> проверяет виджет через
+  <code>setCustomValidity</code>. Панель — <code>role="dialog"</code>,
+  фокус остаётся в поле. Уход фокуса возвращает нативный тип. Поле времени
+  виджет не трогает: выбор встроен в само поле.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Дата с границами, время, дата и время <span class="badge">нужен griffinjs-fields.js</span></div>
+  <form class="gr-flex gr-flex-col gr-gap" id="gr-lab-datetime-form" style="max-width: 26rem" onsubmit="return false">
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-date">Дата заезда</label>
+      <input class="gr-input" id="gr-lab-date" type="date" name="from" value="2026-09-01" min="2026-01-01" max="2026-12-31" data-gr-datetime aria-describedby="gr-lab-date-hint">
+      <span class="gr-hint" id="gr-lab-date-hint">В пределах 2026 года.</span>
+    </div>
+    <div class="gr-flex gr-gap-sm">
+      <div class="gr-field gr-flex-1 gr-min-w-0">
+        <label class="gr-label" for="gr-lab-time">Время</label>
+        <input class="gr-input" id="gr-lab-time" type="time" name="at" value="14:30" data-gr-datetime>
+      </div>
+      <div class="gr-field gr-flex-1 gr-min-w-0">
+        <label class="gr-label" for="gr-lab-datetime">Дата и время</label>
+        <input class="gr-input" id="gr-lab-datetime" type="datetime-local" name="when" data-gr-datetime>
+      </div>
+    </div>
+  </form>
+</div>
+
+<h2>Файловое поле</h2>
+
+<p>
+  <code>.gr-file</code> — поле семьи: рамка, фокус и состояния те же,
+  что у <code>.gr-input</code>, кнопка выбора — <code>::file-selector-button</code>.
+  Мультивыбор даёт <code>multiple</code>, и без скрипта поле показывает число
+  выбранных само. Со скриптом <code>data-gr-file</code> добавляет список
+  с размером в единицах локали и кнопкой «убрать» — один файл из выбранного
+  без <code>DataTransfer</code> не убрать вовсе; <code>append</code> копит
+  выбор вместо замены.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Мультивыбор: замена и накопление <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-file">Документы</label>
+      <input class="gr-file" id="gr-lab-file" type="file" name="docs" multiple data-gr-file>
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-file-append">Фотографии, по одной или пачкой</label>
+      <input class="gr-file" id="gr-lab-file-append" type="file" name="photos" multiple accept="image/*" data-gr-file="append">
+    </div>
+    <div class="gr-field">
+      <label class="gr-file-drop" id="gr-lab-file-drop">
+        <input class="gr-file" id="gr-lab-file-drop-input" type="file" name="drop" multiple data-gr-file="drop; append">
+        <span>Перетащите файлы сюда или выберите</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<h2>Ввод оценки</h2>
+
+<p>
+  Пять радиокнопок в <code>&lt;fieldset&gt;</code> — база без скрипта.
+  Со скриптом <code>data-gr-rating</code> пишет число выбранной в
+  <code>--gr-rating</code> ряда <code>.gr-rating</code>, подпись выбранной —
+  в его <code>aria-label</code>, а CSS слоя кладёт подписи поверх знаков.
+  Наведение показывает оценку под указателем мыши; стрелки клавиатуры
+  меняют выбор, как в любой группе радиокнопок.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Оценка товара <span class="badge">нужен griffinjs-fields.js</span></div>
+  <fieldset class="gr-rating-input" id="gr-lab-rating" data-gr-rating>
+    <legend class="gr-label">Оценка</legend>
+    <span class="gr-rating" role="img" aria-label="Без оценки"></span>
+    <label><input type="radio" name="score" value="1"> 1 из 5</label>
+    <label><input type="radio" name="score" value="2"> 2 из 5</label>
+    <label><input type="radio" name="score" value="3"> 3 из 5</label>
+    <label><input type="radio" name="score" value="4"> 4 из 5</label>
+    <label><input type="radio" name="score" value="5"> 5 из 5</label>
+  </fieldset>
+</div>
+
+<h2>Одноразовый код</h2>
+
+<p>
+  Ряд ячеек <code>maxlength="1"</code> — база без скрипта: заполняются
+  вручную, каждая уходит в форму своим значением. Со скриптом
+  <code>data-gr-otp</code> набранный знак переводит фокус дальше, Backspace
+  на пустой ячейке возвращает назад, код из буфера или из автозаполнения
+  (<code>autocomplete="one-time-code"</code>) раскладывается по ячейкам;
+  полный код — событие <code>griffin:complete</code>.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Шесть цифр из СМС <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field">
+    <span class="gr-label" id="gr-lab-otp-label">Код из СМС</span>
+    <div class="gr-otp" id="gr-lab-otp" role="group" aria-labelledby="gr-lab-otp-label" data-gr-otp>
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" autocomplete="one-time-code" aria-label="Знак 1">
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" aria-label="Знак 2">
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" aria-label="Знак 3">
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" aria-label="Знак 4">
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" aria-label="Знак 5">
+      <input class="gr-input gr-otp-cell" type="text" inputmode="numeric" maxlength="1" name="code[]" aria-label="Знак 6">
+    </div>
+    <output class="gr-hint" id="gr-lab-otp-out" for="gr-lab-otp"></output>
+  </div>
+</div>
+
+<h2>Сводка ошибок формы</h2>
+
+<p>
+  Без скрипта форму проверяет браузер и показывает пузырь у первого
+  непройденного поля. Со скриптом <code>data-gr-validate</code> собирает
+  все непройденные поля в сводку в начале формы: ссылки «подпись: сообщение
+  платформы», фокус на первой, <code>aria-invalid</code> на полях;
+  исправленное поле теряет пометку сразу, список обновляет следующая отправка.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Три обязательных поля <span class="badge">нужен griffinjs-fields.js</span></div>
+  <form class="gr-flex gr-flex-col gr-gap" id="gr-lab-validate" style="max-width: 26rem" data-gr-validate onsubmit="return false">
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-v-name">Имя</label>
+      <input class="gr-input" id="gr-lab-v-name" name="name" type="text" required minlength="2">
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-v-mail">Почта</label>
+      <input class="gr-input" id="gr-lab-v-mail" name="mail" type="email" required>
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-v-kind">Тема</label>
+      <select class="gr-select" id="gr-lab-v-kind" name="kind" required>
+        <option value="">Выберите</option>
+        <option value="bug">Ошибка</option>
+        <option value="idea">Предложение</option>
+      </select>
+    </div>
+    <div><button class="gr-btn gr-btn-primary" id="gr-lab-v-submit" type="submit">Отправить</button></div>
+  </form>
+</div>
+
+<h2>Счётчик символов</h2>
+
+<p>
+  Предел задаёт <code>maxlength</code>, и без скрипта он действует сам.
+  Со скриптом <code>data-gr-counter</code> добавляет подпись с остатком
+  после поля, связывает её с полем через <code>aria-describedby</code>
+  и объявляет через <code>aria-live</code>; у порога подпись получает
+  состояние <code>near</code>, на пределе — <code>full</code>.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">maxlength=40, порог 25 % <span class="badge">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="gr-lab-counter">О себе</label>
+    <textarea class="gr-textarea" id="gr-lab-counter" maxlength="40" data-gr-counter="near: 0.25" placeholder="Пара слов"></textarea>
+  </div>
+</div>
+
+<script>
+  // Показание стенда: слой и поля подключены или нет. Меняется только текст
+  // бейджей — сам полигон от скриптов не зависит.
+  (function () {
+    var status = document.getElementById('gr-lab-status');
+    var fields = document.getElementById('gr-lab-fields');
+
+    if (!window.GriffinJS) return;
+
+    status.textContent = 'GriffinJS v' + window.GriffinJS.version;
+
+    // Поля узнаются по реестру: griffinjs-fields.js регистрирует их в ядре.
+    var names = [];
+
+    for (var name in window.GriffinJS.widgets) {
+      if (/^(mask|phone|datetime|file|rating|otp|counter|validate)$/.test(name)) names.push(name);
+    }
+
+    if (names.length) fields.textContent = 'поля: ' + names.join(', ');
+
+    // Стенд кода: полный код — в подпись.
+    var otp = document.getElementById('gr-lab-otp');
+
+    if (otp) otp.addEventListener('griffin:complete', function (e) { document.getElementById('gr-lab-otp-out').textContent = 'Код: ' + e.detail.value; });
+  })();
+</script>
+
+</main>
+</div>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -82,3 +82,68 @@
   padding-inline: var(--gr-control-padding-x);
   color: var(--gr-color-text-secondary);
 }
+
+// --- Мультивыбор: теги перед полем -------------------------------------------
+
+// База без скрипта — <select multiple> внутри обёртки. Со скриптом (есть
+// состояние) он уходит с экрана: выбранное показывают теги, которые рисует
+// скрипт, а значение остаётся в нём же — форма отправляет его как без скрипта.
+.gr-combobox[data-gr-state] > select[multiple] {
+  display: none;
+}
+
+.gr-combobox-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0 0 calc(var(--gr-ui-gap) * 0.5);
+  padding: 0;
+  list-style: none;
+}
+
+// Пустой список не занимает места: отступ нужен только под тегами.
+.gr-combobox-tags:empty {
+  display: none;
+}
+
+.gr-combobox-tag {
+  display: inline-flex;
+  gap: 0.25em;
+  align-items: center;
+  padding-block: 0.125rem;
+  padding-inline: 0.625rem 0.25rem;
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-color-surface);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.gr-combobox-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--gr-color-text-secondary);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gr-combobox-tag-remove:hover {
+    background-color: var(--gr-color-surface-raised);
+    color: var(--gr-color-danger);
+  }
+}
+
+.gr-combobox-tag-remove:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 1px;
+}

@@ -16,7 +16,7 @@ import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 
-import { CORE, ENGINES, SHARED, WIDGETS } from './build-griffinjs.mjs';
+import { CORE, ENGINES, FIELDS, SHARED, WIDGETS } from './build-griffinjs.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'packages/ui/src/griffinjs');
@@ -25,6 +25,12 @@ const dist = join(root, 'packages/ui/dist');
 const PAGE = 'docs/griffinjs.html';
 const OPEN = '<!-- gr:griffinjs-deps -->';
 const CLOSE = '<!-- /gr:griffinjs-deps -->';
+
+// Поля второго бандла (Этап 38) — своя таблица на своей странице, той же
+// машинерией: набор «ядро + объявленное + поле».
+const FIELDS_PAGE = 'docs/griffinjs-fields.html';
+const FIELDS_OPEN = '<!-- gr:griffinjs-fields-deps -->';
+const FIELDS_CLOSE = '<!-- /gr:griffinjs-fields-deps -->';
 
 const fix = process.argv.includes('--fix');
 
@@ -36,14 +42,14 @@ function die(message) {
 const name = (rel) => basename(rel, '.js');
 const fileOf = {};
 
-for (const rel of [...CORE, ...SHARED, ...ENGINES, ...WIDGETS]) fileOf[name(rel)] = rel;
+for (const rel of [...CORE, ...SHARED, ...ENGINES, ...WIDGETS, ...FIELDS]) fileOf[name(rel)] = rel;
 
 // Объявления читаются у самого рантайма: слой поднимается в Node без DOM —
 // модули только регистрируются, фабрики не исполняются.
 const require = createRequire(import.meta.url);
 const G = require(join(src, 'core/griffinjs-core.js'));
 
-for (const rel of [...CORE.slice(1), ...SHARED, ...ENGINES, ...WIDGETS]) require(join(src, rel));
+for (const rel of [...CORE.slice(1), ...SHARED, ...ENGINES, ...WIDGETS, ...FIELDS]) require(join(src, rel));
 
 // Дорожка — единственная, кто берёт движок из реестра, и знает об этом
 // только её код. Отсюда и правило: набору с дорожкой нужен движок.
@@ -70,7 +76,7 @@ function closureOf(module) {
 }
 
 // Порядок подключения в наборе — тот же, что в полном файле.
-const ORDER = [...SHARED, ...ENGINES, ...WIDGETS].map(name);
+const ORDER = [...SHARED, ...ENGINES, ...WIDGETS, ...FIELDS].map(name);
 const byOrder = (a, b) => ORDER.indexOf(a) - ORDER.indexOf(b);
 
 function partsOf(module) {
@@ -117,24 +123,48 @@ const expected = [
   '</table>',
 ].join('\n');
 
-const html = readFileSync(join(root, PAGE), 'utf8');
-const start = html.indexOf(OPEN);
-const end = html.indexOf(CLOSE);
+const FIELD_MODULES = FIELDS.map(name);
 
-if (start === -1 || end === -1) die(`в ${PAGE} нет маркеров ${OPEN} … ${CLOSE}`);
+const fieldsExpected = [
+  '<p>',
+  `  Все поля одним файлом — <b>${kb(gzip([readFileSync(join(dist, 'griffinjs-fields.js'))]))} gzip</b> без ядра;`,
+  `  набор «ядро + anchor + поля» — <b>${kb(gzip([core, dfile('anchor'), readFileSync(join(dist, 'griffinjs-fields.js'))]))}</b>.`,
+  '  По одному поля берутся так же, как виджеты: ядро первым, затем объявленное',
+  '  и само поле. Таблица собрана из объявлений при сборке.',
+  '</p>',
+  '',
+  '<table>',
+  '  <tr><th>Поле</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>',
+  ...FIELD_MODULES.map(row),
+  '</table>',
+].join('\n');
 
-const actual = html.slice(start + OPEN.length, end).replace(/^\n|\n\s*$/g, '');
+let broken = 0;
 
-if (actual === expected) process.exit(0);
+for (const [page, open, close, expectedBlock] of [[PAGE, OPEN, CLOSE, expected], [FIELDS_PAGE, FIELDS_OPEN, FIELDS_CLOSE, fieldsExpected]]) {
+  const html = readFileSync(join(root, page), 'utf8');
+  const start = html.indexOf(open);
+  const end = html.indexOf(close);
 
-if (fix) {
-  writeFileSync(join(root, PAGE), `${html.slice(0, start + OPEN.length)}\n${expected}\n${html.slice(end)}`);
-  console.log(`sync-griffinjs: обновлён ${PAGE}`);
-  process.exit(0);
+  if (start === -1 || end === -1) die(`в ${page} нет маркеров ${open} … ${close}`);
+
+  const actual = html.slice(start + open.length, end).replace(/^\n|\n\s*$/g, '');
+
+  if (actual === expectedBlock) continue;
+
+  if (fix) {
+    writeFileSync(join(root, page), `${html.slice(0, start + open.length)}\n${expectedBlock}\n${html.slice(end)}`);
+    console.log(`sync-griffinjs: обновлён ${page}`);
+    continue;
+  }
+
+  console.error(`sync-griffinjs: таблица наборов в ${page} разошлась со слоем`);
+  console.error(`  ожидается:\n${expectedBlock}`);
+  console.error(`  в файле:\n${actual}`);
+  broken += 1;
 }
 
-console.error(`sync-griffinjs: таблица наборов в ${PAGE} разошлась со слоем`);
-console.error(`  ожидается:\n${expected}`);
-console.error(`  в файле:\n${actual}`);
-console.error('sync-griffinjs: запустите `npm run sync-griffinjs -- --fix`');
-process.exit(1);
+if (broken > 0) {
+  console.error('sync-griffinjs: запустите `npm run sync-griffinjs -- --fix`');
+  process.exit(1);
+}

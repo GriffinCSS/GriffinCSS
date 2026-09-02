@@ -9,11 +9,14 @@ const PAGES = [
   '/docs/griffinjs.html', '/docs/griffinjs-slides.html', '/docs/griffinjs-parallax.html',
   '/docs/griffinjs-menus.html', '/docs/griffinjs-overlays.html', '/docs/griffinjs-architecture.html',
   '/docs/griffinjs-lab.html', '/docs/ui-overlays.html', '/docs/ui-nav.html', '/docs/ui-forms.html',
+  '/docs/griffinjs-fields.html', '/docs/griffinjs-fields-lab.html',
 ];
 
-// Заблокированный самим тестом griffinjs.js Chromium честно записывает
-// в консоль как ошибку загрузки — это не ошибка страницы.
-const OWN_ABORT = /ERR_FAILED|griffinjs\.js/;
+// Заблокированные самим тестом файлы слоя Chromium честно записывает
+// в консоль как ошибку загрузки — это не ошибка страницы. Блокируются
+// все файлы слоя разом: второй бандл без ядра — ошибка автора страницы,
+// а не сценарий «читатель не подключил скрипт».
+const OWN_ABORT = /ERR_FAILED|griffinjs[\w-]*\.js/;
 
 function watch(page) {
   const errors = [];
@@ -42,7 +45,7 @@ for (const path of PAGES) {
   test(`консоль чистая без griffinjs.js: ${path}`, async ({ page }) => {
     const errors = watch(page);
 
-    await page.route('**/griffinjs.js', (route) => route.abort());
+    await page.route('**/griffinjs*.js', (route) => route.abort());
     await page.goto(path);
     await page.waitForTimeout(300);
     expect(errors).toEqual([]);

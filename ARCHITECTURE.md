@@ -277,6 +277,22 @@ Invariants and the reader-facing architecture: `docs/griffinjs-architecture.html
 
 from `JS_BUDGET`; the layer is not part of `griffincss-all.js`.
 
+### Second bundle — form fields (Stage 38)
+
+`packages/ui/dist/griffinjs-fields.js` + `griffinjs-fields.css` (+ `griffinjs-countries.js`,
+the country table for `phone`): `mask`, `phone`, `datetime`, `file`, `rating`, `otp`,
+`counter`, `validate`. Sources `packages/ui/src/griffinjs/fields/`, styles
+`packages/ui/scss/griffinjs/fields/`, build list `FIELDS` in `scripts/build-griffinjs.mjs`,
+one `griffinjs-<field>.js` per field. The core is not part of it (a second core would
+wipe `window.GriffinJS`), and not a byte of it goes into `griffinjs.js` — `check-dist`
+greps the full bundle for every field's `defineWidget`. Budgets: fields 8.7 KB, set
+«core + anchor + fields» 11.3 KB, styles 1.5 KB, countries 0.9 KB — set by first
+measurement, raised only with a named purchase. `mask` is the foundation (phone, datetime
+and otp stand on it); `datetime` touches the markup only on `pointerType === 'mouse'`.
+These widgets write the control's `value` — the declared extension of invariant 7, see
+«Инварианты» in `docs/griffinjs-architecture.html`. Lab: `docs/griffinjs-fields-lab.html`, spec
+`browser/fields.spec.mjs`; docs `docs/griffinjs-fields.html`.
+
 ### Acceptance (21g)
 
 - `npm run test:browser` — Playwright on Chromium, Firefox, WebKit over

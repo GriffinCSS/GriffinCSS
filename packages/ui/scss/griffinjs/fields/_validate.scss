@@ -1,0 +1,43 @@
+// GriffinJS — сводка ошибок формы
+// Блок создаёт скрипт в начале формы (или наполняет свой — summary: #id)
+// и показывает только после отправки с ошибками. Без скрипта его нет:
+// проверку и пузырь у поля показывает браузер.
+//
+// Тем же приёмом, что .gr-alert: слово в заголовке, а не только цвет,
+// и полупрозрачная вуаль статуса вместо смешанного цвета.
+
+.gr-validate {
+  box-sizing: border-box;
+  margin-block-end: var(--gr-ui-gap);
+  padding-block: var(--gr-ui-gap);
+  padding-inline: var(--gr-control-padding-x);
+  border: var(--gr-border-width) solid var(--gr-color-danger);
+  border-radius: var(--gr-radius);
+  background-color: hsl(var(--gr-hsl-danger), 8%);
+  color: var(--gr-color-text);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.gr-validate-title {
+  margin: 0 0 calc(var(--gr-ui-gap) * 0.5);
+  color: var(--gr-color-danger);
+  font-weight: 600;
+}
+
+.gr-validate-list {
+  margin: 0;
+  padding-inline-start: 1.25em;
+}
+
+.gr-validate-list a {
+  color: var(--gr-color-danger);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.gr-validate-list a:focus-visible {
+  border-radius: calc(var(--gr-radius) * 0.5);
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}

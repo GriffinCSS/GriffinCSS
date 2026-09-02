@@ -1,0 +1,28 @@
+// GriffinJS — стили второго бандла: расширенные поля форм (Этап 38)
+// Собирается в packages/ui/dist/griffinjs-fields.css отдельно и от
+// griffincss-ui.css, и от griffinjs.css: за поля платит только тот, кто
+// подключил griffinjs-fields.js, — стили лежат рядом с ним по той же причине.
+//
+// Слой каскада тот же, что у компонентов, — griffincss.ui. Токены берутся
+// из ядра через var(--gr-*); блок :root сюда не входит — файл подключается
+// всегда ПОВЕРХ griffincss-ui.css, где он есть.
+//
+// Оформление привязывается к состояниям, а не к классам, которые JS
+// добавляет: [data-gr-state="near"], [data-gr-state="open"]. Классы здесь
+// носят только узлы, которые виджет создаёт сам (подпись счётчика,
+// панель календаря, список файлов) — их без скрипта не бывает.
+
+
+@use 'sass:meta';
+@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+
+// Весь вывод — в griffincss.ui, как у компонентов.
+@layer griffincss.ui {
+  @include meta.load-css('counter');
+  @include meta.load-css('phone');
+  @include meta.load-css('datetime');
+  @include meta.load-css('file');
+  @include meta.load-css('rating');
+  @include meta.load-css('otp');
+  @include meta.load-css('validate');
+}

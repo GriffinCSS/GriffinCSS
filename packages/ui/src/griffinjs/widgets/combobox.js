@@ -23,6 +23,22 @@
  * innerHTML из данных). Не переносится оформление витрины: двухколоночная
  * карточка, значки групп, цены — это render() и событие griffin:select
  * в теме, а не слой.
+ *
+ * Мультивыбор (Этап 38g) — флаг multiple, а не новый виджет:
+ *
+ *   <div class="gr-combobox" data-gr-combobox="src: /tags?q={q}; multiple">
+ *     <select name="tags[]" multiple>
+ *       <option value="css" selected>CSS</option>
+ *     </select>
+ *     <input class="gr-input" type="search">
+ *   </div>
+ *
+ * База без скрипта — сам <select multiple>. Со скриптом он уходит с экрана
+ * (CSS по состоянию), выбранное показывается тегами перед полем, выбор
+ * позиции включает её в <select> (добавляя, если такой нет) и очищает поле,
+ * удаление тега или Backspace в пустом поле снимает выбор. Значение всегда
+ * в <select> — форма отправляет его как без скрипта; о смене он сообщает
+ * событием change.
  */
 (function (G) {
   'use strict';
@@ -36,7 +52,9 @@
     empty: '',        // подпись пустого ответа; '' — список просто закрывается
     navigate: false,  // выбор позиции с href — переход по адресу
     highlight: true,
-    cache: true
+    cache: true,
+    multiple: false,  // выбранное — теги, значение — в <select multiple>
+    remove: 'Убрать {label}'
   };
 
   var seq = 0;
@@ -116,6 +134,10 @@
 
     if (!input) throw new Error('у комбобокса нет поля ввода');
 
+    var choice = o.multiple ? el.querySelector('select[multiple]') : null;
+
+    if (o.multiple && !choice) throw new Error('для multiple нужен <select multiple> внутри');
+
     var list = el.querySelector('[role="listbox"]');
     var created = false;
 
@@ -134,6 +156,8 @@
     var controller = null;
     var cache = {};
     var opened = false;
+    var tags = null;       // теги мультивыбора
+    var added = [];        // позиции <select>, созданные скриптом
 
     // --- Показ ----------------------------------------------------------------
 
@@ -282,6 +306,89 @@
       return api;
     }
 
+    // --- Мультивыбор ----------------------------------------------------------
+
+    function optionOf(value) {
+      var all = choice.options;
+
+      for (var i = 0; i < all.length; i++) if (all[i].value === value) return all[i];
+
+      return null;
+    }
+
+    function renderTags() {
+      while (tags.firstElementChild) tags.firstElementChild.remove();
+
+      var all = choice.options;
+
+      for (var i = 0; i < all.length; i++) {
+        if (!all[i].selected) continue;
+
+        var tag = element('li', 'gr-combobox-tag');
+        var text = element('span');
+        var remove = element('button', 'gr-combobox-tag-remove', {
+          type: 'button',
+          'data-gr-value': all[i].value,
+          'aria-label': String(o.remove).replace('{label}', all[i].textContent)
+        });
+
+        text.textContent = all[i].textContent;
+        remove.textContent = '×';
+        tag.appendChild(text);
+        tag.appendChild(remove);
+        tags.appendChild(tag);
+      }
+    }
+
+    function changed() {
+      try {
+        choice.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (e) { /* окружение без Event */ }
+    }
+
+    // Включить позицию: та, что есть в <select>, — как есть; новой —
+    // добавляется <option>, и снимается вместе с выбором.
+    function add(value, label) {
+      var option = optionOf(value);
+
+      if (!option) {
+        option = element('option', '', { value: value });
+        option.textContent = label;
+        choice.appendChild(option);
+        added.push(option);
+      }
+
+      if (option.selected) return;
+
+      option.selected = true;
+      renderTags();
+      changed();
+    }
+
+    function drop(value) {
+      var option = optionOf(value);
+
+      if (!option) return;
+
+      option.selected = false;
+
+      var at = added.indexOf(option);
+
+      if (at !== -1) { added.splice(at, 1); option.remove(); }
+
+      renderTags();
+      changed();
+    }
+
+    function onTagsClick(event) {
+      var button = G.closest(event.target, '.gr-combobox-tag-remove');
+
+      if (!button) return;
+
+      drop(button.getAttribute('data-gr-value'));
+      input.focus();
+    }
+
     // --- Выбор ----------------------------------------------------------------
 
     function activate(index, scroll) {
@@ -318,7 +425,9 @@
 
       if (!item) return api;
 
-      input.value = item.value;
+      if (choice) { add(item.value, item.label); input.value = ''; }
+      else input.value = item.value;
+
       close();
       G.emit('griffin:select', input, { item: item, index: index, input: input });
 
@@ -352,6 +461,12 @@
         event.preventDefault();
       } else if (key === 'Tab') {
         close();
+      } else if (key === 'Backspace' && choice && !input.value) {
+        // Пустое поле: Backspace снимает последний тег.
+        var last = null;
+
+        for (var i = 0; i < choice.options.length; i++) if (choice.options[i].selected) last = choice.options[i];
+        if (last) { drop(last.value); event.preventDefault(); }
       }
     }
 
@@ -397,6 +512,7 @@
       events.removeAll();
       clear();
       if (created) list.remove();
+      if (tags) tags.remove();
       attrs.restore();
     }
 
@@ -409,6 +525,13 @@
       query: query,
       select: select,
       items: function () { return items.slice(); },
+      values: function () {
+        var out = [];
+
+        if (choice) for (var i = 0; i < choice.options.length; i++) if (choice.options[i].selected) out.push(choice.options[i].value);
+
+        return out;
+      },
       destroy: destroy
     };
 
@@ -422,6 +545,13 @@
     setAttr(input, 'aria-controls', list.getAttribute('id'));
     setAttr(input, 'autocomplete', 'off');
     setAttr(el, 'data-gr-state', 'ready');
+
+    if (choice) {
+      tags = element('ul', 'gr-combobox-tags', { role: 'list' });
+      el.insertBefore(tags, input);
+      renderTags();
+      listen(tags, 'click', onTagsClick);
+    }
 
     listen(input, 'input', onInput);
     listen(input, 'keydown', onKeyDown);

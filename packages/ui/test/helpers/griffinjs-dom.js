@@ -39,6 +39,13 @@ class Element extends base.MockElement {
     }
   }
 
+  // focus() — как у базового мока плюс focusin: слой слушает его на обёртке.
+  focus() {
+    this.focusCalls += 1;
+    if (this.ownerDocument) this.ownerDocument.activeElement = this;
+    this.dispatchEvent(event('focusin', this));
+  }
+
   get isConnected() {
     let node = this;
     while (node) {
@@ -49,6 +56,7 @@ class Element extends base.MockElement {
   }
 
   get firstElementChild() { return this.children[0] || null; }
+  get firstChild() { return this.children[0] || null; }
   get lastElementChild() { return this.children[this.children.length - 1] || null; }
 
   get nextElementSibling() {
@@ -57,6 +65,11 @@ class Element extends base.MockElement {
     return this.parentNode.children[at + 1] || null;
   }
 
+  // Текстовых узлов между элементами в моке не бывает, поэтому следующий
+  // узел — следующий элемент; insertBefore(node, el.nextSibling) работает
+  // как в браузере.
+  get nextSibling() { return this.nextElementSibling; }
+
   get id() { return this.getAttribute('id') || ''; }
   set id(value) { this.setAttribute('id', value); }
 
@@ -64,6 +77,46 @@ class Element extends base.MockElement {
   // Виджету ползунка достаточно: он и читает, и пишет одно и то же свойство.
   get value() { return this.getAttribute('value') || ''; }
   set value(v) { this.setAttribute('value', String(v)); }
+
+  // Выделение в текстовом поле — для маски (Этап 38): selectionStart/End
+  // ставит тест, setSelectionRange пишет виджет, и по нему проверяется каретка.
+  setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; }
+
+  // Выделить всё в ячейке кода — в моке достаточно факта вызова.
+  select() { this.selectCalls = (this.selectCalls || 0) + 1; }
+
+  // <form>: контролы и проверка платформы. validity в моке ставит тест;
+  // контрол без validity считается верным.
+  get elements() { return this.querySelectorAll('input, select, textarea'); }
+  checkValidity() { return this.elements.every((c) => !c.validity || c.validity.valid !== false); }
+
+  // <option>: selected зеркалит атрибут — как checked у радиокнопки.
+  get selected() { return this.hasAttribute('selected'); }
+  set selected(v) { if (v) this.setAttribute('selected', ''); else this.removeAttribute('selected'); }
+
+  // Радиокнопка и флажок: checked зеркалит атрибут, как value.
+  get checked() { return this.hasAttribute('checked'); }
+  set checked(v) { if (v) this.setAttribute('checked', ''); else this.removeAttribute('checked'); }
+
+  // Проверка ограничений: своё сообщение виджет ставит так же, как в браузере,
+  // а читает его тест из validationMessage. Платформенной проверки в моке нет.
+  setCustomValidity(message) { this.validationMessage = String(message || ''); }
+
+  // <select>: список позиций и выбранная — как в браузере, по атрибуту
+  // selected; без него выбрана первая. Поле телефона читает и пишет
+  // selectedIndex, а не value.
+  get options() { return this.children.filter((c) => c.tagName === 'OPTION'); }
+
+  get selectedIndex() {
+    const opts = this.options;
+    const at = opts.findIndex((o) => o.hasAttribute('selected'));
+
+    return at === -1 ? (opts.length ? 0 : -1) : at;
+  }
+
+  set selectedIndex(i) {
+    this.options.forEach((o, k) => { if (k === i) o.setAttribute('selected', ''); else o.removeAttribute('selected'); });
+  }
 
   // innerHTML в моке — строка без разбора: тест проверяет, что именно
   // вставлено, а не как оно распарсилось.
@@ -171,6 +224,8 @@ class Document extends base.MockDocument {
 
   createElement(tag) { return this.own(new Element(tag)); }
 
+  getElementById(id) { return this.body.querySelector('#' + id) || (this.documentElement.getAttribute('id') === id ? this.documentElement : null); }
+
   // Текстовый узел: живёт среди children, на селекторы не отвечает.
   createTextNode(text) {
     return {
@@ -212,6 +267,12 @@ function setup(parts = []) {
   const doc = new Document();
 
   global.document = doc;
+  global.Event = class {
+    constructor(type, init = {}) {
+      this.type = type;
+      this.bubbles = !!init.bubbles;
+    }
+  };
   global.CustomEvent = class {
     constructor(type, init = {}) {
       this.type = type;

@@ -29,7 +29,9 @@ const USE = /\bG\.(?:widgets\.|engines\.)?([A-Za-z_$][\w$]*)/g;
 // Имя модуля — имя файла без расширения, как в сборщике.
 const FILES = {};
 
-for (const dir of ['core', 'engines', 'widgets']) {
+// Поля второго бандла (Этап 38) проверяются той же машинерией: у них тот же
+// договор с ядром, а набор «ядро + поля» — такая же сборка руками.
+for (const dir of ['core', 'engines', 'widgets', 'fields']) {
   for (const file of fs.readdirSync(path.join(SRC, dir)).sort()) {
     if (!file.endsWith('.js') || file === 'griffinjs-core.js') continue;
 
@@ -81,6 +83,9 @@ function partsFor(name, skip) {
 
   return parts;
 }
+
+// Файловое поле переписывает input.files через DataTransfer — в Node его нет.
+global.DataTransfer = class { constructor() { this.files = []; this.items = { add: (f) => this.files.push(f) }; } };
 
 // Параллакс — единственный, кто читает окно: без window его фабрика падает,
 // а другим виджетам поддельное окно ни к чему (media ждёт matchMedia).
@@ -191,6 +196,58 @@ const MARKUP = {
     el('a', { href: 'a.jpg', 'data-gr-lightbox': 'g' }, [el('img', { alt: 'А' })]),
     el('a', { href: 'b.jpg', 'data-gr-lightbox': 'g' }),
   ])),
+
+  // --- Поля второго бандла (Этап 38) -----------------------------------------
+
+  counter: (doc) => {
+    const control = el('textarea', { maxlength: '10', 'data-gr-counter': '' });
+
+    mount(doc, el('div', {}, [control]));
+
+    return control;
+  },
+
+  mask: (doc) => mount(doc, el('input', { type: 'tel', 'data-gr-mask': '000-000' })),
+
+  datetime: (doc) => {
+    const control = el('input', { type: 'date', 'data-gr-datetime': '' });
+
+    mount(doc, el('div', {}, [control]));
+
+    return control;
+  },
+
+  file: (doc) => {
+    const control = el('input', { type: 'file', multiple: '', 'data-gr-file': '' });
+
+    control.files = [];
+    mount(doc, el('div', {}, [control]));
+
+    return control;
+  },
+
+  otp: (doc) => mount(doc, el('div', { 'data-gr-otp': '' }, [
+    el('input', { maxlength: '1' }), el('input', { maxlength: '1' }),
+  ])),
+
+  validate: (doc) => mount(doc, el('form', { 'data-gr-validate': '' }, [el('input', { required: '' })])),
+
+  rating: (doc) => mount(doc, el('fieldset', { 'data-gr-rating': '' }, [
+    el('span', { class: 'gr-rating' }),
+    el('label', {}, [el('input', { type: 'radio', name: 'r', value: '1' })]),
+    el('label', {}, [el('input', { type: 'radio', name: 'r', value: '2' })]),
+  ])),
+
+  phone: (doc) => mount(doc, el('div', { class: 'gr-input-group', 'data-gr-phone': '' }, [
+    el('select', {}, [el('option', { value: '+7', 'data-gr-iso': 'RU', 'data-gr-format': '(000) 000-00-00' })]),
+    el('input', { type: 'tel' }),
+  ])),
+
+  // Таблица стран — не виджет: на старте кладёт состав в G.phone.table,
+  // и пустой список кодов заполняется из неё.
+  countries: (doc) => mount(doc, el('div', { class: 'gr-input-group', 'data-gr-phone': '' }, [
+    el('select'), el('input', { type: 'tel' }),
+  ])),
 };
 
 const CHECK = {
@@ -198,6 +255,10 @@ const CHECK = {
     doc.fire('click', event('click', node.children[0]));
 
     assert.ok(G.lightbox._dialog(), 'лайтбокс не построил окно');
+  },
+
+  countries: (G, doc, node) => {
+    assert.ok(node.querySelector('select').options.length > 50, 'таблица не заполнила список кодов');
   },
 };
 

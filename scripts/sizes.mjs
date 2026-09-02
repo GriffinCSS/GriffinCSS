@@ -17,7 +17,7 @@ import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 
-import { ENGINES, SHARED, WIDGETS } from './build-griffinjs.mjs';
+import { ENGINES, FIELDS, SHARED, WIDGETS } from './build-griffinjs.mjs';
 import { BUNDLE } from './build-bundle.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,11 +34,16 @@ const JS_UI = 'packages/ui/dist/griffincss-ui.js';
 const JS_UTILS = 'packages/utils/dist/griffincss-utils.js';
 
 const GRIFFINJS = 'packages/ui/dist/griffinjs.js';
+const GRIFFINJS_FIELDS = 'packages/ui/dist/griffinjs-fields.js';
+const GRIFFINJS_FIELDS_CSS = 'packages/ui/dist/griffinjs-fields.css';
+const GRIFFINJS_COUNTRIES = 'packages/ui/dist/griffinjs-countries.js';
 const layerFile = (module) => `packages/ui/dist/griffinjs-${module}.js`;
 
 // Модули слоя виджетов: список берётся у сборки, а не переписывается сюда.
 // Ядро склеено из нескольких исходников в один файл и потому названо прямо.
-const LAYER_MODULES = ['core', ...[...SHARED, ...ENGINES, ...WIDGETS].map((rel) => basename(rel, '.js'))];
+// Поля второго бандла (Этап 38) считаются той же машинерией: у каждого
+// свой файл griffinjs-<поле>.js.
+const LAYER_MODULES = ['core', ...[...SHARED, ...ENGINES, ...WIDGETS, ...FIELDS].map((rel) => basename(rel, '.js'))];
 
 // Минимальный набор для слайдера: меряется как ОДИН файл — так же, как
 // полный griffinjs.js. Сумма независимых gzip платила бы за пять словарей
@@ -48,6 +53,11 @@ const SLIDER_SET = ['core', 'motion', 'track', 'scroll', 'slider'].map(layerFile
 const RANGE_SET = ['core', 'range'].map(layerFile);
 // Набор сортируемой таблицы: тоже ядро и один виджет — зависимостей у неё нет.
 const SORTABLE_SET = ['core', 'sortable'].map(layerFile);
+// Набор полей (Этап 38): цена входа — ядро, позиционирование у якоря
+// (панель календаря — popover, как у dropdown) и второй бандл, меряется
+// одним файлом по образцу набора слайдера. Ядро в griffinjs-fields.js
+// не входит по устройству, и читатель платит за все файлы набора.
+const FIELDS_SET = ['core', 'anchor', 'fields'].map(layerFile);
 
 // Описание артефакта — ровно один из трёх способов посчитать:
 //   gzip — gzip склейки перечисленных файлов (один файл — обычный случай);
@@ -91,6 +101,10 @@ export const ARTIFACTS = {
   'griffinjs-slider-set': { gzip: SLIDER_SET },
   'griffinjs-range-set': { gzip: RANGE_SET },
   'griffinjs-sortable-set': { gzip: SORTABLE_SET },
+  'griffinjs-fields': { gzip: [GRIFFINJS_FIELDS] },
+  'griffinjs-fields-css': { gzip: [GRIFFINJS_FIELDS_CSS] },
+  'griffinjs-countries': { gzip: [GRIFFINJS_COUNTRIES] },
+  'griffinjs-fields-set': { gzip: FIELDS_SET },
   ...Object.fromEntries(LAYER_MODULES.map((module) => [`griffinjs-${module}`, { gzip: [layerFile(module)] }])),
 };
 

@@ -1,0 +1,76 @@
+// GriffinJS — список выбранных файлов
+// Список создаёт скрипт сразу после поля (или наполняет свой — list: #id).
+// Без скрипта его нет: сколько файлов выбрано, показывает само поле,
+// а оформление поля — модуль .gr-file пакета ui.
+
+.gr-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-file-item {
+  display: flex;
+  gap: var(--gr-ui-gap);
+  align-items: center;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  margin: 0;
+  padding-block: calc(var(--gr-ui-gap) * 0.5);
+  padding-inline: var(--gr-control-padding-x);
+  border: var(--gr-border-width) solid var(--gr-color-border);
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+// Имя ужимается многоточием, размер и кнопка — нет: длинное имя
+// не должно выталкивать кнопку «убрать» за край.
+.gr-file-name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-file-size {
+  flex: 0 0 auto;
+  color: var(--gr-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.gr-file-remove {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gr-radius);
+  background: none;
+  color: var(--gr-color-text-secondary);
+  font: inherit;
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .gr-file-remove:hover {
+    background-color: var(--gr-color-surface-raised);
+    color: var(--gr-color-danger);
+  }
+}
+
+.gr-file-remove:focus-visible {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 1px;
+}

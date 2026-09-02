@@ -1,0 +1,84 @@
+// GriffinJS — ввод оценки поверх модуля .gr-rating
+// База без скрипта — пять радиокнопок с подписями в <fieldset>; ряд знаков
+// .gr-rating рядом с ними показывает выбранное только со скриптом: число
+// в --gr-rating пишет он. Правила подмены ключуются на состояние ready —
+// без скрипта радиокнопки остаются обычными радиокнопками в ряд.
+//
+//   <fieldset class="gr-rating-input" data-gr-rating>
+//     <legend class="gr-label">Оценка</legend>
+//     <span class="gr-rating" role="img" aria-label="Без оценки"></span>
+//     <label><input type="radio" name="score" value="1"> 1 из 5</label> … ×5
+//   </fieldset>
+//
+// Со скриптом подписи ложатся поверх ряда знаков сеткой из пяти равных
+// колонок: знаки одинаковы и стоят вплотную, поэтому пятая часть ширины
+// ряда — ровно один знак. Радиокнопка и слово уходят с экрана, но остаются
+// в дереве и в доступности: Tab приводит в группу, стрелки меняют выбор,
+// контур фокуса рисуется на подписи-колонке.
+
+.gr-rating-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gr-ui-gap);
+  align-items: center;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gr-rating-input[data-gr-state="ready"] {
+  display: inline-grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  font-size: 1.5rem;
+}
+
+.gr-rating-input[data-gr-state="ready"] > .gr-rating {
+  grid-area: 1 / 1 / 2 / 6;
+}
+
+// Подпись — невидимая колонка над своим знаком. Текст выталкивается
+// за край и обрезается (приём замены текста картинкой), радиокнопка
+// растянута на всю колонку и прозрачна — не удалена: скринридер читает
+// подпись, клавиатура ходит по кнопкам, щелчок попадает в саму кнопку.
+//
+// contain: size — чтобы «1 из 5» с радиокнопкой не вносили свою ширину
+// в колонки: ширину ряда задаёт только ряд знаков, подписи растягиваются
+// по нему. Без изоляции колонки расходились бы вчетверо шире знаков.
+// Высота — от строки знаков явно: с изоляцией своей у подписи нет.
+.gr-rating-input[data-gr-state="ready"] > label {
+  position: relative;
+  z-index: 1;
+  grid-row: 1;
+  block-size: 100%;
+  overflow: hidden;
+  border-radius: var(--gr-radius);
+  white-space: nowrap;
+  text-indent: 100%;
+  cursor: pointer;
+  contain: size;
+}
+
+// Радиокнопка во всю колонку, прозрачная: text-indent замещённый элемент
+// не сдвигает, и без этого правила кружок рисовался бы поверх знака.
+.gr-rating-input[data-gr-state="ready"] > label > input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+@for $i from 1 through 5 {
+  .gr-rating-input[data-gr-state="ready"] > label:nth-of-type(#{$i}) {
+    grid-column: $i;
+  }
+}
+
+.gr-rating-input[data-gr-state="ready"] > label:has(> input:focus-visible) {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 1px;
+}

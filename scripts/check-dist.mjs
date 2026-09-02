@@ -13,6 +13,7 @@ import { BUNDLE, bundleContent } from './build-bundle.mjs';
 import { STYLES as STYLE_NAMES, styleFile } from './build-styles.mjs';
 import { TOKENS, SETS, rootVariables, tokensContent } from './build-tokens.mjs';
 import { bytes, kb, rawOf } from './sizes.mjs';
+import { FIELDS } from './build-griffinjs.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -24,6 +25,7 @@ const UTILS = 'packages/utils/dist/griffincss-utils.css';
 const UTILS_SCOPED = 'packages/utils/dist/griffincss-utils-scoped.css';
 const STYLES = 'packages/core/dist/griffincss-styles.css';
 const GRIFFIN_CSS = 'packages/ui/dist/griffinjs.css';
+const GRIFFIN_FIELDS_CSS = 'packages/ui/dist/griffinjs-fields.css';
 
 // Однофайловые сборки оси: та же точка входа с одним стилем в $gr-styles.
 // Список берётся у скрипта сборки — иначе проверяемые артефакты
@@ -536,10 +538,23 @@ const kbBudget = (value) => Math.round(value * 1024);
 // Артефакт, потолок, имя для сводки. Порядок — как в сводке.
 const CSS_BUDGETS = [
   ['core', kbBudget(3.4), CORE],
-  ['ui', kbBudget(10.8), UI],
+  // ui: 11 054 Б после 0.22.1; Этап 38e — модуль .gr-file (+99 Б: файлового
+  // поля в библиотеке не было вовсе), 11 153 Б — потолок поднят до 11,0 КБ.
+  // Ревизия Этапа 38 — центровка содержимого .gr-file арифметикой
+  // (кнопка заданной высоты с равными отступами) и зона перетаскивания
+  // .gr-file-drop: 11 287 Б, потолок 11,1 КБ.
+  ['ui', kbBudget(11.1), UI],
   ['utils', kbBudget(14.7), UTILS],
   ['reset', kbBudget(0.6), RESET],
-  ['griffinjs-css', kbBudget(2.4), GRIFFIN_CSS],
+  // griffinjs-css: 2 400 Б до Этапа 38; 38g, теги мультивыбора — 2 586 Б,
+  // потолок поднят до 2,6 КБ с той же покупкой.
+  ['griffinjs-css', kbBudget(2.6), GRIFFIN_CSS],
+  // Стили полей (Этап 38): по первому замеру 213 Б в 38a — 0,3 КБ;
+  // 38d, панель календаря — 889 Б, потолок 0,9 КБ; 38e, список файлов
+  // и подписи оценки поверх ряда знаков — 1 261 Б, потолок 1,3 КБ;
+  // 38f, ячейки кода и сводка ошибок — 1 425 Б, потолок 1,5 КБ; ревизия:
+  // год и время в панели, сетка без таблицы — 1 576 Б, потолок 1,6 КБ.
+  ['griffinjs-fields-css', kbBudget(1.6), GRIFFIN_FIELDS_CSS],
 ];
 
 for (const [id, budget, file] of CSS_BUDGETS) {
@@ -644,7 +659,12 @@ try {
 //                    (js + css) вшестеро.
 const GRIFFIN_SRC = 'packages/ui/src/griffinjs';
 const GRIFFIN = 'packages/ui/dist/griffinjs.js';
-const GRIFFIN_BUDGET = Math.round(17.4 * 1024);
+//     Замер 38g (2026-09-02): 17 615 → 18 110 Б. +495 Б — мультивыбор
+//     в combobox: теги, позиции в <select multiple>, Backspace по тегам.
+//     Единственное исключение Этапа 38 из правила «griffinjs.js не растёт»,
+//     и покупка названа: сам виджет, а не второй. Решение — 17,8 КБ;
+//     ориентиры UIkit ≈ 50 КБ и Swiper ≈ 42 КБ не сдвинулись.
+const GRIFFIN_BUDGET = Math.round(17.8 * 1024);
 const GRIFFIN_CORE_BUDGET = Math.round(7.7 * 1024);
 // Части минимального набора для слайдера. После Этапа 22 дорожка и анимация
 // лежат вне ядра, но набору слайдера нужны обе: список повторяет needs.
@@ -662,12 +682,77 @@ const GRIFFIN_CORE_PARTS = [
 const GRIFFIN_ONLY_CORE = 'packages/ui/dist/griffinjs-core.js';
 const GRIFFIN_ONLY_CORE_BUDGET = Math.round(2.8 * 1024);
 
+// Второй бандл слоя — расширенные поля форм (Этап 38). Три своих потолка
+//     плюс набор «ядро + поля»; в griffinjs.js поля не входят ни одним
+//     байтом, и его потолок этим этапом не трогается. Значения ставятся
+//     ПО ПЕРВОМУ ЗАМЕРУ, а не назначаются заранее, и поднимаются только
+//     вместе с названной покупкой — по тому же правилу, что и всё выше.
+//
+//       38a (2026-09-02): счётчик символов — первый груз каркаса.
+//                    griffinjs-fields.js 822 Б, griffinjs-fields.css 213 Б,
+//                    набор «ядро + поля» 3 205 Б. Потолки 0,9 / 0,3 / 3,3 КБ.
+//       38b (2026-09-02): маска — фундамент телефона, даты и кода.
+//                    +1 208 Б: разбор формата, прогон, каретка через
+//                    beforeinput, отступление на композиции. Поля 2 030 Б,
+//                    набор 4 307 Б. Потолки 2,1 / 4,3 КБ.
+//       38c (2026-09-02): телефон — маска плюс код страны, состав из разметки
+//                    или из таблицы. +1 210 Б: поля 3 240 Б, набор 5 443 Б.
+//                    Таблица стран отдельным файлом — 871 Б, свой потолок.
+//                    Потолки 3,3 / 5,4 / 0,9 КБ.
+//       38d (2026-09-02): дата и время — раскладка по локали, спутник в ISO,
+//                    проверка границ, панель календаря с клавиатурой.
+//                    +3 063 Б: поля 6 303 Б; набор с anchor (панель —
+//                    popover у поля) 9 062 Б; стили панели — 889 Б.
+//                    Потолки 6,4 / 8,9 КБ, стили 0,9 КБ.
+//       38e (2026-09-02): файловое поле (список, удаление по одному через
+//                    DataTransfer) и ввод оценки поверх .gr-rating.
+//                    +1 244 Б: поля 7 547 Б, набор 10 246 Б, стили 1 261 Б.
+//                    Потолки 7,4 / 10,1 КБ, стили 1,3 КБ.
+//       38f (2026-09-02): одноразовый код по ячейкам и сводка ошибок формы
+//                    (счётчик вошёл ещё в 38a). +1 249 Б: поля 8 796 Б,
+//                    набор 11 484 Б, стили 1 425 Б. Состав второго бандла
+//                    закрыт: восемь полей, потолки 8,7 / 11,3 КБ, стили 1,5 КБ.
+//       ревизия (2026-09-02): по замечаниям владельца — год списком и время
+//                    в панели календаря, немедленная пометка невозможного
+//                    значения, национальный префикс телефона (8 → +7), зона
+//                    перетаскивания у файла. +838 Б: поля 9 634 Б, набор
+//                    12 323 Б, стили 1 576 Б. Потолки 9,5 / 12,1 КБ, стили 1,6 КБ.
+const GRIFFIN_FIELDS = 'packages/ui/dist/griffinjs-fields.js';
+const GRIFFIN_FIELDS_BUDGET = Math.round(9.5 * 1024);
+const GRIFFIN_FIELDS_SET_BUDGET = Math.round(12.1 * 1024);
+const GRIFFIN_COUNTRIES = 'packages/ui/dist/griffinjs-countries.js';
+const GRIFFIN_COUNTRIES_BUDGET = Math.round(0.9 * 1024);
+
 let griffinWeight = 0;
 let griffinCoreWeight = 0;
 let griffinOnlyCoreWeight = 0;
+let griffinFieldsWeight = 0;
+let griffinFieldsSetWeight = 0;
+let griffinCountriesWeight = 0;
+
+// Стили слоя: та же дисциплина, что у компонентов, — порядок слоёв
+// первой строкой, весь вывод в griffincss.ui, префикс gr-, без !important.
+// Проверка :root не нужна: файл подключается поверх griffincss-ui.css
+// и токенов не несёт по устройству. Стили полей — тот же файл по устройству,
+// поэтому и проверка та же.
+function checkLayerCss(file) {
+  const css = read(file);
+  const parsed = parseBlocks(css);
+  const strayCss = parsed.topLevel.filter((prelude) => prelude !== '@layer griffincss.ui');
+
+  if (!css.replace(/\s+/g, ' ').startsWith(LAYER_ORDER.slice(0, -1))) {
+    fail(file, 'порядок слоёв не объявлен первой строкой');
+  }
+  if (strayCss.length > 0) fail(file, `вне слоя griffincss.ui осталось блоков — ${strayCss.length}`);
+  if (css.includes('!important')) fail(file, 'найден !important');
+
+  for (const name of classNames(parsed.selectors)) {
+    if (!name.startsWith('gr-')) fail(file, `класс .${name} без префикса gr-`);
+  }
+}
 
 try {
-  for (const file of [GRIFFIN, ...GRIFFIN_CORE_PARTS]) checkMinified(file);
+  for (const file of [GRIFFIN, ...GRIFFIN_CORE_PARTS, GRIFFIN_FIELDS, GRIFFIN_COUNTRIES]) checkMinified(file);
 
   griffinWeight = bytes('griffinjs');
   griffinOnlyCoreWeight = bytes('griffinjs-core');
@@ -677,6 +762,9 @@ try {
   // (~1 КБ на пустом месте) и измеряла бы нарезку, а не код. Состав набора
   // объявлен в sizes.mjs — там же, где его берёт документация.
   griffinCoreWeight = bytes('griffinjs-slider-set');
+  griffinFieldsWeight = bytes('griffinjs-fields');
+  griffinFieldsSetWeight = bytes('griffinjs-fields-set');
+  griffinCountriesWeight = bytes('griffinjs-countries');
 
   if (griffinWeight > GRIFFIN_BUDGET) {
     fail(GRIFFIN, `слой весит ${griffinWeight} Б gzip при бюджете ${GRIFFIN_BUDGET} Б — превышение на ${griffinWeight - GRIFFIN_BUDGET} Б`);
@@ -690,23 +778,33 @@ try {
     fail(GRIFFIN_CORE_PARTS[0], `набор слайдера (ядро + motion + track + scroll + slider) весит ${griffinCoreWeight} Б gzip при бюджете ${GRIFFIN_CORE_BUDGET} Б`);
   }
 
-  // Стили слоя: та же дисциплина, что у компонентов, — порядок слоёв
-  // первой строкой, весь вывод в griffincss.ui, префикс gr-, без !important.
-  // Проверка :root не нужна: файл подключается поверх griffincss-ui.css
-  // и токенов не несёт по устройству.
-  const css = read(GRIFFIN_CSS);
-  const parsed = parseBlocks(css);
-  const strayCss = parsed.topLevel.filter((prelude) => prelude !== '@layer griffincss.ui');
-
-  if (!css.replace(/\s+/g, ' ').startsWith(LAYER_ORDER.slice(0, -1))) {
-    fail(GRIFFIN_CSS, 'порядок слоёв не объявлен первой строкой');
+  if (griffinFieldsWeight > GRIFFIN_FIELDS_BUDGET) {
+    fail(GRIFFIN_FIELDS, `поля весят ${griffinFieldsWeight} Б gzip при бюджете ${GRIFFIN_FIELDS_BUDGET} Б — превышение на ${griffinFieldsWeight - GRIFFIN_FIELDS_BUDGET} Б`);
   }
-  if (strayCss.length > 0) fail(GRIFFIN_CSS, `вне слоя griffincss.ui осталось блоков — ${strayCss.length}`);
-  if (css.includes('!important')) fail(GRIFFIN_CSS, 'найден !important');
 
-  for (const name of classNames(parsed.selectors)) {
-    if (!name.startsWith('gr-')) fail(GRIFFIN_CSS, `класс .${name} без префикса gr-`);
+  if (griffinFieldsSetWeight > GRIFFIN_FIELDS_SET_BUDGET) {
+    fail(GRIFFIN_FIELDS, `набор «ядро + поля» весит ${griffinFieldsSetWeight} Б gzip при бюджете ${GRIFFIN_FIELDS_SET_BUDGET} Б`);
   }
+
+  if (griffinCountriesWeight > GRIFFIN_COUNTRIES_BUDGET) {
+    fail(GRIFFIN_COUNTRIES, `таблица стран весит ${griffinCountriesWeight} Б gzip при бюджете ${GRIFFIN_COUNTRIES_BUDGET} Б`);
+  }
+
+  // Поля в полный файл не входят — ни одним виджетом. Списки сборки
+  // разведены, но сторожится артефакт: разъехаться со списком он не может,
+  // а вот попасть в него «раз уж влезло» — рукой автора — может.
+  const full = read(GRIFFIN);
+
+  for (const rel of FIELDS) {
+    const widget = rel.replace(/^fields\//, '').replace(/\.js$/, '');
+
+    if (new RegExp(`defineWidget\\(["']${widget}["']`).test(full)) {
+      fail(GRIFFIN, `виджет поля «${widget}» попал в полный griffinjs.js — место полей во втором бандле`);
+    }
+  }
+
+  checkLayerCss(GRIFFIN_CSS);
+  checkLayerCss(GRIFFIN_FIELDS_CSS);
 } catch (e) {
   fail(GRIFFIN, `слой не собран — npm run build:griffinjs --workspace griffincss-ui (${e.message})`);
 }
@@ -823,7 +921,11 @@ for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
 //     griffinjs.js» — после заголовка с id="griffinjs". Без бейджа читатель без скрипта
 //     получил бы неработающий пример без объяснения.
 {
+  // Поля второго бандла требуют griffinjs-fields.js — бейдж называет
+  // именно его: читателю, подключившему один griffinjs.js, пример
+  // без этой оговорки показал бы неработающее поле.
   const layerAttr = /data-gr-(?:track|slider|gallery|lightbox|parallax|megamenu|dropdown|tooltip|dialog|open|combobox|range|sortable)\b/;
+  const fieldAttr = new RegExp(`data-gr-(?:${FIELDS.map((rel) => rel.replace(/^fields\//, '').replace(/\.js$/, '')).join('|')})\\b`);
   const docsDir = join(root, 'docs');
 
   for (const name of readdirSync(docsDir).filter((f) => f.endsWith('.html'))) {
@@ -837,13 +939,16 @@ for (const needle of [`v${VERSION}`, `VERSION = '${VERSION}'`]) {
     for (const match of html.matchAll(/<div class="demo-block">([\s\S]*?)\n<\/div>\n/g)) {
       const block = match[1];
 
-      if (!layerAttr.test(block)) continue;
+      const field = fieldAttr.test(block);
+
+      if (!layerAttr.test(block) && !field) continue;
 
       const title = (block.match(/demo-block-title">([\s\S]*?)<\/div>/) || [])[1] || '';
       const inside = section !== -1 && match.index > section;
+      const badge = field ? /нужен griffinjs-fields\.js/ : /нужен griffinjs\.js/;
 
-      if (!/нужен griffinjs\.js/.test(block)) {
-        fail(`docs/${name}`, `демонстрация со скриптом без бейджа «нужен griffinjs.js»: ${title.replace(/<[^>]*>/g, '').trim().slice(0, 60)}`);
+      if (!badge.test(block)) {
+        fail(`docs/${name}`, `демонстрация со скриптом без бейджа «нужен ${field ? 'griffinjs-fields.js' : 'griffinjs.js'}»: ${title.replace(/<[^>]*>/g, '').trim().slice(0, 60)}`);
       }
 
       if (name.startsWith('ui-') && !inside) {
@@ -940,6 +1045,7 @@ console.log(`  utils  ${size(UTILS)} (${utilsClasses.size} классов) + sco
 console.log(`  js     ${kb(jsWeight)} gzip на ${RUNTIMES.length} рантайма (бюджет ${kb(JS_BUDGET)})`);
 console.log(`  бандл  ${kb(bundleWeight)} gzip одним файлом (бюджет ${kb(BUNDLE_BUDGET)})`);
 console.log(`  griffinjs ${kb(griffinWeight)} gzip (бюджет ${kb(GRIFFIN_BUDGET)}), ядро ${kb(griffinOnlyCoreWeight)} (бюджет ${kb(GRIFFIN_ONLY_CORE_BUDGET)}), набор слайдера ${kb(griffinCoreWeight)} (бюджет ${kb(GRIFFIN_CORE_BUDGET)})`);
+console.log(`  поля   ${kb(griffinFieldsWeight)} gzip (бюджет ${kb(GRIFFIN_FIELDS_BUDGET)}), набор «ядро + поля» ${kb(griffinFieldsSetWeight)} (бюджет ${kb(GRIFFIN_FIELDS_SET_BUDGET)}), таблица стран ${kb(griffinCountriesWeight)} (бюджет ${kb(GRIFFIN_COUNTRIES_BUDGET)})`);
 console.log(`  ось    ${size(STYLES)} на три стиля, по одному — ${STYLE_NAMES.map((name) => `${name} ${size(styleFile(name))}`).join(', ')}`);
 console.log(`  бюджет CSS ${CSS_BUDGETS.map(([id, budget]) => `${id} ${kb(bytes(id))} из ${kb(budget)}`).join(' · ')}`);
 console.log(`  токены ${tokenCount} на набор × ${SETS.length} набора (${SETS.map(({ name }) => name).join(', ')})`);

@@ -159,7 +159,40 @@
   <tr><td><code>navigate</code></td><td><code>false</code></td><td>Выбор позиции с <code>href</code> — переход по адресу</td></tr>
   <tr><td><code>highlight</code></td><td><code>true</code></td><td>Совпадение в подписи оборачивается <code>&lt;mark&gt;</code> — через <code>textContent</code>, данные разметкой не становятся</td></tr>
   <tr><td><code>cache</code></td><td><code>true</code></td><td>Выдача по запросу запоминается на время жизни страницы</td></tr>
+  <tr><td><code>multiple</code></td><td><code>false</code></td><td>Мультивыбор: выбранное — теги перед полем, значение — в <code>&lt;select multiple&gt;</code> внутри обёртки (см. ниже)</td></tr>
+  <tr><td><code>remove</code></td><td><code>Убрать {label}</code></td><td>Подпись кнопки «убрать» у тега, для скринридера</td></tr>
 </table>
+
+<h3>Мультивыбор</h3>
+
+<p>
+  Флаг <code>multiple</code>, а не второй виджет. База без скрипта —
+  <code>&lt;select multiple&gt;</code> внутри обёртки: он и без слоя
+  выбирает несколько позиций и отправляет их форме. Со скриптом он уходит
+  с экрана, выбранное показывается тегами перед полем, выбор позиции
+  из выдачи включает её в <code>&lt;select&gt;</code> — добавляя
+  <code>&lt;option&gt;</code>, если такой не было, — и очищает поле;
+  крестик у тега или <kbd>Backspace</kbd> в пустом поле снимает выбор.
+  Значение всегда в <code>&lt;select&gt;</code>, и о смене он сообщает
+  событием <code>change</code>, как без скрипта.
+</p>
+
+<pre><code>&lt;div class="gr-combobox" data-gr-combobox="src: /tags?q={q}; multiple"&gt;
+  &lt;select name="tags[]" multiple aria-label="Выбранные теги"&gt;
+    &lt;option value="css" selected&gt;CSS&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input class="gr-input" type="search" placeholder="Добавить тег" aria-label="Добавить тег"&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Теги из <code>&lt;select multiple&gt;</code>; наберите «а» <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="ov-combobox-multi" style="max-width: 24rem">
+    <select name="tags[]" multiple aria-label="Выбранные товары">
+      <option value="Acer Aspire" selected>Acer Aspire</option>
+    </select>
+    <input class="gr-input" type="search" placeholder="Добавить товар" aria-label="Добавить товар">
+  </div>
+</div>
 
 <p>
   Через JS источником может быть функция, а позиция — своей разметкой:

@@ -31,7 +31,7 @@ export const SITES = [
   {
     file: 'README.md',
     ids: [
-      'core', 'js-pkg-core', 'ui', 'js-ui', 'griffinjs', 'utils', 'js-utils',
+      'core', 'js-pkg-core', 'ui', 'js-ui', 'griffinjs', 'griffinjs-fields-set', 'utils', 'js-utils',
       'css-all', 'css-ui-stack', 'js-all',
     ],
   },
@@ -47,9 +47,16 @@ export const SITES = [
       'griffinjs-megamenu:n', 'griffinjs-dropdown:n', 'griffinjs-tooltip:n',
       'griffinjs-dialog:n', 'griffinjs-combobox:n', 'griffinjs-range:n', 'griffinjs-sortable:n',
       'griffinjs', 'griffinjs-core:n', 'griffinjs-slider-set:n',
+      'griffinjs-mask:n', 'griffinjs-phone:n', 'griffinjs-datetime:n', 'griffinjs-file:n',
+      'griffinjs-rating:n', 'griffinjs-otp:n', 'griffinjs-counter:n', 'griffinjs-validate:n',
+      'griffinjs-fields', 'griffinjs-fields-set:n', 'griffinjs-countries:n',
     ],
   },
-  { file: 'docs/ui-forms.html', ids: ['griffinjs-range-set'] },
+  { file: 'docs/ui-forms.html', ids: ['griffinjs-range-set', 'griffinjs-fields-set'] },
+  {
+    file: 'docs/griffinjs-fields.html',
+    ids: ['griffinjs-fields-set', 'griffinjs-fields', 'griffinjs-fields-css', 'griffinjs-countries'],
+  },
   { file: 'docs/ui-tables.html', ids: ['griffinjs-sortable-set'] },
   { file: 'docs/ui-overlays.html', ids: ['js-ui'] },
   { file: 'docs/ui-disclosure.html', ids: ['core'] },

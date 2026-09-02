@@ -295,6 +295,17 @@
   </div>
 </div>
 
+<div class="demo-block">
+  <div class="demo-block-title">Мультивыбор: теги перед полем, значение — в <code>&lt;select multiple&gt;</code> <span class="badge">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="gr-lab-combobox-multi" style="max-width: 24rem">
+    <select name="tags[]" id="gr-lab-combobox-multi-select" multiple aria-label="Выбранные товары">
+      <option value="Acer Aspire" selected>Acer Aspire</option>
+      <option value="AirPods">AirPods</option>
+    </select>
+    <input class="gr-input" type="search" placeholder="Добавить товар" aria-label="Добавить товар">
+  </div>
+</div>
+
 <h2>Сортируемая таблица</h2>
 
 <div class="demo-block">
@@ -336,11 +347,17 @@
         { value: 'Apple Watch', group: 'Часы' }
       ];
 
+      var source = function (q) {
+        return Promise.resolve(goods.filter(function (g) { return g.value.toLowerCase().indexOf(q.toLowerCase()) !== -1; }));
+      };
+
       window.GriffinJS.mount(document.getElementById('gr-lab-combobox'), 'combobox', {
-        min: 1, delay: 50, empty: 'Ничего не найдено',
-        source: function (q) {
-          return Promise.resolve(goods.filter(function (g) { return g.value.toLowerCase().indexOf(q.toLowerCase()) !== -1; }));
-        }
+        min: 1, delay: 50, empty: 'Ничего не найдено', source: source
+      });
+
+      // Мультивыбор: тот же источник, флаг multiple, значение в <select multiple>.
+      window.GriffinJS.mount(document.getElementById('gr-lab-combobox-multi'), 'combobox', {
+        min: 1, delay: 50, multiple: true, source: source
       });
     }
   })();
