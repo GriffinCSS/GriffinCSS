@@ -27,7 +27,7 @@
  * Мультивыбор (Этап 38g) — флаг multiple, а не новый виджет:
  *
  *   <div class="gr-combobox" data-gr-combobox="src: /tags?q={q}; multiple">
- *     <select name="tags[]" multiple>
+ *     <select class="gr-select" name="tags[]" multiple>
  *       <option value="css" selected>CSS</option>
  *     </select>
  *     <input class="gr-input" type="search">

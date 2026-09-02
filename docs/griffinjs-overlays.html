@@ -178,7 +178,7 @@
 </p>
 
 <pre><code>&lt;div class="gr-combobox" data-gr-combobox="src: /tags?q={q}; multiple"&gt;
-  &lt;select name="tags[]" multiple aria-label="Выбранные теги"&gt;
+  &lt;select class="gr-select" name="tags[]" multiple aria-label="Выбранные теги"&gt;
     &lt;option value="css" selected&gt;CSS&lt;/option&gt;
   &lt;/select&gt;
   &lt;input class="gr-input" type="search" placeholder="Добавить тег" aria-label="Добавить тег"&gt;
@@ -187,7 +187,7 @@
 <div class="demo-block">
   <div class="demo-block-title">Теги из <code>&lt;select multiple&gt;</code>; наберите «а» <span class="badge badge-accent">нужен griffinjs.js</span></div>
   <div class="gr-combobox" id="ov-combobox-multi" style="max-width: 24rem">
-    <select name="tags[]" multiple aria-label="Выбранные товары">
+    <select class="gr-select" name="tags[]" multiple aria-label="Выбранные товары">
       <option value="Acer Aspire" selected>Acer Aspire</option>
     </select>
     <input class="gr-input" type="search" placeholder="Добавить товар" aria-label="Добавить товар">
@@ -319,8 +319,12 @@ el.addEventListener('griffin:select', function (e) { console.log(e.detail.item);
     };
 
     var el = document.getElementById('ov-combobox');
+    var multi = document.getElementById('ov-combobox-multi');
 
     if (el) window.GriffinJS.mount(el, 'combobox', { min: 1, delay: 100, empty: 'Ничего не найдено', source: source });
+
+    // Мультивыбор: тот же источник, флаг multiple; значение — в <select multiple>.
+    if (multi) window.GriffinJS.mount(multi, 'combobox', { min: 1, delay: 100, multiple: true, source: source });
   })();
 </script>
 
