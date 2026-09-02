@@ -231,8 +231,10 @@
   cursor: pointer;
 }
 
-// Радиус кнопки чуть меньше радиуса поля, чтобы вписаться в его угол;
-// на нулевом радиусе не уходит в минус.
+// Радиус кнопки — по каскаду скруглений, тому же, что у .gr-radius в утилитах:
+// радиус ребёнка равен радиусу родителя минус зазор до него. Зазор здесь —
+// рамка поля плюс внутренний отступ, так угол кнопки ложится концентрично
+// в угол поля при любом --gr-radius; на нулевом не уходит в минус.
 .gr-file::file-selector-button {
   box-sizing: border-box;
   block-size: var(--gr-file-button);
@@ -241,7 +243,7 @@
   padding-block: 0;
   padding-inline: calc(var(--gr-control-padding-x) * 0.7);
   border: var(--gr-border-width) solid var(--gr-color-border);
-  border-radius: max(0px, calc(var(--gr-radius) - 0.125rem));
+  border-radius: max(0px, calc(var(--gr-radius) - var(--gr-border-width) - var(--gr-file-inset)));
   background-color: var(--gr-color-surface-raised);
   color: var(--gr-color-text);
   font: inherit;

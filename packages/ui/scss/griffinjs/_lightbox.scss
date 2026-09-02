@@ -7,6 +7,8 @@
 // Правил на .gr-modal здесь нет: класс принадлежит пакету ui, лайтбокс
 // только уточняет его своим классом.
 
+@use '../mixins' as m;
+
 .gr-lightbox {
   inline-size: 100%;
   block-size: 100%;
@@ -79,6 +81,14 @@
   line-height: 1;
   cursor: pointer;
   transition: background-color var(--gr-transition);
+}
+
+// Закрытие — полосками: знак «×» в 1,5rem садится на 2 px ниже центра
+// круга во всех движках.
+.gr-lightbox-close {
+  @include m.gr-cross(1rem);
+
+  --gr-cross-color: hsl(var(--gr-hsl-white));
 }
 
 .gr-lightbox-close:hover,

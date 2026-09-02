@@ -11,6 +11,8 @@
 // Показывается он состоянием обёртки — data-gr-state="open"; без скрипта
 // состояния нет, и списка не видно.
 
+@use '../mixins' as m;
+
 .gr-combobox {
   position: relative;
 }
@@ -113,11 +115,12 @@
 }
 
 .gr-combobox-tag {
+  --gr-tag-inset: 0.25rem;
+
   display: inline-flex;
-  gap: 0.25em;
+  gap: var(--gr-tag-inset);
   align-items: center;
-  padding-block: 0.125rem;
-  padding-inline: 0.625rem 0.25rem;
+  padding: var(--gr-tag-inset);
   border: var(--gr-border-width) solid var(--gr-color-border);
   border-radius: var(--gr-radius-pill);
   background-color: var(--gr-color-surface);
@@ -125,10 +128,21 @@
   line-height: 1.4;
 }
 
+// Отступ у тега один со всех сторон: крестик — круг того же зазора
+// от края, что и сверху и снизу, и ложится в скругление концентрично.
+// Тексту у левой дуги пилюли тесно, поэтому его собственный отступ —
+// на нём самом, а не в паддинге тега.
+.gr-combobox-tag > span {
+  margin-inline-start: calc(var(--gr-tag-inset) * 1.5);
+}
+
 .gr-combobox-tag-remove {
+  @include m.gr-cross(0.625rem);
+
+  --gr-cross-color: var(--gr-color-text-secondary);
+
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   inline-size: 1.25rem;
   block-size: 1.25rem;
   margin: 0;
@@ -136,16 +150,14 @@
   border: 0;
   border-radius: 50%;
   background: none;
-  color: var(--gr-color-text-secondary);
-  font: inherit;
-  line-height: 1;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .gr-combobox-tag-remove:hover {
+    --gr-cross-color: var(--gr-color-danger);
+
     background-color: var(--gr-color-surface-raised);
-    color: var(--gr-color-danger);
   }
 }
 

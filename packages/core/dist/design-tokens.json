@@ -7,7 +7,7 @@
       "url": "https://tr.designtokens.org/format/",
       "dialect": "значения строками: цвет — hex (#rrggbb или #rrggbbaa), размер — длина CSS (0.5rem, 16px)",
       "library": "griffincss",
-      "version": "0.23.0",
+      "version": "0.23.1",
       "source": "packages/core/dist/griffincss-core.css",
       "generator": "scripts/build-tokens.mjs",
       "variables": "имя токена — имя переменной CSS без префикса: «color-bg» это --gr-color-bg",

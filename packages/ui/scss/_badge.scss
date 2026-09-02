@@ -14,6 +14,7 @@
 // цвета выглядят не предупреждением, а грязью.
 
 @use 'sass:list';
+@use 'mixins' as m;
 
 .gr-badge {
   --gr-badge-color: var(--gr-color-text-secondary);
@@ -125,28 +126,30 @@ $gr-badge-statuses: (
   vertical-align: middle;
 }
 
+// Крестик — полосками, а не знаком «×»: глиф садится ниже центра кнопки
+// на 0,6–1,5 px, в каждом движке по-своему (миксин gr-cross).
 .gr-tag-remove {
+  @include m.gr-cross(0.55rem);
+
+  --gr-cross-color: var(--gr-color-text-secondary);
+
+  position: relative;
   display: inline-flex;
   box-sizing: border-box;
-  align-items: center;
-  justify-content: center;
   inline-size: 1.2em;
   block-size: 1.2em;
   padding: 0;
   border: 0;
   border-radius: var(--gr-radius-pill);
   background-color: transparent;
-  color: var(--gr-color-text-secondary);
-  font-family: inherit;
-  font-size: inherit;
-  line-height: 1;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .gr-tag-remove:hover {
+    --gr-cross-color: var(--gr-color-text);
+
     background-color: var(--gr-color-border);
-    color: var(--gr-color-text);
   }
 }
 

@@ -7,7 +7,7 @@
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
 | **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | <!--gr:size:core-->3,3 КБ<!--/gr:size:core--> CSS + <!--gr:size:js-pkg-core-->4,8 КБ<!--/gr:size:js-pkg-core--> JS |
-| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->11,0 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->2,9 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->17,7 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
+| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->11,1 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->2,9 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->17,7 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
 | **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | <!--gr:size:utils-->14,6 КБ<!--/gr:size:utils--> CSS + <!--gr:size:js-utils-->2,4 КБ<!--/gr:size:js-utils--> JS |
 
 ### Раскладки: две дорожки, одна строка
@@ -60,9 +60,9 @@ peer-зависят от него: дизайн-токены и карта бр�
 поднимается только вместе с тем, что покупается, и подо что оставлен
 запас — записано рядом с каждой цифрой в `scripts/check-dist.mjs`.
 Для сравнения (замер сторонних файлов — 2026-08-30, gzip): ресет, ядро,
-компоненты и утилиты вместе — <!--gr:size:css-all-->29,5 КБ<!--/gr:size:css-all-->
+компоненты и утилиты вместе — <!--gr:size:css-all-->29,6 КБ<!--/gr:size:css-all-->
 против 30,1 КБ у `bootstrap.min.css` и 63,1 КБ у `bulma.min.css`;
-ресет, ядро и компоненты — <!--gr:size:css-ui-stack-->14,9 КБ<!--/gr:size:css-ui-stack-->
+ресет, ядро и компоненты — <!--gr:size:css-ui-stack-->15,0 КБ<!--/gr:size:css-ui-stack-->
 против 29,3 КБ у `uikit.min.css`; четыре рантайма —
 <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> против 23,2 КБ
 у `bootstrap.bundle.min.js`.
@@ -135,7 +135,7 @@ anywhere in the library.
 
 ## Установка / Installation
 
-> **Текущая версия `0.23.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.23.1`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -162,10 +162,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.23.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.23.1/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss.js"></script>
 ```
 
 Стратегии оформления `data-gr-style` — отдельный файл, по желанию: все три
@@ -173,9 +173,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 
 ```html
 <!-- все три стиля -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.0/dist/griffincss-styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-styles.css">
 <!-- или один — вместо предыдущей строки, а не вдобавок к ней -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.0/dist/griffincss-style-strict.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-style-strict.css">
 ```
 
 Разбор и веса по каждому файлу — [docs/style-presets.html](docs/style-presets.html).
@@ -186,8 +186,8 @@ npm i griffincss-core griffincss-ui griffincss-utils
 сортируемая таблица):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffinjs.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffinjs.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffinjs.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffinjs.js"></script>
 ```
 
 Расширенные поля форм — маска, телефон, дата и время, файл с удалением
@@ -197,9 +197,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 `griffinjs.js` от них не растёт ни на байт:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffinjs-fields.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffinjs-fields.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.0/dist/griffinjs-countries.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffinjs-fields.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffinjs-fields.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.23.1/dist/griffinjs-countries.js"></script>
 ```
 
 Работает и `unpkg.com` с теми же путями. Номер версии в адресе указывайте
@@ -211,7 +211,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.0/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.

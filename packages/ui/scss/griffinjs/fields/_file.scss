@@ -3,6 +3,8 @@
 // Без скрипта его нет: сколько файлов выбрано, показывает само поле,
 // а оформление поля — модуль .gr-file пакета ui.
 
+@use '../../mixins' as m;
+
 .gr-file-list {
   display: flex;
   flex-direction: column;
@@ -45,10 +47,13 @@
 }
 
 .gr-file-remove {
+  @include m.gr-cross(0.75rem);
+
+  --gr-cross-color: var(--gr-color-text-secondary);
+
+  position: relative;
   display: inline-flex;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
   inline-size: 1.75rem;
   block-size: 1.75rem;
   margin: 0;
@@ -56,17 +61,14 @@
   border: 0;
   border-radius: var(--gr-radius);
   background: none;
-  color: var(--gr-color-text-secondary);
-  font: inherit;
-  font-size: 1.125rem;
-  line-height: 1;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .gr-file-remove:hover {
+    --gr-cross-color: var(--gr-color-danger);
+
     background-color: var(--gr-color-surface-raised);
-    color: var(--gr-color-danger);
   }
 }
 

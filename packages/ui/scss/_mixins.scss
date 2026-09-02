@@ -1,0 +1,35 @@
+// Griffincss UI — общие миксины пакета
+// Кухня, не вывод: подключаются модулями компонентов и слоя GriffinJS
+// (griffinjs.scss и fields/fields.scss), а в CSS ничего сами не пишут.
+
+// Крестик «убрать» — двумя полосками через псевдоэлементы, а не знаком «×»:
+// у глифа своя посадка в строке, и на трёх движках он садится ниже центра
+// кнопки на 1–2 px по-разному; полоски, повёрнутые от центра, центрированы
+// по построению. Текст «×» в кнопке остаётся — имя ей даёт aria-label,
+// а глиф прячется прозрачным цветом текста (не нулевым кеглем: размер
+// кнопки может быть задан в em). Цвет полосок — --gr-cross-color, его
+// ставит кнопка и её hover. Кнопка обязана быть позиционирована
+// (relative или absolute) — миксин position не трогает.
+@mixin gr-cross($size) {
+  color: transparent;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: $size;
+
+    // Толщина — от ширины рамок: в режиме для слабовидящих крестик
+    // утолщается вместе с ними, а не остаётся волоском.
+    block-size: calc(var(--gr-border-width) * 1.5);
+    border-radius: var(--gr-border-width);
+    background-color: var(--gr-cross-color);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  &::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+}
