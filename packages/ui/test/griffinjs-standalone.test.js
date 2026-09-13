@@ -244,8 +244,10 @@ const MARKUP = {
   ])),
 
   // Таблица стран — не виджет: на старте кладёт состав в G.phone.table,
-  // и пустой список кодов заполняется из неё.
-  countries: (doc) => mount(doc, el('div', { class: 'gr-input-group', 'data-gr-phone': '' }, [
+  // и пустой список кодов заполняется из неё. country обязателен: без него
+  // виджет предупреждает о стране по умолчанию (Этап 41), а этот тест
+  // ждёт тишины.
+  countries: (doc) => mount(doc, el('div', { class: 'gr-input-group', 'data-gr-phone': 'country: ru' }, [
     el('select'), el('input', { type: 'tel' }),
   ])),
 };

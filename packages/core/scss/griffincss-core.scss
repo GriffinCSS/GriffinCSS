@@ -22,7 +22,11 @@
 // Весь вывод пакета — в слое griffincss.core.
 @layer griffincss.core {
   @include meta.load-css('tokens');
-  @include meta.load-css('theme');
+
+  // Тема двумя файлами: токены едут во все три пакета, правила со
+  // свойствами — только сюда и в компоненты. Причина — в шапках файлов.
+  @include meta.load-css('theme-tokens');
+  @include meta.load-css('theme-rules');
   @include meta.load-css('container-queries');
   @include meta.load-css('grid-helpers');
   @include meta.load-css('grid-parser');

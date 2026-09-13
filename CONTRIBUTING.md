@@ -341,15 +341,23 @@ Rules for modifying existing SCSS files in the library.
 
    Layer order: `@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils;` —
    declared in full by every entry point, so the result does not depend on `<link>` order.
-3. **`_tokens.scss`, `_breakpoints.scss`, `_theme.scss` and `_theme-values.scss` live only in `packages/core/`.**
-   `griffincss-ui` and `griffincss-utils`
+3. **`_tokens.scss`, `_breakpoints.scss`, `_theme-tokens.scss`, `_theme-rules.scss` and
+   `_theme-values.scss` live only in `packages/core/`.** `griffincss-ui` and `griffincss-utils`
    pull them by package path (`@use 'griffincss-core/scss/breakpoints' as bp;`) — both peer-depend
    on the core. Editing them changes all three packages at once, so rebuild and check all three.
-   `_theme.scss` **must** be loaded by every entry point, not just the grid one: the
+   `_theme-tokens.scss` **must** be loaded by every entry point, not just the grid one: the
    `griffincss.ui` and `griffincss.utils` layers outrank `griffincss.core`, so theme overrides
    that ship only with the core would lose to the base `:root` block coming from an add-on
    build, whatever the selector specificity. `check-dist.mjs` fails the build if the theme
    block is missing from any artifact.
+   `_theme-rules.scss` — the property rules of the low-vision mode (font scale, `a[href]`,
+   `:focus-visible`) — is loaded by the core and the ui entry points **only**: the utils layer
+   is the topmost, and a property rule from there beats every component whatever its
+   specificity. In the theme blocks of the utils builds there may be nothing but custom
+   properties (plus `color-scheme`); `packages/utils/test/utils.test.js` checks it. A component
+   that has to survive a theme rule shields itself with its own rule in its own module
+   (see `a.gr-btn` in `_button.scss`), never with a `[data-gr-a11y]` selector.
+   `_theme.scss` only forwards the two partials, for external imports.
 4. **Resolved `--gr-color-*` are declared for every theme carrier**, not just `:root`
    (`:root, [data-gr-theme], [data-gr-a11y]`). `var()` inside a custom property is
    substituted on the element where the property is declared; descendants inherit the
@@ -425,6 +433,8 @@ Rules for modifying existing SCSS files in the library.
 ```
 packages/core/scss/griffincss-core.scss        @layer griffincss.core
 ├── _tokens.scss          → _breakpoints.scss   (generates --gr-bp-*)
+├── _theme-tokens.scss    → _theme-values.scss  (token carriers; every entry point)
+├── _theme-rules.scss     → _theme-values.scss  (low-vision property rules; core and ui only)
 ├── _grid-helpers.scss    → _breakpoints.scss
 ├── _grid-parser.scss     → _layout-mixins.scss (@forward)
 │   └── _layout-mixins.scss → _breakpoints.scss, _functions.scss
@@ -435,7 +445,8 @@ packages/core/scss/griffincss-reset.scss       @layer griffincss.reset
 
 packages/ui/scss/griffincss-ui.scss            @layer griffincss.ui
 ├── griffincss-core/scss/tokens        (peer dep; no local copy)
-├── griffincss-core/scss/theme
+├── griffincss-core/scss/theme-tokens
+├── griffincss-core/scss/theme-rules   (the a[href] rule must outrank .gr-link-* in this layer)
 └── _alert / _avatar / _badge / _button / _card / _choice / _form / _table
     (no deps — components read tokens through var(), not through @use)
 
@@ -444,6 +455,7 @@ packages/ui/scss/griffincss-ui-scoped.scss — the same, prefixed with :where(.g
 
 packages/utils/scss/griffincss-utils.scss      @layer griffincss.utils
 ├── griffincss-core/scss/tokens        (peer dep → the core copy, no local one)
+├── griffincss-core/scss/theme-tokens  (tokens only — never theme-rules, see step 3 above)
 ├── _border-radius.scss   → griffincss-core/scss/breakpoints
 ├── _colors.scss          (no deps)
 ├── _spacing.scss         → griffincss-core/scss/breakpoints
@@ -485,7 +497,8 @@ Rules for modifying `packages/core/src/griffincss.js` — the DOM-scanning grid 
 
 - **Source:** `packages/core/src/griffincss.js` — edit this copy
 - **Artifact:** `packages/core/dist/griffincss.js` — minified by terser during `npm run build`
-  (source map alongside, ASCII `/*! … */` banner; never edit it)
+  (source map alongside, ASCII `/*! … */` banner; never edit it — `scripts/check-origin.mjs`
+  in `npm test` compares every `dist/*.js` with the minification of `src/` byte for byte)
 - **Format:** UMD-ish wrapper — `module.exports` under Node, `window.Griffincss` + auto-start in the browser
 - **Size:** ~27 KB uncompressed in `src/`, 3.3 KB gzip in `dist/`; budget for all four runtimes — 10 KB gzip
 - **No compilation:** the source is the truth, but run `npm run build` so `dist/` is re-minified from `src/`
@@ -598,7 +611,7 @@ Rules for modifying `packages/core/src/griffincss.js` — the DOM-scanning grid 
 1. **Run the suites:**
    ```bash
    node --test "packages/*/test/*.test.js"
-   npm run check          # lint + build + tests + check-dist
+   npm run check          # lint + build + tests + check-dist + check-origin
    ```
 
 2. **Test in a real browser:**
@@ -765,12 +778,18 @@ npx serve -l 8800 -n .
 ```bash
 npx playwright install          # один раз, ~500 МБ на три движка
 npm run test:browser:all        # все три по очереди, со сводкой, ~8 минут
+npm run test:browser:all -- --report   # то же + запись сводки в BROWSERS.md
 npm run test:browser            # то же средствами playwright, без сводки
 npm run test:browser -- --project=webkit   # один движок
 ```
 
-`test:browser:all` печатает платформу, версии Node и playwright и строку
-на каждый движок — статус, число тестов и время. Движки сам не ставит:
+`test:browser:all` печатает платформу, версии Node и playwright, версию
+каждого движка и строку на каждый из них — статус, число тестов и время.
+Ключ `--report` кладёт то же самое в `BROWSERS.md`: файл уезжает
+к потребителю вместе с выпуском, и гейт выпуска отказывает, если сводки
+нет, она за другую версию или хоть один движок красный. Подлинности гейт
+не доказывает — сводка собирается локально и пишется руками за минуту;
+это фиксация ритуала в артефакте, а не подпись. Движки сам не ставит:
 500 МБ трафика — решение того, кто запускает, поэтому при их отсутствии
 скрипт печатает команду установки и выходит с ненулевым кодом.
 

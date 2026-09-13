@@ -115,6 +115,23 @@ test('перевод HSL в hex держится внутри разброса �
   assert.equal(light['hsl-status-warning-surface'].$value, '#f59b14');
 });
 
+test('якорь бренда приезжает в экспорт, а оси берут от него разные пары', () => {
+  const { light, dark } = sets();
+  const low = sets()['low-vision'];
+
+  for (const [name, set] of [['light', light], ['dark', dark], ['low-vision', low]]) {
+    assert.equal(set['hsl-accent-base']?.$type, 'color', `в наборе ${name} нет якоря hsl-accent-base`);
+    assert.equal(set['hsl-accent-base-hover']?.$type, 'color', `в наборе ${name} нет якоря hsl-accent-base-hover`);
+  }
+
+  // В обычных темах акцент и есть якорь; в режиме для слабовидящих
+  // акцент уходит на accent-max, а якорь остаётся повседневным.
+  assert.equal(light['hsl-accent'].$value, light['hsl-accent-base'].$value);
+  assert.equal(dark['hsl-accent'].$value, dark['hsl-accent-base'].$value);
+  assert.equal(low['hsl-accent'].$value, low['hsl-accent-max'].$value);
+  assert.notEqual(low['hsl-accent'].$value, low['hsl-accent-base'].$value);
+});
+
 test('значения резолвнуты до конца: ни var(), ни calc() в выводе', () => {
   assert.doesNotMatch(built, /var\(--/);
   assert.doesNotMatch(built, /calc\(/);

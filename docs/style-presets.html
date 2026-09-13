@@ -32,6 +32,13 @@
     flex: 0 1 auto;
   }
 
+  /* Таблица «что стиль переводит в палитре» — четыре колонки имён токенов.
+     Имя, разорванное переносом, не прочесть, поэтому в этой таблице код
+     не переносится: на узком экране прокручивается её обёртка .table-scroll. */
+  #style-palette code {
+    white-space: nowrap;
+  }
+
   /* Островок: секция со своей осью внутри страницы. Пунктир — авторский,
      он показывает границу островка, а не оформление библиотеки. */
   .island {
@@ -142,6 +149,71 @@
     собственные отступы компонентов и на <code class="token">--gr-gap</code>.
   </p>
 </div>
+
+<h2>Что стиль переводит в палитре</h2>
+
+<p>
+  Стиль — не только геометрия и движение. Каждый из трёх переводит часть
+  HSL-триплетов темы на собственные якоря; значения якорей задаёт
+  действующая тема, поэтому один и тот же блок стиля работает поверх
+  светлой и тёмной. Ниже — полный перечень: какой токен и на какой якорь
+  переведён. Прочерк — стиль этот токен не трогает. Таблица написана
+  руками, а тест <code>style-css.test.js</code> сверяет её с миксинами
+  <code>gr-style-*</code>: токен, который стиль переводит, а таблица
+  не называет, роняет сборку.
+</p>
+
+<div class="table-scroll">
+<table id="style-palette">
+  <thead>
+    <tr><th>Токен</th><th><code>airy</code></th><th><code>strict</code></th><th><code>compact</code></th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>--gr-hsl-accent</code></td><td><code>accent-soft</code></td><td>—</td><td><code>accent-press</code></td></tr>
+    <tr><td><code>--gr-hsl-accent-hover</code></td><td><code>accent-soft-hover</code></td><td>—</td><td><code>accent-press-hover</code></td></tr>
+    <tr><td><code>--gr-hsl-on-accent</code></td><td><code>on-accent-soft</code></td><td>—</td><td>—</td></tr>
+    <tr><td><code>--gr-hsl-link</code></td><td><code>accent-soft</code></td><td>—</td><td><code>accent-press</code></td></tr>
+    <tr><td><code>--gr-hsl-link-hover</code></td><td><code>accent-soft-hover</code></td><td>—</td><td><code>accent-press-hover</code></td></tr>
+    <tr><td><code>--gr-hsl-surface-0</code></td><td><code>surface-0-tinted</code></td><td><code>surface-0-lifted</code></td><td><code>surface-0-lifted</code></td></tr>
+    <tr><td><code>--gr-hsl-surface-1</code></td><td><code>surface-1-tinted</code></td><td><code>surface-1-lifted</code></td><td><code>surface-1-lifted</code></td></tr>
+    <tr><td><code>--gr-hsl-surface-2</code></td><td><code>surface-2-tinted</code></td><td><code>surface-2-lifted</code></td><td><code>surface-2-lifted</code></td></tr>
+    <tr><td><code>--gr-hsl-surface-sunken</code></td><td><code>surface-sunken-tinted</code></td><td><code>surface-sunken-lifted</code></td><td><code>surface-sunken-lifted</code></td></tr>
+    <tr><td><code>--gr-hsl-surface-overlay</code></td><td><code>surface-overlay-tinted</code></td><td><code>surface-1-lifted</code></td><td><code>surface-1-lifted</code></td></tr>
+    <tr><td><code>--gr-hsl-border</code></td><td><code>border-tinted</code></td><td><code>border-soft</code></td><td><code>border-press</code></td></tr>
+    <tr><td><code>--gr-hsl-border-strong</code></td><td><code>border-strong-tinted</code></td><td><code>border-strong-soft</code></td><td><code>border-strong-press</code></td></tr>
+    <tr><td><code>--gr-hsl-status-success</code></td><td>—</td><td>—</td><td><code>status-success-press</code></td></tr>
+    <tr><td><code>--gr-hsl-status-success-surface</code></td><td><code>status-success-pastel</code></td><td>—</td><td><code>status-success-press</code></td></tr>
+    <tr><td><code>--gr-hsl-on-status-success</code></td><td><code>on-status-success-pastel</code></td><td>—</td><td>—</td></tr>
+    <tr><td><code>--gr-hsl-status-warning-surface</code></td><td><code>status-warning-pastel</code></td><td>—</td><td><code>status-warning-surface-press</code></td></tr>
+    <tr><td><code>--gr-hsl-on-status-warning</code></td><td><code>on-status-warning-pastel</code></td><td>—</td><td>—</td></tr>
+    <tr><td><code>--gr-hsl-status-danger</code></td><td>—</td><td>—</td><td><code>status-danger-press</code></td></tr>
+    <tr><td><code>--gr-hsl-status-danger-surface</code></td><td><code>status-danger-pastel</code></td><td>—</td><td><code>status-danger-press</code></td></tr>
+    <tr><td><code>--gr-hsl-on-status-danger</code></td><td><code>on-status-danger-pastel</code></td><td>—</td><td>—</td></tr>
+    <tr><td><code>--gr-hsl-status-info</code></td><td>—</td><td>—</td><td><code>status-info-press</code></td></tr>
+    <tr><td><code>--gr-hsl-status-info-surface</code></td><td><code>status-info-pastel</code></td><td>—</td><td><code>status-info-press</code></td></tr>
+    <tr><td><code>--gr-hsl-on-status-info</code></td><td><code>on-status-info-pastel</code></td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Текстовые цвета статусов (<code class="token">--gr-hsl-status-warning</code>
+  и соседи) воздушный и строгий не трогают: сигнал в тексте обязан остаться
+  контрастным, пастельным становится прямоугольник. Журнальный приглушает
+  и их — вместе с линиями, это его характер. Режим для слабовидящих
+  перебивает всё перечисленное: он возвращает поверхности, чернила, линии
+  и акцент к якорям контраста, а чернила на акценте — к
+  <code class="token">surface-max</code>.
+</p>
+
+<p>
+  Отсюда же следует, где бренду задавать свои цвета: воздушный стиль берёт
+  пару <code class="token">--gr-hsl-accent-soft</code> / <code>-soft-hover</code>
+  и чернила <code class="token">--gr-hsl-on-accent-soft</code>, журнальный —
+  <code class="token">--gr-hsl-accent-press</code> / <code>-press-hover</code>,
+  а повседневный и контрастный акцент — якоря <code>-base</code> и <code>-max</code>
+  темы. Рецепт целиком — <a href="theme.html">«Темы»</a>.
+</p>
 
 <h2>Образцы</h2>
 
@@ -393,10 +465,10 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
 </p>
 
 <pre><code>&lt;!-- все три стиля --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-styles.css"&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.24.0/dist/griffincss-styles.css"&gt;
 
 &lt;!-- или один — вместо предыдущей строки, а не вдобавок к ней --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.23.1/dist/griffincss-style-strict.css"&gt;</code></pre>
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.24.0/dist/griffincss-style-strict.css"&gt;</code></pre>
 
 <table>
   <thead>

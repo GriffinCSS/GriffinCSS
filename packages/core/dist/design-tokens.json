@@ -7,11 +7,11 @@
       "url": "https://tr.designtokens.org/format/",
       "dialect": "значения строками: цвет — hex (#rrggbb или #rrggbbaa), размер — длина CSS (0.5rem, 16px)",
       "library": "griffincss",
-      "version": "0.23.1",
+      "version": "0.24.0",
       "source": "packages/core/dist/griffincss-core.css",
       "generator": "scripts/build-tokens.mjs",
       "variables": "имя токена — имя переменной CSS без префикса: «color-bg» это --gr-color-bg",
-      "excluded": "ось оформления data-gr-style: она opt-in и меняет пять ручек — см. docs/style-presets.html"
+      "excluded": "ось оформления data-gr-style: она opt-in и двигает ручки геометрии и часть палитры на своих якорях — таблица в docs/style-presets.html"
     }
   },
   "light": {
@@ -227,6 +227,14 @@
     "hsl-border-strong": {
       "$type": "color",
       "$value": "#858585"
+    },
+    "hsl-accent-base": {
+      "$type": "color",
+      "$value": "#1754cf"
+    },
+    "hsl-accent-base-hover": {
+      "$type": "color",
+      "$value": "#1243a5"
     },
     "hsl-accent": {
       "$type": "color",
@@ -898,6 +906,14 @@
       "$type": "color",
       "$value": "#737373"
     },
+    "hsl-accent-base": {
+      "$type": "color",
+      "$value": "#6896f3"
+    },
+    "hsl-accent-base-hover": {
+      "$type": "color",
+      "$value": "#97b7f7"
+    },
     "hsl-accent": {
       "$type": "color",
       "$value": "#6896f3"
@@ -1567,6 +1583,14 @@
     "hsl-border-strong": {
       "$type": "color",
       "$value": "#000000"
+    },
+    "hsl-accent-base": {
+      "$type": "color",
+      "$value": "#1754cf"
+    },
+    "hsl-accent-base-hover": {
+      "$type": "color",
+      "$value": "#1243a5"
     },
     "hsl-accent": {
       "$type": "color",

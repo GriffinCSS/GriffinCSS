@@ -96,8 +96,12 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  inline-size: var(--gr-step-marker-size);
-  block-size: var(--gr-step-marker-size);
+
+  // Запасное значение — для маркера вне списка: номер в заголовке карточки,
+  // счётчик в шапке. Переменная объявлена на .gr-steps, и без запасного
+  // значения одиночный маркер схлопывался в ноль.
+  inline-size: var(--gr-step-marker-size, 2rem);
+  block-size: var(--gr-step-marker-size, 2rem);
   border: var(--gr-border-width) solid currentcolor;
   border-radius: var(--gr-radius-pill);
   background-color: var(--gr-step-marker-bg);

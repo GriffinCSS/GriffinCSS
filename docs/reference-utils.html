@@ -49,7 +49,7 @@
 <table>
   <tr><th>Группа</th><th>Классы</th></tr>
   <tr><td><strong>Фон</strong></td><td><code>.gr-bg-white</code>, <code>.gr-bg-gray-50</code> … <code>.gr-bg-gray-900</code>, <code>.gr-bg-black</code>, <code>.gr-bg-primary</code> … <code>.gr-bg-info-dark</code></td></tr>
-  <tr><td><strong>Текст</strong></td><td><code>.gr-text-white</code>, <code>.gr-text-gray-50</code> … <code>.gr-text-gray-900</code>, <code>.gr-text-black</code>, <code>.gr-text-primary</code> … <code>.gr-text-info-dark</code></td></tr>
+  <tr><td><strong>Текст</strong></td><td><code>.gr-text-white</code>, <code>.gr-text-gray-50</code> … <code>.gr-text-gray-900</code>, <code>.gr-text-black</code>, <code>.gr-text-primary</code> … <code>.gr-text-info-dark</code>. Это цвета палитры, а не роли: <code>.gr-text-secondary</code> — синий второго акцента, а не второстепенный текст; за ним — <code>.gr-text-ink-secondary</code>, за приглушённым — <code>.gr-text-ink-muted</code></td></tr>
   <tr><td><strong>Рамка</strong></td><td><code>.gr-border-white</code>, <code>.gr-border-gray-50</code> … <code>.gr-border-gray-900</code>, <code>.gr-border-black</code>, <code>.gr-border-primary</code> … <code>.gr-border-info-dark</code></td></tr>
 </table>
 
@@ -57,7 +57,7 @@
 
 <p>Классы выше — <strong>литеральные</strong>: <code>.gr-bg-white</code> остаётся белым в любой теме, и это контракт, а не недоработка. Разметку, которая должна жить по теме, пишут на семантических классах — они в таблице ниже, в разделе «Темы».</p>
 
-<h2>Темы: тёмная и для слабовидящих (<code>scss/_theme.scss</code> ядра)</h2>
+<h2>Темы: тёмная и для слабовидящих (<code>scss/_theme-tokens.scss</code> и <code>_theme-rules.scss</code> ядра)</h2>
 
 <p>Демонстрация: <a href="theme.html"><code>docs/theme.html</code></a>.</p>
 
@@ -78,7 +78,7 @@
 <table>
   <tr><th>Группа</th><th>Классы</th></tr>
   <tr><td><strong>Поверхности</strong></td><td><code>.gr-bg-page</code>, <code>.gr-bg-surface</code>, <code>.gr-bg-raised</code>, <code>.gr-bg-sunken</code>, <code>.gr-bg-accent</code></td></tr>
-  <tr><td><strong>Текст</strong></td><td><code>.gr-text-ink</code>, <code>.gr-text-ink-secondary</code>, <code>.gr-text-ink-muted</code>, <code>.gr-text-ink-disabled</code>, <code>.gr-text-accent</code>, <code>.gr-text-on-accent</code>, <code>.gr-text-link</code></td></tr>
+  <tr><td><strong>Текст</strong></td><td><code>.gr-text-ink</code>, <code>.gr-text-ink-secondary</code>, <code>.gr-text-ink-muted</code>, <code>.gr-text-ink-disabled</code>, <code>.gr-text-accent</code>, <code>.gr-text-on-accent</code>, <code>.gr-text-link</code>. Роли текста живут здесь: второстепенный — <code>.gr-text-ink-secondary</code>, приглушённый — <code>.gr-text-ink-muted</code>; <code>.gr-text-secondary</code> из таблицы выше — цвет палитры</td></tr>
   <tr><td><strong>Границы</strong></td><td><code>.gr-border-subtle</code>, <code>.gr-border-strong</code></td></tr>
 </table>
 
@@ -602,7 +602,10 @@ Griffincss.utils.stop();               // снять всё наблюдение
 
 @layer griffincss.utils {
   @include meta.load-css('griffincss-core/scss/tokens');
-  @include meta.load-css('griffincss-core/scss/theme');
+
+  // Только токены темы. Правила режима со свойствами (theme-rules) в этот
+  // слой не подключают: он старший, и оттуда они побеждают компоненты.
+  @include meta.load-css('griffincss-core/scss/theme-tokens');
   @include meta.load-css('griffincss-utils/scss/keyframes');
   @include meta.load-css('griffincss-utils/scss/animations');
   @include meta.load-css('griffincss-utils/scss/border-radius');

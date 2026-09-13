@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.23.1
+- **Version:** 0.24.0
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -38,12 +38,18 @@ npm run check          # lint + build + test
 ```
 
 **After any SCSS change:** run `npm run build`. The JS runtimes are hand-written in
-`packages/*/src/*.js` and minified into `dist/` by `build:js` (terser, `-c passes=3 -m`,
-source map alongside, ASCII `/*! … */` banner via `--format preamble`) — always edit the
-`src/` copy; `dist/*.js` is a build artifact. `check-dist.mjs` guards the result: a banner
-in ASCII, no block comments left, no Cyrillic outside string literals (Russian console
-messages and `aria-label`s are string literals and stay), and 10 KB gzip for all four
-runtimes together — 9.1 KB today.
+`packages/*/src/*.js` and minified into `dist/` by `build:js` (`scripts/build-js.mjs`:
+terser with `passes: 3`, `mangle`, `ecma: 2020`, source map alongside, ASCII `/*! … */`
+banner). The terser flags live in one module, `scripts/terser-options.mjs`, read by
+`build-js.mjs`, by `build-griffinjs.mjs` and by `scripts/check-origin.mjs` — always edit the
+`src/` copy; `dist/*.js` is a build artifact, and `check-origin.mjs` (a step of `npm test`)
+minifies every `src/` in memory with the same functions the build uses and compares it with
+`dist/` byte for byte: a hand-edited or stale `dist/*.js` fails `npm test` with the file name
+and the hint `npm run build`. The terser version is pinned exactly (no `^`): upgrading the
+minifier is a deliberate commit with a rebuild, not a surprise on `npm install`.
+`check-dist.mjs` guards the result: a banner in ASCII, no block comments left, no Cyrillic
+outside string literals (Russian console messages and `aria-label`s are string literals and
+stay), and 10 KB gzip for all four runtimes together — 9.1 KB today.
 
 **Package hierarchy:** `griffincss-core` is the core and depends on nothing. `griffincss-ui`
 and `griffincss-utils` are layers on top: each declares `griffincss-core` in `peerDependencies`
@@ -145,6 +151,24 @@ beats any specificity, so the style axis shipping in `griffincss.core` would hav
 those base tokens silently on any page with `griffincss-ui.css`. User CSS outside layers
 still wins over all five.
 
+**What of the theme travels into the add-ons, and why (Stage 40).** The theme is two
+partials. `_theme-tokens.scss` — the token carriers (`:root`, `[data-gr-theme]`,
+`[data-gr-a11y]`, the `prefers-*` media blocks, print) — ships in **every** entry point:
+the add-on layers outrank `griffincss.core`, so a theme override left only in the core
+would lose to the base `:root` those add-ons carry, whatever the selector specificity.
+`_theme-rules.scss` — the three property rules of the low-vision mode (root font scale,
+`a[href]` underline and colour, the `:focus-visible` ring) — ships in the core and in
+`griffincss-ui`, but **not** in `griffincss-utils`. From the topmost layer such a rule beats
+every component regardless of specificity: `[data-gr-a11y="low-vision"] a[href] { color }`
+in `griffincss-utils.css` painted the link colour over the fill of `a.gr-btn-primary`,
+and in that mode link and fill are the same `accent-max` — 1.0 : 1 (field report on 0.23.1).
+In the components layer the same rule is deliberate: it has to outrank `.gr-link-quiet`
+and `.gr-link-inherit` (0,1,0), which it could not do from the core. A filled component
+therefore shields itself with its own rule (`a.gr-btn:not(.gr-btn-link)` in `_button.scss`),
+never with an attribute selector. `packages/utils/test/utils.test.js` checks that the theme
+blocks of the utils build hold nothing but custom properties (and `color-scheme`, which
+pairs with the base `:root`); `_theme.scss` forwards both partials for external imports.
+
 The order string is one constant repeated in **nine** places — six entry points,
 `packages/core/src/griffincss.js`, `scripts/check-dist.mjs` and the assertion in
 `packages/core/test/generate.test.js`. They are cross-checked, so a missed copy fails the
@@ -169,7 +193,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.23.1)
+### JS Runtime Key Features (v0.24.0)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
@@ -256,7 +280,8 @@ ls -la packages/*/dist/
 Optional layer inside `griffincss-ui`: one `<script src="griffinjs.js">`, its own
 global `window.GriffinJS`, no dependency on the CSS runtimes. Sources —
 `packages/ui/src/griffinjs/{core,engines,widgets}/*.js` (ES2020 IIFEs, concatenated
-in list order by `scripts/build-griffinjs.mjs`, then terser); styles —
+in list order by `scripts/build-griffinjs.mjs`, then terser with the flags from
+`scripts/terser-options.mjs`); styles —
 `packages/ui/scss/griffinjs/` → `dist/griffinjs.css` (cascade layer `griffincss.ui`).
 Invariants and the reader-facing architecture: `docs/griffinjs-architecture.html`
 (sections «Контракт с CSS» and «Инварианты»).
@@ -323,7 +348,9 @@ These widgets write the control's `value` — the declared extension of invarian
 | `packages/core/scss/_breakpoints.scss` | `$gr-breakpoints` map — single source for media queries, tokens and runtime fallbacks |
 | `packages/core/scss/_tokens.scss` | CSS custom properties (:root) — source of truth for all three packages; component tokens (`--gr-control-*`, `--gr-ui-gap`, `--gr-overlay`, `--gr-z-*`) live here too |
 | `packages/core/scss/_theme-values.scss` | Theme and a11y values as mixins only — zero CSS output |
-| `packages/core/scss/_theme.scss` | `data-gr-theme` / `data-gr-a11y` blocks, `prefers-color-scheme`, `prefers-contrast` |
+| `packages/core/scss/_theme-tokens.scss` | Token carriers of the theme: `data-gr-theme` / `data-gr-a11y` blocks, `prefers-color-scheme`, `prefers-contrast`, print — ships in every entry point |
+| `packages/core/scss/_theme-rules.scss` | Property rules of the low-vision mode (font scale, `a[href]`, `:focus-visible`) — core and ui only, never utils |
+| `packages/core/scss/_theme.scss` | Forwards both theme partials — the entry for external `@use 'griffincss-core/scss/theme'` |
 | `packages/core/scss/_container-queries.scss` | `.gr-cq` — `container-type: inline-size`, name from `--gr-name`; re-exports the mixins |
 | `packages/core/scss/_container-mixins.scss` | `gr-container-media($bp, $name)`, `gr-bp-value($key)`, `gr-is-container($key)` — no CSS of its own, so `griffincss-utils` can `@use` it without dragging `.gr-cq` into a second package |
 | `packages/core/scss/_functions.scss` | SCSS parser + utility functions |
@@ -444,14 +471,18 @@ These widgets write the control's `value` — the declared extension of invarian
    unconditional `list-style: none` removes the list role in VoiceOver along with the
    "list of N items" announcement. `.gr-list-*` utilities cover the case where the markup
    cannot be touched.
-18. **Themes must ship in every entry point.** `_theme.scss` is loaded by
-   `griffincss-core.scss`, `griffincss-ui.scss`, `griffincss-ui-scoped.scss`,
+18. **Theme tokens must ship in every entry point; theme rules must not.** `_theme-tokens.scss`
+   is loaded by `griffincss-core.scss`, `griffincss-ui.scss`, `griffincss-ui-scoped.scss`,
    `griffincss-utils.scss` and `griffincss-utils-scoped.scss` alike,
    for the same reason gap responsiveness lives in the tokens (gotcha 11): the
    `griffincss.utils` layer outranks `griffincss.core`, so a `[data-gr-theme="dark"]` block
    shipping only with the core would lose to the base `:root` coming from
    `griffincss-utils.css` — regardless of selector specificity. `check-dist.mjs` fails the
-   build when either artifact is missing the theme.
+   build when either artifact is missing the theme. `_theme-rules.scss` — the property
+   rules of the low-vision mode — is loaded by the core and by the ui builds only: from
+   the utils layer those rules beat every component (see "Cascade layers"), and
+   `packages/utils/test/utils.test.js` fails the build when a property other than
+   `color-scheme` shows up inside a theme block of the utils artifacts.
 19. **Resolved `--gr-color-*` are declared on every theme carrier**
    (`:root, [data-gr-theme], [data-gr-a11y]`), not on `:root` alone. `var()` inside a custom
    property is substituted on the element where the property is *declared*; descendants
@@ -465,7 +496,11 @@ These widgets write the control's `value` — the declared extension of invarian
    `data-gr-theme` × `data-gr-a11y` from turning into a selector matrix, and it is why an
    absolute colour inside that mixin is a bug — over the dark theme it would produce white
    on white. The typography half (`gr-a11y-typography`) stays on the attribute carrier only,
-   or the `font-size` scale would multiply twice on nested carriers.
+   or the `font-size` scale would multiply twice on nested carriers. An axis that moves one
+   paint of a pair moves the other: the mixin sends `--gr-hsl-accent` to `accent-max` **and**
+   `--gr-hsl-on-accent` to `surface-max` — white on the dark accent in the light theme, black
+   on the light one in the dark theme. Leave the ink to the style axis and `airy`'s dark
+   `on-accent-soft` lands on the dark `accent-max`: 1.9 : 1 (field report on 0.23.1, Stage 40).
 
 21. **A component must not depend on the reset.** `griffincss-reset.css` is opt-in, so every
    component sets its own `box-sizing`, `font-family: inherit`, `margin: 0` and, for tables,
@@ -494,6 +529,12 @@ These widgets write the control's `value` — the declared extension of invarian
    beatable by the theme: the low-vision block ships in every artifact and lands in the same
    layer as the components, so `[data-gr-a11y="low-vision"] a[href]` at (0,1,1) outranks
    a variant at (0,1,0). Keep variants at single-class specificity for that reason.
+   The flip side: the same rule outranks `.gr-btn` (0,1,0) on an `<a>`, and in the mode
+   link colour and accent fill are one and the same. A filled component shields itself —
+   `a.gr-btn:not(.gr-btn-link) { color: var(--gr-btn-fg); text-decoration-line: none }`
+   in `_button.scss`, no attribute selector (gotcha 22), the link-looking variant excluded
+   because to it the mode's underline and link colour are due. `.gr-tabs-pills` needs no
+   shield: its active tab is already (0,3,0).
 27. **A status colour is either ink or fill, and for `warning` they differ.**
    `--gr-color-warning` is a text-safe value: to read as text on white it has to be
    a dark brown, and a dark brown dot, counter, button or stripe reads as dirt rather than
@@ -543,7 +584,7 @@ These widgets write the control's `value` — the declared extension of invarian
 32. **Print cannot be done from the reset alone.** `griffincss.reset` is the lowest
    layer and `!important` is banned, so `box-shadow: none` written there loses to
    both `.gr-card` and `.gr-shadow-*`. Shadows are therefore killed at the token
-   level — `@media print` in `_theme.scss` sets `--gr-shadow-strength: 0`, and all
+   level — `@media print` in `_theme-tokens.scss` sets `--gr-shadow-strength: 0`, and all
    seven shadows are built from that multiplier, so they go transparent in every
    layer of every package at once. The selector list mirrors the theme carriers,
    `:root:not([data-gr-theme])` included: that one is (0,2,0) and without a match

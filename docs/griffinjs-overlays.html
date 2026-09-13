@@ -300,6 +300,117 @@ el.addEventListener('griffin:select', function (e) { console.log(e.detail.item);
   &lt;/div&gt;
 &lt;/form&gt;</code></pre>
 
+<h3>Строка подсказки: картинка, категория и цена</h3>
+
+<p>
+  Оформление строки слою не принадлежит: его задаёт
+  <code>render(item, query) → узел</code>. Слой ставит на возвращённый узел
+  только <code>role="option"</code>, <code>aria-selected</code> и
+  <code>id</code> — клавиатура и <code>aria-activedescendant</code> работают
+  как на простой строке. <b>Ни одного нового класса:</b> карточка собирается
+  утилитами внутри <code>.gr-combobox-option</code> — он оставляет строке
+  свои отступы, минимальную высоту и подсветку выбранной позиции.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Флекс — обёрткой внутри строки, а не на самой строке.</strong>
+    <code>.gr-combobox-option</code> объявлен <code>display: block</code>
+    в слое <code>griffincss.ui</code>, а <code>.gr-flex</code> живёт в слое
+    <code>griffincss.core</code>, который идёт <em>раньше</em>, — значит
+    на одном узле побеждает компонент, и флекс молча не включится. Замер
+    в трёх движках это и показал: строка вырастала втрое. Поэтому
+    <code>&lt;li&gt;</code> остаётся строкой компонента, а раскладка карточки
+    живёт в <code>&lt;span class="gr-flex …"&gt;</code> внутри неё.
+  </p>
+</div>
+
+<p>
+  Поля позиции слой приводит к своим — <code>value</code>,
+  <code>label</code>, <code>href</code>, <code>group</code>, — а весь
+  исходный объект источника кладёт в <code>item.data</code>. Оттуда
+  <code>render()</code> и берёт цену с картинкой: слою о них знать незачем.
+</p>
+
+<p>
+  Картинке нужны <code>width</code> и <code>height</code> в разметке:
+  без них список дёргается при загрузке, а строка подсказки живёт
+  под пальцем. <code>loading="lazy"</code> — потому что подсказок бывает
+  двадцать, а увидят пять.
+</p>
+
+<pre><code>GriffinJS.mount(el, 'combobox', {
+  source: suggest,
+  render: function (item, query) {
+    var li = document.createElement('li');
+    var row = document.createElement('span');
+    var body = document.createElement('span');
+    var name = document.createElement('span');
+    var kind = document.createElement('span');
+    var price = document.createElement('span');
+    var img = document.createElement('img');
+
+    li.className = 'gr-combobox-option';                    // отступы и подсветка — компонента
+    row.className = 'gr-flex gr-flex-items-center gr-gap';  // раскладка — внутри строки
+    img.className = 'gr-radius-2 gr-object-cover';
+    img.src = item.data.image;
+    img.width = 40;
+    img.height = 40;
+    img.loading = 'lazy';
+    img.alt = '';
+
+    body.className = 'gr-flex gr-flex-col gr-min-w-0';
+    name.className = 'gr-truncate';
+    highlight(name, item.label, query);          // textContent и &lt;mark&gt;, см. ниже
+    kind.className = 'gr-text-sm gr-text-secondary gr-truncate';
+    kind.textContent = item.group;
+
+    price.className = 'gr-ms-auto gr-font-medium';
+    price.textContent = item.data.price;
+
+    body.appendChild(name);
+    body.appendChild(kind);
+    row.appendChild(img);
+    row.appendChild(body);
+    row.appendChild(price);
+    li.appendChild(row);
+
+    return li;
+  }
+});</code></pre>
+
+<p>
+  <b>Подсветка при своём <code>render()</code> — своими руками.</b> Штатная
+  работает над подписью, которую слой рисует сам; вернули свой узел — рисуете
+  и её. Способ ровно тот же, что внутри слоя: текст идёт через
+  <code>textContent</code>, совпадение — отдельным узлом
+  <code>&lt;mark&gt;</code>. <code>innerHTML</code> из ответа сервера здесь
+  <b>запрещён</b> по той же причине, по которой его нет в слое: подсказки
+  приходят из внешнего источника, и разметка в них — чужой скрипт на вашей
+  странице.
+</p>
+
+<pre><code>function highlight(target, text, query) {
+  var at = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
+
+  if (at === -1) { target.textContent = text; return; }
+
+  var mark = document.createElement('mark');
+
+  mark.textContent = text.slice(at, at + query.length);
+
+  if (at &gt; 0) target.appendChild(document.createTextNode(text.slice(0, at)));
+  target.appendChild(mark);
+  if (at + query.length &lt; text.length) target.appendChild(document.createTextNode(text.slice(at + query.length)));
+}</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Подсказки карточками: наберите «a» <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="ov-combobox-rich" style="max-width: 26rem">
+    <input class="gr-input" type="search" placeholder="Поиск по каталогу" aria-label="Поиск по каталогу">
+  </div>
+</div>
+
 </main>
 </div>
 
@@ -325,6 +436,91 @@ el.addEventListener('griffin:select', function (e) { console.log(e.detail.item);
 
     // Мультивыбор: тот же источник, флаг multiple; значение — в <select multiple>.
     if (multi) window.GriffinJS.mount(multi, 'combobox', { min: 1, delay: 100, multiple: true, source: source });
+
+    // Строка подсказки карточкой: картинка, категория и цена. Картинки —
+    // свои, собранные тут же: доксайт наружу не ходит.
+    var picture = function (letter, hue) {
+      return 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
+        + '<rect width="40" height="40" fill="hsl(' + hue + ', 60%, 82%)"/>'
+        + '<text x="20" y="27" font-family="system-ui, sans-serif" font-size="18" text-anchor="middle" fill="hsl(' + hue + ', 60%, 28%)">' + letter + '</text>'
+        + '</svg>'
+      );
+    };
+
+    var catalog = [
+      { value: 'Acer Aspire 5', group: 'Ноутбуки', price: '54 990 ₽', image: picture('A', 220) },
+      { value: 'Asus Zenbook 14', group: 'Ноутбуки', price: '89 990 ₽', image: picture('A', 260) },
+      { value: 'AirPods Pro', group: 'Наушники', price: '19 990 ₽', image: picture('A', 150) },
+      { value: 'Anker Soundcore', group: 'Наушники', price: '4 490 ₽', image: picture('A', 30) },
+      { value: 'Amazfit GTR 4', group: 'Часы', price: '12 990 ₽', image: picture('A', 340) }
+    ];
+
+    // Подсветка своими руками: textContent и узел <mark>, никакого innerHTML.
+    var highlight = function (target, text, query) {
+      var at = query ? text.toLowerCase().indexOf(query.toLowerCase()) : -1;
+
+      if (at === -1) { target.textContent = text; return; }
+
+      var mark = document.createElement('mark');
+
+      mark.textContent = text.slice(at, at + query.length);
+
+      if (at > 0) target.appendChild(document.createTextNode(text.slice(0, at)));
+      target.appendChild(mark);
+      if (at + query.length < text.length) target.appendChild(document.createTextNode(text.slice(at + query.length)));
+    };
+
+    var card = function (item, query) {
+      var li = document.createElement('li');
+      var row = document.createElement('span');
+      var body = document.createElement('span');
+      var name = document.createElement('span');
+      var kind = document.createElement('span');
+      var price = document.createElement('span');
+      var img = document.createElement('img');
+
+      li.className = 'gr-combobox-option';
+      row.className = 'gr-flex gr-flex-items-center gr-gap';
+      img.className = 'gr-radius-2 gr-object-cover';
+      img.src = item.data.image;
+      img.width = 40;
+      img.height = 40;
+      img.loading = 'lazy';
+      img.alt = '';
+
+      body.className = 'gr-flex gr-flex-col gr-min-w-0';
+      name.className = 'gr-truncate';
+      highlight(name, item.label, query);
+      kind.className = 'gr-text-sm gr-text-secondary gr-truncate';
+      kind.textContent = item.group;
+
+      price.className = 'gr-ms-auto gr-font-medium';
+      price.textContent = item.data.price;
+
+      body.appendChild(name);
+      body.appendChild(kind);
+      row.appendChild(img);
+      row.appendChild(body);
+      row.appendChild(price);
+      li.appendChild(row);
+
+      return li;
+    };
+
+    var rich = document.getElementById('ov-combobox-rich');
+
+    if (rich) {
+      window.GriffinJS.mount(rich, 'combobox', {
+        min: 1,
+        delay: 100,
+        empty: 'Ничего не найдено',
+        render: card,
+        source: function (q) {
+          return Promise.resolve(catalog.filter(function (g) { return g.value.toLowerCase().indexOf(q.toLowerCase()) !== -1; }));
+        }
+      });
+    }
   })();
 </script>
 

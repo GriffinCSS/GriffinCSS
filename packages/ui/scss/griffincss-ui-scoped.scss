@@ -32,8 +32,10 @@
   @include meta.load-css('griffincss-core/scss/tokens');
 
   // Тема — тоже вне области: атрибут data-gr-theme стоит на <html>,
-  // то есть заведомо снаружи области .griffin.
-  @include meta.load-css('griffincss-core/scss/theme');
+  // то есть заведомо снаружи области .griffin. Оба файла, как в обычной
+  // сборке: правила режима обязаны лежать в одном слое с вариантами ссылки.
+  @include meta.load-css('griffincss-core/scss/theme-tokens');
+  @include meta.load-css('griffincss-core/scss/theme-rules');
 
   // @keyframes — вне области: имя анимации ищется глобально, префикс
   // области к нему неприменим.

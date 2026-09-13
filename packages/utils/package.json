@@ -1,6 +1,6 @@
 {
   "name": "griffincss-utils",
-  "version": "0.23.1",
+  "version": "0.24.0",
   "description": "Griffincss Utils — утилитарные классы: отступы, типографика, цвета, видимость, скругления",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
@@ -31,7 +31,7 @@
     "src/"
   ],
   "peerDependencies": {
-    "griffincss-core": "^0.23.1"
+    "griffincss-core": "^0.24.0"
   },
   "keywords": [
     "css",
@@ -46,6 +46,6 @@
     "build": "npm run build:css && npm run build:scoped && npm run build:js",
     "build:css": "sass scss/griffincss-utils.scss dist/griffincss-utils.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:scoped": "sass scss/griffincss-utils-scoped.scss dist/griffincss-utils-scoped.css --load-path=../../node_modules --style=compressed --no-source-map",
-    "build:js": "terser src/griffincss-utils.js -c passes=3,ecma=2020,unsafe_arrows=true -m --ecma 2020 --comments false --format \"preamble='/*! Griffincss Utils | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */'\" --source-map \"url='griffincss-utils.js.map'\" -o dist/griffincss-utils.js"
+    "build:js": "node ../../scripts/build-js.mjs"
   }
 }

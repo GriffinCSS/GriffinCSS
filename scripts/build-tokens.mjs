@@ -20,8 +20,9 @@
 // повторяет имя переменной без префикса, поэтому обратный путь всегда виден:
 // токен «color-bg» — это --gr-color-bg.
 //
-// Ось оформления (data-gr-style) сюда не входит: она opt-in и двигает пять
-// ручек, а не палитру, — её значения названы в docs/style-presets.html.
+// Ось оформления (data-gr-style) сюда не входит: она opt-in, а её сдвиги —
+// ручки геометрии и часть палитры на якорях стиля — на две темы дали бы
+// шесть наборов. Что стиль переводит, названо таблицей в docs/style-presets.html.
 //
 // Свежесть файла сторожит check-dist: он генерирует ожидаемое содержимое
 // этой же функцией и сравнивает байт-в-байт.
@@ -510,7 +511,7 @@ export function buildTokens(css, version) {
         source: SOURCE,
         generator: 'scripts/build-tokens.mjs',
         variables: 'имя токена — имя переменной CSS без префикса: «color-bg» это --gr-color-bg',
-        excluded: 'ось оформления data-gr-style: она opt-in и меняет пять ручек — см. docs/style-presets.html',
+        excluded: 'ось оформления data-gr-style: она opt-in и двигает ручки геометрии и часть палитры на своих якорях — таблица в docs/style-presets.html',
       },
     },
   };

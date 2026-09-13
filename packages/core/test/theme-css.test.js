@@ -117,6 +117,40 @@ test('масштаб кегля не применяется к вложенны�
   );
 });
 
+test('у бренда есть якорь: акцент и ссылки выводятся из --gr-hsl-accent-base', () => {
+  // Рецепт бренда через :root { --gr-hsl-accent: … } вне слоёв выигрывал
+  // у блока режима для слабовидящих внутри слоя при любой специфичности —
+  // режим переставал переводить акцент на accent-max (полевой отчёт
+  // по 0.23.1, Этап 40). Якорь -base даёт бренду точку входа в ряд с -max
+  // и -soft: производные токены ссылаются на него через var(), и какую
+  // пару взять — решает ось, а не пользовательское объявление.
+  for (const selector of [':root', '[data-gr-theme="light"]', '[data-gr-theme="dark"]']) {
+    const body = blockBody(selector);
+
+    assert.match(body, /--gr-hsl-accent-base:\s*\d+,\s*\d+%,\s*\d+%/, `${selector}: нет якоря accent-base`);
+    assert.match(body, /--gr-hsl-accent-base-hover:\s*\d+,\s*\d+%,\s*\d+%/, `${selector}: нет якоря accent-base-hover`);
+
+    for (const [token, anchor] of [
+      ['accent', 'accent-base'],
+      ['accent-hover', 'accent-base-hover'],
+      ['link', 'accent-base'],
+      ['link-hover', 'accent-base-hover'],
+    ]) {
+      assert.match(
+        body,
+        new RegExp(`--gr-hsl-${token}:\\s*var\\(--gr-hsl-${anchor}\\)`),
+        `${selector}: --gr-hsl-${token} не выводится из якоря ${anchor}`,
+      );
+    }
+  }
+
+  // Фокус к бренду не привязан: это сигнал платформы, а не фирменный цвет.
+  assert.ok(
+    !/--gr-hsl-focus:\s*var\(--gr-hsl-accent-base/.test(blockBody(':root')),
+    'кольцо фокуса привязано к бренду',
+  );
+});
+
 // Контраст живёт в групповом селекторе — вместе с вложенными носителями темы.
 const contrastBody = topLevelBlocks(CSS)
   .filter((b) => norm(b.prelude).includes('[data-gr-a11y=low-vision]'))
@@ -135,10 +169,31 @@ test('контраст ссылается на якоря темы, а не на
   );
 });
 
+test('режим двигает пару «заливка + чернила» акцента целиком', () => {
+  // Ось, двигающая одну краску пары, обязана двигать и вторую. Раньше
+  // контраст переводил --gr-hsl-accent на accent-max, а чернила на нём
+  // не трогал: поверх воздушного стиля, где --gr-hsl-on-accent уже уехал
+  // на тёмный on-accent-soft, главная кнопка получалась тёмным по тёмному
+  // (1,9 : 1 — полевой отчёт по 0.23.1, Этап 40). Чернила переезжают
+  // на surface-max: в светлой теме это белое на тёмном accent-max,
+  // в тёмной — чёрное на светлом, обе стороны сходятся без третьего якоря.
+  assert.match(
+    contrastBody,
+    /--gr-hsl-on-accent:\s*var\(--gr-hsl-surface-max\)/,
+    'контраст перевёл акцент, но не чернила на нём — поверх стиля пара разъедется',
+  );
+});
+
 test('режим для слабовидящих увеличивает кегль и интерлиньяж', () => {
   assert.match(contrastBody, /--gr-border-width:\s*2px/);
 
-  const typography = blockBody('[data-gr-a11y="low-vision"]');
+  // Блоков с этим селектором два — токены типографики и масштаб кегля
+  // приезжают из разных файлов темы (_theme-tokens.scss и _theme-rules.scss),
+  // потому что едут в разные сборки. Здесь важна сумма.
+  const typography = topLevelBlocks(CSS)
+    .filter((b) => norm(b.prelude) === norm('[data-gr-a11y="low-vision"]'))
+    .map((b) => b.body)
+    .join('\n');
 
   assert.match(typography, /font-size:\s*calc\(100% \* var\(--gr-a11y-scale/);
   assert.match(typography, /--gr-leading-base:\s*1\.7/);

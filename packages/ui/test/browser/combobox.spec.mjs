@@ -63,3 +63,78 @@ test('без griffinjs.js <select multiple> остаётся на экране �
   expect(await chosen(page)).toEqual(['Acer Aspire', 'AirPods']);
   expect(await page.locator('.gr-combobox-tag').count()).toBe(0);
 });
+
+// Строка подсказки карточкой (Этап 39c): рецепт из docs собран утилитами
+// поверх .gr-combobox-option, ни одного нового класса. Проверяется ЗАМЕРОМ,
+// а не снимком: у строки свои отступы и минимальная высота, и картинка
+// внутри может их перебить — на каждом движке по-своему.
+
+const DOCS = '/docs/griffinjs-overlays.html';
+const RICH = '#ov-combobox-rich';
+
+test('строка подсказки карточкой: картинка, категория и цена держат высоту и выравнивание', async ({ page }) => {
+  await page.goto(DOCS);
+
+  const root = page.locator(RICH);
+  const input = root.locator('input');
+
+  await input.pressSequentially('a');
+
+  const options = root.locator('.gr-combobox-option');
+
+  await expect(options).toHaveCount(5);
+
+  const first = options.first();
+
+  // Все прямоугольники снимаются одним заходом: список живой, и четыре
+  // отдельных замера могут прийтись на разные его состояния.
+  const { line, image, price, list } = await first.evaluate((li) => {
+    const box = (el) => {
+      const r = el.getBoundingClientRect();
+
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    };
+
+    return {
+      line: box(li),
+      image: box(li.querySelector('img')),
+      price: box(li.querySelector('span.gr-ms-auto')),
+      list: box(li.closest('.gr-combobox-list')),
+    };
+  });
+
+  // Картинка ровно та, что заказана разметкой: 40×40 без дрожания списка.
+  expect(image.width).toBe(40);
+  expect(image.height).toBe(40);
+
+  // Строка не ниже картинки и не выросла вдвое: min-block-size компонента
+  // и отступы остались на месте, картинка их не перебила.
+  expect(line.height).toBeGreaterThanOrEqual(40);
+  expect(line.height).toBeLessThan(80);
+
+  // Центры картинки и строки совпадают — это и есть gr-flex-items-center.
+  expect(Math.abs((image.y + image.height / 2) - (line.y + line.height / 2))).toBeLessThanOrEqual(1);
+
+  // Цена у конца строки: между её краем и краем строки — только отступ.
+  const tail = line.x + line.width - (price.x + price.width);
+
+  expect(tail).toBeGreaterThan(0);
+  expect(tail).toBeLessThanOrEqual(24);
+
+  // Длинные названия не растягивают список: строка не шире своего списка.
+  expect(line.width).toBeLessThanOrEqual(list.width + 1);
+
+  // Подсветка нарисована рецептом, а не слоем, — и она на месте.
+  await expect(first.locator('mark').first()).toHaveText('A');
+
+  // Клавиатура и aria-activedescendant работают как на простой строке.
+  await input.press('ArrowDown');
+  expect(await input.getAttribute('aria-activedescendant')).toBe(await first.getAttribute('id'));
+  await expect(first).toHaveAttribute('aria-selected', 'true');
+
+  await input.press('ArrowDown');
+  expect(await input.getAttribute('aria-activedescendant')).toBe(await options.nth(1).getAttribute('id'));
+
+  await input.press('Enter');
+  expect(await input.inputValue()).toBe('Asus Zenbook 14');
+});

@@ -211,6 +211,48 @@ test('скрипт печатает счётчики и отдаёт CSS в фа
   }
 });
 
+test('обход каталога знает серверные шаблоны, а явный файл берётся всегда', async () => {
+  // Полевой отчёт по 0.23.1 (Этап 40): вёрстка панели жила в .py и в jinja-
+  // шаблонах, и обход каталога их не видел — покупатель узнал об этом
+  // по пропавшим стилям. Явно переданный файл при этом берётся с любым
+  // расширением: список действует только при обходе каталога.
+  const { collectFiles } = await load();
+  const dir = fs.mkdtempSync(path.join(__dirname, '..', 'dist', 'purge-walk-'));
+
+  try {
+    fs.mkdirSync(path.join(dir, 'templates'));
+
+    for (const name of ['views.py', 'templates/page.jinja2', 'templates/base.j2', 'templates/mail.django',
+      'templates/list.tmpl', 'templates/item.gotmpl', 'templates/row.jinja', 'main.rs', 'notes.txt']) {
+      fs.writeFileSync(path.join(dir, name), '');
+    }
+
+    const found = collectFiles(dir).map((file) => path.relative(dir, file)).sort();
+
+    assert.deepEqual(found, [
+      'main.rs', 'templates/base.j2', 'templates/item.gotmpl', 'templates/list.tmpl', 'templates/mail.django',
+      'templates/page.jinja2', 'templates/row.jinja', 'views.py',
+    ]);
+
+    const explicit = collectFiles(path.join(dir, 'notes.txt'));
+
+    assert.deepEqual(explicit, [path.join(dir, 'notes.txt')], 'явно переданный файл отброшен по расширению');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('в файлах с кодом на Python и Rust классы берутся и из строковых литералов', async () => {
+  const { extractClasses, CODE_EXT } = await load();
+
+  assert.ok(CODE_EXT.has('.py'), '.py не считается кодом — clsx-подобная склейка в Python не найдётся');
+  assert.ok(CODE_EXT.has('.rs'), '.rs не считается кодом');
+
+  const found = extractClasses("row_class = 'gr-p-4 gr-flex'\nhtml = f'<div class=\"gr-mt-2\">'", { js: true });
+
+  assert.ok(found.has('gr-p-4') && found.has('gr-flex') && found.has('gr-mt-2'), [...found].join(' '));
+});
+
 // --- ось оформления (Этап 22) ------------------------------------------------
 //
 // Стилей четыре, странице нужен один. Правила `[data-gr-style="X"]` неотличимы

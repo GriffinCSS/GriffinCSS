@@ -581,3 +581,31 @@ test('атрибутных селекторов в утилитах нет', () 
   // отсечение неиспользуемого: перечень селекторов только явный.
   assert.ok(!/\[class[*^~|$]?=/.test(utils), 'атрибутный селектор по имени класса в утилитах');
 });
+
+test('в блоках темы и режима — только токены, ни одного свойства', () => {
+  // Слой griffincss.utils старше и ядра, и компонентов. Правило со свойством,
+  // приехавшее сюда вместе с темой, побеждает любой компонент независимо
+  // от специфичности: [data-gr-a11y=low-vision] a[href] { color } из этого
+  // файла клал цвет ссылки поверх заливки a.gr-btn-primary — 1,0 : 1
+  // (полевой отчёт по 0.23.1, Этап 40). Токены при этом обязаны ехать:
+  // :root этой же сборки перебил бы переопределения темы, оставшиеся
+  // только в ядре, — см. griffincss-utils.scss.
+  //
+  // color-scheme — единственное не-токенное объявление носителя темы: оно
+  // стоит в базовом :root, и без пары в [data-gr-theme=dark] слой утилит
+  // вернул бы тёмной теме светлые скроллбары и поля ввода.
+  for (const [name, css] of [['griffincss-utils.css', utils], ['griffincss-utils-scoped.css', scoped]]) {
+    const blocks = [...css.matchAll(/([^{}]*\[data-gr-(?:a11y|theme)[^{}]*)\{([^{}]*)\}/g)];
+
+    assert.ok(blocks.length >= 5, `${name}: блоков темы нашлось ${blocks.length} — разбор сломан`);
+
+    for (const [, selector, body] of blocks) {
+      const foreign = body
+        .split(';')
+        .map((declaration) => declaration.trim())
+        .filter((declaration) => declaration && !declaration.startsWith('--') && !declaration.startsWith('color-scheme:'));
+
+      assert.deepEqual(foreign, [], `${name}: ${selector.trim()} несёт свойства, а не токены`);
+    }
+  }
+});

@@ -360,13 +360,23 @@ export function purge(css, used, { safelist = [], styles = null } = {}) {
 
 // --- CLI --------------------------------------------------------------------
 
-const JS_EXT = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte', '.astro']);
-const CONTENT_EXT = new Set([
-  ...JS_EXT,
-  '.html', '.htm', '.xhtml', '.php', '.twig', '.erb', '.hbs', '.md', '.mdx', '.liquid', '.blade',
+// Файлы с кодом: кроме атрибутов class, в них читаются строковые литералы —
+// класс, собранный в коде, чаще всего лежит в строке. Python и Rust здесь
+// со Этапа 40: вёрстка серверной панели живёт в .py и в шаблонах, и обход
+// каталога без них молча отдавал файл без половины стилей.
+export const CODE_EXT = new Set([
+  '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.vue', '.svelte', '.astro', '.py', '.rs',
 ]);
 
-function collectFiles(target, files = []) {
+// Что берётся при обходе каталога. Явно переданный файл берётся всегда,
+// с любым расширением, — список действует только на обход.
+export const CONTENT_EXT = new Set([
+  ...CODE_EXT,
+  '.html', '.htm', '.xhtml', '.php', '.twig', '.erb', '.hbs', '.md', '.mdx', '.liquid', '.blade',
+  '.jinja', '.jinja2', '.j2', '.django', '.tmpl', '.gotmpl',
+]);
+
+export function collectFiles(target, files = []) {
   const stats = statSync(target);
 
   if (stats.isFile()) {
@@ -423,7 +433,7 @@ function main(argv) {
 
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
-    const js = JS_EXT.has(extname(file).toLowerCase());
+    const js = CODE_EXT.has(extname(file).toLowerCase());
 
     for (const cls of extractClasses(text, { js })) used.add(cls);
     for (const value of extractStyles(text)) styles.add(value);

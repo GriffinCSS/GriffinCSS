@@ -4,7 +4,9 @@
 // Исходники слоя — самодостаточные IIFE в ES2020 без модулей, в
 // packages/ui/src/griffinjs/. Бандлера нет намеренно: файлы склеиваются
 // в порядке списка ниже, как build-theme-js.js в OcapiCMS, и уходят
-// в terser с теми же флагами, что у остальных рантаймов (Этап 19).
+// в terser с теми же флагами, что у остальных рантаймов (Этап 19) —
+// флаги читаются из terser-options.mjs, их же читает сверка происхождения
+// dist (check-origin.mjs, Этап 41).
 //
 // На выходе, всё в packages/ui/dist/:
 //   griffinjs.js          — слой целиком: ядро + движки + виджеты;
@@ -31,6 +33,8 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 import { minify } from 'terser';
+
+import { terserOptions } from './terser-options.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'packages/ui/src/griffinjs');
@@ -74,48 +78,50 @@ export const FIELDS = [
 // обновления библиотека не сопровождает вместе с кодом.
 export const COUNTRIES = 'fields/countries.js';
 
-const PREAMBLE = '/*! GriffinJS | MIT | https://gitverse.ru/BarneyScott/GriffinCSS */';
-
 const read = (rel) => readFileSync(join(src, rel), 'utf8');
-
-async function pack(parts, out) {
-  const code = parts.map(read).join('\n');
-  const file = `${out}.js`;
-  const result = await minify(code, {
-    ecma: 2020,
-    compress: { passes: 3, ecma: 2020, unsafe_arrows: true },
-    mangle: true,
-    format: { comments: false, preamble: PREAMBLE },
-    sourceMap: { url: `${file}.map`, filename: file },
-  });
-
-  writeFileSync(join(dist, file), result.code);
-  writeFileSync(join(dist, `${file}.map`), result.map);
-
-  return Buffer.byteLength(result.code);
-}
 
 // Имя модуля — имя файла без расширения: engines/scroll.js → griffinjs-scroll.js.
 const moduleName = (rel) => basename(rel, '.js');
+
+// Что собирается: [имя файла в dist без расширения, части в порядке склейки].
+// Список один — его же обходит сверка происхождения dist.
+export function bundles() {
+  const list = [
+    ['griffinjs', [...CORE, ...ENGINES, ...SHARED, ...WIDGETS]],
+    ['griffinjs-core', CORE],
+    // Поля — тем же способом, что виджеты, но в свой файл: полный griffinjs.js
+    // их не содержит, и его вес от этого списка не зависит.
+    ['griffinjs-fields', FIELDS],
+    ['griffinjs-countries', [COUNTRIES]],
+  ];
+
+  for (const rel of [...ENGINES, ...SHARED, ...WIDGETS, ...FIELDS]) list.push([`griffinjs-${moduleName(rel)}`, [rel]]);
+
+  return list;
+}
+
+/** Минификация одного файла слоя в памяти: { code, map } — то, что ложится в dist. */
+export async function minifyBundle(parts, out) {
+  const file = `${out}.js`;
+
+  return minify(parts.map(read).join('\n'), terserOptions(file, { filename: file }));
+}
+
+async function pack(parts, out) {
+  const result = await minifyBundle(parts, out);
+
+  writeFileSync(join(dist, `${out}.js`), result.code);
+  writeFileSync(join(dist, `${out}.js.map`), result.map);
+
+  return Buffer.byteLength(result.code);
+}
 
 async function main() {
   mkdirSync(dist, { recursive: true });
 
   const sizes = [];
 
-  sizes.push(['griffinjs', await pack([...CORE, ...ENGINES, ...SHARED, ...WIDGETS], 'griffinjs')]);
-  sizes.push(['griffinjs-core', await pack(CORE, 'griffinjs-core')]);
-
-  // Поля — тем же способом, что виджеты, но в свой файл: полный griffinjs.js
-  // их не содержит, и его вес от этого списка не зависит.
-  sizes.push(['griffinjs-fields', await pack(FIELDS, 'griffinjs-fields')]);
-  sizes.push(['griffinjs-countries', await pack([COUNTRIES], 'griffinjs-countries')]);
-
-  for (const rel of [...ENGINES, ...SHARED, ...WIDGETS, ...FIELDS]) {
-    const name = `griffinjs-${moduleName(rel)}`;
-
-    sizes.push([name, await pack([rel], name)]);
-  }
+  for (const [name, parts] of bundles()) sizes.push([name, await pack(parts, name)]);
 
   // Стили — тем же sass и с теми же флагами, что у griffincss-ui.css.
   // Стили полей — отдельным файлом по той же причине, что и скрипт.

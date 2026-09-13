@@ -486,6 +486,26 @@ test('режим для слабовидящих возвращает контр
   );
 });
 
+test('отмена режима доступности возвращает и чернила на акценте', () => {
+  // Воздушный стиль переводит --gr-hsl-on-accent на тёмный on-accent-soft.
+  // Блок отмены включает тот же миксин контраста, что и ядро, поэтому
+  // чернила обязаны вернуться вместе с акцентом: иначе на airy в режиме
+  // для слабовидящих главная кнопка — тёмное по тёмному (1,9 : 1).
+  const body = topLevelBlocks(STYLES)
+    .filter((b) => {
+      const p = norm(b.prelude);
+      return p.includes('[data-gr-a11y=low-vision]') && p.includes('[data-gr-style]');
+    })
+    .map((b) => b.body)
+    .join('\n');
+
+  assert.match(
+    body,
+    /--gr-hsl-on-accent:\s*var\(--gr-hsl-surface-max\)/,
+    'отмена вернула акцент, но оставила чернила стиля — пара разъедется',
+  );
+});
+
 test('отмена режима доступности не привязана к корню документа', () => {
   // Оба атрибута могут стоять на обычной секции. Привяжи отмену к :root —
   // и контрастный островок остался бы с линиями стиля, а журнальный
@@ -603,6 +623,88 @@ test('в воздушном стиле не осталось нейтральн�
       body,
       new RegExp(`--gr-hsl-${token}:\\s*var\\(--gr-hsl-`),
       `${token} остался нейтральным`,
+    );
+  }
+});
+
+// --- Таблица «Что стиль переводит в палитре» ----------------------------------
+//
+// docs/style-presets.html перечисляет руками, какой HSL-токен каждый стиль
+// переводит и на какой якорь. Написанная руками таблица разошлась бы с кодом
+// на первой же правке миксина — поэтому здесь она сверяется с собранным
+// файлом оси в обе стороны: токен без строки и строка без токена одинаково
+// роняют сборку. Генератора ради одной таблицы нет намеренно.
+
+const fs = require('node:fs');
+
+const STYLE_NAMES = ['airy', 'strict', 'compact'];
+
+// Из сборки: стиль → (токен → якорь), только HSL-триплеты.
+function paletteFromCss() {
+  const out = new Map();
+
+  for (const style of STYLE_NAMES) {
+    const body = blockBody(`:root[data-gr-style="${style}"], [data-gr-style="${style}"]`, STYLES);
+
+    assert.ok(body, `блока стиля ${style} нет`);
+
+    for (const [, token, anchor] of body.matchAll(/(--gr-hsl-[\w-]+):\s*var\(--gr-hsl-([\w-]+)\)/g)) {
+      if (!out.has(token)) out.set(token, {});
+
+      out.get(token)[style] = anchor;
+    }
+  }
+
+  return out;
+}
+
+// Из документации: та же карта, по строкам таблицы #style-palette.
+function paletteFromDocs() {
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'docs', 'style-presets.html'), 'utf8');
+  const table = html.match(/<table id="style-palette">([\s\S]*?)<\/table>/);
+
+  assert.ok(table, 'в docs/style-presets.html нет таблицы #style-palette');
+
+  const out = new Map();
+  const cell = (text) => text.match(/<code>([\w-]+)<\/code>/)?.[1] ?? null;
+
+  for (const [, row] of table[1].matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
+    const cells = [...row.matchAll(/<td>([\s\S]*?)<\/td>/g)].map((m) => m[1]);
+
+    if (cells.length !== 4) continue;
+
+    const token = cell(cells[0]);
+    const entry = {};
+
+    STYLE_NAMES.forEach((style, i) => {
+      const anchor = cell(cells[i + 1]);
+
+      if (anchor) entry[style] = anchor;
+    });
+
+    out.set(token, entry);
+  }
+
+  return out;
+}
+
+test('таблица «что стиль переводит в палитре» совпадает с миксинами gr-style-*', () => {
+  const fromCss = paletteFromCss();
+  const fromDocs = paletteFromDocs();
+
+  assert.ok(fromCss.size >= 20, `в сборке оси нашлось всего ${fromCss.size} переведённых токенов`);
+
+  const missing = [...fromCss.keys()].filter((token) => !fromDocs.has(token));
+  const stale = [...fromDocs.keys()].filter((token) => !fromCss.has(token));
+
+  assert.deepEqual(missing, [], `стиль переводит, а таблица не называет: ${missing.join(', ')}`);
+  assert.deepEqual(stale, [], `таблица называет, а стиль не переводит: ${stale.join(', ')}`);
+
+  for (const [token, byStyle] of fromCss) {
+    assert.deepEqual(
+      fromDocs.get(token),
+      byStyle,
+      `${token}: таблица говорит ${JSON.stringify(fromDocs.get(token))}, сборка — ${JSON.stringify(byStyle)}`,
     );
   }
 });

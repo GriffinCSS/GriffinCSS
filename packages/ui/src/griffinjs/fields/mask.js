@@ -19,9 +19,19 @@
  * fill — знак свободного слота в ней, «_» по умолчанию.
  *
  * База без скрипта: pattern и inputmode на элементе — платформа проверяет
- * сама, скрипт лишь помогает вводить и ни pattern, ни проверку не трогает.
- * Из маски он берёт только два удобства: подсказку и inputmode="numeric"
- * для маски из одних цифр — и то, если автор не задал своих.
+ * сама. Авторский pattern маска не трогает и не заменяет; из маски она берёт
+ * два удобства — подсказку и inputmode="numeric" для маски из одних цифр,
+ * и то, если автор не задал своих.
+ *
+ * Недобор. Непустое значение с незаполненными обязательными слотами — своя
+ * ошибка проверки: setCustomValidity(incomplete) ставится сразу, поэтому
+ * checkValidity() даёт false и форма не уходит с половиной номера. На полном
+ * значении custom-error пуст, и единственным судьёй снова становится pattern.
+ * Пустое поле маска не трогает: пустое — это required платформы, и поле
+ * без required обязательным не становится. Красным (aria-invalid) поле
+ * помечается ТОЛЬКО по уходу фокуса и светлеет, как только значение стало
+ * полным: ругаться на человека, пока он печатает, — не проверка. Там, где
+ * недобор законен, выход не требует нового API — токен ? в формате.
  *
  * Каретка. Правки перехватываются в beforeinput: новое значение считается
  * здесь, пишется целиком, и каретка встаёт за только что введённый знак —
@@ -31,16 +41,17 @@
  * браузер делает своё, а маска потом приводит значение к формату по input
  * или compositionend. Это единственный случай, когда каретка уходит в конец.
  *
- * Маска пишет value контрола — первый такой виджет в слое. Расширение
- * инварианта 7 объявлено в docs/griffinjs-architecture.html («Инварианты»)
- * и в правилах правки слоя. После каждой своей записи она шлёт input
+ * Маска пишет value контрола и его валидность — первый такой виджет в слое.
+ * Расширение инварианта 7 объявлено в docs/griffinjs-architecture.html
+ * («Инварианты») и в правилах правки слоя: пишешь value — пиши и валидность,
+ * и возвращай её в destroy(). После каждой своей записи она шлёт input
  * (а по уходу фокуса — change), поэтому фреймворк узнаёт о значении
  * так же, как о набранном руками.
  */
 (function (G) {
   'use strict';
 
-  var DEFAULTS = { format: '', hint: true, fill: '_' };
+  var DEFAULTS = { format: '', hint: true, fill: '_', incomplete: 'Значение набрано не полностью' };
 
   // Что принимает слот. Буква — любая по Юникоду: маска номерного знака
   // на кириллице не хуже латинской.
@@ -157,6 +168,7 @@
     var tokens;
     var last = null;          // последнее записанное значение
     var focused = null;       // значение на момент фокуса — для change
+    var short = false;        // набрано, но не до конца
     var ownHint = o.hint && !el.getAttribute('placeholder');
     var ownMode = !el.getAttribute('inputmode');
 
@@ -169,6 +181,12 @@
       last = result.value;
 
       attrs.set(el, 'data-gr-state', !result.raw ? 'empty' : result.complete ? 'complete' : 'partial');
+
+      // Недобор — своя ошибка; пустое поле остаётся заботой required.
+      short = !!result.raw && !result.complete;
+
+      if (typeof el.setCustomValidity === 'function') el.setCustomValidity(short ? o.incomplete : '');
+      if (!short) attrs.set(el, 'aria-invalid', null);
 
       if (k !== undefined && typeof el.setSelectionRange === 'function') {
         var at = caret(result, k);
@@ -264,6 +282,7 @@
     // правку он не видел. Событие шлётся здесь по тому же правилу —
     // значение по уходу фокуса отличается от значения на входе.
     function onBlur() {
+      if (short) attrs.set(el, 'aria-invalid', 'true');
       if (focused !== null && el.value !== focused) fire(el, 'change');
       focused = null;
     }
@@ -298,6 +317,8 @@
       destroy: function () {
         events.removeAll();
         attrs.restore();
+
+        if (typeof el.setCustomValidity === 'function') el.setCustomValidity('');
       }
     };
   });

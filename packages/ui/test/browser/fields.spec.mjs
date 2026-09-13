@@ -275,6 +275,57 @@ test('телефон: пустой список заполняется из та
   await expect(page.locator('#gr-lab-phone-table')).toHaveAttribute('placeholder', '(___) ___-__-__');
 });
 
+test('телефон: недобранный номер форму не отправляет, сводка называет поле, красное — по уходу фокуса', async ({ page }) => {
+  await page.goto(LAB);
+
+  const form = page.locator('#gr-lab-phone-form');
+  const field = page.locator('#gr-lab-phone-req');
+  const box = form.locator('.gr-validate');
+
+  // Отправку ловим слушателем: сводка отменяет событие, и «форма не ушла» —
+  // это defaultPrevented, а не отсутствие события. Обработчик из разметки,
+  // который гасит отправку на живой странице, снимается: он стоит первым
+  // и отменял бы событие раньше сводки. Гасит здесь слушатель ниже.
+  await page.evaluate(() => {
+    const form = document.getElementById('gr-lab-phone-form');
+
+    form.removeAttribute('onsubmit');
+    form.onsubmit = null;
+    window.__sent = null;
+    form.addEventListener('submit', (e) => { window.__sent = !e.defaultPrevented; e.preventDefault(); });
+  });
+
+  // Сценарий аудита: шесть знаков из десяти.
+  await field.click();
+  await field.pressSequentially('912345');
+  expect(await field.inputValue()).toBe('(912) 345');
+  expect(await field.evaluate((el) => el.checkValidity())).toBe(false);
+  expect(await field.evaluate((el) => el.validationMessage)).not.toBe('');
+  await expect(field).not.toHaveAttribute('aria-invalid', /.*/);
+
+  await page.locator('#gr-lab-phone-submit').click();
+
+  expect(await page.evaluate(() => window.__sent)).toBe(false);
+  await expect(box).toBeVisible();
+  await expect(box.locator('a')).toHaveCount(1);
+  await expect(box.locator('a').first()).toHaveText(/^Телефон: .+/);
+  await expect(field).toHaveAttribute('aria-invalid', 'true');
+
+  // Дописали до конца: пометка снимается сразу, форма уходит.
+  await field.focus();
+  await page.keyboard.press('End');
+  await field.pressSequentially('6789');
+
+  expect(await field.inputValue()).toBe('(912) 345-67-89');
+  expect(await field.evaluate((el) => el.checkValidity())).toBe(true);
+  await expect(field).not.toHaveAttribute('aria-invalid', /.*/);
+
+  await page.locator('#gr-lab-phone-submit').click();
+
+  expect(await page.evaluate(() => window.__sent)).toBe(true);
+  await expect(box).toBeHidden();
+});
+
 test('дата: тач-событие разметку не трогает, указатель мыши подменяет тип и заводит спутник в ISO', async ({ page }) => {
   await page.goto(LAB);
 

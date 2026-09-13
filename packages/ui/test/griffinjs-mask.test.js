@@ -308,3 +308,64 @@ test('формат с двоеточием и параметры парами; �
 
   G.destroy();
 });
+
+test('недобор: своё сообщение сразу, красное — по уходу фокуса, полное значение снова судит платформа', () => {
+  const { G, doc } = setup(PARTS);
+  const node = input(doc, { 'data-gr-mask': '(000) 000-00-00', pattern: '.+' });
+
+  G.start();
+
+  // Сценарий аудита: шесть знаков из десяти.
+  typed(node, '123456');
+  assert.equal(node.value, '(123) 456');
+  assert.equal(node.checkValidity(), false, 'форма с половиной номера не отправляется');
+  assert.ok(node.validationMessage, 'сообщение о недоборе непусто');
+  assert.equal(node.getAttribute('aria-invalid'), null, 'пока человек печатает, поле не краснеет');
+
+  // Красным — по уходу фокуса.
+  node.dispatchEvent(event('blur', node));
+  assert.equal(node.getAttribute('aria-invalid'), 'true');
+
+  // Дописали до конца: красное снимается сразу, custom-error пуст,
+  // и единственным судьёй снова становится pattern платформы.
+  typed(node, '7890');
+  assert.equal(node.value, '(123) 456-78-90');
+  assert.equal(node.validationMessage, '');
+  assert.equal(node.checkValidity(), true);
+  assert.equal(node.getAttribute('aria-invalid'), null);
+  assert.equal(node.getAttribute('pattern'), '.+', 'pattern маска не трогает');
+
+  // Снова стёрли знак — недобор вернулся.
+  edit(node, 'deleteContentBackward', node.value.length);
+  assert.equal(node.checkValidity(), false);
+
+  G.destroy();
+  assert.equal(node.validationMessage, '', 'destroy вернул поле в валидное состояние');
+  assert.equal(node.getAttribute('aria-invalid'), null);
+});
+
+test('пустое поле — забота required платформы, а не маски; хвост после ? недобором не считается', () => {
+  const { G, doc } = setup(PARTS);
+  const free = input(doc, { 'data-gr-mask': '(000) 000-00-00' });
+  const must = input(doc, { 'data-gr-mask': '(000) 000-00-00', required: '' });
+  const plate = input(doc, { 'data-gr-mask': 'A 000 AA?-000' });
+
+  G.start();
+
+  assert.equal(free.validationMessage, '', 'на пустом поле своей ошибки нет — только сброс');
+  assert.equal(free.checkValidity(), true, 'поле без required пустым остаётся валидным');
+  assert.equal(must.checkValidity(), false, 'пустое поле с required невалидно — и это платформа, не маска');
+
+  // Уход фокуса с пустого поля тоже не красит.
+  free.dispatchEvent(event('blur', free));
+  assert.equal(free.getAttribute('aria-invalid'), null);
+
+  // Номерной знак без региона: хвост после ? необязателен, значение полное.
+  typed(plate, 'а123вс');
+  assert.equal(plate.value, 'А 123 ВС');
+  assert.equal(plate.checkValidity(), true);
+  plate.dispatchEvent(event('blur', plate));
+  assert.equal(plate.getAttribute('aria-invalid'), null);
+
+  G.destroy();
+});

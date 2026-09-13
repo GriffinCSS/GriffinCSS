@@ -88,7 +88,6 @@ class Element extends base.MockElement {
   // <form>: контролы и проверка платформы. validity в моке ставит тест;
   // контрол без validity считается верным.
   get elements() { return this.querySelectorAll('input, select, textarea'); }
-  checkValidity() { return this.elements.every((c) => !c.validity || c.validity.valid !== false); }
 
   // <option>: selected зеркалит атрибут — как checked у радиокнопки.
   get selected() { return this.hasAttribute('selected'); }
@@ -99,8 +98,18 @@ class Element extends base.MockElement {
   set checked(v) { if (v) this.setAttribute('checked', ''); else this.removeAttribute('checked'); }
 
   // Проверка ограничений: своё сообщение виджет ставит так же, как в браузере,
-  // а читает его тест из validationMessage. Платформенной проверки в моке нет.
+  // а читает его тест из validationMessage. Платформенной проверки в моке нет,
+  // кроме required на пустом значении: недобор маски проверяется рядом с ним,
+  // и они не должны путаться. Форма спрашивает свои контролы.
   setCustomValidity(message) { this.validationMessage = String(message || ''); }
+
+  checkValidity() {
+    if (this.tagName === 'FORM') return this.elements.every((c) => c.checkValidity());
+    if (this.validationMessage) return false;
+    if (this.validity && this.validity.valid === false) return false;
+
+    return !(this.hasAttribute('required') && !this.value);
+  }
 
   // <select>: список позиций и выбранная — как в браузере, по атрибуту
   // selected; без него выбрана первая. Поле телефона читает и пишет

@@ -1,6 +1,7 @@
 // Griffincss — Значения тем
 // Только миксины, ни одного правила: подключаются из _tokens.scss (светлая
-// как база :root) и из _theme.scss (блоки селекторов).
+// как база :root), из _theme-tokens.scss (носители токенов) и из
+// _theme-rules.scss (правила режима со свойствами).
 //
 // Тема меняет исключительно HSL-триплеты семантической шкалы. Резолвленные
 // --gr-color-* объявлены один раз в :root: подстановка var() считается на
@@ -13,9 +14,18 @@
 // Якоря --gr-hsl-*-max задают «куда двигаться» контрастному режиму. Благодаря
 // им блок контраста пишется один раз и работает поверх любой темы: он ссылается
 // на якоря, а какие они — решает действующая на этом элементе тема.
+//
+// У акцента якорей три пары, и повседневная — тоже якорь: --gr-hsl-accent-base
+// и -base-hover (Этап 40). Производные --gr-hsl-accent, -accent-hover, -link
+// и -link-hover ссылаются на него через var(), поэтому бренд задаётся якорями,
+// а какую пару взять — base, max или soft — решает ось. Переопределять
+// --gr-hsl-accent напрямую нельзя: небезслойное объявление на :root выигрывает
+// у блока режима внутри слоя при любой специфичности, и режим для слабовидящих
+// перестаёт переводить акцент на accent-max — так ломался рецепт бренда
+// из документации 0.23.1.
 
 // Резолвленные семантические цвета. Отдельным миксином, потому что
-// подключаются не только к :root: см. комментарий в _theme.scss.
+// подключаются не только к :root: см. комментарий в _theme-tokens.scss.
 @mixin gr-semantic-colors {
   --gr-color-bg: hsl(var(--gr-hsl-surface-0));
   --gr-color-surface: hsl(var(--gr-hsl-surface-1));
@@ -89,12 +99,15 @@
   --gr-hsl-border: 0, 0%, 82%;
   --gr-hsl-border-strong: 0, 0%, 52%;
 
-  // Акцент, ссылки, фокус
-  --gr-hsl-accent: 220, 80%, 45%;
-  --gr-hsl-accent-hover: 220, 80%, 36%;
+  // Акцент, ссылки, фокус. Повседневная пара — якорь бренда; фокус к бренду
+  // не привязан: это сигнал платформы, а не фирменный цвет.
+  --gr-hsl-accent-base: 220, 80%, 45%;
+  --gr-hsl-accent-base-hover: 220, 80%, 36%;
+  --gr-hsl-accent: var(--gr-hsl-accent-base);
+  --gr-hsl-accent-hover: var(--gr-hsl-accent-base-hover);
   --gr-hsl-on-accent: 0, 0%, 100%;
-  --gr-hsl-link: 220, 80%, 45%;
-  --gr-hsl-link-hover: 220, 80%, 36%;
+  --gr-hsl-link: var(--gr-hsl-accent-base);
+  --gr-hsl-link-hover: var(--gr-hsl-accent-base-hover);
   --gr-hsl-link-visited: 292, 60%, 40%;
   --gr-hsl-focus: 220, 90%, 45%;
 
@@ -146,12 +159,14 @@
   --gr-hsl-border: 0, 0%, 22%;
   --gr-hsl-border-strong: 0, 0%, 45%;
 
-  // Акцент, ссылки, фокус
-  --gr-hsl-accent: 220, 85%, 68%;
-  --gr-hsl-accent-hover: 220, 85%, 78%;
+  // Акцент, ссылки, фокус — якорь бренда, как в светлой
+  --gr-hsl-accent-base: 220, 85%, 68%;
+  --gr-hsl-accent-base-hover: 220, 85%, 78%;
+  --gr-hsl-accent: var(--gr-hsl-accent-base);
+  --gr-hsl-accent-hover: var(--gr-hsl-accent-base-hover);
   --gr-hsl-on-accent: 0, 0%, 7%;
-  --gr-hsl-link: 220, 85%, 68%;
-  --gr-hsl-link-hover: 220, 85%, 78%;
+  --gr-hsl-link: var(--gr-hsl-accent-base);
+  --gr-hsl-link-hover: var(--gr-hsl-accent-base-hover);
   --gr-hsl-link-visited: 292, 60%, 72%;
   --gr-hsl-focus: 220, 90%, 70%;
 
@@ -208,6 +223,15 @@
   // Акцент и ссылки — до 7:1
   --gr-hsl-accent: var(--gr-hsl-accent-max);
   --gr-hsl-accent-hover: var(--gr-hsl-accent-max-hover);
+
+  // Правило: ось, двигающая одну краску пары, двигает и вторую. Акцент
+  // ушёл к краю шкалы — чернила на нём уходят к противоположному краю,
+  // то есть на surface-max: белое на тёмном accent-max в светлой теме,
+  // чёрное на светлом — в тёмной. Третьего якоря не нужно, обе стороны
+  // сходятся сами. Без этой строки чернила оставались за стилем: воздушный
+  // переводит --gr-hsl-on-accent на тёмный on-accent-soft, и главная кнопка
+  // в режиме для слабовидящих получалась тёмным по тёмному — 1,9 : 1.
+  --gr-hsl-on-accent: var(--gr-hsl-surface-max);
   --gr-hsl-link: var(--gr-hsl-accent-max);
   --gr-hsl-link-hover: var(--gr-hsl-accent-max-hover);
   --gr-hsl-link-visited: var(--gr-hsl-visited-max);
@@ -218,14 +242,27 @@
   --gr-focus-width: 3px;
 }
 
-// Типографика режима для слабовидящих. Масштаб — в процентах от родителя,
-// а не в rem или px: процент считается от кегля, который пользователь выбрал
+// Типографика режима для слабовидящих — двумя половинами, потому что едут
+// они в разные сборки (см. _theme-tokens.scss и _theme-rules.scss).
+//
+// Токены: интерлиньяж и трекинг. Обязаны быть в каждой точке входа —
+// базовые значения стоят в :root, и из надстройки они перебили бы режим.
+@mixin gr-a11y-typography-tokens {
+  --gr-leading-base: 1.7;
+  --gr-tracking-base: 0.02em;
+}
+
+// Масштаб кегля — правило со свойством. В процентах от родителя, а не
+// в rem или px: процент считается от кегля, который пользователь выбрал
 // в настройках браузера, поэтому режим складывается с этой настройкой,
 // а не отменяет её. Вся шкала спейсинга и кегли заданы в rem, поэтому
 // страница растёт целиком и пропорционально.
-@mixin gr-a11y-typography {
+@mixin gr-a11y-scale {
   font-size: calc(100% * var(--gr-a11y-scale, 1.25));
+}
 
-  --gr-leading-base: 1.7;
-  --gr-tracking-base: 0.02em;
+// Типографика целиком — для тех, кто собирает тему из миксинов сам.
+@mixin gr-a11y-typography {
+  @include gr-a11y-scale;
+  @include gr-a11y-typography-tokens;
 }

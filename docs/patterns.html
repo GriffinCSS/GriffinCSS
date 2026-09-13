@@ -25,14 +25,14 @@
 <div class="hero">
   <h1>Готовые блоки</h1>
   <p>
-    Тринадцать крупных сегментов вёрстки, которые забирают в проект целиком:
+    Четырнадцать крупных сегментов вёрстки, которые забирают в проект целиком:
     шапка, первый экран, сетка карточек, карточка товара, тарифы, форма
     входа, лента статей, панель админки, дашборд, таблица с фильтрами,
-    вопросы и ответы, призыв к действию и подвал. У каждого — вкладка «Код»
-    и кнопка копирования.
+    вопросы и ответы, призыв к действию, подвал и каталог с фасетами.
+    У каждого — вкладка «Код» и кнопка копирования.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">13 сегментов</span>
+    <span class="badge badge-accent">14 сегментов</span>
     <span class="badge">только классы библиотеки</span>
     <span class="badge">ни одного литерального цвета</span>
   </div>
@@ -56,7 +56,7 @@
   вставить в свою разметку → заменить тексты и ссылки. Классы
   <code>gr-area-*</code> в панели админки и <code>data-gr-layout</code>
   на её контейнере — единственное место, где нужен JS-рантайм библиотеки;
-  остальные двенадцать блоков работают без него. Своего кода просит один
+  остальные тринадцать блоков работают без него. Своего кода просит один
   счётчик количества в карточке товара — два вызова
   <code>stepUp()</code> / <code>stepDown()</code> прямо в разметке блока.
 </p>
@@ -730,14 +730,168 @@
   </footer>
 </div>
 
+<h2 id="katalog-s-fasetami">14. Каталог с фасетами</h2>
+
+<p>
+  Боковая колонка отбора (четыре доли из двенадцати) и сетка карточек —
+  <code>gr-grid-12-lg</code> со <code>span</code>-утилитами; ниже 1024 px
+  колонки схлопываются в одну.
+  Порог здесь <code>lg</code>, а не <code>md</code>: на планшете три колонки
+  из двенадцати оставляют фасетам полосу, в которую не помещается ни цена
+  «от — до», ни подпись флажка.
+  Весь сегмент лежит <strong>внутри одной <code>&lt;form method="get"&gt;</code></strong>:
+  отбор уезжает в адресную строку, страница возвращается с теми же
+  значениями в полях, и переносится это в любой движок сайта как есть.
+  Ни одной строки скрипта, ни одного нового класса.
+</p>
+
+<p>
+  Фасеты — вложенные <code>&lt;details&gt;</code>: группа сворачивается,
+  и это платформа, а не виджет. Внешний <code>&lt;details open&gt;</code>
+  «Фильтры» нужен телефону: там колонка идёт над товаром, и её сворачивают
+  одним касанием. Выдвижной панели здесь намеренно нет — она потребовала бы
+  второго набора тех же полей в форме (или своего CSS у этой страницы),
+  а дубль полей в GET-форме отправляет фасет дважды.
+</p>
+
+<p>
+  Чего здесь нет и не будет: счётчиков у фасетов, логики фильтрации
+  и состояния в адресе, собираемого скриптом. Это витрина, а не приложение:
+  разметка и форма — всё. Крестик у выбранного фасета — ссылка на тот же
+  адрес без этого параметра, а не кнопка, которой нужен обработчик.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Каталог: фасеты, чипы выбранного, сортировка</div>
+  <form class="gr-grid-1 gr-grid-12-lg gr-gap" method="get" action="#katalog-s-fasetami">
+    <aside class="gr-grid-col-span-4">
+      <details class="gr-accordion-item" open>
+        <summary class="gr-accordion-trigger">Фильтры</summary>
+        <div class="gr-accordion-panel">
+          <div class="gr-accordion gr-accordion-flush">
+            <details class="gr-accordion-item" open>
+              <summary class="gr-accordion-trigger">Категория</summary>
+              <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="cat" value="laptops" checked> Ноутбуки</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="cat" value="phones"> Телефоны</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="cat" value="audio"> Наушники</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="cat" value="watch"> Часы</label>
+              </div>
+            </details>
+            <details class="gr-accordion-item" open>
+              <summary class="gr-accordion-trigger">Бренд</summary>
+              <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="brand" value="acer"> Acer</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="brand" value="asus" checked> Asus</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="brand" value="lenovo"> Lenovo</label>
+              </div>
+            </details>
+            <details class="gr-accordion-item" open>
+              <summary class="gr-accordion-trigger">Цена, ₽</summary>
+              <div class="gr-accordion-panel">
+                <div class="gr-flex gr-gap-sm gr-flex-items-end">
+                  <div class="gr-field gr-mb-0 gr-flex-1">
+                    <label class="gr-label" for="p-price-min">от</label>
+                    <input class="gr-input gr-input-sm" id="p-price-min" type="number" name="price_min" inputmode="numeric" min="0" step="1000">
+                  </div>
+                  <div class="gr-field gr-mb-0 gr-flex-1">
+                    <label class="gr-label" for="p-price-max">до</label>
+                    <input class="gr-input gr-input-sm" id="p-price-max" type="number" name="price_max" inputmode="numeric" min="0" step="1000">
+                  </div>
+                </div>
+              </div>
+            </details>
+            <details class="gr-accordion-item" open>
+              <summary class="gr-accordion-trigger">Наличие</summary>
+              <div class="gr-accordion-panel gr-flex gr-flex-col gr-gap-sm">
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="stock" value="in"> Только в наличии</label>
+                <label class="gr-choice"><input class="gr-checkbox" type="checkbox" name="sale" value="1"> Со скидкой</label>
+              </div>
+            </details>
+          </div>
+          <div class="gr-flex gr-gap-sm gr-flex-wrap gr-mt-4">
+            <button class="gr-btn gr-btn-primary gr-btn-sm" type="submit">Показать</button>
+            <a class="gr-btn gr-btn-ghost gr-btn-sm" href="#katalog-s-fasetami">Сбросить всё</a>
+          </div>
+        </div>
+      </details>
+    </aside>
+
+    <div class="gr-grid-col-span-8">
+      <div class="gr-flex gr-flex-between gr-flex-items-center gr-flex-wrap gr-gap-sm gr-mb-4">
+        <div class="gr-flex gr-flex-wrap gr-gap-sm gr-flex-items-center">
+          <span class="gr-text-sm gr-text-ink-secondary">Выбрано:</span>
+          <span class="gr-tag">Ноутбуки
+            <a class="gr-tag-remove" href="?brand=asus#katalog-s-fasetami" aria-label="Убрать фильтр Ноутбуки">×</a>
+          </span>
+          <span class="gr-tag">Asus
+            <a class="gr-tag-remove" href="?cat=laptops#katalog-s-fasetami" aria-label="Убрать фильтр Asus">×</a>
+          </span>
+        </div>
+        <div class="gr-field gr-mb-0">
+          <label class="gr-label gr-sr-only" for="p-sort">Сортировка</label>
+          <select class="gr-select gr-input-sm" id="p-sort" name="sort">
+            <option value="rel">Популярные</option>
+            <option value="cheap">Дешевле</option>
+            <option value="rich">Дороже</option>
+            <option value="new">Новинки</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="gr-grid-1 gr-grid-2-sm gr-grid-3-xl gr-gap">
+        <article class="gr-card">
+          <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+          <div class="gr-card-body">
+            <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Asus Zenbook 14</a></h3>
+            <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-3">14", 16 ГБ, 512 ГБ</p>
+            <p class="gr-text-lg gr-font-semibold gr-m-0">89 990 ₽</p>
+          </div>
+        </article>
+        <article class="gr-card">
+          <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+          <div class="gr-card-body">
+            <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Asus Vivobook 16</a></h3>
+            <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-3">16", 8 ГБ, 256 ГБ</p>
+            <p class="gr-text-lg gr-font-semibold gr-m-0">54 490 ₽</p>
+          </div>
+        </article>
+        <article class="gr-card">
+          <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+          <div class="gr-card-body">
+            <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Asus ProArt 16</a></h3>
+            <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-3">16", 32 ГБ, 1 ТБ</p>
+            <p class="gr-text-lg gr-font-semibold gr-m-0">184 900 ₽</p>
+          </div>
+        </article>
+        <article class="gr-card">
+          <div class="gr-aspect-square gr-bg-sunken gr-flex gr-flex-center gr-flex-items-center gr-text-ink-secondary gr-text-sm">изображение</div>
+          <div class="gr-card-body">
+            <h3 class="gr-text-base gr-font-semibold gr-mt-0 gr-mb-2"><a class="gr-link gr-link-inherit" href="#">Asus TUF Gaming</a></h3>
+            <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-3">15", 16 ГБ, RTX</p>
+            <p class="gr-text-lg gr-font-semibold gr-m-0">112 000 ₽</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </form>
+</div>
+
 <h2 id="chego-zdes-net">Чего здесь нет</h2>
 
 <p>
-  Ни выбора даты, ни фильтров с пагинацией. Это не забывчивость: таким
+  Ни выбора даты, ни фильтрации по щелчку. Это не забывчивость: таким
   блокам нужен не «тонкий опциональный JS», а полноценный виджет
   с управлением состоянием — другая ответственность и другой размер.
   Всё, что на этой странице, работает от разметки и стилей, и ровно один
-  сегмент из тринадцати просит рантайм.
+  сегмент из четырнадцати просит рантайм.
+</p>
+
+<p>
+  Фасетный фильтр из этого списка ушёл — но ушла только его разметка:
+  сегмент 14 отбирает <code>&lt;form method="get"&gt;</code>, а счётчики
+  у фасетов, подгрузка выдачи и состояние в адресе остаются за приложением.
+  Граница та же, что и была: витрина показывает, приложение считает.
 </p>
 
 <p>
@@ -755,7 +909,7 @@
   <code>griffinjs.js</code> внутри пакета <code>griffincss-ui</code> —
   «другая библиотека» получила имя и место, не меняя состава npm.
   Подключается она отдельным файлом и по-прежнему никому не навязывается:
-  тринадцать блоков выше собраны без неё.
+  все четырнадцать блоков выше собраны без неё.
 </p>
 
 <p>

@@ -45,8 +45,8 @@
     подключается после <code>griffinjs.js</code> или после
     <code>griffinjs-core.js</code>, как любой модуль слоя. Цена входа —
     набор «ядро + позиция у якоря + поля»:
-    <b><!--gr:size:griffinjs-fields-set-->12,1 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
-    сами поля — <!--gr:size:griffinjs-fields-->9,4 КБ<!--/gr:size:griffinjs-fields-->,
+    <b><!--gr:size:griffinjs-fields-set-->12,2 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
+    сами поля — <!--gr:size:griffinjs-fields-->9,6 КБ<!--/gr:size:griffinjs-fields-->,
     стили — <!--gr:size:griffinjs-fields-css-->1,7 КБ<!--/gr:size:griffinjs-fields-css-->.
     Для сравнения: <code>flatpickr</code> ≈ 15 КБ, <code>imask</code> ≈ 12 КБ,
     <code>intl-tel-input</code> ≈ 40 КБ с данными — три библиотеки на три
@@ -146,6 +146,7 @@
   <tr><td><code>format</code></td><td>сам атрибут</td><td>Формат; без ключа атрибут читается целиком как формат</td></tr>
   <tr><td><code>hint</code></td><td><code>true</code></td><td>Подсказка пустого поля из формата — если автор не задал <code>placeholder</code></td></tr>
   <tr><td><code>fill</code></td><td><code>_</code></td><td>Знак свободного слота в подсказке</td></tr>
+  <tr><td><code>incomplete</code></td><td>«Значение набрано не полностью»</td><td>Сообщение о недоборе: непустое значение с незаполненными обязательными слотами не проходит проверку формы</td></tr>
 </table>
 
 <p>
@@ -155,9 +156,25 @@
   не понимает — композиция IME и экранной клавиатуры Android,
   автозаполнение, автозамена, отмена, — она <strong>отступает, а не
   гадает</strong>: браузер делает своё, а маска потом приводит значение
-  к формату. <code>pattern</code> на элементе не трогается — проверяет
-  платформа. Состояние в <code>data-gr-state</code>: <code>empty</code>,
+  к формату. Состояние в <code>data-gr-state</code>: <code>empty</code>,
   <code>partial</code>, <code>complete</code>.
+</p>
+
+<p>
+  <b>Недобор не проходит проверку.</b> Непустое значение с незаполненными
+  обязательными слотами — своя ошибка поля: <code>checkValidity()</code>
+  даёт <code>false</code>, и форма с половиной номера не отправляется.
+  Красным (<code>aria-invalid</code>) поле помечается только
+  <strong>по уходу фокуса</strong> и светлеет сразу, как только значение
+  стало полным: ругаться на человека, пока он печатает, — не проверка.
+  Пустое поле маска не трогает — пустое это <code>required</code>
+  платформы, и поле без него обязательным не становится. На полном
+  значении своё сообщение снимается, и единственным судьёй снова
+  становится авторский <code>pattern</code>: его маска не заменяет.
+  Там, где недобор законен, выход не требует нового параметра — токен
+  <code>?</code> в формате делает хвост необязательным (номерной знак
+  ниже полон и без региона). <code>destroy()</code> возвращает поле
+  в валидное состояние.
 </p>
 
 <div class="demo-block">
@@ -210,7 +227,7 @@
 
 <table>
   <tr><th>Параметр <code>data-gr-phone</code></th><th>По умолчанию</th><th>Что делает</th></tr>
-  <tr><td><code>country</code></td><td>—</td><td>ISO начальной страны, когда список заполняется из таблицы</td></tr>
+  <tr><td><code>country</code></td><td>—</td><td>ISO начальной страны, когда список заполняется из таблицы. Без него список начинается с первой страны по алфавиту языка страницы — на русской это Австралия, +61, — и виджет предупреждает об этом в консоли; авторских <code>&lt;option&gt;</code> предупреждение не касается</td></tr>
   <tr><td><code>names</code></td><td><code>true</code></td><td>Переписывать подписи позиций в «🇷🇺 Россия +7»; <code>false</code> оставляет авторские</td></tr>
 </table>
 
@@ -228,7 +245,36 @@
   длинному подходящему коду. Форма отправляет два поля: код и национальный
   номер; целиком он в <code>value()</code> экземпляра и в событии
   <code>griffin:change</code> (<code>iso</code>, <code>code</code>,
-  <code>value</code>).
+  <code>value</code>, <code>complete</code>).
+</p>
+
+<h3>Что проверяется</h3>
+
+<p>
+  Проверяется <b>длина номера по маске выбранной страны</b>. Недобранный
+  номер не проходит <code>checkValidity()</code> — проверка приходит
+  от <a href="#maska">маски</a> и работает у телефона так же, как у ИНН
+  и номерного знака. Смена страны пересчитывает полноту: девяти знаков
+  хватает Беларуси и мало России, и полное значение от смены кода битым
+  не становится. Красным поле становится по уходу фокуса.
+</p>
+
+<p>
+  <b>Чего мы не обещаем.</b> Тип номера и диапазон оператора
+  не проверяются: <code>libphonenumber</code> в замену не входит —
+  ровно поэтому набор с полями весит килобайты, а не сорок.
+  «Телефон набран до конца» и «такой номер существует» — разные
+  утверждения, и первое здесь не выдаётся за второе. Нужна вторая —
+  берите библиотеку с данными операторов и оставьте телефон полю ввода.
+</p>
+
+<p>
+  <code>value()</code> при этом отражает <b>набранное</b>, даже неполное:
+  это его работа — показывать, что в поле. Полнота уезжает отдельным
+  признаком <code>complete</code> в событии <code>griffin:change</code>
+  и видна в <code>checkValidity()</code> самого поля. Где недобор законен,
+  выход тот же, что у маски, — токен <code>?</code> в
+  <code>data-gr-format</code> страны.
 </p>
 
 <h3>Своя таблица стран</h3>
@@ -660,18 +706,18 @@ var TABLE = [
 
 <!-- gr:griffinjs-fields-deps -->
 <p>
-  Все поля одним файлом — <b>9,4 КБ gzip</b> без ядра;
-  набор «ядро + anchor + поля» — <b>12,1 КБ</b>.
+  Все поля одним файлом — <b>9,6 КБ gzip</b> без ядра;
+  набор «ядро + anchor + поля» — <b>12,2 КБ</b>.
   По одному поля берутся так же, как виджеты: ядро первым, затем объявленное
   и само поле. Таблица собрана из объявлений при сборке.
 </p>
 
 <table>
   <tr><th>Поле</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
-  <tr><td><code>data-gr-mask</code></td><td><code>griffinjs-mask.js</code></td><td>3,8 КБ</td></tr>
-  <tr><td><code>data-gr-phone</code></td><td><code>griffinjs-mask.js</code> + <code>griffinjs-phone.js</code></td><td>5,1 КБ</td></tr>
-  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,0 КБ</td></tr>
-  <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,7 КБ</td></tr>
+  <tr><td><code>data-gr-mask</code></td><td><code>griffinjs-mask.js</code></td><td>3,9 КБ</td></tr>
+  <tr><td><code>data-gr-phone</code></td><td><code>griffinjs-mask.js</code> + <code>griffinjs-phone.js</code></td><td>5,3 КБ</td></tr>
+  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,1 КБ</td></tr>
+  <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,8 КБ</td></tr>
   <tr><td><code>data-gr-rating</code></td><td><code>griffinjs-rating.js</code></td><td>3,1 КБ</td></tr>
   <tr><td><code>data-gr-otp</code></td><td><code>griffinjs-otp.js</code></td><td>3,4 КБ</td></tr>
   <tr><td><code>data-gr-counter</code></td><td><code>griffinjs-counter.js</code></td><td>3,1 КБ</td></tr>

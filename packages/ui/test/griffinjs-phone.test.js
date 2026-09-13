@@ -252,6 +252,42 @@ test('таблица стран: пустой список заполняетс�
   assert.equal(select.options.length, 0, 'destroy не убрал добавленные страны');
 });
 
+test('таблица без country: первая страна по алфавиту остаётся, но виджет предупреждает; авторский список молчит', () => {
+  // Список из таблицы без country — на русской странице первой стоит
+  // Австралия, +61. Поведение не меняется: угадывать страну за автора
+  // значило бы ошибаться тише, чем сейчас. Меняется только тишина.
+  {
+    const { G, doc } = setup(WITH_TABLE);
+
+    doc.documentElement.setAttribute('lang', 'ru');
+
+    const { group, select } = phone(doc, []);
+    const said = quiet(() => G.start());
+
+    assert.ok(G.instance(group, 'phone'), 'виджет не поднялся');
+    assert.equal(select.selectedIndex, 0, 'первая по алфавиту — поведение прежнее');
+    assert.equal(select.options[0].getAttribute('data-gr-iso'), 'AU');
+    assert.equal(said.length, 1, `предупреждений — ${said.length}: ${said}`);
+    assert.match(said[0], /страна не задана/);
+    assert.match(said[0], /country/, 'предупреждение обязано назвать параметр, которым снимается');
+
+    G.destroy();
+  }
+
+  // Авторские <option> без country — порядок выбрал автор, предупреждать
+  // не о чем; таблица при этом подключена и не при делах.
+  {
+    const { G, doc } = setup(WITH_TABLE);
+    const { select } = phone(doc, [BY(), option('+7', 'RU', '(000) 000-00-00')]);
+    const said = quiet(() => G.start());
+
+    assert.deepEqual(said, [], `авторский список, а виджет жалуется: ${said}`);
+    assert.equal(select.selectedIndex, 0);
+
+    G.destroy();
+  }
+});
+
 test('таблица без поля телефона предупреждает на старте, а не молчит', () => {
   const { G } = setup(['core/options.js', 'core/registry.js', 'fields/countries.js']);
   const said = quiet(() => G.start());
@@ -272,4 +308,47 @@ test('names: false — подписи автора не переписывают
   G.start();
   assert.equal(select.options[0].textContent, 'Россия');
   G.destroy();
+});
+
+test('смена страны пересчитывает недобор: десять знаков RU — девять BY; полнота уезжает в событие', () => {
+  const { G, doc } = setup(PARTS);
+  const { group, select, input } = phone(doc, [RU(), BY()]);
+  const seen = [];
+
+  group.addEventListener('griffin:change', (e) => seen.push(e.detail));
+  G.start();
+
+  const widget = G.instance(group, 'phone');
+
+  // Девять знаков при десяти в маске RU — недобор.
+  input.setSelectionRange(0, 0);
+  input.dispatchEvent(event('beforeinput', input, { inputType: 'insertText', data: '912345678' }));
+
+  assert.equal(input.checkValidity(), false, 'девять знаков из десяти форму не проходят');
+  assert.equal(widget.value(), '+7912345678', 'value отражает набранное — это его работа');
+
+  // BY: тех же девяти знаков хватает — значение стало полным.
+  select.selectedIndex = 1;
+  select.dispatchEvent(event('change', select));
+
+  assert.equal(input.value, '(91) 234-56-78');
+  assert.equal(input.checkValidity(), true, 'полное значение битым от смены страны не становится');
+  assert.equal(seen[seen.length - 1].complete, true, 'полнота уезжает признаком, а не догадкой по длине');
+
+  // И обратно: в маске RU тех же знаков снова мало.
+  select.selectedIndex = 0;
+  select.dispatchEvent(event('change', select));
+
+  assert.equal(input.checkValidity(), false, 'неполное значение валидным от смены страны не становится');
+  assert.equal(seen[seen.length - 1].complete, false);
+
+  // Десятый знак — и номер полон.
+  input.setSelectionRange(input.value.length, input.value.length);
+  input.dispatchEvent(event('beforeinput', input, { inputType: 'insertText', data: '9' }));
+
+  assert.equal(input.value, '(912) 345-67-89');
+  assert.equal(input.checkValidity(), true);
+
+  G.destroy();
+  assert.equal(input.validationMessage, '', 'destroy вернул поле в валидное состояние');
 });

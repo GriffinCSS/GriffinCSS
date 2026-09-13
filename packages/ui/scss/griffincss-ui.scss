@@ -23,11 +23,18 @@
 @layer griffincss.ui {
   @include meta.load-css('griffincss-core/scss/tokens');
 
-  // Тема подключается и здесь, как в utils: слой griffincss.ui старше
+  // Тема подключается и здесь, а не только в ядре: слой griffincss.ui старше
   // griffincss.core, поэтому переопределения темы, приехавшие только
   // с griffincss-core.css, проиграли бы базовому :root из этой сборки —
   // независимо от специфичности селектора.
-  @include meta.load-css('griffincss-core/scss/theme');
+  //
+  // Правила режима со свойствами тоже здесь — в отличие от utils. Правило
+  // [data-gr-a11y="low-vision"] a[href] (0,1,1) обязано побеждать варианты
+  // ссылки .gr-link-quiet и .gr-link-inherit (0,1,0), а для этого лежать
+  // с ними в одном слое: из ядра оно бы им проиграло. Компонент с заливкой
+  // защищается от него сам — a.gr-btn в _button.scss стоит позже по порядку.
+  @include meta.load-css('griffincss-core/scss/theme-tokens');
+  @include meta.load-css('griffincss-core/scss/theme-rules');
 
   // @keyframes живут отдельным файлом ради scoped-сборки — см. _keyframes.scss.
   @include meta.load-css('keyframes');

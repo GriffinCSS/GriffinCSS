@@ -28,7 +28,7 @@
     Компактная, расширяемая, без лишнего кода. Описывайте сложные сетки одной строкой.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">v0.23.1</span>
+    <span class="badge badge-accent">v0.24.0</span>
     <span class="badge">Dart Sass</span>
     <span class="badge">CSS Grid</span>
     <span class="badge">Flexbox</span>
@@ -132,7 +132,55 @@
 &lt;link rel="stylesheet" href="griffincss-utils/dist/griffincss-utils.css"&gt;
 &lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;</code></pre>
 
-<h3>2. Первая раскладка</h3>
+<h3>2. Скелет страницы</h3>
+
+<p>
+  Ресет обнуляет поля и не задаёт шрифт — сознательно, чтобы не спорить
+  с вашим. Без четырёх строк типографики ниже страница набрана Times
+  с абзацами встык. Свой CSS идёт в собственный слой между ядром
+  и компонентами: правило по элементу оттуда не перебьёт ни
+  <code>.gr-btn</code> на ссылке, ни <code>.gr-mb-0</code> на абзаце.
+  Файл целиком, чтобы скопировать, — <a href="starter.html">starter.html</a>.
+</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="ru" data-gr-style="standard"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;Новая страница&lt;/title&gt;
+
+&lt;!-- Порядок слоёв — первым объявлением в документе; app — ваш слой --&gt;
+&lt;style&gt;@layer griffincss.reset, griffincss.core, app, griffincss.ui, griffincss.utils, griffincss.style;&lt;/style&gt;
+
+&lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-reset.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-ui/dist/griffincss-ui.css"&gt;
+&lt;link rel="stylesheet" href="griffincss-utils/dist/griffincss-utils.css"&gt;
+
+&lt;!-- Синхронно: атрибуты темы встают до первой отрисовки --&gt;
+&lt;script src="griffincss-core/dist/griffincss-theme.js"&gt;&lt;/script&gt;
+&lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;
+
+&lt;!-- Типографика — ваша. Четыре строки, без которых Times и абзацы встык --&gt;
+&lt;style&gt;
+@layer app {
+  body { font-family: var(--gr-font-sans); }
+  h1, h2, h3 { margin-block: var(--gr-gap-lg) var(--gr-gap-sm); line-height: 1.2; }
+  p, ul, ol, pre, table { margin-block: 0 var(--gr-gap); }
+  a { color: var(--gr-color-link); text-decoration: underline; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main class="gr-container gr-px-4 gr-py-6"&gt;
+  &lt;h1&gt;Заголовок страницы&lt;/h1&gt;
+  &lt;p&gt;Абзац текста со &lt;a href="#"&gt;ссылкой&lt;/a&gt;.&lt;/p&gt;
+&lt;/main&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>3. Первая раскладка</h3>
 
 <pre><code>&lt;div data-gr-layout="a3b4-c2d5"&gt;
   &lt;div class="gr-area-a"&gt;A — 3 колонки&lt;/div&gt;
@@ -161,7 +209,7 @@
   grid-template-rows: var(--gr-l-rows, repeat(2, auto));
 }</code></pre>
 
-<h3>3. Адаптивная раскладка</h3>
+<h3>4. Адаптивная раскладка</h3>
 
 <pre><code>&lt;div data-gr-layout="a1b1"
      data-gr-layout-md="a3b4-c2d5"
@@ -176,7 +224,7 @@
   &lt;div class="gr-area-ftr"&gt;Footer&lt;/div&gt;
 &lt;/div&gt;</code></pre>
 
-<h3>4. Flex-центрирование одной строкой</h3>
+<h3>5. Flex-центрирование одной строкой</h3>
 
 <pre><code>&lt;div class="gr-flex gr-flex-center gr-flex-items-center"&gt;
   &lt;div&gt;Идеально по центру&lt;/div&gt;
@@ -189,7 +237,7 @@
   </div>
 </div>
 
-<h3>5. Адаптивные колонки без медиа-запросов</h3>
+<h3>6. Адаптивные колонки без медиа-запросов</h3>
 
 <pre><code>&lt;div class="gr-grid-auto-fit"&gt;
   &lt;div&gt;Карточка 1&lt;/div&gt;

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" data-gr-style="standard">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Скелет страницы — Griffincss</title>
+
+<!-- Порядок слоёв — первым объявлением в документе. Свой слой app стоит
+     между ядром и компонентами: правило по элементу отсюда не перебьёт
+     ни .gr-btn на ссылке, ни .gr-mb-0 на абзаце — без !important. -->
+<style>@layer griffincss.reset, griffincss.core, app, griffincss.ui, griffincss.utils, griffincss.style;</style>
+
+<!-- Пути — как в дереве документации. В проекте: griffincss-core/dist/…,
+     griffincss-ui/dist/…, griffincss-utils/dist/…. Ресет опционален. -->
+<link rel="stylesheet" href="../packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+
+<!-- Синхронно и в <head>: атрибуты темы, стиля и режима встают до первой
+     отрисовки, и сохранённая тёмная тема не мигает светлой. -->
+<script src="../packages/core/dist/griffincss-theme.js"></script>
+<script src="../packages/core/dist/griffincss.js"></script>
+
+<!-- Типографика оставлена автору сознательно: ресет обнуляет поля и не задаёт
+     шрифт, чтобы не спорить с вашим. Без этих четырёх строк страница набрана
+     Times с абзацами встык. -->
+<style>
+@layer app {
+  body { font-family: var(--gr-font-sans); }
+  h1, h2, h3 { margin-block: var(--gr-gap-lg) var(--gr-gap-sm); line-height: 1.2; }
+  p, ul, ol, pre, table { margin-block: 0 var(--gr-gap); }
+  a { color: var(--gr-color-link); text-decoration: underline; }
+}
+</style>
+</head>
+<body>
+
+<main class="gr-container gr-px-4 gr-py-6">
+  <h1>Заголовок страницы</h1>
+  <p>Абзац текста со <a href="#">ссылкой</a>. Тема, стиль и режим для слабовидящих — атрибуты на <code>&lt;html&gt;</code>.</p>
+
+  <div data-gr-layout="a2b1" class="gr-gap">
+    <div class="gr-area-a gr-p-4 gr-bg-surface">Основная колонка</div>
+    <div class="gr-area-b gr-p-4 gr-bg-surface">Боковая</div>
+  </div>
+</main>
+
+</body>
+</html>
