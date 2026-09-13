@@ -282,6 +282,31 @@ test('заливка сегментного переключателя ложи�
   }
 });
 
+test('образец цвета и плашка размера: радио прячется только через :has(), цвет — из переменной', () => {
+  // Этап 42e. Радио остаётся в потоке 1px и прозрачной — как в .gr-segmented,
+  // — и прячется правилом с :has(): без него (Firefox < 121) правило
+  // не применяется, и радио остаётся видимой рядом с образцом. display: none
+  // сломал бы и клавиатуру, и деградацию.
+  const hide = ui.indexOf('.gr-choice:has(>.gr-swatch,>.gr-swatch-tag)>.gr-radio{');
+
+  assert.ok(hide > 0, 'нет правила, прячущего радио рядом с образцом');
+
+  const rule = ui.slice(hide, ui.indexOf('}', hide));
+
+  assert.ok(!rule.includes('display:none'), 'радио спрятана display: none');
+  assert.ok(rule.includes('opacity:0'), 'радио не прозрачна');
+
+  // Цвет образца — только через переменную на элементе; литерала в модуле
+  // нет (общий тест на литералы это тоже ловит), умолчание — токен.
+  const swatch = ui.indexOf('.gr-swatch{');
+  const body = ui.slice(swatch, ui.indexOf('}', swatch));
+
+  assert.ok(body.includes('background-color:var(--gr-swatch)'), 'фон образца не из --gr-swatch');
+  assert.ok(ui.includes('.gr-radio:checked+.gr-swatch{'), 'нет состояния выбранного образца');
+  assert.ok(ui.includes('.gr-radio:checked+.gr-swatch-tag{'), 'нет состояния выбранной плашки');
+  assert.ok(ui.includes('.gr-radio:focus-visible+.gr-swatch,'), 'нет фокуса на образце');
+});
+
 test('пакет не зависит от утилит: собранный CSS самодостаточен', () => {
   assert.ok(ui.includes(':root{'), 'блок :root не приехал — сборка не самодостаточна');
   assert.ok(ui.includes('[data-gr-theme=dark]'), 'блок тёмной темы не приехал');

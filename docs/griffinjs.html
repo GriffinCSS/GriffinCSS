@@ -110,13 +110,14 @@
   <tr><td><a href="ui-overlays.html#griffinjs">Дропдаун</a> <span class="badge">контроллер</span></td><td>роли меню, клавиатура menu button, <kbd>Esc</kbd> и щелчок мимо для <code>&lt;details&gt;</code>, позиция popover-панели без anchor positioning, наведение с задержкой</td><td><code>.gr-dropdown</code> как есть: <code>&lt;details&gt;</code>, popover или наведение из <code>ui</code></td></tr>
   <tr><td><a href="griffinjs-overlays.html">Окна</a> <span class="badge">контроллер</span></td><td><code>data-gr-open</code>, стек, блокировка прокрутки под окном (и на iOS), остановка видео, ajax-содержимое, hash с кнопкой «Назад»</td><td><code>.gr-modal</code> / <code>.gr-drawer</code> как есть: <code>showModal()</code> и <code>&lt;form method="dialog"&gt;</code></td></tr>
   <tr><td><a href="griffinjs-overlays.html#komboboks">Комбобокс</a></td><td>роли combobox/listbox, <code>aria-activedescendant</code>, дебаунс, отмена запроса, кеш, группы, подсветка, выбор</td><td>обычное поле в форме поиска</td></tr>
-  <tr><td><a href="ui-forms.html#griffinjs">Ползунок</a> <span class="badge">контроллер</span></td><td>доля пройденного пути — след до ручки красит CSS; пара «от — до» держит порядок значений и шлёт <code>griffin:change</code></td><td><code>.gr-range</code> как есть: ползунок работает, следа нет (в Firefox есть — его рисует платформа)</td></tr>
+  <tr><td><a href="ui-forms.html#griffinjs">Ползунок</a> <span class="badge">контроллер</span></td><td>доля пройденного пути — след до ручки красит CSS; пара «от — до» держит порядок значений, шлёт <code>griffin:change</code> и параметром <code>fields</code> связывается с числовыми полями</td><td><code>.gr-range</code> как есть: ползунок работает, следа нет (в Firefox есть — его рисует платформа)</td></tr>
   <tr><td><a href="ui-tables.html#griffinjs">Сортируемая таблица</a> <span class="badge">контроллер</span></td><td>круг <code>aria-sort</code> «нет → по возрастанию → по убыванию», стабильная перестановка строк, числа и ISO-даты числами, остальное — <code>Intl.Collator</code> с локалью документа, клавиатура на заголовке</td><td><code>.gr-table</code> как есть: порядок строк тот, что пришёл с сервера; указатель направления рисуется из <code>aria-sort</code> и без скрипта</td></tr>
   <tr><td><a href="ui-overlays.html#griffinjs">Подсказка</a> <span class="badge">контроллер</span></td><td>верхний слой (popover) по наведению с задержкой и по фокусу, позиция у якоря, <kbd>Esc</kbd></td><td><code>.gr-tooltip-anchor</code> как есть: <code>:hover</code> и <code>:focus-within</code> из <code>ui</code></td></tr>
   <tr><td colspan="3"><strong>Второй бандл — <a href="griffinjs-fields.html">поля форм</a></strong> (<code>griffinjs-fields.js</code>, в <code>griffinjs.js</code> не входят)</td></tr>
   <tr><td><a href="griffinjs-fields.html#maska">Маска</a></td><td>формат токенами, литералы, каретка, подсказка и <code>inputmode</code> из формата</td><td><code>&lt;input pattern inputmode&gt;</code> — проверяет платформа</td></tr>
   <tr><td><a href="griffinjs-fields.html#telefon">Телефон</a></td><td>маска по коду страны, имя и флаг от платформы, полный номер с плюсом выбирает страну; таблица стран отдельным файлом</td><td><code>type="tel"</code> и <code>&lt;select&gt;</code> кодов</td></tr>
-  <tr><td><a href="griffinjs-fields.html#data-i-vremya">Дата и время</a></td><td>на указателе мыши — маска по локали, календарь, ISO в спутнике, проверка границ; на тач-устройстве — ничего</td><td>нативный <code>&lt;input type="date"&gt;</code></td></tr>
+  <tr><td><a href="griffinjs-fields.html#data-i-vremya">Дата и время</a></td><td>на указателе мыши — маска по локали, календарь, ISO в спутнике, проверка границ; на тач-устройстве — ничего; пара «с — по» атрибутом <code>to</code> — границы друг друга и отрезок в панели</td><td>нативный <code>&lt;input type="date"&gt;</code></td></tr>
+  <tr><td><a href="griffinjs-fields.html#summa">Сумма</a></td><td>разряды и дробь по локали на экране, число в спутнике, каретка держится за цифрой, границы через спутник</td><td>текстовое поле — сервер получает набранное</td></tr>
   <tr><td><a href="griffinjs-fields.html#fayl">Файл</a></td><td>список выбранного, удаление по одному через <code>DataTransfer</code>, накопление</td><td><code>&lt;input type="file" multiple&gt;</code></td></tr>
   <tr><td><a href="griffinjs-fields.html#otsenka">Ввод оценки</a></td><td><code>--gr-rating</code> и слово в <code>aria-label</code>, наведение, подписи поверх знаков</td><td>пять радиокнопок в <code>&lt;fieldset&gt;</code></td></tr>
   <tr><td><a href="griffinjs-fields.html#kod-iz-sms">Одноразовый код</a></td><td>фокус по ячейкам, вставка и автозаполнение раскладываются, <code>griffin:complete</code></td><td>ряд ячеек <code>maxlength="1"</code></td></tr>
@@ -139,7 +140,7 @@
 
 <!-- gr:griffinjs-deps -->
 <p>
-  Весь слой одним файлом — <b>17,7 КБ gzip</b>. Но берут его обычно не целиком:
+  Весь слой одним файлом — <b>18,0 КБ gzip</b>. Но берут его обычно не целиком:
   ядро, нужное любому набору, весит <b>2,6 КБ</b>, а остальное подключается
   по потребности. Каждый модуль объявляет, что берёт из ядра, и таблица собрана
   из этих объявлений при сборке — разойтись с кодом ей нечем.
@@ -156,8 +157,8 @@
   <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>4,7 КБ</td></tr>
   <tr><td><code>data-gr-tooltip</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-tooltip.js</code></td><td>3,8 КБ</td></tr>
   <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>3,9 КБ</td></tr>
-  <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>5,1 КБ</td></tr>
-  <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,1 КБ</td></tr>
+  <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>5,2 КБ</td></tr>
+  <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,4 КБ</td></tr>
   <tr><td><code>data-gr-sortable</code></td><td><code>griffinjs-sortable.js</code></td><td>3,5 КБ</td></tr>
 </table>
 <!-- /gr:griffinjs-deps -->

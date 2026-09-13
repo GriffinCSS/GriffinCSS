@@ -63,10 +63,12 @@ export const WIDGETS = [
 ];
 // Поля форм — второй бандл (Этап 38). Порядок значим: маска — фундамент,
 // на ней стоят телефон, дата и одноразовый код, поэтому она идёт первой.
+// Сумма с разрядами (Этап 43b) — рядом с датой: оба несут число в спутнике.
 export const FIELDS = [
   'fields/mask.js',
   'fields/phone.js',
   'fields/datetime.js',
+  'fields/number.js',
   'fields/file.js',
   'fields/rating.js',
   'fields/otp.js',

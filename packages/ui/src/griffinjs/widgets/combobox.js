@@ -39,6 +39,13 @@
  * удаление тега или Backspace в пустом поле снимает выбор. Значение всегда
  * в <select> — форма отправляет его как без скрипта; о смене он сообщает
  * событием change.
+ *
+ * Свободные теги (Этап 42f) — флаг free рядом с multiple: Enter на непустом
+ * поле без активной позиции создаёт <option selected> со значением, равным
+ * тексту (ключевые слова, адреса писем). Дубликата по значению нет —
+ * существующая позиция просто выбирается. На сервер значение уходит
+ * текстом, проверять его — там. Без multiple флаг смысла не имеет: текст
+ * поля и есть значение, — и пропускается с предупреждением.
  */
 (function (G) {
   'use strict';
@@ -54,6 +61,7 @@
     highlight: true,
     cache: true,
     multiple: false,  // выбранное — теги, значение — в <select multiple>
+    free: false,      // Enter без позиции — новый тег из текста (только с multiple)
     remove: 'Убрать {label}'
   };
 
@@ -137,6 +145,7 @@
     var choice = o.multiple ? el.querySelector('select[multiple]') : null;
 
     if (o.multiple && !choice) throw new Error('для multiple нужен <select multiple> внутри');
+    if (o.free && !choice) { G.warn('комбобокс: free без multiple смысла не имеет — флаг пропущен'); o.free = false; }
 
     var list = el.querySelector('[role="listbox"]');
     var created = false;
@@ -452,8 +461,12 @@
         activate(key === 'Home' ? 0 : items.length - 1, true);
         event.preventDefault();
       } else if (key === 'Enter') {
-        if (!opened || active < 0) return;
-        select(active);
+        var text = input.value.trim();
+
+        if (opened && active >= 0) select(active);
+        else if (o.free && text) { add(text, text); input.value = ''; close(); }
+        else return;
+
         event.preventDefault();
       } else if (key === 'Escape') {
         if (!opened) return;

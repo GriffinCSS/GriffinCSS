@@ -166,6 +166,13 @@
   outline-offset: -2px;
 }
 
+// Пара «с — по»: дни между концами — той же заливкой, что у наведения,
+// концы — как выбранный день; между ними и по бокам сетки остаётся
+// тот же зазор, что и у всех клеток.
+.gr-datetime-day[data-gr-in-range] {
+  background-color: hsl(var(--gr-hsl-accent), 12%);
+}
+
 .gr-datetime-day[aria-selected="true"] {
   background-color: var(--gr-color-accent);
   color: var(--gr-color-on-accent);

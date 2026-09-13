@@ -237,7 +237,7 @@
   </div>
 </div>
 
-<h2>Группа с аддонами</h2>
+<h2 id="gruppa-s-addonami">Группа с аддонами</h2>
 
 <p>
   <code>.gr-input-group</code> склеивает поле с подписью или кнопкой:
@@ -361,13 +361,17 @@
   </p>
 </div>
 
-<h3>Диапазон «от — до»</h3>
+<h3 id="diapazon-ot-do">Диапазон «от — до»</h3>
 
 <p>
-  Пара дат — это два поля и одно правило между ними, которое библиотека
-  не берёт на себя: границу задаёт разметка через <code>min</code>
-  и <code>max</code>, а согласовать их между собой — дело формы.
-  Платформа проверит введённое и сама пометит поле недействительным.
+  Пара дат — это два поля и одно правило между ними. База без скрипта —
+  два нативных поля: границу задаёт разметка через <code>min</code>
+  и <code>max</code>, платформа проверит введённое и сама пометит поле
+  недействительным. С подключённым бандлом полей поля связываются одним
+  атрибутом — <code>data-gr-datetime="to: #b"</code> на первом: значение
+  «с» становится <code>min</code> у «по», значение «по» — <code>max</code>
+  у «с», и панель одного показывает отрезок до другого. Подробности —
+  в подразделе <a href="#griffinjs-fields-range">«Диапазон „с — по“»</a> ниже.
 </p>
 
 <pre><code>&lt;div class="gr-flex gr-gap-sm"&gt;
@@ -395,9 +399,11 @@
     «от — до» держит порядок значений сама, потому что там между ручками
     есть физическая связь. Это подраздел
     <a href="#griffinjs">«С подключённым <code>griffinjs.js</code>»</a>
-    ниже. У двух дат такой связи нет: они независимы, и навязывать им
-    порядок значило бы решать за форму. Диапазон дат одним контролом
-    не делает и виджет второго бандла — это приложение, а не поле.
+    ниже. У двух дат такой связи нет, и порядок им не навязывается
+    и со скриптом: «по» раньше «с» — ошибка ввода, которую показывает
+    проверка границ, а не молчаливая правка второго поля. Диапазон дат
+    одним контролом с двумя концами не делает и виджет второго бандла —
+    это приложение, а не поле; связанная пара нативных полей — поле.
   </p>
 </div>
 
@@ -487,6 +493,78 @@
   </p>
 </div>
 
+<h2 id="vybor-cveta-i-razmera">Выбор цвета и размера</h2>
+
+<p>
+  Карточке товара нужны радио, которые выглядят не как радио: кружок цвета
+  и плашка размера. Разметка — та же строка выбора, что и у флажка:
+  <code>&lt;label class="gr-choice"&gt;</code>, внутри
+  <code>&lt;input class="gr-radio"&gt;</code> и образец следом —
+  <code>.gr-swatch</code> для цвета, <code>.gr-swatch-tag</code> для плашки.
+  Форма, клавиатура и объявление состояния остаются платформенными:
+  стрелки переключают выбор внутри группы, <kbd>Tab</kbd> входит в неё
+  один раз.
+</p>
+
+<p>
+  Цвет образца — <strong>переменная на элементе</strong>,
+  <code>style="--gr-swatch: …"</code>: цвет товара — данные страницы,
+  а не оформление, и в библиотеке от него не остаётся ни одного литерала.
+  Цвет — не подпись: у радио обязателен <code>aria-label</code>
+  (и <code>title</code> на строке даст ту же подсказку под курсором).
+  Группе нужно имя — <code>role="radiogroup"</code>
+  с <code>aria-labelledby</code> или <code>&lt;fieldset&gt;</code>.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-items-center gr-gap-sm" role="radiogroup" aria-labelledby="color-label"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="color-label"&gt;Цвет&lt;/span&gt;
+  &lt;label class="gr-choice" title="Чёрный"&gt;
+    &lt;input class="gr-radio" type="radio" name="color" value="black" checked aria-label="Чёрный"&gt;
+    &lt;span class="gr-swatch" style="--gr-swatch: #1f1f1f"&gt;&lt;/span&gt;
+  &lt;/label&gt;
+  &lt;label class="gr-choice" title="Песочный"&gt;
+    &lt;input class="gr-radio" type="radio" name="color" value="sand" aria-label="Песочный"&gt;
+    &lt;span class="gr-swatch" style="--gr-swatch: #d9c3a0"&gt;&lt;/span&gt;
+  &lt;/label&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="radiogroup" aria-labelledby="size-label"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="size-label"&gt;Размер&lt;/span&gt;
+  &lt;label class="gr-choice"&gt;&lt;input class="gr-radio" type="radio" name="size" value="s"&gt;&lt;span class="gr-swatch-tag"&gt;S&lt;/span&gt;&lt;/label&gt;
+  &lt;label class="gr-choice"&gt;&lt;input class="gr-radio" type="radio" name="size" value="m" checked&gt;&lt;span class="gr-swatch-tag"&gt;M&lt;/span&gt;&lt;/label&gt;
+  &lt;label class="gr-choice"&gt;&lt;input class="gr-radio" type="radio" name="size" value="xl" disabled&gt;&lt;span class="gr-swatch-tag"&gt;XL&lt;/span&gt;&lt;/label&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Образцы цвета и плашки размера: выбранный — кольцо или заливка акцентом</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="radiogroup" aria-labelledby="forms-demo-color-label">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-color-label">Цвет</span>
+      <label class="gr-choice" title="Чёрный"><input class="gr-radio" type="radio" name="forms-demo-color" value="black" checked aria-label="Чёрный"><span class="gr-swatch" style="--gr-swatch: #1f1f1f"></span></label>
+      <label class="gr-choice" title="Песочный"><input class="gr-radio" type="radio" name="forms-demo-color" value="sand" aria-label="Песочный"><span class="gr-swatch" style="--gr-swatch: #d9c3a0"></span></label>
+      <label class="gr-choice" title="Хвоя"><input class="gr-radio" type="radio" name="forms-demo-color" value="pine" aria-label="Хвоя"><span class="gr-swatch" style="--gr-swatch: #2f5d50"></span></label>
+      <label class="gr-choice" title="Белый"><input class="gr-radio" type="radio" name="forms-demo-color" value="white" aria-label="Белый"><span class="gr-swatch" style="--gr-swatch: #ffffff"></span></label>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="radiogroup" aria-labelledby="forms-demo-size-label">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-size-label">Размер</span>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="forms-demo-size" value="s"><span class="gr-swatch-tag">S</span></label>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="forms-demo-size" value="m" checked><span class="gr-swatch-tag">M</span></label>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="forms-demo-size" value="l"><span class="gr-swatch-tag">L</span></label>
+      <label class="gr-choice"><input class="gr-radio" type="radio" name="forms-demo-size" value="xl" disabled><span class="gr-swatch-tag">XL</span></label>
+    </div>
+  </div>
+</div>
+
+<p>
+  Выбранный кружок получает кольцо акцента с просветом цвета подложки —
+  на нём одинаково читаются и белый образец, и образец цвета акцента;
+  выбранная плашка заливается акцентом. Сама радио остаётся в потоке,
+  размером в пиксель и прозрачной, и прячется правилом
+  с <code>:has()</code>: там, где его нет (Firefox до 121), правило
+  не применяется вовсе, и радио остаётся видимой рядом с образцом —
+  группа работает, только выглядит проще. <code>display: none</code>
+  снял бы и клавиатуру, и эту деградацию.
+</p>
+
 <h2>Ползунок</h2>
 
 <p>
@@ -564,7 +642,8 @@
   на <a href="sizing.html">Sizing</a>, ритм стопки полей —
   на <a href="spacing.html">Spacing</a>. Здесь — сюжеты про сами
   контролы: ошибка, которую видно и слышно, поисковая строка с аддоном,
-  страница настроек на тогглах, фильтр цены и счётчик количества.
+  пароль с кнопкой «показать», страница настроек на тогглах, фильтр цены
+  и счётчик количества.
 </p>
 
 <h3>Ошибка от сервера: видно и слышно</h3>
@@ -617,6 +696,39 @@
   </div>
 </div>
 
+<h3 id="parol-pokazat-skryt">Пароль: показать и скрыть</h3>
+
+<p>
+  Поле пароля и кнопка рядом — та же <code>.gr-input-group</code>, что
+  у поиска. Кнопка — переключатель: <code>aria-pressed</code> держит
+  состояние, подпись говорит, что случится по нажатию. Переключают три
+  строки на странице: <code>type</code> поля, <code>aria-pressed</code>
+  и текст кнопки. Виджета здесь нет и не нужно — ради трёх строк заводить
+  <code>data-gr-*</code> значило бы платить за них каждому, кто подключил
+  слой. Значение при смене <code>type</code> остаётся на месте во всех
+  трёх движках; <code>autocomplete="current-password"</code> оставляет
+  менеджеру паролей его подсказку.
+</p>
+
+<pre><code>&lt;div class="gr-input-group"&gt;
+  &lt;input class="gr-input" id="pass" type="password" autocomplete="current-password"&gt;
+  &lt;button class="gr-btn" type="button" aria-pressed="false"
+          onclick="const f = this.previousElementSibling, on = f.type === 'password';
+                   f.type = on ? 'text' : 'password';
+                   this.setAttribute('aria-pressed', on);
+                   this.textContent = on ? 'Скрыть' : 'Показать'"&gt;Показать&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Кнопка рабочая: <code>type</code> поля, <code>aria-pressed</code> и подпись меняются вместе</div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-pass">Пароль</label>
+    <div class="gr-input-group">
+      <input class="gr-input" id="forms-demo-pass" type="password" autocomplete="current-password" value="griffin-2026">
+      <button class="gr-btn" type="button" aria-pressed="false" onclick="const f = this.previousElementSibling, on = f.type === 'password'; f.type = on ? 'text' : 'password'; this.setAttribute('aria-pressed', on); this.textContent = on ? 'Скрыть' : 'Показать'">Показать</button>
+    </div>
+  </div>
+</div>
+
 <h3>Страница настроек на тогглах</h3>
 
 <p>
@@ -656,7 +768,9 @@
   и связывает их та пара строк скрипта, которую пишет потребитель.
   Библиотеке здесь принадлежит только вид: <code>.gr-range</code>,
   <code>.gr-input-group</code> с аддоном валюты и <code>.gr-field</code>
-  как обёртка.
+  как обёртка. Со слоем <code>griffinjs.js</code> эти строки не пишутся:
+  связку берёт на себя параметр <code>fields</code> виджета —
+  <a href="#griffinjs-range-fields">ниже</a>.
 </p>
 
 <pre><code>&lt;div class="gr-field"&gt;
@@ -691,7 +805,7 @@
     и пишет на каждую ручку одно свойство — <code>--gr-progress</code>,
     долю пройденного пути от <code>min</code> до <code>max</code>. Рисует
     по ней CSS модуля. Набор для этого — <code>griffinjs-core.js</code>
-    плюс <code>griffinjs-range.js</code>, <b><!--gr:size:griffinjs-range-set-->3,1 КБ<!--/gr:size:griffinjs-range-set--> gzip</b>.
+    плюс <code>griffinjs-range.js</code>, <b><!--gr:size:griffinjs-range-set-->3,4 КБ<!--/gr:size:griffinjs-range-set--> gzip</b>.
   </p>
 </div>
 
@@ -759,6 +873,62 @@
 <pre><code>pair.addEventListener('griffin:change', (e) =&gt; {
   out.textContent = `${e.detail.from} — ${e.detail.to} ₽`;
 });</code></pre>
+
+<h3 id="griffinjs-range-fields">Пара и числовые поля</h3>
+
+<p>
+  У фасета цены ползунок и числа обязаны жить вместе: потянул ручку —
+  число обновилось; вписал число — ручка уехала; форма отправляет одно
+  значение, а не два. Параметр <code>fields</code> связывает пару с полями
+  одним атрибутом — селекторов столько же, сколько ползунков, через запятую.
+  Логику порядка при этом не переписывает никто: она та же, что у ручек.
+</p>
+
+<p>
+  <strong>Форму отправляют поля.</strong> <code>name</code> стоит
+  у <code>&lt;input type="number"&gt;</code>, у ползунков его нет — иначе
+  в адрес уехали бы четыре параметра. Без скрипта остаются два рабочих
+  числовых поля; со скриптом ползунок ложится поверх. Правда — в полях:
+  страница вернулась с параметрами в них, и на монтаже ручки встают
+  по полям, а пустое поле ставит свою ручку на край. Само поле от монтажа
+  не заполняется — «фильтр не задан» остаётся пустым, пока ручку не тронут.
+</p>
+
+<p>
+  Ввод в поле двигает ручку сразу, на <code>input</code>, с зажимом
+  по <code>min</code>/<code>max</code>; порядок наводится
+  на <code>change</code> — «1» по пути к «1000» иначе толкнул бы вторую
+  ручку. Событие <code>griffin:change</code> приходит на обёртку и при вводе
+  в поле, с тем же <code>detail</code>.
+</p>
+
+<pre><code>&lt;div class="gr-range-pair" data-gr-range="fields: #price-min, #price-max"&gt;
+  &lt;input class="gr-range" type="range" min="0" max="20000" step="500" value="0" aria-label="Цена от"&gt;
+  &lt;input class="gr-range" type="range" min="0" max="20000" step="500" value="20000" aria-label="Цена до"&gt;
+&lt;/div&gt;
+&lt;div class="gr-flex gr-gap-sm"&gt;
+  &lt;input class="gr-input gr-input-sm gr-flex-1" id="price-min" type="number" name="price_min" min="0" max="20000" step="500" aria-label="Цена от"&gt;
+  &lt;input class="gr-input gr-input-sm gr-flex-1" id="price-max" type="number" name="price_max" min="0" max="20000" step="500" aria-label="Цена до"&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Пара над полями: потяните ручку или впишите число <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-fields-min">Цена, ₽</label>
+    <div class="gr-range-pair" data-gr-range="fields: #forms-demo-fields-min, #forms-demo-fields-max">
+      <input class="gr-range" type="range" min="0" max="20000" step="500" value="0" aria-label="Цена от">
+      <input class="gr-range" type="range" min="0" max="20000" step="500" value="20000" aria-label="Цена до">
+    </div>
+    <div class="gr-flex gr-gap-sm gr-mt-2">
+      <input class="gr-input gr-input-sm gr-flex-1" id="forms-demo-fields-min" type="number" min="0" max="20000" step="500" value="4000" placeholder="от" aria-label="Цена от">
+      <input class="gr-input gr-input-sm gr-flex-1" id="forms-demo-fields-max" type="number" min="0" max="20000" step="500" placeholder="до" aria-label="Цена до">
+    </div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Параметр <code>data-gr-range</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>fields</code></td><td>—</td><td>Селекторы числовых полей через запятую, по одному на ползунок: ручка пишет в поле, поле двигает ручку. Поле не найдено — виджет не поднимается и называет селектор в консоли</td></tr>
+</table>
 
 <h3>Счётчик количества в корзине</h3>
 
@@ -888,13 +1058,13 @@
 
 <div class="callout">
   <p>
-    Второй бандл слоя — восемь полей, которых у платформы нет. Разметка
+    Второй бандл слоя — девять полей, которых у платформы нет. Разметка
     та же семья <code>.gr-field</code>, у каждого поля есть база без
     скрипта, а <code>griffinjs.js</code> от них не растёт ни на байт:
     файл подключают только те, кому он нужен, после <code>griffinjs.js</code>
     или <code>griffinjs-core.js</code>. Набор «ядро + anchor + поля» —
-    <b><!--gr:size:griffinjs-fields-set-->12,2 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>.
-    Здесь — четыре поля, которые чаще всего стоят в форме рядом;
+    <b><!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>.
+    Здесь — поля, которые чаще всего стоят в форме рядом;
     остальные и подробности — на странице
     <a href="griffinjs-fields.html">«Поля форм»</a>.
   </p>
@@ -947,6 +1117,67 @@
     <label class="gr-label" for="forms-demo-date-field">Дата заезда</label>
     <input class="gr-input" id="forms-demo-date-field" type="date" name="from" value="2026-09-01" min="2026-01-01" max="2026-12-31" data-gr-datetime aria-describedby="forms-demo-date-field-hint">
     <span class="gr-hint" id="forms-demo-date-field-hint">В пределах 2026 года.</span>
+  </div>
+</div>
+
+<h3 id="griffinjs-fields-range">Диапазон «с — по»</h3>
+
+<p>
+  Пара нативных полей из раздела <a href="#diapazon-ot-do">«Диапазон
+  „от — до“»</a>, связанная атрибутом <code>to</code> на первом.
+  Значение «с» — <code>min</code> у «по», значение «по» —
+  <code>max</code> у «с»: проверка границ, сообщения и недоступные дни
+  в панели работают тем же путём, что у одиночного поля. Пустое поле
+  открывает панель на месяце соседа, дни между концами помечены
+  в обеих панелях. На тач-устройстве работает только связка границ —
+  системный календарь скрывает недоступное сам. Авторская граница
+  остаётся, если она уже; очистка возвращает её.
+</p>
+
+<pre><code>&lt;input class="gr-input" id="a" type="date" name="since" data-gr-datetime="to: #b"&gt;
+&lt;input class="gr-input" id="b" type="date" name="until" data-gr-datetime&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Заезд и выезд: второе поле не раньше первого <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-flex gr-gap-sm" style="max-width: 26rem">
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="forms-demo-range-from">Заезд</label>
+      <input class="gr-input" id="forms-demo-range-from" type="date" name="since" min="2026-01-01" data-gr-datetime="to: #forms-demo-range-to">
+    </div>
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="forms-demo-range-to">Выезд</label>
+      <input class="gr-input" id="forms-demo-range-to" type="date" name="until" max="2026-12-31" data-gr-datetime>
+    </div>
+  </div>
+</div>
+
+<h3>Сумма с разрядами</h3>
+
+<p>
+  Отдельное поле, а не маска: <code>type="number"</code> разрядов
+  не показывает, <code>inputmode</code> не форматирует, а маска знает
+  только фиксированные слоты. На экране — «1 250 000,50» по локали
+  документа, в скрытом спутнике с прежним именем — <code>1250000.50</code>;
+  разряды встают на ходу, каретка держится за той же цифрой, вставка
+  «1 250 000,50» и «1250000.50» читается одинаково. Валюта и единица —
+  в <a href="#gruppa-s-addonami">аддоне</a> рядом. База без скрипта —
+  обычное текстовое поле: сервер получит то, что набрано, и разбор
+  на сервере обязателен в любом случае.
+</p>
+
+<pre><code>&lt;div class="gr-input-group"&gt;
+  &lt;input class="gr-input" type="text" inputmode="decimal" name="amount" min="0" data-gr-number="decimals: 2"&gt;
+  &lt;span class="gr-input-addon"&gt;₽&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Разряды и дробь по локали, число — в форму <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-field" style="max-width: 26rem">
+    <label class="gr-label" for="forms-demo-number-field">Сумма</label>
+    <div class="gr-input-group">
+      <input class="gr-input" id="forms-demo-number-field" type="text" inputmode="decimal" name="amount" value="1250000.5" min="0" data-gr-number="decimals: 2">
+      <span class="gr-input-addon">₽</span>
+    </div>
   </div>
 </div>
 

@@ -21,6 +21,7 @@
   @include meta.load-css('counter');
   @include meta.load-css('phone');
   @include meta.load-css('datetime');
+  @include meta.load-css('number');
   @include meta.load-css('file');
   @include meta.load-css('rating');
   @include meta.load-css('otp');

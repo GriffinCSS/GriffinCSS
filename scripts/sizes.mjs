@@ -19,6 +19,7 @@ import { dirname, join, basename } from 'node:path';
 
 import { ENGINES, FIELDS, SHARED, WIDGETS } from './build-griffinjs.mjs';
 import { BUNDLE } from './build-bundle.mjs';
+import { STYLES as STYLE_NAMES, styleFile } from './build-styles.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -27,6 +28,9 @@ const RESET_CSS = 'packages/core/dist/griffincss-reset.css';
 const UI_CSS = 'packages/ui/dist/griffincss-ui.css';
 const UTILS_CSS = 'packages/utils/dist/griffincss-utils.css';
 const GRIFFINJS_CSS = 'packages/ui/dist/griffinjs.css';
+// Ось оформления: все три стиля одним файлом и по одному (Этап 44 —
+// потолки по замеру; до него ось только печаталась).
+const STYLES_CSS = 'packages/core/dist/griffincss-styles.css';
 
 const JS_CORE = 'packages/core/dist/griffincss.js';
 const JS_THEME = 'packages/core/dist/griffincss-theme.js';
@@ -71,6 +75,8 @@ export const ARTIFACTS = {
   ui: { gzip: [UI_CSS] },
   utils: { gzip: [UTILS_CSS] },
   'griffinjs-css': { gzip: [GRIFFINJS_CSS] },
+  styles: { gzip: [STYLES_CSS] },
+  ...Object.fromEntries(STYLE_NAMES.map((name) => [`style-${name}`, { gzip: [styleFile(name)] }])),
 
   // Стек CSS: файлы отдаются по отдельности, каждый со своим словарём,
   // поэтому и складываются веса, а не содержимое. Нужны README и разделу

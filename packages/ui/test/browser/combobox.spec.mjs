@@ -138,3 +138,35 @@ test('строка подсказки карточкой: картинка, ка
   await input.press('Enter');
   expect(await input.inputValue()).toBe('Asus Zenbook 14');
 });
+
+// Свободные теги (Этап 42f): Enter на тексте, которого нет в выдаче,
+// создаёт тег; Enter на активной позиции по-прежнему берёт позицию.
+test('free: Enter на своём слове создаёт тег, на активной позиции — берёт позицию', async ({ page }) => {
+  await page.goto('/docs/griffinjs-overlays.html', { waitUntil: 'networkidle' });
+
+  const root = page.locator('#ov-combobox-free');
+  const input = root.locator('input');
+  const labels = root.locator('.gr-combobox-tag span');
+  const values = () => root.locator('select').evaluate((el) => Array.from(el.selectedOptions).map((o) => o.value));
+
+  await expect(labels).toHaveText(['ноутбук']);
+
+  await input.click();
+  await page.keyboard.type('react');
+  await page.keyboard.press('Enter');
+  await expect(labels).toHaveText(['ноутбук', 'react']);
+  expect(await values()).toEqual(['ноутбук', 'react']);
+  expect(await input.inputValue()).toBe('');
+
+  // Подсказка активна — Enter берёт её, а не набранный префикс.
+  await page.keyboard.type('нау');
+  await expect(root).toHaveAttribute('data-gr-state', 'open');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(labels).toHaveText(['ноутбук', 'react', 'наушники']);
+
+  // Повтор своего слова дубликата не даёт.
+  await page.keyboard.type('react');
+  await page.keyboard.press('Enter');
+  await expect(labels).toHaveText(['ноутбук', 'react', 'наушники']);
+});

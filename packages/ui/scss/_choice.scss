@@ -200,3 +200,93 @@
   color: var(--gr-color-text-disabled);
   cursor: not-allowed;
 }
+
+// --- Образец цвета и плашка размера -----------------------------------------
+
+// Радио, которую видят как образец: кружок цвета товара или плашка
+// с размером (Этап 42e). Разметка — та же строка выбора: <label
+// class="gr-choice">, внутри <input class="gr-radio"> и образец следом.
+// Композиция из готового не сложилась ровно в одном месте: состояние
+// «выбран» на самом образце требует правила, которого нет ни у одной
+// утилиты, — а без него выбор показывала бы только радио рядом с кружком.
+//
+// Цвет образца — только через переменную на элементе
+// (style="--gr-swatch: …"): цвет товара — данные страницы, литеральных
+// цветов в библиотеке нет. Цвет — не подпись: у радио обязателен aria-label
+// или текст рядом.
+//
+// Радио прячется правилом с :has(): без него (Firefox < 121) правило
+// не применяется вовсе, и радио остаётся видимой рядом с образцом —
+// мягкая деградация по построению. Сама радио остаётся в потоке, 1px
+// и прозрачной — как в .gr-segmented: display: none снял бы клавиатуру.
+.gr-swatch,
+.gr-swatch-tag {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border: var(--gr-border-width) solid var(--gr-color-border-strong);
+  cursor: pointer;
+  transition:
+    box-shadow var(--gr-transition),
+    background-color var(--gr-transition),
+    color var(--gr-transition);
+}
+
+.gr-swatch {
+  --gr-swatch: var(--gr-color-surface-sunken);
+
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--gr-radius-pill);
+  background-color: var(--gr-swatch);
+}
+
+.gr-swatch-tag {
+  min-inline-size: 2.25rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.625rem;
+  border-radius: var(--gr-radius);
+  background-color: var(--gr-color-surface);
+  color: var(--gr-color-text);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.gr-choice:has(> .gr-swatch, > .gr-swatch-tag) {
+  position: relative;
+}
+
+.gr-choice:has(> .gr-swatch, > .gr-swatch-tag) > .gr-radio {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+// Выбранный кружок — кольцо акцента с просветом цвета подложки: и белый
+// образец, и образец цвета акцента читаются на нём одинаково.
+.gr-radio:checked + .gr-swatch {
+  box-shadow:
+    0 0 0 2px var(--gr-color-surface),
+    0 0 0 4px var(--gr-color-accent);
+}
+
+.gr-radio:checked + .gr-swatch-tag {
+  border-color: var(--gr-color-accent);
+  background-color: var(--gr-color-accent);
+  color: var(--gr-color-on-accent);
+}
+
+.gr-radio:focus-visible + .gr-swatch,
+.gr-radio:focus-visible + .gr-swatch-tag {
+  outline: var(--gr-focus-width) solid var(--gr-color-focus);
+  outline-offset: 2px;
+}
+
+.gr-radio:disabled + .gr-swatch,
+.gr-radio:disabled + .gr-swatch-tag {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

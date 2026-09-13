@@ -45,12 +45,12 @@
     подключается после <code>griffinjs.js</code> или после
     <code>griffinjs-core.js</code>, как любой модуль слоя. Цена входа —
     набор «ядро + позиция у якоря + поля»:
-    <b><!--gr:size:griffinjs-fields-set-->12,2 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
-    сами поля — <!--gr:size:griffinjs-fields-->9,6 КБ<!--/gr:size:griffinjs-fields-->,
+    <b><!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
+    сами поля — <!--gr:size:griffinjs-fields-->11,1 КБ<!--/gr:size:griffinjs-fields-->,
     стили — <!--gr:size:griffinjs-fields-css-->1,7 КБ<!--/gr:size:griffinjs-fields-css-->.
     Для сравнения: <code>flatpickr</code> ≈ 15 КБ, <code>imask</code> ≈ 12 КБ,
     <code>intl-tel-input</code> ≈ 40 КБ с данными — три библиотеки на три
-    пункта из восьми.
+    пункта из девяти.
   </p>
 </div>
 
@@ -76,8 +76,8 @@
 <p>
   До этого раздела скрипт слоя читал только <code>data-gr-*</code>
   и писал только состояния — <code>aria-*</code>, <code>data-gr-state</code>,
-  числа вроде <code>--gr-progress</code>. Маска, телефон, дата и одноразовый
-  код пишут <strong>значение контрола</strong>: иначе форматировать
+  числа вроде <code>--gr-progress</code>. Маска, телефон, дата, сумма
+  и одноразовый код пишут <strong>значение контрола</strong>: иначе форматировать
   набранное нельзя. Это расширение инварианта объявлено, а не протащено:
   у такого поля есть три обязанности. После каждой своей записи оно шлёт
   то самое событие, которое послала бы платформа, — <code>input</code>,
@@ -100,6 +100,8 @@
   <tr><td><a href="#maska">Маска</a></td><td>литералы подставляются, каретка встаёт за введённым знаком, подсказка и <code>inputmode</code> из формата</td><td><code>&lt;input pattern inputmode&gt;</code> — платформа проверяет сама</td></tr>
   <tr><td><a href="#telefon">Телефон</a></td><td>маска по коду страны, имя страны и флаг от платформы, полный номер с плюсом выбирает страну</td><td><code>type="tel"</code> и <code>&lt;select&gt;</code> кодов в <code>.gr-input-group</code></td></tr>
   <tr><td><a href="#data-i-vremya">Дата и время</a></td><td>на указателе мыши — маска по локали, календарь с годом и временем, ISO в спутнике, проверка границ; уход фокуса возвращает нативное поле; на тач-устройстве и у <code>type="time"</code> — ничего</td><td>нативный <code>&lt;input type="date"&gt;</code>, как сегодня</td></tr>
+  <tr><td><a href="#diapazon">Диапазон «с — по»</a></td><td>значение «с» — <code>min</code> у «по», значение «по» — <code>max</code> у «с»; пустое поле открывает панель на месяце соседа, отрезок между концами помечен</td><td>два нативных поля с авторскими <code>min</code>/<code>max</code></td></tr>
+  <tr><td><a href="#summa">Сумма</a></td><td>разряды и дробь по локали документа на экране, число в спутнике, каретка держится за цифрой, границы через спутник</td><td>обычное текстовое поле — сервер получает набранное</td></tr>
   <tr><td><a href="#fayl">Файл</a></td><td>список выбранного с размером, удаление по одному, накопление выбора</td><td><code>&lt;input type="file" multiple&gt;</code> — мультивыбор платформенный</td></tr>
   <tr><td><a href="#otsenka">Ввод оценки</a></td><td><code>--gr-rating</code> и слово в <code>aria-label</code> ряда знаков, наведение мышью, подписи поверх знаков</td><td>пять <code>&lt;input type="radio"&gt;</code> в <code>&lt;fieldset&gt;</code></td></tr>
   <tr><td><a href="#kod-iz-sms">Одноразовый код</a></td><td>фокус ходит по ячейкам, Backspace возвращает, вставка и автозаполнение раскладываются, <code>griffin:complete</code></td><td>ряд ячеек <code>maxlength="1"</code>, заполняются вручную</td></tr>
@@ -389,6 +391,7 @@ var TABLE = [
   <tr><td><code>invalid</code></td><td><code>Такой даты нет</code></td><td>Сообщение о невозможном значении — «31.02.2026», «15.09.2026, 25:70». Набранное целиком помечается сразу: <code>aria-invalid</code> на поле, неполный ввод не краснеет</td></tr>
   <tr><td><code>range</code></td><td><code>Дата вне допустимых границ</code></td><td>Сообщение о границах там, где у платформы своего нет</td></tr>
   <tr><td><code>label</code>, <code>prev</code>, <code>next</code>, <code>year</code>, <code>time</code></td><td><code>Календарь</code>, <code>Предыдущий месяц</code>, <code>Следующий месяц</code>, <code>Год</code>, <code>Время</code></td><td>Подписи панели, её стрелок, списка лет и поля времени</td></tr>
+  <tr><td><code>to</code></td><td>—</td><td>Селектор поля «по»: пара «с — по», см. <a href="#diapazon">ниже</a></td></tr>
 </table>
 
 <h3>Панель</h3>
@@ -444,11 +447,136 @@ var TABLE = [
   </div>
 </div>
 
+<h3 id="diapazon">Диапазон «с — по»</h3>
+
 <p>
-  Чего здесь не будет: диапазона «от — до» одним контролом, номеров недель,
-  часовых поясов и повторяющихся событий. Каждый пункт выглядит
+  Пара нативных полей, связанная атрибутом <code>to</code> на первом.
+  Одного контрола с двумя концами нет намеренно: база без скрипта —
+  два нативных поля, и панель одного поля пишет одно поле. Связка
+  строится на готовом: значение «с» становится <code>min</code> у «по»,
+  значение «по» — <code>max</code> у «с», через собственный API соседа, —
+  и проверка границ, сообщения и недоступные дни в панели работают
+  без новой логики; на тач-устройстве системный календарь сам скрывает
+  недоступное. Авторская граница остаётся, если она уже; очистка
+  и <code>destroy()</code> возвращают её. Порядок дат виджет не толкает:
+  «по» раньше «с» — ошибка ввода, и её показывает проверка границ,
+  а не молчаливая правка второго поля.
+</p>
+
+<pre><code>&lt;input class="gr-input" id="since" type="date" name="since" data-gr-datetime="to: #until"&gt;
+&lt;input class="gr-input" id="until" type="date" name="until" data-gr-datetime&gt;</code></pre>
+
+<p>
+  Сверх границ пара добавляет только панель: пустое поле открывается
+  на месяце соседа, оба конца — <code>aria-selected</code>, дни между
+  ними — <code>data-gr-in-range</code> (красит CSS панели), а в
+  <code>griffin:change</code> обоих полей приходит
+  <code>detail.range = {from, to}</code>.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Заезд и выезд: выезд не раньше заезда, отрезок в обеих панелях <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-flex gr-gap-sm" style="max-width: 26rem">
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="fl-range-from">Заезд</label>
+      <input class="gr-input" id="fl-range-from" type="date" name="since" min="2026-01-01" data-gr-datetime="to: #fl-range-to">
+    </div>
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="fl-range-to">Выезд</label>
+      <input class="gr-input" id="fl-range-to" type="date" name="until" max="2026-12-31" data-gr-datetime>
+    </div>
+  </div>
+</div>
+
+<p>
+  Чего здесь не будет: диапазона одним контролом с двумя концами, номеров
+  недель, часовых поясов и повторяющихся событий. Каждый пункт выглядит
   на полчаса, и каждый заводит то, чего у поля нет: модель состояния.
   Предел записан в плане и проверяется обзором.
+</p>
+
+<h2 id="summa">Сумма</h2>
+
+<p>
+  Отдельное поле, а не маска: <code>type="number"</code> разрядов
+  не показывает, <code>inputmode</code> не форматирует, а маска знает
+  только фиксированные слоты — переменной длины и разрядов у неё нет.
+  На экране — текст с разделителями по локали документа
+  («1 250 000,50» при <code>lang="ru"</code>, «1,250,000.50» при
+  <code>lang="en"</code>; без <code>lang</code> — язык браузера), число
+  в точечной записи (<code>1250000.50</code>) — в скрытом спутнике
+  <code>type="number"</code> с прежним именем: тот же приём, что у даты.
+  Разряды встают на ходу, каретка держится за той же цифрой, Backspace
+  и Delete перешагивают разделители. Валюта и единица — не здесь:
+  <code>.gr-input-addon</code> рядом.
+</p>
+
+<pre><code>&lt;div class="gr-input-group"&gt;
+  &lt;input class="gr-input" type="text" inputmode="decimal" name="amount"
+         min="0" max="10000000" data-gr-number="decimals: 2"&gt;
+  &lt;span class="gr-input-addon"&gt;₽&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<p>
+  Разбор принимает любую запись — набранную и вставленную из буфера.
+  Разделитель дроби — последний из «,» и «.», если это знак дроби локали
+  или чужой знак не с тремя цифрами за ним: «1 250 000,50» и «1250000.50»
+  читаются одинаково, «1.250.000» в <code>ru</code> — разряды, «1,250,000»
+  в <code>en</code> — тоже. Всё, кроме цифр и минуса в начале,
+  отбрасывается; минус принимается, только если <code>min</code>
+  не задан или отрицателен. Лишние цифры дроби отбрасываются,
+  не округляются: сумма — то, что набрано. Дробь дополняется нулями
+  до <code>decimals</code> по уходу фокуса; спутник несёт число как есть.
+</p>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Плата названа.</strong> База без скрипта — обычное текстовое
+    поле: без бандла полей сервер получит то, что набрано, с пробелами
+    и запятой. Разбор на сервере обязателен в любом случае — и со скриптом
+    тоже: значение спутника приходит с клиента, как всякое другое.
+    Границы <code>min</code>/<code>max</code> переезжают в спутник, и там,
+    где платформа умеет, сообщение о выходе за них — её, в языке браузера;
+    иначе — из параметра <code>range</code>. Красным
+    (<code>aria-invalid</code>) поле помечается по уходу фокуса и светлеет,
+    как только значение вернулось в границы. Пустое поле —
+    <code>required</code> платформы, не виджета.
+  </p>
+</div>
+
+<table>
+  <tr><th>Параметр <code>data-gr-number</code></th><th>По умолчанию</th><th>Что делает</th></tr>
+  <tr><td><code>decimals</code></td><td><code>0</code></td><td>Знаков дроби; при нуле дробь отбрасывается, набранная точка отвергается, как буква</td></tr>
+  <tr><td><code>range</code></td><td><code>Значение вне допустимых границ</code></td><td>Сообщение о границах там, где у платформы своего нет</td></tr>
+  <tr><td><code>min</code>, <code>max</code>, <code>step</code></td><td>с поля</td><td>Не параметры, а атрибуты поля: уходят в спутник, проверяет платформа; без <code>step</code> — <code>any</code></td></tr>
+</table>
+
+<div class="demo-block">
+  <div class="demo-block-title">Сумма с дробью и ставка без неё; число — в форму <span class="badge badge-accent">нужен griffinjs-fields.js</span></div>
+  <div class="gr-flex gr-flex-col gr-gap" style="max-width: 26rem">
+    <div class="gr-field">
+      <label class="gr-label" for="fl-number">Сумма</label>
+      <div class="gr-input-group">
+        <input class="gr-input" id="fl-number" type="text" inputmode="decimal" name="amount" value="1250000.5" min="0" max="10000000" data-gr-number="decimals: 2">
+        <span class="gr-input-addon">₽</span>
+      </div>
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="fl-number-rate">Ставка</label>
+      <div class="gr-input-group">
+        <input class="gr-input" id="fl-number-rate" type="text" inputmode="decimal" name="rate" min="0" max="100" data-gr-number>
+        <span class="gr-input-addon">%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p>
+  API экземпляра: <code>value()</code> — число как в спутнике,
+  <code>set(value)</code> — записать число (шлёт <code>input</code>),
+  <code>destroy()</code> — вернуть имя и число в поле. Событие
+  <code>griffin:change</code> с <code>detail.value</code> — на каждое
+  новое число; о значении из разметки не сообщается.
 </p>
 
 <h2 id="fayl">Файл</h2>
@@ -706,8 +834,8 @@ var TABLE = [
 
 <!-- gr:griffinjs-fields-deps -->
 <p>
-  Все поля одним файлом — <b>9,6 КБ gzip</b> без ядра;
-  набор «ядро + anchor + поля» — <b>12,2 КБ</b>.
+  Все поля одним файлом — <b>11,1 КБ gzip</b> без ядра;
+  набор «ядро + anchor + поля» — <b>13,7 КБ</b>.
   По одному поля берутся так же, как виджеты: ядро первым, затем объявленное
   и само поле. Таблица собрана из объявлений при сборке.
 </p>
@@ -716,7 +844,8 @@ var TABLE = [
   <tr><th>Поле</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
   <tr><td><code>data-gr-mask</code></td><td><code>griffinjs-mask.js</code></td><td>3,9 КБ</td></tr>
   <tr><td><code>data-gr-phone</code></td><td><code>griffinjs-mask.js</code> + <code>griffinjs-phone.js</code></td><td>5,3 КБ</td></tr>
-  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,1 КБ</td></tr>
+  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,5 КБ</td></tr>
+  <tr><td><code>data-gr-number</code></td><td><code>griffinjs-number.js</code></td><td>4,2 КБ</td></tr>
   <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,8 КБ</td></tr>
   <tr><td><code>data-gr-rating</code></td><td><code>griffinjs-rating.js</code></td><td>3,1 КБ</td></tr>
   <tr><td><code>data-gr-otp</code></td><td><code>griffinjs-otp.js</code></td><td>3,4 КБ</td></tr>

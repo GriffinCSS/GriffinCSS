@@ -47,7 +47,7 @@ export const SITES = [
       'griffinjs-megamenu:n', 'griffinjs-dropdown:n', 'griffinjs-tooltip:n',
       'griffinjs-dialog:n', 'griffinjs-combobox:n', 'griffinjs-range:n', 'griffinjs-sortable:n',
       'griffinjs', 'griffinjs-core:n', 'griffinjs-slider-set:n',
-      'griffinjs-mask:n', 'griffinjs-phone:n', 'griffinjs-datetime:n', 'griffinjs-file:n',
+      'griffinjs-mask:n', 'griffinjs-phone:n', 'griffinjs-datetime:n', 'griffinjs-file:n', 'griffinjs-number:n',
       'griffinjs-rating:n', 'griffinjs-otp:n', 'griffinjs-counter:n', 'griffinjs-validate:n',
       'griffinjs-fields', 'griffinjs-fields-set:n', 'griffinjs-countries:n',
     ],
@@ -64,22 +64,42 @@ export const SITES = [
 
 const fix = process.argv.includes('--fix');
 
+// Допуск сверки, байты. Один и тот же dist жмётся разными zlib по-разному:
+// официальный Node 22/24 (zlib 1.3.1, как на CI) и Homebrew-Node на macOS
+// (системный zlib 1.2.12) разошлись на полях на 37 Б (Этап 41), и одного
+// байта на границе округления хватает, чтобы цифра в тексте сменилась.
+// Эталон в доках — с официального Node; сверка без ключа на другом zlib
+// проходит, если записанное число могло получиться из замера в пределах
+// допуска. Допуск меньше шага записи (0,1 КБ = 102 Б): настоящий рост
+// он не прячет, а потолки check-dist допуска не получают вовсе.
+// --fix допуска не знает и пишет точный замер (Этап 42b).
+export const TOLERANCE = 50;
+
 // Ключ маркера — имя артефакта; суффикс :n просит число без единиц
 // (в таблице, где единица уже стоит в заголовке столбца).
-const value = (key) => (key.endsWith(':n') ? num(bytes(key.slice(0, -2))) : kb(bytes(key)));
+const format = (key, weight) => (key.endsWith(':n') ? num(weight) : kb(weight));
+const artifact = (key) => (key.endsWith(':n') ? key.slice(0, -2) : key);
+const parse = (text) => parseFloat(text.replace(',', '.'));
+
+// Записанное значение принимается, если его дал бы замер в пределах
+// допуска: kb() монотонна, поэтому достаточно двух краёв.
+const within = (key, actual, weight) => parse(actual) >= parse(format(key, weight - TOLERANCE))
+  && parse(actual) <= parse(format(key, weight + TOLERANCE));
 
 /**
  * Сверяет и переписывает значения между маркерами.
  * Возвращает текст с подставленным замером и список расхождений.
+ * measure — замер артефакта в байтах; подменяется в тестах.
  */
-export function sync(text, keys) {
+export function sync(text, keys, measure = bytes) {
   const problems = [];
   let out = text;
 
   for (const key of keys) {
     const open = `<!--gr:size:${key}-->`;
     const close = `<!--/gr:size:${key}-->`;
-    const expected = value(key);
+    const weight = measure(artifact(key));
+    const expected = format(key, weight);
 
     let done = '';
     let rest = out;
@@ -99,7 +119,7 @@ export function sync(text, keys) {
 
       const actual = rest.slice(start + open.length, end);
 
-      if (actual !== expected) problems.push(`${key}: в тексте «${actual}», замер даёт «${expected}»`);
+      if (!within(key, actual, weight)) problems.push(`${key}: в тексте «${actual}», замер даёт «${expected}»`);
 
       done += rest.slice(0, start + open.length) + expected;
       rest = rest.slice(end);

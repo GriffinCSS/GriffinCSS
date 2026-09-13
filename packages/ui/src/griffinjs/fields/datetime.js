@@ -46,6 +46,22 @@
  * invalid, range — сообщения проверки; label, prev, next, year, time —
  * подписи панели.
  *
+ * Диапазон «с — по» (Этап 43a) — пара нативных полей, связанная атрибутом:
+ *   <input type="date" name="from" data-gr-datetime="to: #until">
+ *   <input type="date" name="until" id="until" data-gr-datetime>
+ * Одного контрола с двумя концами нет намеренно: база без скрипта — два
+ * нативных поля, и панель одного поля пишет одно поле. Связка строится
+ * на готовом: значение «с» становится min у «по», значение «по» — max
+ * у «с», через собственный API соседа (limit), — и проверка границ,
+ * сообщения и aria-disabled в панели работают без новой логики; на тач-
+ * устройстве системный календарь сам скроет недоступное. Авторская
+ * граница остаётся, если она уже; очистка и destroy() возвращают её.
+ * Порядок дат виджет не толкает: «по» раньше «с» — ошибка ввода, и её
+ * показывает проверка границ, а не молчаливая правка второго поля.
+ * Сверх границ — только панель: пустое поле открывается на месяце
+ * соседа, оба конца — aria-selected, дни между ними — data-gr-in-range
+ * (красит CSS панели), и range: {from, to} в detail griffin:change обоих.
+ *
  * Виджет пишет value контрола — расширение инварианта 7, объявленное
  * в docs/griffinjs-architecture.html («Инварианты»).
  */
@@ -209,6 +225,11 @@
     return node;
   }
 
+  function attr(node, name, value) {
+    if (value) node.setAttribute(name, value);
+    else node.removeAttribute(name);
+  }
+
   G.defineWidget('datetime', { needs: ['mask', 'anchor'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
     var native = el.getAttribute('type');
@@ -241,9 +262,50 @@
     var view = null;       // первое число показанного месяца
     var active = null;     // активный день панели, 'YYYY-MM-DD'
     var last = null;       // последнее ISO, о котором сказано событием
+    var peer = null;       // второе поле пары «с — по»
+    var role = '';         // 'from' | 'to' — кто это поле в паре
+    var own = { min: el.getAttribute('min'), max: el.getAttribute('max') };   // авторские границы
 
     function iso() {
       return companion ? companion.value : el.value;
+    }
+
+    // --- Пара «с — по» ------------------------------------------------------------
+
+    function range() {
+      var mine = iso();
+      var theirs = peer.value();
+
+      return role === 'from' ? { from: mine, to: theirs } : { from: theirs, to: mine };
+    }
+
+    // Граница на поле и спутнике; проверка и панель узнают о ней тем же
+    // путём, что о всякой другой.
+    function apply(name, value) {
+      attr(el, name, value);
+
+      if (companion) { attr(companion, name, value); check(); }
+      if (opened && body) render(view);
+    }
+
+    // Граница от соседа: авторская остаётся, если она уже; пустое
+    // значение возвращает авторскую.
+    function limit(name, value) {
+      var mine = own[name];
+
+      apply(name, !value ? mine : mine && (name === 'min' ? mine > value : mine < value) ? mine : value);
+    }
+
+    function push() {
+      if (peer) peer.limit(role === 'from' ? 'min' : 'max', iso());
+    }
+
+    function unpair() {
+      var name = role === 'from' ? 'max' : 'min';
+
+      peer = null;
+      role = '';
+      apply(name, own[name]);
     }
 
     // --- Проверка ---------------------------------------------------------------
@@ -275,7 +337,8 @@
 
       if (value !== last) {
         last = value;
-        G.emit('griffin:change', el, { value: value });
+        G.emit('griffin:change', el, peer ? { value: value, range: range() } : { value: value });
+        push();
       }
     }
 
@@ -363,6 +426,11 @@
 
     function onClick() {
       if (companion) open();
+    }
+
+    // Нативное поле: значение пишет платформа, и сосед по паре узнаёт о нём здесь.
+    function onNativeInput() {
+      if (!companion) push();
     }
 
     function onInput() {
@@ -522,7 +590,10 @@
       var m = base.getMonth();
       var offset = (new Date(y, m, 1).getDay() - fd + 7) % 7;
       var start = new Date(y, m, 1 - offset);
-      var selected = dateOf(iso());
+      // Концы отрезка: у одиночного поля оба — его значение.
+      var ends = peer ? range() : { from: iso(), to: iso() };
+      var lo = dateOf(ends.from);
+      var hi = dateOf(ends.to);
       var today = isoDate(new Date());
       var min = dateOf(el.getAttribute('min'));
       var max = dateOf(el.getAttribute('max'));
@@ -543,8 +614,9 @@
           var cell = element('div', 'gr-datetime-day', { role: 'gridcell', id: panel.id + '-' + key, 'data-gr-date': key });
 
           cell.textContent = String(date.getDate());
-          cell.setAttribute('aria-selected', key === selected ? 'true' : 'false');
+          cell.setAttribute('aria-selected', key === lo || key === hi ? 'true' : 'false');
 
+          if (lo && hi && lo < key && key < hi) cell.setAttribute('data-gr-in-range', '');
           if (key === today) cell.setAttribute('aria-current', 'date');
           if ((min && key < min) || (max && key > max)) cell.setAttribute('aria-disabled', 'true');
           if (key === active) { cell.setAttribute('data-gr-state', 'active'); descendant = cell.id; }
@@ -566,7 +638,8 @@
       opened = true;
       active = null;
 
-      var d = dateOf(iso());
+      // Пустое поле пары открывается на месяце соседа.
+      var d = dateOf(iso()) || (peer ? dateOf(peer.value()) : '');
 
       if (body) render(d ? fromIso(d) : new Date());
       if (clock) clock.value = timeOf(iso());
@@ -682,20 +755,32 @@
 
     events.add(el, 'pointerdown', onPointerDown);
     events.add(el, 'click', onClick);
+    events.add(el, 'input', onNativeInput);
 
-    return {
+    var api = {
       el: el,
       open: open,
       close: close,
       value: iso,
       set: function (value) {
         if (companion) write(value);
-        else el.value = value;
+        else { el.value = value; push(); }
       },
+      // Пара: limit — граница от соседа (единственный путь, которым виджет
+      // пишет min/max чужого поля), pair — «other — моё „с“», unpair — развод.
+      limit: limit,
+      pair: function (other) {
+        peer = other;
+        role = 'to';
+        push();
+      },
+      unpair: unpair,
       get panel() { return panel; },
       destroy: function () {
         restore();
         events.removeAll();
+
+        if (peer) { var other = peer; unpair(); other.unpair(); }
 
         if (panel) {
           if (G.anchor) G.anchor.clear(panel);
@@ -704,6 +789,18 @@
         }
       }
     };
+
+    // Сосед по паре: уже поднятый — как есть, иначе поднимается здесь;
+    // сканер на нём потом найдёт живой экземпляр.
+    if (o.to && mode !== 'time') {
+      var target = document.querySelector(o.to);
+      var other = target && G.mount(target, 'datetime');
+
+      if (other) { peer = other; role = 'from'; other.pair(api); push(); }
+      else G.warn('datetime: поле «по» не найдено — ' + o.to);
+    }
+
+    return api;
   });
 
   G.datetime = { layout: layout, parse: parse, format: format };

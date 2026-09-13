@@ -22,6 +22,20 @@
  * Второе дело скрипта в паре — порядок значений: тот, кого потянули
  * за чужую границу, толкает вторую ручку перед собой. Пересечься им
  * нельзя — отрезок между ручками вывернулся бы наизнанку.
+ *
+ * Третье — связка с числовыми полями (Этап 42a):
+ *
+ *   <div class="gr-range-pair" data-gr-range="fields: #price-min, #price-max">
+ *
+ * Селекторов столько же, сколько ползунков. Движение ручки пишет число
+ * в своё поле (после наведения порядка); ввод в поле двигает ручку
+ * с зажимом по min/max, а порядок наводится только на change — «1»
+ * по пути к «1000» иначе толкнул бы вторую ручку. Форму отправляют поля:
+ * name — у них, у ползунков его нет, иначе в GET уехали бы четыре
+ * параметра. Правда — в полях: страница вернулась с ними, а атрибуты
+ * value ползунков остались начальными, поэтому на монтаже ручки встают
+ * по полям; пустое поле — ручка на своём краю. Само поле от монтажа
+ * не заполняется: «фильтр не задан» остаётся пустым.
  */
 (function (G) {
   'use strict';
@@ -50,18 +64,57 @@
     return num(current, num(input.getAttribute('min'), 0));
   }
 
-  G.defineWidget('range', function (el) {
+  function edge(input, name, fallback) {
+    return num(input.getAttribute(name), fallback);
+  }
+
+  G.defineWidget('range', function (el, opts) {
     var single = el.tagName === 'INPUT';
     var inputs = single ? [el] : [].slice.call(el.querySelectorAll('input[type="range"]'));
     var listeners = G.listeners();
+    var fields = [];
 
     if (!inputs.length) throw new Error('внутри нет ни одного <input type="range">');
 
     function doneOf(input) {
-      var min = num(input.getAttribute('min'), 0);
-      var span = num(input.getAttribute('max'), 100) - min;
+      var min = edge(input, 'min', 0);
+      var span = edge(input, 'max', 100) - min;
 
       return round(span > 0 ? (valueOf(input) - min) / span : 0);
+    }
+
+    // Число из поля — в ползунок: пустое поле ставит ручку на свой край
+    // (нижняя граница не задана — от min, верхняя — до max), число зажимается.
+    function pull(i) {
+      var input = inputs[i];
+      var min = edge(input, 'min', 0);
+      var max = edge(input, 'max', 100);
+      var value = fields[i].value;
+
+      input.value = value === '' ? (i ? max : min) : Math.max(min, Math.min(max, num(value, min)));
+    }
+
+    // Значения ручек — в поля, кроме того, откуда пришёл ввод: оно уже
+    // содержит то, что человек написал, и переписывать его под рукой нельзя.
+    function push(except) {
+      for (var i = 0; i < fields.length; i++) if (fields[i] !== except) fields[i].value = valueOf(inputs[i]);
+    }
+
+    function typed(event) {
+      var field = event.target;
+      var i = fields.indexOf(field);
+
+      pull(i);
+
+      // Пока число не дописано, ручки могут стоять наоборот: отрезок между
+      // ними на это время вырождается в точку, и это лучше толчка второй ручки.
+      if (event.type === 'change') {
+        order(inputs[i]);
+        push(field);
+      }
+
+      paint();
+      emit();
     }
 
     // Порядок значений в паре. Толкает именно вторую ручку, а не возвращает
@@ -79,20 +132,26 @@
       else to.value = from.value;
     }
 
-    function update(event) {
-      order(event && event.target);
-
+    function paint() {
       if (inputs.length > 1) {
         el.style.setProperty(FROM, doneOf(inputs[0]));
         el.style.setProperty(TO, doneOf(inputs[1]));
       } else {
         inputs[0].style.setProperty(PROP, doneOf(inputs[0]));
       }
+    }
+
+    function update(event) {
+      order(event && event.target);
+      paint();
 
       // Событие — после наведения порядка, и только на живое движение ручки.
       // Подпись рядом с парой иначе показала бы значения ДО толчка: свой
       // обработчик на ползунке отработает раньше нашего, стоящего на обёртке.
-      if (event) emit();
+      if (event) {
+        push();
+        emit();
+      }
     }
 
     function emit() {
@@ -106,6 +165,21 @@
     // Один слушатель на обёртку: события ползунков всплывают до неё,
     // и второй ручке отдельная подписка не нужна.
     listeners.add(el, 'input', update);
+
+    if (opts && opts.fields) {
+      var selectors = String(opts.fields).split(',');
+
+      for (var f = 0; f < inputs.length; f++) {
+        var field = document.querySelector(selectors[f] || '#');
+
+        if (!field) throw new Error('поле «' + selectors[f] + '» не найдено');
+
+        fields.push(field);
+        pull(f);
+        listeners.add(field, 'input', typed);
+        listeners.add(field, 'change', typed);
+      }
+    }
 
     update();
 

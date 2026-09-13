@@ -358,3 +358,141 @@ test('поле не того типа виджет не поднимает', () 
 
   G.destroy();
 });
+
+// --- Диапазон «с — по» (Этап 43a) ------------------------------------------------
+// Пара нативных полей, связанная атрибутом to: граница одного — значение
+// другого через уже существующий путь min/max → спутник → check(); панель
+// пустого поля открывается на месяце соседа; дни между концами — data-gr-in-range.
+
+function pair(doc) {
+  const { input: from } = field(doc, { id: 'from', name: 'from', max: '2026-12-31', 'data-gr-datetime': 'to: #until' });
+  const { input: to } = field(doc, { id: 'until', name: 'until', min: '2026-01-01' });
+
+  return { from, to };
+}
+
+test('пара: значение «с» — min у «по», значение «по» — max у «с»; авторская граница уже — остаётся', async () => {
+  const { G, doc } = setup(PARTS);
+  const { from, to } = pair(doc);
+  const seen = [];
+
+  from.addEventListener('griffin:change', (e) => seen.push(['from', e.detail]));
+  to.addEventListener('griffin:change', (e) => seen.push(['to', e.detail]));
+  G.start();
+
+  assert.ok(G.instance(from, 'datetime') && G.instance(to, 'datetime'), 'пара не поднялась');
+  assert.equal(to.getAttribute('min'), '2026-01-01', 'пустое «с» тронуло авторскую границу');
+  assert.equal(from.getAttribute('max'), '2026-12-31');
+
+  await pointer(from, 'mouse');
+  type(from, '10092026');
+  assert.equal(to.getAttribute('min'), '2026-09-10');
+  assert.deepEqual(seen, [['from', { value: '2026-09-10', range: { from: '2026-09-10', to: '' } }]]);
+
+  // Спутник «по» несёт ту же границу — платформа проверяет её сама.
+  await pointer(to, 'mouse');
+  assert.equal(to.nextSibling.getAttribute('min'), '2026-09-10');
+
+  type(to, '20092026');
+  assert.equal(from.getAttribute('max'), '2026-09-20');
+  assert.equal(from.nextSibling.getAttribute('max'), '2026-09-20');
+  assert.deepEqual(seen[1], ['to', { value: '2026-09-20', range: { from: '2026-09-10', to: '2026-09-20' } }]);
+  assert.equal(to.checkValidity(), true);
+
+  // «по» раньше «с» — ошибка ввода у «по», а не молчаливая правка «с».
+  type(to, '05092026');
+  assert.equal(to.checkValidity(), false);
+  assert.equal(to.validationMessage, 'Дата вне допустимых границ');
+  assert.equal(from.nextSibling.value, '2026-09-10', 'виджет переставил «с»');
+
+  // Авторская граница уже, чем значение соседа, — остаётся авторская.
+  type(from, '01062025');
+  assert.equal(to.getAttribute('min'), '2026-01-01');
+  assert.equal(to.nextSibling.getAttribute('min'), '2026-01-01');
+
+  // Очистка снимает границу — обратно к авторской.
+  type(to, '');
+  assert.equal(from.getAttribute('max'), '2026-12-31');
+  assert.equal(from.nextSibling.getAttribute('max'), '2026-12-31');
+
+  type(from, '10092026');
+  type(to, '20092026');
+  assert.equal(to.getAttribute('min'), '2026-09-10');
+
+  // destroy снимает границы, поставленные виджетом, и не трогает авторские.
+  G.destroy();
+
+  assert.equal(from.getAttribute('max'), '2026-12-31');
+  assert.equal(to.getAttribute('min'), '2026-01-01');
+  assert.equal(from.value, '2026-09-10');
+  assert.equal(to.value, '2026-09-20');
+});
+
+test('пара на нативном поле: ввод платформы связывает границы, разметка не тронута', () => {
+  const { G, doc } = setup(PARTS);
+  const { from, to } = pair(doc);
+
+  G.start();
+
+  // Тач-устройство: тип нативный, спутника нет, но min у «по» стоит.
+  from.value = '2026-09-10';
+  from.dispatchEvent(event('input', from));
+  assert.equal(from.getAttribute('type'), 'date');
+  assert.equal(from.nextSibling, null, 'спутник заведён без указателя мыши');
+  assert.equal(to.getAttribute('min'), '2026-09-10');
+
+  // set() из API — тот же путь.
+  G.instance(to, 'datetime').set('2026-09-20');
+  assert.equal(from.getAttribute('max'), '2026-09-20');
+
+  G.destroy();
+  assert.equal(to.getAttribute('min'), '2026-01-01');
+});
+
+test('пара в панели: пустое «по» открывается на месяце «с», отрезок между концами помечен', async () => {
+  const { G, doc } = setup(PARTS);
+  const { from, to } = pair(doc);
+
+  G.start();
+  await pointer(from, 'mouse');
+  type(from, '10092026');
+  await pointer(to, 'mouse');
+
+  const b = G.instance(to, 'datetime');
+
+  b.open();
+  assert.match(b.panel.querySelector('[aria-live]').textContent, /сентябрь/i);
+  assert.equal(b.panel.querySelector('.gr-datetime-year').value, '2026');
+
+  // Единственный конец — «с» — помечен выбранным и в панели «по».
+  let ends = b.panel.querySelectorAll('[aria-selected="true"]');
+
+  assert.equal(ends.length, 1);
+  assert.equal(ends[0].getAttribute('data-gr-date'), '2026-09-10');
+  assert.equal(b.panel.querySelectorAll('[data-gr-in-range]').length, 0);
+
+  // Дни до «с» недоступны — граница дошла до панели тем же путём, что и всегда.
+  assert.equal(b.panel.querySelector('[data-gr-date="2026-09-09"]').getAttribute('aria-disabled'), 'true');
+  assert.equal(b.panel.querySelector('[data-gr-date="2026-09-11"]').getAttribute('aria-disabled'), null);
+
+  b.panel.querySelector('[data-gr-date="2026-09-20"]').dispatchEvent(event('click', b.panel.querySelector('[data-gr-date="2026-09-20"]')));
+  assert.equal(to.nextSibling.value, '2026-09-20');
+
+  // В панели «с» — оба конца и отрезок между ними.
+  const a = G.instance(from, 'datetime');
+
+  a.open();
+  ends = a.panel.querySelectorAll('[aria-selected="true"]').map((c) => c.getAttribute('data-gr-date'));
+  assert.deepEqual(ends, ['2026-09-10', '2026-09-20']);
+
+  const between = a.panel.querySelectorAll('[data-gr-in-range]').map((c) => c.getAttribute('data-gr-date'));
+
+  assert.deepEqual(between, ['2026-09-11', '2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19']);
+  assert.equal(a.panel.querySelector('[data-gr-date="2026-09-21"]').getAttribute('aria-disabled'), 'true', 'max от «по» не дошёл до панели «с»');
+
+  // Смена «по» при открытой панели «с» перерисовывает отрезок.
+  type(to, '15092026');
+  assert.equal(a.panel.querySelectorAll('[data-gr-in-range]').length, 4);
+
+  G.destroy();
+});

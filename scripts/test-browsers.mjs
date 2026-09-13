@@ -125,7 +125,9 @@ export function report(results, meta) {
 // Чтение сводки — обратная сторона той же формы, и живёт рядом с ней:
 // разъехаться они могут только вместе. Гейт выпуска зовёт эту функцию.
 export function parseReport(text) {
-  const version = (String(text).match(/^Griffincss\s+(\S+)/m) || [])[1] || null;
+  const head = String(text).match(/^Griffincss\s+(\S+)(?:\s+·\s+(\d{4}-\d{2}-\d{2}))?/m) || [];
+  const version = head[1] || null;
+  const date = head[2] || null;
   const engines = [];
   const rows = /^\|\s*([a-z][a-z0-9-]*)\s*\|([^|]*)\|\s*(зелено|КРАСНО)\s*\|/gm;
   let found;
@@ -134,7 +136,7 @@ export function parseReport(text) {
     engines.push({ browser: found[1], version: found[2].trim(), ok: found[3] === 'зелено' });
   }
 
-  return { version, engines };
+  return { version, date, engines };
 }
 
 // Версия движка — то, чего в выводе прогона нет вовсе. Цена — один запуск

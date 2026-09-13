@@ -65,3 +65,37 @@ test('вариант :n даёт число без единиц', () => {
 
   assert.equal(result.text, `<!--gr:size:core:n-->${sizes.num(sizes.bytes('core'))}<!--/gr:size:core:n-->`);
 });
+
+// Допуск сверки (Этап 42b): один dist жмётся разными zlib по-разному —
+// официальный Node (zlib 1.3.1, как на CI) и Homebrew-Node (системный
+// zlib 1.2.12) разошлись на 37 Б. Сверка без ключа не должна ронять
+// участника на другом zlib, если записанное число могло получиться
+// из замера в пределах допуска; --fix пишет точный замер всегда.
+
+test('сверка терпит расхождение в пределах допуска, --fix пишет точно', () => {
+  // 10 220 Б → «10,0 КБ»; граница округления к «10,1» — 10 291 Б.
+  const measured = 10220;
+  const near = () => measured;
+  const wrap = (text) => `<!--gr:size:ui-->${text}<!--/gr:size:ui-->`;
+
+  assert.ok(sync.TOLERANCE >= 37 && sync.TOLERANCE < 102, 'допуск не покрывает zlib или прячет шаг записи 0,1 КБ');
+
+  // 30 Б в сторону — та же цифра, зелено.
+  assert.deepEqual(sync.sync(wrap(sizes.kb(measured + 30)), ['ui'], near).problems, []);
+  // 80 Б в сторону — цифра «10,1 КБ», которую замер в допуске дать не мог.
+  const far = sync.sync(wrap(sizes.kb(measured + 80)), ['ui'], near);
+
+  assert.equal(far.problems.length, 1);
+  assert.match(far.problems[0], /10,1 КБ/);
+  // Текст на выходе — точный замер и в зелёном случае, и в красном.
+  assert.equal(far.text, wrap('10,0 КБ'));
+  assert.equal(sync.sync(wrap(sizes.kb(measured + 30)), ['ui'], near).text, wrap('10,0 КБ'));
+});
+
+test('допуск действует и для варианта :n', () => {
+  const near = () => 10220;
+  const ok = sync.sync('<!--gr:size:ui:n-->10,0<!--/gr:size:ui:n-->', ['ui:n'], () => 10300);
+
+  assert.deepEqual(ok.problems, [], 'замер 10 300 даёт «10,1», но 10 250 в допуске дал бы «10,0»');
+  assert.equal(sync.sync('<!--gr:size:ui:n-->10,2<!--/gr:size:ui:n-->', ['ui:n'], near).problems.length, 1);
+});

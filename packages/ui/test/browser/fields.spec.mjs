@@ -12,7 +12,7 @@ const VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.met
 // Виджеты полного griffinjs.js — как на основном полигоне; поля идут
 // после них, потому что второй файл регистрируется вторым.
 const LAYER = ['track', 'slider', 'gallery', 'parallax', 'megamenu', 'dropdown', 'tooltip', 'dialog', 'combobox', 'range', 'sortable'];
-const FIELDS = ['mask', 'phone', 'datetime', 'file', 'rating', 'otp', 'counter', 'validate'];
+const FIELDS = ['mask', 'phone', 'datetime', 'number', 'file', 'rating', 'otp', 'counter', 'validate'];
 
 function watch(page) {
   const errors = [];
@@ -474,6 +474,172 @@ test('время остаётся нативным полем, дата-врем
   await panel.locator('[data-gr-date="2026-09-20"]').click();
   await expect(both).toHaveAttribute('type', 'datetime-local');
   expect(await both.inputValue()).toBe('2026-09-20T18:45');
+});
+
+test('диапазон «с — по»: тач связывает только границы, пустое «по» открывается на месяце «с», отрезок подсвечен', async ({ page }) => {
+  await page.goto(LAB);
+
+  const from = page.locator('#gr-lab-range-from');
+  const to = page.locator('#gr-lab-range-to');
+
+  // Тач-устройство: разметка не тронута, но значение «с» уже стало min у «по» —
+  // системный календарь скроет недоступное сам.
+  await page.dispatchEvent('#gr-lab-range-from', 'pointerdown', { pointerType: 'touch', bubbles: true });
+  await from.fill('2026-09-10');
+  expect(await from.getAttribute('type')).toBe('date');
+  expect(await page.locator('#gr-lab-range-from + input[hidden]').count()).toBe(0);
+  await expect(to).toHaveAttribute('min', '2026-09-10');
+  await expect(from).toHaveAttribute('max', '2026-12-31');
+
+  // Пустое «по» на указателе мыши: панель открывается на месяце «с»,
+  // «с» помечено концом, дни до него недоступны.
+  await to.click();
+  await expect(to).toHaveAttribute('type', 'text');
+
+  const panel = page.locator('.gr-datetime-panel[data-gr-state="open"]');
+
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('.gr-datetime-title')).toHaveText(/сентябрь/i);
+  await expect(panel.locator('[aria-selected="true"]')).toHaveAttribute('data-gr-date', '2026-09-10');
+  await expect(panel.locator('[data-gr-date="2026-09-09"]')).toHaveAttribute('aria-disabled', 'true');
+  expect(await page.locator('#gr-lab-range-to + input[hidden]').getAttribute('min')).toBe('2026-09-10');
+
+  await panel.locator('[data-gr-date="2026-09-20"]').click();
+  expect(await page.locator('#gr-lab-range-to + input[hidden]').inputValue()).toBe('2026-09-20');
+  await expect(from).toHaveAttribute('max', '2026-09-20');
+
+  // Панель «с»: оба конца и отрезок между ними; отрезок красит CSS.
+  await from.click();
+  await expect(from).toHaveAttribute('type', 'text');
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('[aria-selected="true"]')).toHaveCount(2);
+  await expect(panel.locator('[data-gr-in-range]')).toHaveCount(9);
+  await expect(panel.locator('[data-gr-date="2026-09-21"]')).toHaveAttribute('aria-disabled', 'true');
+
+  const colors = await panel.evaluate((node) => [
+    getComputedStyle(node.querySelector('[data-gr-date="2026-09-15"]')).backgroundColor,
+    getComputedStyle(node.querySelector('[data-gr-date="2026-09-08"]')).backgroundColor,
+  ]);
+
+  expect(colors[0]).not.toBe(colors[1]);
+
+  // «по» раньше «с» — ошибка у «по», «с» не сдвинуто.
+  await to.click();
+  await to.fill('');
+  await page.keyboard.type('05092026');
+  expect(await to.evaluate((el) => el.validity.valid)).toBe(false);
+  await expect(from).toHaveAttribute('type', 'date');
+  expect(await from.inputValue()).toBe('2026-09-10');
+
+  // Форма отправляет оба ISO под своими именами.
+  await to.fill('');
+  await page.keyboard.type('20092026');
+  expect(await page.evaluate(() => {
+    const data = new FormData(document.getElementById('gr-lab-range-form'));
+
+    return [data.get('since'), data.get('until')];
+  })).toEqual(['2026-09-10', '2026-09-20']);
+});
+
+test('сумма: разряды по локали на экране, число в спутнике, каретка держится за цифрой в каждом движке', async ({ page }) => {
+  await page.goto(LAB);
+
+  const amount = page.locator('#gr-lab-number');
+  const companion = page.locator('#gr-lab-number + input[hidden]');
+  const plain = (s) => s.replace(/[\u00a0\u202f]/g, ' ');
+  const caret = () => amount.evaluate((el) => el.selectionStart);
+
+  // Монтаж: значение из разметки — с разрядами и дробью до decimals,
+  // имя ушло в спутник, форма отправляет число.
+  expect(plain(await amount.inputValue())).toBe('1 250 000,50');
+  expect(await amount.getAttribute('name')).toBeNull();
+  await expect(companion).toHaveAttribute('type', 'number');
+  await expect(companion).toHaveAttribute('name', 'amount');
+  await expect(companion).toHaveAttribute('max', '10000000');
+  expect(await companion.inputValue()).toBe('1250000.5');
+  expect(await page.evaluate(() => new FormData(document.getElementById('gr-lab-number-form')).get('amount'))).toBe('1250000.5');
+
+  // Поле последним в группе с аддоном: спутник встал за ним последним
+  // ребёнком, а скругление края осталось у поля.
+  const rate = page.locator('#gr-lab-number-int');
+
+  expect(await rate.evaluate((el) => [el.nextElementSibling.hidden, el.nextElementSibling.nextElementSibling, getComputedStyle(el).borderTopRightRadius !== '0px'])).toEqual([true, null, true]);
+
+  // Набор с нуля: разряды появляются на ходу, каретка в конце.
+  await amount.fill('');
+  await amount.pressSequentially('1250000');
+  expect(plain(await amount.inputValue())).toBe('1 250 000');
+  expect(await caret()).toBe((await amount.inputValue()).length);
+  expect(await companion.inputValue()).toBe('1250000');
+
+  // Цифра в середину, перед разделителем: каретка остаётся за ней.
+  await amount.evaluate((el) => el.setSelectionRange(1, 1));
+  await page.keyboard.type('9');
+  expect(plain(await amount.inputValue())).toBe('19 250 000');
+  expect(await caret()).toBe(2);
+
+  // Backspace через разделитель снимает цифру, а не пробел.
+  await amount.evaluate((el) => el.setSelectionRange(3, 3));
+  await page.keyboard.press('Backspace');
+  expect(plain(await amount.inputValue())).toBe('1 250 000');
+  expect(await caret()).toBe(1);
+
+  // Точка принимается как дробь и показывается запятой локали;
+  // третья цифра дроби не влезает.
+  await amount.evaluate((el) => el.setSelectionRange(el.value.length, el.value.length));
+  await page.keyboard.type('.505');
+  expect(plain(await amount.inputValue())).toBe('1 250 000,50');
+  // Firefox нормализует value у type="number" («…50» → «…5») — число то же.
+  expect(Number(await companion.inputValue())).toBe(1250000.5);
+
+  // Буква не принимается.
+  await page.keyboard.type('x');
+  expect(plain(await amount.inputValue())).toBe('1 250 000,50');
+
+  // Выше max: платформенное сообщение через спутник, красное — по уходу фокуса.
+  await amount.fill('');
+  await page.keyboard.type('25000000');
+  expect(await amount.evaluate((el) => el.validity.valid)).toBe(false);
+  expect(await amount.evaluate((el) => el.validationMessage.length)).toBeGreaterThan(0);
+  await expect(amount).not.toHaveAttribute('aria-invalid', /.*/);
+  await page.locator('#gr-lab-number-int').focus();
+  await expect(amount).toHaveAttribute('aria-invalid', 'true');
+
+  // Вставка из буфера в любой записи — одно число; уход фокуса дополняет дробь.
+  const events = await amount.evaluate((el) => {
+    const seen = [];
+
+    el.addEventListener('input', () => seen.push('input'));
+    el.addEventListener('change', () => seen.push('change'));
+    window.__seen = seen;
+
+    return seen;
+  });
+
+  expect(events).toEqual([]);
+  await amount.focus();
+  await amount.evaluate((el) => el.select());
+  await amount.evaluate((el) => {
+    const dt = new DataTransfer();
+
+    dt.setData('text/plain', '2 500 000,7');
+    el.dispatchEvent(new InputEvent('beforeinput', { inputType: 'insertFromPaste', data: '2 500 000,7', dataTransfer: dt, bubbles: true, cancelable: true }));
+  });
+  expect(plain(await amount.inputValue())).toBe('2 500 000,7');
+  expect(await companion.inputValue()).toBe('2500000.7');
+  await page.locator('#gr-lab-number-int').focus();
+  expect(plain(await amount.inputValue())).toBe('2 500 000,70');
+  expect(await amount.evaluate((el) => el.validity.valid)).toBe(true);
+  await expect(amount).not.toHaveAttribute('aria-invalid', /.*/);
+  expect(await page.evaluate(() => window.__seen)).toEqual(['input', 'change']);
+
+  // Без дроби: набранная точка отвергается, как буква; во вставленном
+  // «12.5» дробь отбрасывается.
+  await rate.pressSequentially('12.');
+  expect(await rate.inputValue()).toBe('12');
+  await rate.fill('12.5');
+  expect(await rate.inputValue()).toBe('12');
+  expect(await page.locator('#gr-lab-number-int + input[hidden]').inputValue()).toBe('12');
 });
 
 test('файловое поле: список выбранного, удаление одного переписывает input.files, append копит', async ({ page }) => {

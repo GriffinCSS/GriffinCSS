@@ -170,6 +170,59 @@
   </form>
 </div>
 
+<p>
+  Диапазон «с — по» — пара нативных полей, связанная атрибутом
+  <code>to</code>: значение «с» становится <code>min</code> у «по»,
+  значение «по» — <code>max</code> у «с»; пустое поле открывает панель
+  на месяце соседа, дни между концами помечены. На тач-устройстве
+  работает только связка границ — системный календарь скрывает
+  недоступное сам.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Диапазон «с — по» <span class="badge">нужен griffinjs-fields.js</span></div>
+  <form class="gr-flex gr-gap-sm" id="gr-lab-range-form" style="max-width: 26rem" onsubmit="return false">
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="gr-lab-range-from">С</label>
+      <input class="gr-input" id="gr-lab-range-from" type="date" name="since" max="2026-12-31" data-gr-datetime="to: #gr-lab-range-to">
+    </div>
+    <div class="gr-field gr-flex-1 gr-min-w-0">
+      <label class="gr-label" for="gr-lab-range-to">По</label>
+      <input class="gr-input" id="gr-lab-range-to" type="date" name="until" min="2026-01-01" data-gr-datetime>
+    </div>
+  </form>
+</div>
+
+<h2>Сумма с разрядами</h2>
+
+<p>
+  Отдельное поле, а не маска: на экране — разряды и дробь по локали
+  документа, в скрытом спутнике с прежним именем — число в точечной
+  записи. Каретка держится за той же цифрой, вставка в любой записи
+  читается одинаково, границы <code>min</code>/<code>max</code>
+  проверяет спутник. Без скрипта — обычное текстовое поле.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Сумма, decimals: 2, min 0, max 10 000 000 <span class="badge">нужен griffinjs-fields.js</span></div>
+  <form class="gr-flex gr-flex-col gr-gap" id="gr-lab-number-form" style="max-width: 26rem" onsubmit="return false">
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-number">Сумма</label>
+      <div class="gr-input-group">
+        <input class="gr-input" id="gr-lab-number" type="text" inputmode="decimal" name="amount" value="1250000.5" min="0" max="10000000" data-gr-number="decimals: 2">
+        <span class="gr-input-addon">₽</span>
+      </div>
+    </div>
+    <div class="gr-field">
+      <label class="gr-label" for="gr-lab-number-int">Аванс, без дроби</label>
+      <div class="gr-input-group">
+        <span class="gr-input-addon">$</span>
+        <input class="gr-input" id="gr-lab-number-int" type="text" inputmode="decimal" name="advance" data-gr-number>
+      </div>
+    </div>
+  </form>
+</div>
+
 <h2>Файловое поле</h2>
 
 <p>
@@ -319,7 +372,7 @@
     var names = [];
 
     for (var name in window.GriffinJS.widgets) {
-      if (/^(mask|phone|datetime|file|rating|otp|counter|validate)$/.test(name)) names.push(name);
+      if (/^(mask|phone|datetime|number|file|rating|otp|counter|validate)$/.test(name)) names.push(name);
     }
 
     if (names.length) fields.textContent = 'поля: ' + names.join(', ');

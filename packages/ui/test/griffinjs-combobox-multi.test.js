@@ -156,3 +156,133 @@ test('multiple без <select multiple> внутри не поднимается
 
   G.destroy();
 });
+
+// Свободные теги (Этап 42f): флаг free — Enter на непустом поле без
+// активной позиции создаёт <option selected> со значением, равным тексту.
+// Только вместе с multiple: у одиночного комбобокса текст поля и есть
+// значение, и добавлять его некуда.
+
+test('free: Enter без активной позиции создаёт позицию и тег, поле пустеет', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = box(doc);
+  const changes = [];
+
+  b.select.addEventListener('change', () => changes.push(chosen(b.select)));
+  G.mount(b.root, 'combobox', { multiple: true, free: true, min: 1, delay: 0, source });
+  G.start();
+
+  // Совпадений нет: список не открыт, активной позиции нет.
+  type(b.input, 'react');
+  await tick(5);
+
+  const enter = event('keydown', b.input, { key: 'Enter' });
+
+  b.input.dispatchEvent(enter);
+  assert.equal(enter.defaultPrevented, true, 'Enter ушёл форме');
+  assert.deepEqual(chosen(b.select), ['acer', 'react']);
+  assert.equal(b.select.options[2].value, 'react');
+  assert.equal(b.select.options[2].textContent, 'react');
+  assert.deepEqual(tagsOf(b.root), ['Acer Aspire', 'react']);
+  assert.equal(b.input.value, '', 'поле не очищено');
+  assert.deepEqual(changes, [['acer', 'react']], 'select не сообщил о смене значения');
+
+  // Текст совпал с существующим значением — дубликата нет, существующая выбрана.
+  type(b.input, 'asus');
+  await tick(5);
+  b.input.dispatchEvent(event('keydown', b.input, { key: 'Enter' }));
+  assert.deepEqual(chosen(b.select), ['acer', 'asus', 'react']);
+  assert.equal(b.select.options.length, 3, 'появился дубликат позиции');
+
+  // Ещё раз тот же свободный тег — второго нет.
+  type(b.input, 'react');
+  await tick(5);
+  b.input.dispatchEvent(event('keydown', b.input, { key: 'Enter' }));
+  assert.equal(b.select.options.length, 3);
+  assert.equal(tagsOf(b.root).length, 3);
+
+  // Пустое поле — ничего.
+  type(b.input, '   ');
+  const blank = event('keydown', b.input, { key: 'Enter' });
+
+  b.input.dispatchEvent(blank);
+  assert.equal(blank.defaultPrevented, false);
+  assert.equal(b.select.options.length, 3);
+
+  // Свободный тег снимается Backspace как обычный — вместе с позицией.
+  b.input.value = '';
+  b.input.dispatchEvent(event('keydown', b.input, { key: 'Backspace' }));
+  assert.deepEqual(chosen(b.select), ['acer', 'asus']);
+  assert.equal(b.select.options.length, 2, 'свободная позиция осталась после снятия');
+
+  G.destroy();
+});
+
+test('free: активная позиция в списке по-прежнему выбирается Enter, а не текстом', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = box(doc);
+
+  G.mount(b.root, 'combobox', { multiple: true, free: true, min: 1, delay: 0, source });
+  G.start();
+
+  type(b.input, 'zen');
+  await tick(5);
+  b.input.dispatchEvent(event('keydown', b.input, { key: 'ArrowDown' }));
+  b.input.dispatchEvent(event('keydown', b.input, { key: 'Enter' }));
+
+  assert.deepEqual(chosen(b.select), ['acer', 'asus']);
+  assert.equal(b.select.options.length, 2, 'вместо позиции списка создан свободный тег «zen»');
+
+  G.destroy();
+});
+
+test('без free Enter без активной позиции — как сегодня: форме', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = box(doc);
+
+  G.mount(b.root, 'combobox', { multiple: true, min: 1, delay: 0, source });
+  G.start();
+
+  type(b.input, 'react');
+  await tick(5);
+
+  const enter = event('keydown', b.input, { key: 'Enter' });
+
+  b.input.dispatchEvent(enter);
+  assert.equal(enter.defaultPrevented, false);
+  assert.equal(b.select.options.length, 2);
+
+  G.destroy();
+});
+
+test('free без multiple — предупреждение, флаг игнорируется', async () => {
+  const { G, doc } = setup(PARTS);
+  const input = el('input', { class: 'gr-input', type: 'search' });
+  const root = mount(doc, el('div', { class: 'gr-combobox' }, [input]));
+  const warnings = [];
+  const before = console.warn;
+
+  input.value = '';
+  console.warn = (message) => warnings.push(message);
+
+  try {
+    G.mount(root, 'combobox', { free: true, min: 1, delay: 0, source });
+    G.start();
+  } finally {
+    console.warn = before;
+  }
+
+  assert.ok(G.instance(root, 'combobox'), 'виджет не поднялся');
+  assert.equal(warnings.length, 1, `предупреждений — ${warnings.length}`);
+  assert.match(warnings[0], /free/);
+
+  type(input, 'react');
+  await tick(5);
+
+  const enter = event('keydown', input, { key: 'Enter' });
+
+  input.dispatchEvent(enter);
+  assert.equal(enter.defaultPrevented, false, 'Enter перехвачен у одиночного комбобокса');
+  assert.equal(input.value, 'react');
+
+  G.destroy();
+});

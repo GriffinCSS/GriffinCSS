@@ -160,6 +160,7 @@
   <tr><td><code>highlight</code></td><td><code>true</code></td><td>Совпадение в подписи оборачивается <code>&lt;mark&gt;</code> — через <code>textContent</code>, данные разметкой не становятся</td></tr>
   <tr><td><code>cache</code></td><td><code>true</code></td><td>Выдача по запросу запоминается на время жизни страницы</td></tr>
   <tr><td><code>multiple</code></td><td><code>false</code></td><td>Мультивыбор: выбранное — теги перед полем, значение — в <code>&lt;select multiple&gt;</code> внутри обёртки (см. ниже)</td></tr>
+  <tr><td><code>free</code></td><td><code>false</code></td><td>Свободные теги, только вместе с <code>multiple</code>: <kbd>Enter</kbd> на непустом поле без активной позиции создаёт тег из текста (см. ниже). Без <code>multiple</code> — предупреждение, флаг пропускается</td></tr>
   <tr><td><code>remove</code></td><td><code>Убрать {label}</code></td><td>Подпись кнопки «убрать» у тега, для скринридера</td></tr>
 </table>
 
@@ -191,6 +192,41 @@
       <option value="Acer Aspire" selected>Acer Aspire</option>
     </select>
     <input class="gr-input" type="search" placeholder="Добавить товар" aria-label="Добавить товар">
+  </div>
+</div>
+
+<h3>Свободные теги</h3>
+
+<p>
+  Ключевые слова, адреса писем, метки — значения, которых в источнике
+  может не быть. Флаг <code>free</code> рядом с <code>multiple</code>:
+  <kbd>Enter</kbd> на непустом поле без активной позиции создаёт
+  <code>&lt;option selected&gt;</code> со значением, равным тексту, и тег
+  перед полем; поле пустеет. Позиция из выдачи по-прежнему выбирается
+  <kbd>Enter</kbd>, когда она активна. Дубликата по значению нет — текст,
+  совпавший с существующей позицией, просто выбирает её; снимается
+  свободный тег как любой другой. Одиночному комбобоксу флаг ни к чему:
+  там текст поля и есть значение.
+</p>
+
+<p>
+  <strong>Значение уходит на сервер как текст</strong> — то, что человек
+  написал, без проверки на стороне страницы. Адрес письма, длина, стоп-слова
+  проверяются там, куда форма отправляется, как и любое текстовое поле.
+</p>
+
+<pre><code>&lt;div class="gr-combobox" data-gr-combobox="src: /keywords?q={q}; multiple; free"&gt;
+  &lt;select class="gr-select" name="keywords[]" multiple aria-label="Ключевые слова"&gt;&lt;/select&gt;
+  &lt;input class="gr-input" type="search" placeholder="Слово и Enter" aria-label="Добавить ключевое слово"&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Ключевые слова: подсказки из источника плюс свои по <kbd>Enter</kbd> <span class="badge badge-accent">нужен griffinjs.js</span></div>
+  <div class="gr-combobox" id="ov-combobox-free" style="max-width: 24rem">
+    <select class="gr-select" name="keywords[]" multiple aria-label="Ключевые слова">
+      <option value="ноутбук" selected>ноутбук</option>
+    </select>
+    <input class="gr-input" type="search" placeholder="Слово и Enter" aria-label="Добавить ключевое слово">
   </div>
 </div>
 
@@ -436,6 +472,22 @@ el.addEventListener('griffin:select', function (e) { console.log(e.detail.item);
 
     // Мультивыбор: тот же источник, флаг multiple; значение — в <select multiple>.
     if (multi) window.GriffinJS.mount(multi, 'combobox', { min: 1, delay: 100, multiple: true, source: source });
+
+    // Свободные теги: подсказки — ключевые слова, но Enter принимает и своё.
+    var free = document.getElementById('ov-combobox-free');
+    var words = ['ноутбук', 'наушники', 'часы', 'скидка', 'доставка', 'гарантия'];
+
+    if (free) {
+      window.GriffinJS.mount(free, 'combobox', {
+        min: 1,
+        delay: 100,
+        multiple: true,
+        free: true,
+        source: function (q) {
+          return Promise.resolve(words.filter(function (w) { return w.indexOf(q.toLowerCase()) === 0; }));
+        }
+      });
+    }
 
     // Строка подсказки карточкой: картинка, категория и цена. Картинки —
     // свои, собранные тут же: доксайт наружу не ходит.
