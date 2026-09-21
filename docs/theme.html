@@ -570,6 +570,42 @@ document.addEventListener('griffincss:themechange', function (e) {
       контраста — <code class="token">prefers-contrast</code>. Скрипт нужен
       ровно затем, чтобы дать пользователю выбор и запомнить его.
     </p>
+
+    <h3 class="gr-mt-6">Смена — за один кадр</h3>
+
+    <p class="gr-mt-2">
+      У компонентов переходы цвета 0,2 с, и без помощи рантайма при
+      переключении каждый ехал бы к новому цвету сам по себе: шапка уже
+      тёмная, карточки ещё нет, страница 200 мс идёт пятнами, а замер
+      контраста сразу после переключения читает промежуточное значение.
+      Поэтому <code class="token">set()</code>, <code class="token">toggle()</code>,
+      <code class="token">a11y()</code> и <code class="token">style()</code>
+      на время переключения ставят на <code class="token">&lt;html&gt;</code>
+      класс <code class="token">gr-theme-switching</code> и вставляют
+      в <code class="token">&lt;head&gt;</code> безслойный
+      <code class="token">&lt;style&gt;</code> с одним правилом —
+      <code class="token">transition: none</code> для всего под этим
+      классом, — а через два кадра (<code class="token">requestAnimationFrame</code>
+      × 2) снимают оба. Страница меняется целиком за один кадр; цвет,
+      прочитанный <code class="token">getComputedStyle</code> сразу после
+      вызова, — уже итоговый.
+    </p>
+
+    <p class="gr-mt-2 gr-text-ink-secondary">
+      Правило намеренно не лежит ни в одном CSS-файле библиотеки: переходы
+      компонентов (<code class="token">griffincss.ui</code>), утилит
+      (<code class="token">griffincss.utils</code>) и вашей темы стоят
+      в разных слоях, и в каком бы слое оно ни лежало, кто-то из них
+      его перебил бы. Безслойное объявление старше всех слоёв без
+      <code class="token">!important</code>. Класс на
+      <code class="token">&lt;html&gt;</code> — ваш крючок: что ещё гасить
+      на время переключения, решает тема (<code class="token">.gr-theme-switching
+      .my-hero { animation: none }</code>). Под строгим CSP листу нужен
+      <code class="token">nonce</code> — рантайм берёт его со своего тега
+      <code class="token">&lt;script&gt;</code>, как рантайм раскладок
+      (<a href="runtime.html#csp">«Строгий CSP»</a>); без него лист
+      блокируется, и тема переключается как прежде — переходами.
+    </p>
   </section>
 
   <section>
@@ -835,6 +871,15 @@ require.resolve('griffincss-core/tokens')</pre>
     </p>
 
     <p class="gr-mt-4 gr-text-ink-secondary">
+      С 0.26.0 те же объявления можно держать и в своём подслое
+      <code class="token">griffincss.app</code>, а не только вне слоёв:
+      токены всех пакетов лежат в одном слое <code class="token">griffincss.tokens</code>,
+      и подслой после него перебивает их — раньше копия <code class="token">:root</code>
+      из компонентов и утилит лежала выше подслоя и выигрывала
+      (<a href="starter.html">скелет страницы</a>, порядок слоёв в README).
+    </p>
+
+    <p class="gr-mt-4 gr-text-ink-secondary">
       Одному блоку — локально и сознательно — переопределяют сам
       семантический токен: <code class="token">var()</code> подставляется
       в месте объявления, и HSL-якоря на острове не сработали бы. Цена
@@ -850,6 +895,34 @@ require.resolve('griffincss-core/tokens')</pre>
       <p class="gr-text-ink-secondary gr-mt-2">Семантический токен переопределён на этом острове: <a href="#" onclick="return false">ссылка</a> и кнопка уже в фирменном цвете.</p>
       <button class="btn gr-mt-4" type="button">Действие</button>
     </div>
+
+    <h3 class="gr-mt-6">Радиус контейнера: «радиус + отступ»</h3>
+
+    <p class="gr-mt-2 gr-text-ink-secondary">
+      Визуальное правило: контейнер с отступом <em>P</em> вокруг контролов
+      скруглён на <em>radius + P</em>, иначе кнопка с радиусом 8 px в карточке
+      с радиусом 8 px и отступом 16 px читается как «углы не совпадают».
+      Библиотека этого правила не навязывает — вид всех карточек по мнению
+      менять нельзя, — но даёт ему ручку: <code class="token">--gr-radius-container</code>
+      читают карточка, окно, меню и сообщение, а без объявления он равен
+      <code class="token">--gr-radius</code>. Задать правило — одна строка
+      в своём CSS; считается она на элементе, поэтому островок с другим
+      <code class="token">--gr-radius</code> получит свои углы.
+    </p>
+
+<pre>/* Контейнеры скруглены на радиус контрола плюс зазор */
+:root { --gr-radius-container: calc(var(--gr-radius) + var(--gr-gap)); }
+
+/* Строгий стиль: и контролы, и контейнеры прямые — правило само даёт 0 + зазор,
+   поэтому для него радиус контейнера возвращается к --gr-radius */
+:root[data-gr-style="strict"], [data-gr-style="strict"] { --gr-radius-container: var(--gr-radius); }</pre>
+
+    <p class="gr-mt-4 gr-text-ink-secondary">
+      Обратный расчёт «внутрь» — от контейнера к контролу — тем же токеном
+      не выразить: <code class="token">--gr-radius</code> на самом контейнере
+      сослался бы сам на себя. Для вложенных скруглений есть каскад
+      <code class="token">.gr-radius</code> в утилитах.
+    </p>
 
     <script>
       (function () {

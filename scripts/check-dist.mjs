@@ -37,11 +37,12 @@ const STYLE_FILES = STYLE_NAMES.map(styleFile);
 const AXIS_FILES = [STYLES, ...STYLE_FILES];
 const BREAKPOINTS = 'packages/core/scss/_breakpoints.scss';
 const RUNTIME = 'packages/core/src/griffincss.js';
+const THEME_RUNTIME = 'packages/core/src/griffincss-theme.js';
 
 // Исходники рантаймов: те же четыре файла до минификации.
 const RUNTIME_SOURCES = [
   RUNTIME,
-  'packages/core/src/griffincss-theme.js',
+  THEME_RUNTIME,
   'packages/ui/src/griffincss-ui.js',
   'packages/utils/src/griffincss-utils.js',
 ];
@@ -66,7 +67,27 @@ const RUNTIMES = [
 // 252 Б — впятеро больше дорогой из двух проб; это запас под Этап 30
 // и только под него. Правило Этапа 30 в силе: если готовая реализация
 // не влезет и сюда, этап останавливается, а не двигает потолок.
-const JS_BUDGET = Math.round(10.2 * 1024);
+//
+// Этап 45 (2026-09-21): 10 386 → 10 591 Б, потолок поднят до 10,4 КБ.
+// ПОКУПКА: смена темы за один кадр — griffincss-theme.js ставит на два
+// кадра безслойный <style> с transition: none и класс на <html>
+// (+205 Б; фидбек темы griffin по 0.25.0, п. 17: страница шла пятнами
+// 0,2 с, а замер контраста после переключения читал промежуточный цвет).
+// Правило в CSS-файле не годится: в каком бы слое библиотеки оно ни
+// лежало, переходы компонентов, утилит и темы потребителя стоят в других
+// слоях; поэтому цена ложится в рантайм, а не в CSS.
+//
+// Этап 47 (2026-09-21): 10 591 → 10 758 Б, потолок 10,6 КБ. ПОКУПКА
+// двух частей в griffincss.js (+167 Б при ожидании 60–120): наблюдение
+// за живым деревом после init() по умолчанию с выключателем
+// data-observe="false" (наблюдение Н2 из панели VPN: FOUC-защита ловит
+// поздний контейнер по атрибуту и без наблюдателя оставляла его
+// прозрачным) и предупреждение об области, которой нет ни в одном
+// наборе контейнера (фидбек темы griffin, п. 19: ребёнок пропадал
+// молча). Второе дороже ожидания: союз имён всех наборов и список
+// «уже предупреждали» на контейнере — иначе наблюдатель повторял бы
+// предупреждение с каждым проходом.
+const JS_BUDGET = Math.round(10.6 * 1024);
 
 // Бандл жмётся одним словарём и обязан быть заметно легче суммы четырёх:
 // перестанет — значит, склейка сломалась и смысла в ней больше нет.
@@ -76,22 +97,31 @@ const JS_BUDGET = Math.round(10.2 * 1024);
 // у бандла нет — он растёт ровно настолько, насколько выросли рантаймы,
 // поэтому его запас (337 Б) повторяет запас рантаймов и назван тем же:
 // Этап 30. Прежние 542 Б были запасом ни подо что.
-const BUNDLE_BUDGET = Math.round(8.8 * 1024);
+// Этап 45: 8 863 → 9 023 Б вслед за рантаймом темы, потолок 8,9 КБ.
+// Этап 47: 9 023 → 9 189 Б вслед за ядром (наблюдение по умолчанию
+// и предупреждение об области), потолок 9,0 КБ.
+const BUNDLE_BUDGET = Math.round(9.0 * 1024);
 
 // Порядок каскадных слоёв: объявляется целиком в каждой сборке,
 // поэтому итог не зависит от того, какой файл подключён первым.
-const LAYER_ORDER = '@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;';
+// Семь слоёв с Этапа 46: tokens — один слой токенов на все пакеты,
+// hidden — [hidden] после всего библиотечного.
+const LAYER_ORDER = '@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;';
 
-// Слой, в который каждая сборка обязана уложить весь свой вывод.
-const LAYER_OF = new Map([
-  [CORE, 'griffincss.core'],
-  [RESET, 'griffincss.reset'],
-  [UI, 'griffincss.ui'],
-  [UI_SCOPED, 'griffincss.ui'],
-  [UTILS, 'griffincss.utils'],
-  [UTILS_SCOPED, 'griffincss.utils'],
-  [STYLES, 'griffincss.style'],
-  ...STYLE_FILES.map((file) => [file, 'griffincss.style']),
+// Слои, в которые каждая сборка обязана уложить весь свой вывод: свой
+// слой пакета, общий слой токенов (у всех, кто их несёт) и слой [hidden]
+// (у всех, где есть хоть один display). Первый в списке — слой пакета.
+const TOKENS_LAYER = 'griffincss.tokens';
+const HIDDEN_LAYER = 'griffincss.hidden';
+const LAYERS_OF = new Map([
+  [CORE, ['griffincss.core', TOKENS_LAYER, HIDDEN_LAYER]],
+  [RESET, ['griffincss.reset', HIDDEN_LAYER]],
+  [UI, ['griffincss.ui', TOKENS_LAYER, HIDDEN_LAYER]],
+  [UI_SCOPED, ['griffincss.ui', TOKENS_LAYER, HIDDEN_LAYER]],
+  [UTILS, ['griffincss.utils', TOKENS_LAYER, HIDDEN_LAYER]],
+  [UTILS_SCOPED, ['griffincss.utils', TOKENS_LAYER, HIDDEN_LAYER]],
+  [STYLES, ['griffincss.style', TOKENS_LAYER]],
+  ...STYLE_FILES.map((file) => [file, ['griffincss.style', TOKENS_LAYER]]),
 ]);
 
 // Классы вне схемы `gr-`: корень области видимости для scoped-сборок.
@@ -137,6 +167,72 @@ function parseBlocks(css) {
   }
 
   return { selectors, atRules, topLevel };
+}
+
+// Верхнеуровневые блоки @layer <имя> { … } сжатого файла: [{ layer, body }].
+// Объявление порядка (до первой точки с запятой) отбрасывается.
+function layerBlocks(css) {
+  const found = [];
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  let depth = 0;
+  let buf = '';
+  let start = -1;
+  let layer = '';
+
+  for (let i = text.indexOf(';') + 1; i < text.length; i += 1) {
+    const char = text[i];
+
+    if (char === '{') {
+      if (depth === 0) {
+        const match = /^\s*@layer\s+([\w.-]+)\s*$/.exec(buf);
+
+        layer = match ? match[1] : '';
+        start = i + 1;
+      }
+      depth += 1;
+      buf = '';
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        if (layer) found.push({ layer, body: text.slice(start, i) });
+        layer = '';
+      }
+    } else if (depth === 0) {
+      buf += char;
+    }
+  }
+
+  return found;
+}
+
+// Все правила со селектором (не @-правила) на любой глубине вложенности:
+// [{ prelude, body }], где body — текст между скобками правила.
+function selectorRules(css) {
+  const rules = [];
+  const stack = [];
+  let buf = '';
+
+  for (let i = 0; i < css.length; i += 1) {
+    const char = css[i];
+
+    if (char === '{') {
+      const prelude = buf.trim();
+
+      stack.push({ prelude, start: i + 1, at: prelude.startsWith('@') });
+      buf = '';
+    } else if (char === '}') {
+      const open = stack.pop();
+
+      if (open && !open.at) rules.push({ prelude: open.prelude, body: css.slice(open.start, i) });
+      buf = '';
+    } else if (char === ';') {
+      buf = '';
+    } else {
+      buf += char;
+    }
+  }
+
+  return rules;
 }
 
 // Имена классов из списка селекторов, с раскрытием экранирования (.gr-sm\:m-4).
@@ -221,11 +317,36 @@ for (const file of artifacts) {
     fail(file, `порядок слоёв не объявлен первой строкой: ${declaration.slice(0, 60)}`);
   }
 
-  const layer = LAYER_OF.get(file);
-  const stray = topLevel.filter((prelude) => prelude !== `@layer ${layer}`);
+  const layers = LAYERS_OF.get(file);
+  const stray = topLevel.filter((prelude) => !layers.some((layer) => prelude === `@layer ${layer}`));
 
   if (stray.length > 0) {
-    fail(file, `вне слоя ${layer} осталось блоков — ${stray.length}: ${stray.slice(0, 3).join(' | ')}`);
+    fail(file, `вне слоёв ${layers.join(', ')} осталось блоков — ${stray.length}: ${stray.slice(0, 3).join(' | ')}`);
+  }
+
+  for (const layer of layers) {
+    if (!topLevel.includes(`@layer ${layer}`)) fail(file, `нет блока @layer ${layer}`);
+  }
+
+  // 4а. Токены — только в слое tokens (Этап 46). Объявление --gr-* на носителе
+  //     темы (:root, [data-gr-theme], [data-gr-a11y]) в любом другом слое
+  //     перебивало бы подслой темы потребителя, стоящий после tokens, —
+  //     ровно тот дефект, ради которого слой заведён. Исключение одно:
+  //     носитель оси [data-gr-style] в слое style — стиль обязан бить тему.
+  //     Тело каждого верхнеуровневого слоя разбирается на правила заново.
+  const CARRIER = /^(:root|\[data-gr-theme|\[data-gr-a11y)/;
+
+  for (const block of layerBlocks(css)) {
+    if (block.layer === TOKENS_LAYER) continue;
+
+    for (const rule of selectorRules(block.body)) {
+      const carrier = rule.prelude.split(',').some((part) => CARRIER.test(part.trim()));
+      const axis = block.layer === 'griffincss.style' && rule.prelude.includes('[data-gr-style');
+
+      if (carrier && !axis && /--gr-[\w-]+\s*:/.test(rule.body)) {
+        fail(file, `токен на носителе темы вне слоя ${TOKENS_LAYER} (${block.layer}): ${rule.prelude.slice(0, 60)}`);
+      }
+    }
   }
 
   // 5. Токены --gr-bp-* собраны из карты и не разошлись с ней.
@@ -549,8 +670,25 @@ const kbBudget = (value) => Math.round(value * 1024);
 const CSS_BUDGETS = [
   // core: Этап 40 — якорь бренда --gr-hsl-accent-base / -hover в обеих
   // темах и чернила на акценте в блоке контраста: 3 439 Б, потолок прежний,
-  // допуск 43 Б.
-  ['core', kbBudget(3.4), CORE],
+  // допуск 43 Б. Этап 46 (фидбек темы griffin по 0.25.0, пп. 10–11):
+  // 3 439 → 3 494 Б, потолок 3,5 КБ. ПОКУПКА: семь слоёв вместо пяти —
+  // токены в общем слое griffincss.tokens (второй блок @layer в файле
+  // и два новых имени в объявлении порядка), [hidden] последним слоем
+  // griffincss.hidden из каждой сборки (+55 Б). Без первого подслой темы
+  // не мог переопределить :root ни в одной сборке с надстройкой, без
+  // второго <nav class="gr-nav" hidden> оставался на экране.
+  // Этап 47: 3 494 → 3 813 Б, потолок 3,8 КБ. ПОКУПКА двух частей:
+  // контейнерные варианты явных сеток .gr-grid-{1…12}-c{sm,md,lg,xl}
+  // и направления с переносом флекса .gr-flex-{row,col,wrap}-c{bp}
+  // (+279 Б при ожидании 400–700; наблюдение Н1 из панели VPN: виджет,
+  // смонтированный то в боковую колонку, то в содержимое, раскладывал
+  // сетку по ширине окна и в узком гнезде давал три колонки по 90 px;
+  // контейнерные суффиксы были только у display, sizing и whitespace
+  // в утилитах, а число колонок и направление флекса живут в ядре)
+  // и четыре имени контейнеров .gr-cq-{page,main,aside,card} (+40 Б;
+  // фидбек темы griffin, п. 8: имя слота инлайновым style="--gr-name"
+  // в теме запрещено, а attr() в container-name не работает).
+  ['core', kbBudget(3.8), CORE],
   // ui: 11 054 Б после 0.22.1; Этап 38e — модуль .gr-file (+99 Б: файлового
   // поля в библиотеке не было вовсе), 11 153 Б — потолок поднят до 11,0 КБ.
   // Ревизия Этапа 38 — центровка содержимого .gr-file арифметикой
@@ -565,18 +703,60 @@ const CSS_BUDGETS = [
   // .gr-dot / .gr-tag) не дала одного — состояния «выбран» на самом
   // образце: его показывала бы только радио рядом, а правила с :has()
   // нет ни у одной утилиты. Карточке товара выбор цвета и размера
-  // обязателен.
-  ['ui', kbBudget(11.4), UI],
+  // обязателен. Этап 45 (фидбек темы griffin по 0.25.0): 11 572 →
+  // 11 761 Б, потолок 11,6 КБ. ПОКУПКА трёх частей: края .gr-input-group
+  // по видимым полям вторым ярусом правил поверх прежних (+74 Б: скрытое
+  // поле в группе — обычная практика форм, а прежние правила остаются
+  // мягкой деградацией для Chrome < 111 и Firefox < 113); модификаторы
+  // .gr-choice-start / .gr-choice-row, состояние ошибки на обёртке
+  // .gr-field и семантический токен оценки (+53 Б: композицией
+  // не собрать — утилиты флекса в core проигрывают ui); минимальная
+  // высота окна и кольцо состояния loading (+62 Б: пустое окно
+  // до ответа сервера рисовалось полоской в рамку).
+  // Этап 46: 11 761 → 12 009 Б, потолок 11,8 КБ. ПОКУПКА: семь слоёв
+  // (тот же довод, что у core) и токены компонентов по списку темы —
+  // card (bg, border, radius, pad), nav (item-pad, link-radius), modal
+  // (body-overflow, transition), tabs (tab-pad), dropdown (pad, min-width),
+  // accordion (summary-pad) — читаются через var(…, <прежний литерал>)
+  // и не объявляются, чтобы переопределение доходило с любой обёртки;
+  // плюс .gr-card-overlay и радиус контейнера --gr-radius-container
+  // у карточки, окна, меню и сообщения (всего +248 Б). Без токенов тема
+  // держала 39 своих правил вместо .gr-card и оборачивала <li> лишним узлом.
+  // Этап 47 (фидбек темы griffin, п. 5): 12 009 → 12 533 Б, потолок
+  // 12,3 КБ. ПОКУПКА: .gr-table-stack — карточки вместо строк таблицы
+  // (+516 Б: 115 за сами правила и ~50 за каждый из восьми порогов
+  // -{sm,md,lg,xl} / -c{sm,md,lg,xl}; ожидание плана было 250–400 на всё
+  // с именами контейнеров и лентой). Правила под каждым порогом — своя
+  // копия: display у tr, td и thead нельзя переключить переменной,
+  // а подпись из data-label без порога показалась бы и в таблице.
+  // Восемь порогов — те же четыре ступени, что у всех адаптивных классов;
+  // тема держала .th-table из 39 правил ровно ради этого. Плюс
+  // position: relative у .gr-table-wrap (+8 Б): без него .gr-sr-only
+  // кнопки-иконки вылетал из прокрутки и растягивал документ.
+  ['ui', kbBudget(12.3), UI],
   // utils: Этап 40 — правила режима со свойствами (кегль, a[href],
   // :focus-visible) больше не едут в этот слой, только токены: 14 854 Б.
   // Покупки нет — потолок опущен с 14,7 до 14,6 КБ, допуск 96 Б.
-  ['utils', kbBudget(14.6), UTILS],
-  ['reset', kbBudget(0.6), RESET],
+  // Этап 47c: 14 945 → 14 957 Б, потолок 14,7 КБ. ПОКУПКА: .gr-tabular-nums
+  // (+12 Б) — разряды в колонке чисел таблицы друг под другом; фидбек
+  // темы griffin, п. 5, просил .gr-cell-num, решение 47-0 — одна утилита
+  // без адаптивных вариантов.
+  ['utils', kbBudget(14.7), UTILS],
+  // reset: Этап 46 — [hidden] уехал из слоя reset в слой hidden своим
+  // блоком @layer, объявление порядка выросло на два имени: 629 Б,
+  // потолок 0,7 КБ (та же покупка, что у core).
+  ['reset', kbBudget(0.7), RESET],
   // griffinjs-css: 2 400 Б до Этапа 38; 38g, теги мультивыбора — 2 586 Б,
   // потолок поднят до 2,6 КБ с той же покупкой; ревизия — крестик тега
   // нарисован полосками, а не глифом (центр по построению на трёх
-  // движках) — 2 684 Б, потолок 2,7 КБ.
-  ['griffinjs-css', kbBudget(2.7), GRIFFIN_CSS],
+  // движках) — 2 684 Б, потолок 2,7 КБ. Этап 47d (фидбек темы griffin,
+  // п. 8): 2 684 → 2 880 Б, потолок 2,9 КБ. ПОКУПКА двух частей:
+  // .gr-track-stack-c{bp} — лента столбиком в узком гнезде (+121 Б, четыре
+  // контейнерных порога, оконных нет; тема перебивала overflow-x
+  // и scroll-snap ленты в своём слое) и .gr-track-{1…4}-c{bp} — число
+  // слайдов в ряд по ширине гнезда (+75 Б, решение владельца 2026-09-21:
+  // виджет в слоте меряется слотом, а не окном).
+  ['griffinjs-css', kbBudget(2.9), GRIFFIN_CSS],
   // Стили полей (Этап 38): по первому замеру 213 Б в 38a — 0,3 КБ;
   // 38d, панель календаря — 889 Б, потолок 0,9 КБ; 38e, список файлов
   // и подписи оценки поверх ряда знаков — 1 261 Б, потолок 1,3 КБ;
@@ -720,7 +900,21 @@ const GRIFFIN = 'packages/ui/dist/griffinjs.js';
 //     позиции источника. Итого за Этап 42 +309 Б. Правило владельца
 //     (2026-09-13): потолки — из необходимости; нужная возможность
 //     поднимает потолок, покупка называется. Решение — 18,1 КБ.
-const GRIFFIN_BUDGET = Math.round(18.1 * 1024);
+//     Замер 48 (2026-09-21): 18 447 → 19 602 Б, +1 155 Б тремя покупками
+//     по фидбеку темы griffin. Загрузчик полей griffinjs-loader.js
+//     (48c, +~560 в бандле, 960 Б своим файлом): бандл полей приезжает
+//     по потребности, страница без полей не грузит ничего — общая часть
+//     вне ядра, набор из двух файлов за неё не платит. Состояние closing
+//     у мегаменю и дропдауна на <details> (48d, +313 / +272 своими файлами,
+//     в бандле меньше — общий код жмётся): уход панели анимирует тема,
+//     а не обрывает платформа; перехват щелчка по заголовку — та же
+//     возможность, без него анимировался бы только Esc. Рост окна
+//     по data-gr-dialog="grow" (48d, +367 своим файлом): ResizeObserver
+//     и element.animate только по атрибуту. План ждал +500–800 на всё;
+//     разница — цена трёх копий чтения --gr-transition и двух копий
+//     закрытия: общая часть под них стоила бы файла и объявления needs
+//     ради ~150 Б. Решение — 19,3 КБ.
+const GRIFFIN_BUDGET = Math.round(19.3 * 1024);
 const GRIFFIN_CORE_BUDGET = Math.round(7.7 * 1024);
 // Части минимального набора для слайдера. После Этапа 22 дорожка и анимация
 // лежат вне ядра, но набору слайдера нужны обе: список повторяет needs.
@@ -819,9 +1013,15 @@ const GRIFFIN_ONLY_CORE_BUDGET = Math.round(2.8 * 1024);
 //                    одно правило: спутник в .gr-input-group не отнимает
 //                    у поля скругление края. Потолки 11,2 / 13,8 КБ,
 //                    стили 1,8 КБ.
+//       48c (2026-09-21): набор 14 052 → 14 152 Б — поля не тронуты,
+//                    выросло ядро: +37 Б за объект config и хук init
+//                    у участников жизненного цикла, на которых стоит
+//                    догрузка бандла (сам загрузчик — вне ядра и вне
+//                    набора). Потолок набора 13,9 КБ; ядро осталось
+//                    в своих 2,8 КБ (2 732).
 const GRIFFIN_FIELDS = 'packages/ui/dist/griffinjs-fields.js';
 const GRIFFIN_FIELDS_BUDGET = Math.round(11.2 * 1024);
-const GRIFFIN_FIELDS_SET_BUDGET = Math.round(13.8 * 1024);
+const GRIFFIN_FIELDS_SET_BUDGET = Math.round(13.9 * 1024);
 const GRIFFIN_COUNTRIES = 'packages/ui/dist/griffinjs-countries.js';
 const GRIFFIN_COUNTRIES_BUDGET = Math.round(0.9 * 1024);
 
@@ -939,18 +1139,21 @@ for (const file of walkJs(GRIFFIN_SRC)) {
   }
 }
 
-// Единственный источник <style> — рантайм ядра (Этап 30).
+// Источников <style> ровно два — рантайм ядра (Этап 30) и рантайм темы
+//     (Этап 45: безслойный лист на два кадра гасит переходы при смене темы).
 //     Документация обещает читателю со строгим CSP ровно это: <style>
-//     создаёт один файл, и только он нуждается в nonce. Обещание, которое
-//     никто не сторожит, тихо перестаёт быть правдой при первой же
-//     надстройке, решившей завести свой лист.
+//     создают два файла из пакета core, и только им нужен nonce; остальные
+//     рантаймы и слой виджетов листов не заводят. Обещание, которое никто
+//     не сторожит, тихо перестаёт быть правдой при первой же надстройке,
+//     решившей завести свой лист.
 const STYLE_MAKER = /createElement\(\s*['"]style['"]/;
+const STYLE_MAKERS = [RUNTIME, THEME_RUNTIME];
 
 for (const file of [...RUNTIME_SOURCES, ...walkJs(GRIFFIN_SRC)]) {
   if (!STYLE_MAKER.test(read(file))) continue;
 
-  if (file !== RUNTIME) {
-    fail(file, '<style> создаёт не только рантайм ядра — раздел о строгом CSP перестал быть правдой');
+  if (!STYLE_MAKERS.includes(file)) {
+    fail(file, '<style> создаёт не только пакет core — раздел о строгом CSP перестал быть правдой');
   }
 }
 
@@ -960,6 +1163,10 @@ if (!STYLE_MAKER.test(read(RUNTIME))) {
 
 if (!/styleEl\.nonce = nonce/.test(read(RUNTIME))) {
   fail(RUNTIME, 'nonce на <style> не переносится — под строгим CSP раскладки потеряются молча');
+}
+
+if (!/freezeEl\.nonce = nonce/.test(read(THEME_RUNTIME))) {
+  fail(THEME_RUNTIME, 'nonce на <style> гашения не переносится — под строгим CSP тема переключается пятнами');
 }
 
 // Динамический import() в тестах и скриптах — только по специферу или file:-URL.

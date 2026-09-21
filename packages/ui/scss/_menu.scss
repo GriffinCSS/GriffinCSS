@@ -17,7 +17,10 @@
   padding-block: calc(var(--gr-ui-gap) * 0.5);
   padding-inline: 0;
   border: var(--gr-border-width) solid var(--gr-color-border);
-  border-radius: var(--gr-radius);
+
+  // Радиус контейнера, как у карточки и окна: меню — видимая коробка
+  // выпадающей панели (Этап 46).
+  border-radius: var(--gr-radius-container, var(--gr-radius));
   background-color: var(--gr-color-surface-overlay);
   color: var(--gr-color-text);
   box-shadow: var(--gr-shadow-lg);

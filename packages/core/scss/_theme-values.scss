@@ -77,6 +77,14 @@
   --gr-color-info: hsl(var(--gr-hsl-status-info));
   --gr-color-info-surface: hsl(var(--gr-hsl-status-info-surface));
   --gr-color-on-info: hsl(var(--gr-hsl-on-status-info));
+
+  // Цвет оценки: звёзды и всё, что изображает оценку, — полосы
+  // распределения, значок у подписи, ввод оценки. Семантический токен,
+  // а не переменная компонента (Этап 45): текстовый --gr-color-warning
+  // затемнён ради контраста, и всё «предупреждающее» рядом со звёздами
+  // выходило коричневым, пока цвет звёзд жил только в модуле рейтинга.
+  // По умолчанию — поверхностный цвет предупреждения, янтарь.
+  --gr-color-rating: hsl(var(--gr-hsl-status-warning-surface));
 }
 
 @mixin gr-theme-light {

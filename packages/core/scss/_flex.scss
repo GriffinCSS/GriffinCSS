@@ -3,6 +3,7 @@
 
 @use 'sass:map';
 @use 'breakpoints' as bp;
+@use 'container-mixins' as cq;
 
 // --- Functions ---
 @function gr-flex-justify-value($key) {
@@ -38,19 +39,26 @@
   display: inline-flex;
 }
 
-// Direction
-.gr-flex-row {
-  flex-direction: row;
+// Направление и перенос. Три класса, у которых есть и оконные,
+// и контейнерные варианты, описаны миксином: «столбик в узком гнезде,
+// ряд в широком» — то, ради чего флекс переключают по ширине контейнера.
+// Выравнивания и flex: 1 по гнезду не переключаются: их не просили,
+// а каждый суффикс — это ещё четыре правила на класс.
+@mixin gr-flex-flow($suffix: '') {
+  .gr-flex-row#{$suffix} {
+    flex-direction: row;
+  }
+
+  .gr-flex-col#{$suffix} {
+    flex-direction: column;
+  }
+
+  .gr-flex-wrap#{$suffix} {
+    flex-wrap: wrap;
+  }
 }
 
-.gr-flex-col {
-  flex-direction: column;
-}
-
-// Wrap
-.gr-flex-wrap {
-  flex-wrap: wrap;
-}
+@include gr-flex-flow;
 
 .gr-flex-nowrap {
   flex-wrap: nowrap;
@@ -87,9 +95,9 @@
   @media (width >= $bp-value) {
     .gr-flex-#{$bp-name} { display: flex; }
     .gr-inline-flex-#{$bp-name} { display: inline-flex; }
-    .gr-flex-row-#{$bp-name} { flex-direction: row; }
-    .gr-flex-col-#{$bp-name} { flex-direction: column; }
-    .gr-flex-wrap-#{$bp-name} { flex-wrap: wrap; }
+
+    @include gr-flex-flow('-#{$bp-name}');
+
     .gr-flex-nowrap-#{$bp-name} { flex-wrap: nowrap; }
     .gr-flex-1-#{$bp-name} { flex: 1; }
 
@@ -110,5 +118,15 @@
         align-self: gr-flex-align-value($s);
       }
     }
+  }
+}
+
+// --- Контейнерные варианты ---
+// Направление и перенос по ширине ближайшего предка с .gr-cq:
+// .gr-flex-col + .gr-flex-row-cmd — столбик в узкой колонке, ряд
+// в широкой, где бы блок ни стоял на странице (наблюдение Н1).
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-flex-flow('-c#{$bp-name}');
   }
 }

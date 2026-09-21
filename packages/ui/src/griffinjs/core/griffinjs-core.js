@@ -1,5 +1,5 @@
 /*!
- * GriffinJS — Core v0.25.0
+ * GriffinJS — Core v0.26.0
  * Опциональный слой виджетов с состоянием поверх Griffincss: слайдер,
  * галерея, лайтбокс, параллакс, мегаменю. Подключается одной строкой
  * и одним файлом; страница без него — законное и рабочее состояние.
@@ -10,8 +10,8 @@
  * поднимает всё, destroy() снимает всё до последнего атрибута.
  *
  * В griffinjs-core.js склеивается только то, без чего не обходится ни один
- * виджет: options, registry, scanner. Остальное из core/ — anchor, media,
- * motion, gesture, track — общие части ВНЕ ядра (Этап 22): ими пользуется
+ * виджет: options, registry, scanner. Остальное из core/ — loader, anchor,
+ * media, motion, gesture, track — общие части ВНЕ ядра (Этап 22): ими пользуется
  * меньшинство, и каждая уезжает своим файлом griffinjs-<часть>.js. Что
  * модуль из этого берёт, он объявляет сам — вторым аргументом defineWidget
  * или needs(); start() сверяет объявленное со сборкой.
@@ -20,6 +20,13 @@
  * window.GriffinJS, а не window.Griffincss — там слияние рантаймов
  * CSS-части, и порядок тегов не значим; слою с состоянием чужой
  * глобал ни к чему.
+ *
+ * Участник жизненного цикла (use) кроме start/destroy может объявить
+ * init(root): ядро зовёт его после подъёма виджетов в корне — и на старте,
+ * и на каждой порции сканера. Так догрузка бандла полей (core/loader.js,
+ * Этап 48c) видит data-gr-<поле> без виджета, не будучи частью ядра.
+ * GriffinJS.config — общий объект настроек: ядру он не нужен, но это
+ * его поверхность, и модуль читает из неё (config.fields у загрузчика).
  */
 (function (factory) {
   'use strict';
@@ -38,7 +45,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.25.0';
+  var VERSION = '0.26.0';
 
   // Реестры. Модуль зовёт defineEngine/defineWidget; ядро — единственное
   // место, которое знает, как их применить.
@@ -60,6 +67,9 @@
   var mounted = [];
 
   var started = false;
+
+  // Настройки — одна поверхность на слой; ядро само ничего отсюда не читает.
+  var config = {};
 
   // Объявление и чтение зависимостей: needs('slider', ['track', 'motion'])
   // записывает, needs('slider') возвращает.
@@ -273,6 +283,10 @@
       for (var j = 0; j < nodes.length; j++) mount(nodes[j], name);
     }
 
+    for (var k = 0; k < lifecycle.length; k++) {
+      if (typeof lifecycle[k].init === 'function') lifecycle[k].init(root);
+    }
+
     return api;
   }
 
@@ -348,6 +362,7 @@
 
   var api = {
     version: VERSION,
+    config: config,
     engines: engines,
     widgets: widgets,
     defineEngine: defineEngine,

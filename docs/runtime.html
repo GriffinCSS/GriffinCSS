@@ -23,9 +23,9 @@
 
 <div class="hero">
   <h1>JS-рантайм</h1>
-  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,1 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,7 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->8,7 КБ<!--/gr:size:bundle--> одним файлом.</p>
+  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,7 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->10,5 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->9,0 КБ<!--/gr:size:bundle--> одним файлом.</p>
   <div class="hero-badges">
-    <span class="badge badge-accent"><!--gr:size:js-core-->3,7 КБ<!--/gr:size:js-core--> gzip</span>
+    <span class="badge badge-accent"><!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip</span>
     <span class="badge">IIFE</span>
     <span class="badge">Нет зависимостей</span>
     <span class="badge">Авто-инициализация</span>
@@ -66,6 +66,7 @@
   <li>Внедряет CSS в <code>&lt;style id="griffincss-dynamic"&gt;</code> в <code>&lt;head&gt;</code>.</li>
   <li>Выполняет авто-присвоение <code>gr-area-*</code> детям без явного класса.</li>
   <li>Добавляет <code>.gr-ready</code> на grid-контейнеры (снятие FOUC-защиты).</li>
+  <li>Поднимает наблюдателя за <code>body</code>: контейнер, вставленный позже, раскладывается сам (с 0.26.0; выключатель — <code>data-observe="false"</code>).</li>
 </ol>
 
 <h2 id="api">API</h2>
@@ -82,7 +83,9 @@ Griffincss.init();</code></pre>
 <h3>Griffincss.refresh(root?)</h3>
 
 <pre><code>// Повторно сканирует DOM и обновляет CSS.
-// Вызывайте после динамического добавления элементов с layout-атрибутами.
+// Добавленные узлы рантайм видит сам (наблюдатель ниже); refresh()
+// нужен, когда наблюдение выключено или когда data-gr-layout
+// поменялся на уже существующем элементе.
 // root — опциональный корневой элемент (по умолчанию document).
 
 Griffincss.refresh();
@@ -90,8 +93,10 @@ Griffincss.refresh(document.getElementById('dynamic-content'));</code></pre>
 
 <h3>Griffincss.observe(root?)</h3>
 
-<pre><code>// Включает MutationObserver для автоматического отслеживания
-// новых элементов с layout-атрибутами в DOM.
+<pre><code>// MutationObserver за новыми элементами с layout-атрибутами.
+// После init() автостарт поднимает его на document.body сам;
+// вызов нужен, когда наблюдение выключено (data-observe="false")
+// или при ручной инициализации с data-auto="false".
 // root — опционально (по умолчанию document.body).
 
 Griffincss.observe();
@@ -131,7 +136,7 @@ Griffincss.parseLayout('hdr4-main4-side2_2-ftr4');
 <h3>Griffincss.version</h3>
 
 <pre><code>// Версия рантайма — строка, совпадающая с версией пакета griffincss-core.
-Griffincss.version;   // '0.25.0'</code></pre>
+Griffincss.version;   // '0.26.0'</code></pre>
 
 <h2>Валидация раскладок</h2>
 
@@ -175,25 +180,80 @@ Griffincss.version;   // '0.25.0'</code></pre>
   // Ручная инициализация в нужный момент
   document.addEventListener('DOMContentLoaded', function () {
     Griffincss.init();
+    Griffincss.observe(); // наблюдение за поздними узлами — тоже вручную
   });
 &lt;/script&gt;</code></pre>
+
+<p>Три переключателя на теге скрипта — все со значением <code>false</code>:</p>
+
+<table>
+  <tr><th>Атрибут</th><th>Что выключает</th></tr>
+  <tr><td><code>data-auto="false"</code></td><td>Автостарт целиком: ни FOUC-защиты, ни разбора, пока не вызван <code>init()</code></td></tr>
+  <tr><td><code>data-stream="false"</code></td><td>Потоковую раскладку по мере разбора документа: один проход на <code>DOMContentLoaded</code></td></tr>
+  <tr><td><code>data-observe="false"</code></td><td>Наблюдение за живым деревом после <code>init()</code>: поздние контейнеры ждут <code>refresh()</code> или <code>observe()</code></td></tr>
+</table>
+
+<h2 id="head">Что в <code>&lt;head&gt;</code>, что <code>defer</code></h2>
+
+<p>
+  Синхронно и в <code>&lt;head&gt;</code> нужны только два файла, и оба
+  из пакета <code>griffincss-core</code>: рантайм темы ставит атрибуты темы,
+  стиля и режима до первой отрисовки — сохранённая тёмная тема не мигает
+  светлой, — а рантайм раскладок ставит FOUC-защиту и складывает
+  <code>data-gr-layout</code> по мере разбора документа. Подключённые
+  с <code>defer</code>, они делали бы то же самое, но после отрисовки:
+  светлый кадр перед тёмным и контейнеры, которые сначала показаны как
+  есть, а потом гаснут и раскладываются. Остальным рантаймам и слою виджетов
+  до первой отрисовки ставить нечего — их место в <code>defer</code>:
+  они выполняются по порядку после разбора документа, до
+  <code>DOMContentLoaded</code>, и стартуют сразу, не дожидаясь события.
+</p>
+
+<pre><code>&lt;script src="griffincss-theme.js"&gt;&lt;/script&gt;             &lt;!-- синхронно: атрибуты темы до отрисовки --&gt;
+&lt;script src="griffincss.js"&gt;&lt;/script&gt;                   &lt;!-- синхронно: FOUC-защита, раскладки по мере разбора --&gt;
+&lt;script defer src="griffincss-ui.js"&gt;&lt;/script&gt;          &lt;!-- поведение компонентов --&gt;
+&lt;script defer src="griffincss-utils.js"&gt;&lt;/script&gt;       &lt;!-- каскад скруглений, произвольные значения --&gt;
+&lt;script defer src="griffinjs.js"&gt;&lt;/script&gt;              &lt;!-- слой виджетов --&gt;</code></pre>
+
+<table>
+  <tr><th>Файл</th><th>Где</th><th>Чем платит другой вариант</th></tr>
+  <tr><td><code>griffincss-theme.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>с <code>defer</code> — кадр светлой темы перед сохранённой тёмной</td></tr>
+  <tr><td><code>griffincss.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>с <code>defer</code> — контейнеры отрисованы как есть, затем гаснут FOUC-защитой и раскладываются; потокового режима нет</td></tr>
+  <tr><td><code>griffincss-ui.js</code></td><td><code>defer</code></td><td>синхронно в <code>&lt;head&gt;</code> он всё равно ждёт <code>DOMContentLoaded</code> — выигрыша нет, а блокирующий путь длиннее. Панели вкладок до старта видны все (база без скрипта); если это заметно, ставьте <code>hidden</code> неактивным в разметке</td></tr>
+  <tr><td><code>griffincss-utils.js</code></td><td><code>defer</code></td><td>синхронно он достраивает углы вложенных <code>.gr-radius</code> по мере разбора, с <code>defer</code> — одним проходом после; первый уровень и его прямые дети скруглены статикой в обоих случаях</td></tr>
+  <tr><td><code>griffinjs.js</code></td><td><code>defer</code></td><td>до старта разметка живёт базой без скрипта — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, дорожка со scroll-snap; это рабочее состояние, а не поломка</td></tr>
+  <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->9,0 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,2 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
+</table>
+
+<p>
+  Свой стартовый код, которому нужны рантаймы, — тоже <code>defer</code>
+  и после них: инлайновый <code>&lt;script&gt;</code> выполняется при разборе,
+  раньше любого отложенного файла, и <code>Griffincss.ui</code> в нём ещё
+  <code>undefined</code>. Готовый файл целиком —
+  <a href="starter.html">starter.html</a>.
+</p>
 
 <h2 id="csp">Строгий CSP</h2>
 
 <p>
-  <code>griffincss.js</code> — <strong>единственный файл библиотеки, который создаёт
-  <code>&lt;style&gt;</code></strong>. Ни <code>griffincss-theme.js</code>, ни
+  <code>&lt;style&gt;</code> создают <strong>два файла библиотеки, оба из пакета
+  <code>griffincss-core</code></strong>: <code>griffincss.js</code> пишет в свой лист
+  правила раскладок <code>data-gr-layout</code>, а <code>griffincss-theme.js</code>
+  на два кадра ставит лист с <code>transition: none</code>, чтобы тема менялась
+  за один кадр, а не пятнами (<a href="theme.html">«Тема»</a>). Ни
   <code>griffincss-ui.js</code>, ни <code>griffincss-utils.js</code>, ни слой виджетов
   <code>griffinjs.js</code> листов не заводят: им от политики нужен только
-  <code>script-src</code>. Поэтому весь разговор о <code>style-src</code> — про один файл.
+  <code>script-src</code>. Поэтому весь разговор о <code>style-src</code> — про два файла,
+  и цена ошибки у них разная.
 </p>
 
 <p>
   Под политикой <code>style-src</code> без <code>'unsafe-inline'</code> браузер откажется
-  применять созданный скриптом лист. Страница останется на месте — контент виден, ресет,
-  компоненты и утилиты работают, — но раскладки <code>data-gr-layout</code> не сложатся:
-  именно их правила рантайм пишет в этот лист. Чтобы этого не случилось, рантайм переносит
-  на свой лист <code>nonce</code> со своего же тега <code>&lt;script&gt;</code>.
+  применять созданный скриптом лист. Для рантайма раскладок это потеря: страница останется
+  на месте — контент виден, ресет, компоненты и утилиты работают, — но раскладки
+  <code>data-gr-layout</code> не сложатся. Для рантайма темы — только вид: тема
+  переключится, но переходами, как до 0.26.0. Чтобы этого не случилось, оба рантайма
+  переносят на свой лист <code>nonce</code> со своего же тега <code>&lt;script&gt;</code>.
 </p>
 
 <h3>Готовая политика</h3>
@@ -204,6 +264,7 @@ Griffincss.version;   // '0.25.0'</code></pre>
   style-src   'self' 'nonce-r4nd0m'</code></pre>
 
 <pre><code>&lt;link rel="stylesheet" href="griffincss-core.css"&gt;
+&lt;script src="griffincss-theme.js" nonce="r4nd0m"&gt;&lt;/script&gt;
 &lt;script src="griffincss.js" nonce="r4nd0m"&gt;&lt;/script&gt;</code></pre>
 
 <p>
@@ -230,18 +291,26 @@ Griffincss.version;   // '0.25.0'</code></pre>
       в <code>style-src</code>, тот же <code>nonce</code> — атрибутом на теге</td>
     </tr>
     <tr>
-      <td><code>griffincss-all.js</code> — бандл</td>
-      <td>то же: внутри бандла тот же рантайм раскладок</td>
+      <td><code>griffincss-theme.js</code> — переключатель темы</td>
+      <td>то же: <code>'nonce-…'</code> в <code>style-src</code> и атрибутом на теге.
+      Без него теряется только смена за один кадр — тема переключается переходами</td>
     </tr>
     <tr>
-      <td><code>griffincss-theme.js</code>, <code>griffincss-ui.js</code>,
-      <code>griffincss-utils.js</code></td>
+      <td><code>griffincss-all.js</code> — бандл</td>
+      <td>то же: внутри бандла оба рантайма пакета core</td>
+    </tr>
+    <tr>
+      <td><code>griffincss-ui.js</code>, <code>griffincss-utils.js</code></td>
       <td>только <code>script-src</code>: <code>&lt;style&gt;</code> они не создают</td>
     </tr>
     <tr>
       <td><code>griffinjs.js</code> — слой виджетов</td>
       <td>только <code>script-src</code>: <code>&lt;style&gt;</code> слой не создаёт,
-      оформление приходит из <code>griffinjs.css</code></td>
+      оформление приходит из <code>griffinjs.css</code>. С догрузкой полей
+      (<code>data-fields</code> на теге или <code>GriffinJS.config.fields</code>)
+      вставленный слоем <code>&lt;script&gt;</code> получает <code>nonce</code>
+      с тега слоя — под <code>script-src 'nonce-…'</code> атрибут на теге обязателен,
+      иначе бандл полей отброшен молча, а поля остаются базой без скрипта</td>
     </tr>
   </tbody>
 </table>
@@ -265,7 +334,8 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
   <p><strong>Рантайм, подключённый сборщиком, <code>nonce</code> взять неоткуда.</strong>
   <code>document.currentScript</code> есть только у настоящего тега
   <code>&lt;script&gt;</code>; при импорте из бандла он <code>null</code>. Под строгой
-  политикой подключайте <code>griffincss.js</code> тегом — так, как показано выше.</p>
+  политикой подключайте <code>griffincss.js</code> и <code>griffincss-theme.js</code>
+  тегом — так, как показано выше.</p>
 </div>
 
 <div class="callout">
@@ -320,7 +390,7 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
 </ul>
 
 <pre><code>/* Структура сгенерированного CSS */
-@layer griffincss.reset, griffincss.core, griffincss.utils;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 @layer griffincss.core {
   /* FOUC guard */
   [data-gr-layout]:not(.gr-ready), … { opacity: 0; }
@@ -353,10 +423,10 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
   Присвоение <code>className</code> целиком — так делают React и Vue при изменении
   своего пропа — снимает с контейнера оба класса разом. Раскладка исчезает,
   а FOUC-защита ловит элемент по атрибуту и оставляет его в <code>opacity: 0</code>:
-  пустое место без единой ошибки в консоли. Под <code>Griffincss.observe()</code>
-  рантайм это переживает — наблюдатель слушает и атрибут <code>class</code>,
-  замечает пропажу маркеров на разложенном контейнере и возвращает их,
-  не трогая классы, поставленные вами. Без наблюдателя возвращать их некому.
+  пустое место без единой ошибки в консоли. Рантайм это переживает —
+  наблюдатель слушает и атрибут <code>class</code>, замечает пропажу
+  маркеров на разложенном контейнере и возвращает их, не трогая классы,
+  поставленные вами. С <code>data-observe="false"</code> возвращать их некому.
   Подробнее — <a href="frameworks.html#6-klass-konteynera-raskladki-ne-vash">шестая
   оговорка для фреймворков</a>.</p>
 </div>
@@ -399,22 +469,26 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
 <h2>MutationObserver</h2>
 
 <p>
-  <code>Griffincss.observe()</code> подписывается на изменения DOM и автоматически вызывает <code>refresh()</code>
-  при появлении новых элементов с layout-атрибутами. Это удобно для SPA и динамического контента.
-  Перерисовка идёт с дебаунсом и только по тому корню, за которым ведётся наблюдение, — серия мутаций
-  даёт один проход, а остальной документ не пересканируется.
+  После <code>init()</code> рантайм подписывается на изменения <code>document.body</code>
+  и сам вызывает <code>refresh()</code> при появлении новых элементов с layout-атрибутами —
+  SPA, подгруженный фрагмент, <code>innerHTML</code>. Так с 0.26.0: FOUC-защита ловит
+  любой контейнер по атрибуту, в том числе вставленный после загрузки, — это обещание
+  его показать, и без наблюдателя обещание не выполнялось: вставленный позже блок
+  оставался прозрачным, пока автор не вызовет <code>refresh()</code> сам.
+  Перерисовка идёт с дебаунсом и только по тому корню, за которым ведётся наблюдение, —
+  серия мутаций даёт один проход, а остальной документ не пересканируется.
+  Замер на странице «Паттерны»: порция из 500 контейнеров — один проход,
+  4–7 мс на трёх движках.
 </p>
 
-<pre><code>// Автоматическое отслеживание во всём document.body
-Griffincss.observe();
-
-// Или в конкретном контейнере
-var app = document.getElementById('app');
-Griffincss.observe(app);
-
-// Позже добавляем контент динамически
+<pre><code>// Позже добавляем контент динамически
 app.innerHTML += '&lt;div data-gr-layout="a2b2"&gt;...&lt;/div&gt;';
-// MutationObserver автоматически вызовет refresh()</code></pre>
+// наблюдатель вызовет refresh() сам
+
+// Выключить: &lt;script src="griffincss.js" data-observe="false"&gt;
+// и тогда — свой корень или свой момент
+Griffincss.observe(document.getElementById('app'));
+Griffincss.refresh();</code></pre>
 
 <div class="callout callout-warning">
   <p><strong>Наблюдение идёт за добавлением узлов, не за атрибутами.</strong>

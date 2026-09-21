@@ -85,6 +85,15 @@ test('пустой @media не остаётся', async () => {
   assert.equal(result.css, '');
 });
 
+test('@starting-style разбирается как вложенный блок, а не переносится целиком', async () => {
+  const { purge } = await load();
+  const css = '@starting-style{.gr-toast{opacity:0}.gr-modal[open]{opacity:0}}';
+  const result = purge(css, new Set(['gr-modal']));
+
+  assert.equal(result.css, '@starting-style{.gr-modal[open]{opacity:0}}');
+  assert.equal(purge(css, new Set()).css, '', 'пустой @starting-style остался');
+});
+
 test('@media с уцелевшим правилом сохраняется вместе с ним', async () => {
   const { purge } = await load();
   const css = '@media(width >= 768px){.gr-p-8-md{padding:2rem}.gr-p-4-md{padding:1rem}}';

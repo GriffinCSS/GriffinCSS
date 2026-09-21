@@ -21,7 +21,14 @@
  *   * ajax-содержимое: data-gr-src грузится один раз в [data-gr-content]
  *     (или в само окно), состояния loading → open | error;
  *   * hash: открытие пишет #id в историю, «Назад» закрывает окно,
- *     а страница, открытая с #id, показывает окно сразу.
+ *     а страница, открытая с #id, показывает окно сразу;
+ *   * рост окна (Этап 48d) — data-gr-dialog="grow": ResizeObserver
+ *     на окне, и смена высоты больше 24 px идёт анимацией от прежней
+ *     к новой (element.animate по block-size — не спорит с transition
+ *     компонента). Для окна, чьё содержимое приходит ajax'ом: плашка
+ *     в 10rem не прыгает к форме, а вырастает до неё. Только по атрибуту:
+ *     наблюдатель на каждом окне — цена, которую не все просили. Открытие
+ *     и закрытие не трогаются, prefers-reduced-motion — без анимации.
  *
  * Разметка и стили .gr-modal / .gr-drawer не меняются. Окно поднимается
  * по data-gr-dialog или при первом открытии через data-gr-open — атрибут
@@ -33,8 +40,34 @@
   var DEFAULTS = {
     hash: false,
     media: true,
-    lock: true
+    lock: true,
+    grow: false
   };
+
+  // Порог роста: ниже — ввод в textarea с автовысотой, а не приход содержимого.
+  var GROW_STEP = 24;
+
+  function reducedMotion() {
+    try {
+      return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) { return false; }
+  }
+
+  // Темп окна, мс: --gr-modal-transition темы, иначе --gr-transition;
+  // «0.2s ease» → 200, пусто или 0s → 0.
+  function duration(node) {
+    var value = '';
+
+    try {
+      var styles = getComputedStyle(node);
+
+      value = styles.getPropertyValue('--gr-modal-transition') || styles.getPropertyValue('--gr-transition');
+    } catch (e) { /* без CSSOM */ }
+
+    var m = /(\d*\.?\d+)(m?s)/.exec(value);
+
+    return m ? parseFloat(m[1]) * (m[2] === 's' ? 1000 : 1) : 0;
+  }
 
   var OPEN_ATTR = 'data-gr-open';
 
@@ -103,6 +136,9 @@
     var frames = [];           // [{el, src}] — разгруженные iframe
     var byHistory = false;     // закрыто кнопкой «Назад»: back() не зовём
     var record = { el: el, o: o };
+    var grow = null;           // ResizeObserver — только по grow
+    var known = 0;             // высота окна по последнему наблюдению
+    var growing = null;        // идущая анимация высоты
 
     function id() { return el.getAttribute('id') || ''; }
 
@@ -165,6 +201,28 @@
         G.warn('окно: ' + src + ' не загружен: ' + (error && error.message));
         setAttr(el, 'data-gr-state', 'error');
       });
+    }
+
+    // --- Рост окна ----------------------------------------------------------
+
+    // Пока идёт анимация, наблюдение молчит: промежуточные высоты — её же.
+    // Открытие и закрытие (0 ↔ высота) — не рост; мелочь до порога — тоже.
+    function onResize() {
+      if (growing) return;
+
+      var next = el.getBoundingClientRect().height;
+      var prev = known;
+
+      known = next;
+
+      if (!prev || !next || !isOpen() || Math.abs(next - prev) <= GROW_STEP) return;
+
+      var ms = reducedMotion() ? 0 : duration(el);
+
+      if (!ms || typeof el.animate !== 'function') return;
+
+      growing = el.animate([{ blockSize: prev + 'px' }, { blockSize: next + 'px' }], { duration: ms, easing: 'ease' });
+      growing.onfinish = growing.oncancel = function () { growing = null; };
     }
 
     // --- Hash ---------------------------------------------------------------
@@ -242,6 +300,8 @@
       var at = stack.indexOf(record);
       if (at !== -1) stack.splice(at, 1);
 
+      if (grow) grow.disconnect();
+      if (growing) growing.cancel();
       relock();
       restoreMedia();
       events.removeAll();
@@ -259,6 +319,11 @@
 
     listen(el, 'close', onClose);
     setAttr(el, 'data-gr-state', isOpen() ? 'open' : 'ready');
+
+    if (o.grow && typeof ResizeObserver === 'function') {
+      grow = new ResizeObserver(onResize);
+      grow.observe(el);
+    }
 
     if (isOpen()) { stack.push(record); relock(); }
 

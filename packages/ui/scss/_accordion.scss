@@ -42,8 +42,11 @@
   justify-content: space-between;
   gap: var(--gr-ui-gap);
   min-block-size: var(--gr-control-height);
-  padding-block: calc(var(--gr-gap) * 0.5);
-  padding-inline: var(--gr-gap);
+
+  // Отступ заголовка — токеном (Этап 46): <summary> — структурный ребёнок,
+  // и правило темы на нём проигрывает слою ui.
+  padding-block: calc(var(--gr-accordion-summary-pad, var(--gr-gap)) * 0.5);
+  padding-inline: var(--gr-accordion-summary-pad, var(--gr-gap));
   background-color: transparent;
   color: inherit;
   font-family: inherit;

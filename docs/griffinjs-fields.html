@@ -45,8 +45,8 @@
     подключается после <code>griffinjs.js</code> или после
     <code>griffinjs-core.js</code>, как любой модуль слоя. Цена входа —
     набор «ядро + позиция у якоря + поля»:
-    <b><!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
-    сами поля — <!--gr:size:griffinjs-fields-->11,1 КБ<!--/gr:size:griffinjs-fields-->,
+    <b><!--gr:size:griffinjs-fields-set-->13,8 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
+    сами поля — <!--gr:size:griffinjs-fields-->11,2 КБ<!--/gr:size:griffinjs-fields-->,
     стили — <!--gr:size:griffinjs-fields-css-->1,7 КБ<!--/gr:size:griffinjs-fields-css-->.
     Для сравнения: <code>flatpickr</code> ≈ 15 КБ, <code>imask</code> ≈ 12 КБ,
     <code>intl-tel-input</code> ≈ 40 КБ с данными — три библиотеки на три
@@ -70,6 +70,45 @@
   таблица наборов ниже. Порядок тегов свободный, кроме одного: ядро идёт
   первым. Если чего-то не хватает, слой скажет об этом в консоли при старте.
 </p>
+
+<h3 id="dogruzka">Догрузка по потребности</h3>
+
+<p>
+  Витрине поля нужны на трёх страницах из трёхсот — оформлении заказа,
+  регистрации и отзыве, — а тег бандла стоит в шаблоне шапки для всех.
+  Вместо этого слою можно назвать путь к бандлу, и он возьмёт его сам,
+  когда встретит первое поле: <code>data-gr-mask</code>, <code>data-gr-phone</code>
+  и остальные девять имён загрузчик (<code>griffinjs-loader.js</code>, входит
+  в <code>griffinjs.js</code>; в наборе «ядро + нужное» подключается
+  отдельно) знает как состав файла поставки. Тег вставляется один раз
+  на документ, <code>nonce</code> переносится с тега слоя (под строгим
+  CSP — обязателен, см.
+  <a href="runtime.html#csp">«Строгий CSP»</a>), таблица стран, если
+  названа, грузится вторым тегом, и поля поднимаются, когда приехали оба.
+  Страница без полей не грузит ничего.
+</p>
+
+<pre><code>&lt;!-- слой с defer: пути — атрибутами тега, инлайновый скрипт глобала ещё не видит --&gt;
+&lt;script defer src="griffinjs.js"
+        data-fields="griffinjs-fields.js"
+        data-countries="griffinjs-countries.js"&gt;&lt;/script&gt;
+
+&lt;!-- слой синхронно или из своего кода — то же самое свойством --&gt;
+&lt;script src="griffinjs.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  GriffinJS.config.fields = { src: 'griffinjs-fields.js', countries: 'griffinjs-countries.js' };
+&lt;/script&gt;</code></pre>
+
+<table>
+  <tr><th>Что</th><th>Как</th></tr>
+  <tr><td>Когда</td><td>при старте и на каждом узле, который поднимает сканер: поле, вставленное позже, догружает бандл так же</td></tr>
+  <tr><td>После загрузки</td><td>виджеты подняты на всех полях документа; событие <code>griffinjs:fields-loaded</code> на <code>document</code>, в <code>detail.files</code> — что загружено</td></tr>
+  <tr><td>Ошибка загрузки</td><td>предупреждение <code>GriffinJS: бандл полей не загружен</code>, поля остаются базой без скрипта, второй попытки нет</td></tr>
+  <tr><td>Без <code>config</code></td><td>поле без виджета — предупреждение раз на имя: <code>поле «mask» не собрано</code>. Так было бы и раньше, только молча</td></tr>
+  <tr><td>Стили</td><td><code>griffinjs-fields.css</code> не догружается: лист в <code>&lt;head&gt;</code> — 1,7 КБ, и он нужен до первой отрисовки поля, а не после</td></tr>
+  <tr><td><code>config</code> позже старта</td><td>поля проверяются при каждом <code>init()</code>: задали путь после старта — позовите <code>GriffinJS.init()</code></td></tr>
+  <tr><td>Набор «ядро + нужное»</td><td>загрузчик — свой файл <code>griffinjs-loader.js</code> после ядра; атрибуты <code>data-fields</code> ставятся на его тег</td></tr>
+</table>
 
 <h2>Что нового для слоя: поля пишут <code>value</code></h2>
 
@@ -780,9 +819,12 @@ var TABLE = [
   браузера, а подпись — <code>&lt;label&gt;</code> поля, иначе
   <code>aria-label</code> или <code>name</code>. Фокус после отправки —
   на первой ссылке, Enter по ней ведёт к полю. Непройденные поля получают
-  <code>aria-invalid="true"</code> — их красит CSS семьи
-  <code>.gr-field</code> — и теряют его, как только исправлены; список
-  обновляется следующей отправкой. Пузырь браузера на время жизни виджета
+  <code>aria-invalid="true"</code> — источник для программы чтения
+  с экрана, — а их обёртка <code>.gr-field</code>, если она есть,
+  состояние <code>data-gr-state="error"</code>: его и красит CSS семьи.
+  Оба снимаются, как только поле исправлено (обёртка с двумя контролами
+  держит состояние, пока не пройден хотя бы один); список обновляется
+  следующей отправкой. Пузырь браузера на время жизни виджета
   снимается (<code>novalidate</code>), проверку это не отменяет:
   <code>checkValidity()</code> платформы остаётся единственным судьёй.
 </p>
@@ -834,8 +876,8 @@ var TABLE = [
 
 <!-- gr:griffinjs-fields-deps -->
 <p>
-  Все поля одним файлом — <b>11,1 КБ gzip</b> без ядра;
-  набор «ядро + anchor + поля» — <b>13,7 КБ</b>.
+  Все поля одним файлом — <b>11,2 КБ gzip</b> без ядра;
+  набор «ядро + anchor + поля» — <b>13,8 КБ</b>.
   По одному поля берутся так же, как виджеты: ядро первым, затем объявленное
   и само поле. Таблица собрана из объявлений при сборке.
 </p>
@@ -844,13 +886,13 @@ var TABLE = [
   <tr><th>Поле</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
   <tr><td><code>data-gr-mask</code></td><td><code>griffinjs-mask.js</code></td><td>3,9 КБ</td></tr>
   <tr><td><code>data-gr-phone</code></td><td><code>griffinjs-mask.js</code> + <code>griffinjs-phone.js</code></td><td>5,3 КБ</td></tr>
-  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,5 КБ</td></tr>
-  <tr><td><code>data-gr-number</code></td><td><code>griffinjs-number.js</code></td><td>4,2 КБ</td></tr>
+  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,6 КБ</td></tr>
+  <tr><td><code>data-gr-number</code></td><td><code>griffinjs-number.js</code></td><td>4,3 КБ</td></tr>
   <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,8 КБ</td></tr>
   <tr><td><code>data-gr-rating</code></td><td><code>griffinjs-rating.js</code></td><td>3,1 КБ</td></tr>
-  <tr><td><code>data-gr-otp</code></td><td><code>griffinjs-otp.js</code></td><td>3,4 КБ</td></tr>
-  <tr><td><code>data-gr-counter</code></td><td><code>griffinjs-counter.js</code></td><td>3,1 КБ</td></tr>
-  <tr><td><code>data-gr-validate</code></td><td><code>griffinjs-validate.js</code></td><td>3,6 КБ</td></tr>
+  <tr><td><code>data-gr-otp</code></td><td><code>griffinjs-otp.js</code></td><td>3,5 КБ</td></tr>
+  <tr><td><code>data-gr-counter</code></td><td><code>griffinjs-counter.js</code></td><td>3,2 КБ</td></tr>
+  <tr><td><code>data-gr-validate</code></td><td><code>griffinjs-validate.js</code></td><td>3,7 КБ</td></tr>
 </table>
 <!-- /gr:griffinjs-fields-deps -->
 

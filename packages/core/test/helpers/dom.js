@@ -431,11 +431,23 @@ function setupThemeDom(options = {}) {
 
   doc.currentScript = options.script || null;
 
+  // Кадры: requestAnimationFrame складывает обратные вызовы в очередь,
+  // frame() проигрывает один кадр — так проверяется снятие гашения
+  // переходов через два кадра. noFrames — окружение без rAF.
+  const frames = [];
+  const frame = () => {
+    const queued = frames.splice(0);
+
+    for (const fn of queued) fn();
+  };
+
   global.document = doc;
   global.window = {
     matchMedia: (query) => media[query] || new MockMediaQueryList(query, false),
     localStorage: storage,
   };
+
+  if (!options.noFrames) global.window.requestAnimationFrame = (fn) => frames.push(fn);
   global.CustomEvent = class {
     constructor(type, init) {
       this.type = type;
@@ -446,7 +458,7 @@ function setupThemeDom(options = {}) {
   delete require.cache[require.resolve(THEME_PATH)];
   const theme = require(THEME_PATH);
 
-  return { doc, theme, media, storage };
+  return { doc, theme, media, storage, frame, frames };
 }
 
 module.exports = {

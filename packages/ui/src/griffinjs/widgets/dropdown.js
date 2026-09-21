@@ -21,10 +21,22 @@
  *   * позицию popover-панели у кнопки: считается здесь, а не CSS anchor
  *     positioning, — одинаково во всех движках (нужен griffinjs-anchor.js);
  *   * наведение с задержкой намерения (hover) — только для pointerType
- *     mouse/pen: касание открывает щелчком, как без скрипта.
+ *     mouse/pen: касание открывает щелчком, как без скрипта;
+ *   * закрытие <details> с состоянием (Этап 48d): панель, чей уход тема
+ *     анимирует, не пропадает в первом же кадре — обёртка получает
+ *     data-gr-state="closing", open снимается по transitionend/animationend
+ *     самой панели или по таймауту в длительность --gr-transition плюс
+ *     50 мс. Щелчок по кнопке открытого дропдауна идёт тем же путём.
+ *     Во всех браузерах, без развилки по ::details-content: Firefox 153
+ *     поддерживает селектор и allow-discrete, но закрытие не анимирует —
+ *     замер в browser/closing.spec.mjs (решение владельца 2026-09-21).
+ *     CSS слоя переходов не задаёт — при 0s закрывается сразу.
+ *     Popover-панель анимирует платформа через display allow-discrete —
+ *     ей это не нужно.
  *
  * Открытое состояние — data-gr-state="open" на обёртке: у варианта
  * по наведению (.gr-dropdown-hover) панель по нему показывает CSS слоя.
+ * Между open и ready у <details> бывает closing.
  */
 (function (G) {
   'use strict';
@@ -70,6 +82,18 @@
     return document.activeElement === node;
   }
 
+  // Длительность --gr-transition у узла, мс: «0.2s ease» → 200, «150ms» → 150,
+  // пусто или 0s → 0. Одно чтение вычисленного стиля при закрытии.
+  function duration(node) {
+    var value = '';
+
+    try { value = getComputedStyle(node).getPropertyValue('--gr-transition'); } catch (e) { /* без CSSOM */ }
+
+    var m = /(\d*\.?\d+)(m?s)/.exec(value);
+
+    return m ? parseFloat(m[1]) * (m[2] === 's' ? 1000 : 1) : 0;
+  }
+
   G.defineWidget('dropdown', { needs: ['anchor'] }, function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();
@@ -86,6 +110,7 @@
     var opened = false;        // для popover и css: <details> знает сам
     var viaKeyboard = false;   // открыто с клавиатуры — фокус уходит в меню
     var timer = null;
+    var closing = null;        // таймаут состояния closing у <details>
 
     // --- Состояние ------------------------------------------------------------
 
@@ -111,6 +136,7 @@
 
     function sync(now) {
       if (kind !== 'details') opened = now;
+      if (!now) settleClosing();
 
       setAttr(trigger, 'aria-expanded', now ? 'true' : 'false');
       setAttr(el, 'data-gr-state', now ? 'open' : 'ready');
@@ -119,6 +145,59 @@
 
       if (now && viaKeyboard) focusTo(items()[0]);
       viaKeyboard = false;
+    }
+
+    // --- Закрытие <details> с состоянием closing ------------------------------
+
+    // open снимается не сразу: обёртка получает data-gr-state="closing",
+    // панель уходит переходом темы; конец — transitionend/animationend самой
+    // панели (не потомка) или таймаут. Затем toggle → sync(false) → ready.
+    function closeDetails() {
+      if (closing) return;
+
+      var wait = duration(panel);
+
+      if (!wait) {
+        el.open = false;
+        return;
+      }
+
+      closing = setTimeout(finishClosing, wait + 50);
+      panel.addEventListener('transitionend', onEnd);
+      panel.addEventListener('animationend', onEnd);
+      setAttr(el, 'data-gr-state', 'closing');
+    }
+
+    function onEnd(event) {
+      if (event.target === panel) finishClosing();
+    }
+
+    function settleClosing() {
+      if (!closing) return;
+
+      clearTimeout(closing);
+      closing = null;
+      panel.removeEventListener('transitionend', onEnd);
+      panel.removeEventListener('animationend', onEnd);
+    }
+
+    function finishClosing() {
+      if (!closing) return;
+
+      settleClosing();
+      el.open = false;
+    }
+
+    // Щелчок (и Enter/Space) по кнопке открытого <details>: платформа сняла бы
+    // open в тот же кадр — перехватывается и идёт через closing. Щелчок
+    // по закрывающемуся — передумали: панель остаётся.
+    function onTriggerClick(event) {
+      if (kind !== 'details' || !el.open) return;
+
+      event.preventDefault();
+
+      if (closing) open();
+      else close();
     }
 
     // beforetoggle приходит синхронно, до показа: панель ещё без размера,
@@ -137,6 +216,14 @@
 
     function open() {
       cancelTimer();
+
+      // Открытие во время закрытия отменяет его: панель остаётся на месте.
+      if (closing) {
+        settleClosing();
+        setAttr(el, 'data-gr-state', 'open');
+        return;
+      }
+
       if (isOpen()) return;
 
       if (kind === 'details') el.open = true;
@@ -149,7 +236,7 @@
       cancelTimer();
       if (!isOpen()) return;
 
-      if (kind === 'details') el.open = false;
+      if (kind === 'details') closeDetails();
       else if (kind === 'popover') {
         try { panel.hidePopover(); } catch (e) { sync(false); }
       } else sync(false);
@@ -286,6 +373,7 @@
 
     function destroy() {
       cancelTimer();
+      finishClosing();
       events.removeAll();
       if (kind === 'popover' && G.anchor) G.anchor.clear(panel);
       attrs.restore();
@@ -298,8 +386,10 @@
 
     roles();
 
-    if (kind === 'details') listen(el, 'toggle', function () { sync(!!el.open); });
-    else if (kind === 'popover') {
+    if (kind === 'details') {
+      listen(el, 'toggle', function () { sync(!!el.open); });
+      listen(trigger, 'click', onTriggerClick);
+    } else if (kind === 'popover') {
       listen(panel, 'beforetoggle', onBeforeToggle);
       listen(panel, 'toggle', function (event) { sync(event.newState === 'open'); });
       listen(document, 'scroll', onReflow, true);

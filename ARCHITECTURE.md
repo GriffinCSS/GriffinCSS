@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.25.0
+- **Version:** 0.26.0
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -132,29 +132,55 @@ theme are excluded from the scope for the same class of reason. `check-dist.mjs`
 | Docs site | `docs/*.html`, `docs/nav.js`, `docs/style.css` | 38 pages sharing one shell: `nav.js` builds the sidebar, the search box, the page outline, the copy buttons and the preview/code tabs from the existing DOM — page markup carries none of it |
 
 ### Cascade layers
-Every build declares the same order and puts all of its output inside one layer:
+Every build declares the same order (seven layers since Stage 46) and puts its output
+into its own layer plus, where it carries them, the two shared ones:
 
 ```css
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 ```
 
 | Layer | Source |
 |---|---|
 | `griffincss.reset` | `griffincss-reset.css` |
-| `griffincss.core` | `griffincss-core.css`, `gr-grid-layout()` output, all runtime CSS |
+| `griffincss.tokens` | `_tokens.scss` + `_theme-tokens.scss` from **every** package (core, ui, utils, both scoped builds), `_style-anchors.scss` from the axis files — one shared layer, identical copies |
+| `griffincss.core` | `griffincss-core.css` (rules only), `gr-grid-layout()` output, all runtime CSS |
 | `griffincss.ui` | `griffincss-ui.css`, `griffincss-ui-scoped.css` |
 | `griffincss.utils` | `griffincss-utils.css`, `griffincss-utils-scoped.css` |
-| `griffincss.style` | `griffincss-styles.css`, `griffincss-style-{airy,strict,compact}.css` — tokens only, never a class |
+| `griffincss.style` | `griffincss-styles.css`, `griffincss-style-{airy,strict,compact}.css` — `[data-gr-style]` carrier blocks only, never a class, never `:root` |
+| `griffincss.hidden` | `_hidden.scss` from every build with a `display` — `[hidden]:not([hidden="until-found"]) { display: none }` |
 
 Components outrank the core so `.gr-card` with its own `display: flex` does not lose to
 `.gr-flex`; utilities outrank components so `.gr-mb-0` on a card beats its own `margin-bottom`.
 
-`griffincss.style` is last and must stay last. `griffincss-ui.scss` and
-`griffincss-utils.scss` load the core `_tokens.scss` **inside their own layers** so each
-built file is self-contained — which puts a `:root` block in three layers at once. A layer
-beats any specificity, so the style axis shipping in `griffincss.core` would have lost to
-those base tokens silently on any page with `griffincss-ui.css`. User CSS outside layers
-still wins over all five.
+**Tokens live in one layer, first after the reset (Stage 46).** Each built file is
+self-contained and still carries its own `:root`, theme and a11y blocks — but emits them
+into `griffincss.tokens`, not into its own layer. Before that every package put its copy
+into its own layer, and a consumer sublayer `griffincss.app` between core and ui (the
+documented recipe) could not override `--gr-font-sans`: the same declaration from `ui` and
+`utils` sat in layers above it. Now all copies sit in one layer, the last copy by source
+order wins, and it equals the first — `packages/core/test/layers.test.js` compares the
+five bodies byte for byte — so any sublayer after `tokens` outranks them at any
+specificity. Two consequences: the `[data-gr-style]` blocks of the axis stay in
+`griffincss.style` (they must beat the theme), while the axis **anchors** on `:root` /
+`[data-gr-theme]` moved to `_style-anchors.scss` and into `tokens`; and check 4a in
+`check-dist.mjs` fails on any `--gr-*` declaration on `:root`, `[data-gr-theme]` or
+`[data-gr-a11y]` outside `tokens` (the `[data-gr-style]` carrier in `style` is the one
+exception). A consumer that copied the old five-layer order string first-declares it,
+and the two new names are then appended *after* `style`: `hidden` lands where it belongs,
+but `tokens` outranks their sublayer again — CHANGELOG 0.26.0 says so, and
+`layers.spec.mjs` keeps that negative control.
+
+**`[hidden]` is last and must stay last.** The UA rule `[hidden] { display: none }` loses
+to any author `display`, which half the components set; the reset's own copy in the lowest
+layer lost the same way, so `<nav class="gr-nav" hidden>` stayed visible. The rule now
+ships from every build inside `griffincss.hidden`, without `!important` (check 2 stands);
+above it are only the consumer's layers and unlayered CSS. `hidden="until-found"` is
+excluded — the browser keeps it as `content-visibility: hidden` for find-in-page.
+
+User CSS outside layers still wins over all seven. The consumer sublayer must be a
+**nested** name — `griffincss.app`, never `app`: a top-level layer sorts after the whole
+`griffincss` parent wherever it is written in the list and outranks the entire library
+(`starter.html` carried that mistake until 0.26.0).
 
 **What of the theme travels into the add-ons, and why (Stage 40).** The theme is two
 partials. `_theme-tokens.scss` — the token carriers (`:root`, `[data-gr-theme]`,
@@ -198,20 +224,20 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.25.0)
+### JS Runtime Key Features (v0.26.0)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
 4. **Non-overlapping breakpoints:** range syntax (`(width < 768px)`, `(768px <= width < 1024px)`, `(width >= 1280px)`) — no `-1px` arithmetic, units of the breakpoint value do not matter. `rangeQuery()` writes the range, `wrapInQuery(rule, …)` picks `@media` or `@container`. Window and container are two independent chains; the base layout is wrapped in both at once, or it would cover the other axis' range and the winner would depend on rule order
-5. **Auto-hide via :not():** hides children whose grid-area is not in current template (preserves native display)
+5. **Auto-hide via :not():** hides children whose grid-area is not in current template (preserves native display). A child whose explicit `gr-area-*` is in **none** of the container's layouts is a markup error (a typo, or `abcd` read as one area instead of `a1b1c1d1`) and gets `console.warn('Griffincss: area "…" is not in any layout of its container (…)')` once per container and name — the record keeps `known` (the union of names over all sets) and `warned`, so the default observer's repeated passes do not repeat it. A name missing from only some sets is hiding by design and warns about nothing
 6. **Auto-assign gr-area-*:** names already present on children are collected first and excluded; the remaining free names go to classless children in first-appearance order — duplicates are impossible
 7. **Validation:** empty area name, repeat count `0` or `> 64`, name longer than 32 chars, invalid name chars, empty row → `console.warn('Griffincss: …')` and the whole element is skipped (still gets `.gr-ready`, so it stays visible). An empty attribute value (`data-gr-layout=""`) is not an error and warns about nothing, but the element still gets `.gr-ready` — the FOUC guard matches on the attribute's presence, so without it the content would stay at `opacity: 0` forever
 7a. **Re-processing is idempotent:** `refresh()` over an element the runtime already touched drops the previous `.gr-l-*` class if the set changed and re-runs the `gr-area-*` handout from scratch. Two layout classes on one container would both apply, with source order — not recency — deciding the winner; stale area names would fall outside the new template and the auto-hide rule would hide every child. Classes written in the markup are never removed: only what `touched` records is taken back
 8. **FOUC guard:** injected by the runtime itself as its first action, not shipped in the static CSS — with JS blocked there is no rule and the content stays visible
 9. **API:** `Griffincss.init()`, `Griffincss.refresh(root?)`, `Griffincss.observe(root?)`, `Griffincss.destroy()`, `Griffincss.parseLayout(str)` (throws on invalid input)
-10. **observe():** one MutationObserver per root, debounced (16 ms), refreshes only that root
+10. **observe():** one MutationObserver per root, debounced (16 ms), refreshes only that root. Since Stage 47 the auto-start raises it on `document.body` itself right after `init()` (both paths: `DOMContentLoaded` and the already-loaded one) — the FOUC guard matches any late container by its attribute, which is a promise to show it, and without an observer the promise was not kept: a block inserted after load stayed at `opacity: 0` until the author called `refresh()`. `data-observe="false"` on the `<script>` tag turns it off; a manual `init()` under `data-auto="false"` does not observe on its own. Measured on `patterns.html`: a batch of 500 inserted containers is one pass, 4–7 ms on three engines (`observe.spec.mjs`)
 11. **destroy():** disconnects observers, removes `.gr-ready`, `.gr-l-*` and the area classes the runtime assigned (explicit ones stay), drops the `<style>`, and clears every cache including the one-shot `--gr-bp-*` read — a later `init()` picks up breakpoints changed in the meantime
-12. **data-auto="false":** attribute on `<script>` tag disables auto-init (FOUC guard then appears only with the manual `init()`)
+12. **data-auto="false":** attribute on `<script>` tag disables auto-init (FOUC guard then appears only with the manual `init()`); `data-stream="false"` and `data-observe="false"` are the other two switches, all read from `document.currentScript` at load time
 12a. **Streaming layout:** when the script is synchronous in `<head>` and `readyState === 'loading'`, the runtime raises a parse observer on `document.documentElement` and lays out each container the moment the parser creates it — attributes arrive with the opening tag, children follow in later batches. `init()` on `DOMContentLoaded` stays as a final reconciliation pass and rebuilds the sheet if `--gr-bp-*` turned out to differ from what was read at script time. `data-stream="false"` on the `<script>` tag falls back to the pre-0.7.0 path; with `defer` or a script at the end of `<body>` the mode degenerates into it on its own. No fade in streaming mode: the container is never painted transparent, so the guard's transition has nothing to start from
 12b. **Incremental area handout:** a classless child gets the first free name immediately; an explicit `gr-area-X` on a later child always wins, and the container is recomputed from scratch so the result matches the batch algorithm
 13. **No radius pass:** `processRadius` is gone — the `.gr-radius` cascade is pure CSS (`--gr-p` → `padding`), no forced reflow
@@ -298,6 +324,7 @@ Invariants and the reader-facing architecture: `docs/griffinjs-architecture.html
 | `griffinjs-core.js` | 6.0 KB | core (registries, lifecycle, recorder/listeners), options, registry (event delegation), scanner, media, motion, gesture, track |
 | `griffinjs-scroll.js` / `griffinjs-fade.js` | 1.5 / 0.5 KB | track engines |
 | `griffinjs-anchor.js` | 0.9 KB | top-layer positioning; outside the core on purpose, required by dropdown and tooltip |
+| `griffinjs-loader.js` | 0.9 KB (2026-09-21, Stage 48c) | lazy loading of the fields bundle: on `init(root)` a `data-gr-<field>` without a registered widget inserts `<script>` from `GriffinJS.config.fields = { src, countries }` (or `data-fields` / `data-countries` on the tag) once, `async = false`, `nonce` copied from the tag, mounts after every file loaded, emits `griffinjs:fields-loaded`; without a config warns once per field. In `SHARED`, not in the core: the two-file set does not pay for it (+37 B in the core for `config` and the `init` lifecycle hook) |
 | `griffinjs-slider.js` / `-gallery.js` / `-lightbox.js` / `-parallax.js` | 1.6 / 0.7 / 1.7 / 0.3 KB | scrolling family and parallax |
 | `griffinjs-megamenu.js` / `-dropdown.js` / `-tooltip.js` | 2.2 / 1.9 / 0.9 KB | dropping family |
 | `griffinjs-dialog.js` / `-combobox.js` | 1.8 / 2.3 KB | dialog controller and combobox |
@@ -318,6 +345,7 @@ wipe `window.GriffinJS`), and not a byte of it goes into `griffinjs.js` — `che
 greps the full bundle for every field's `defineWidget`. Budgets: fields 11.2 KB, set
 «core + anchor + fields» 13.8 KB, styles 1.8 KB, countries 0.9 KB — set by first
 measurement, raised only with a named purchase (the history is in `check-dist.mjs`).
+Stage 48c: the bundle can be loaded on demand — `griffinjs-loader.js` (see the table above).
 `mask` is the foundation (phone, datetime and otp stand on it); `datetime` touches the
 markup only on `pointerType === 'mouse'`. Stage 43: `datetime` links a pair «from — to»
 through the option `to` — the value of one field becomes the `min`/`max` of the other,
@@ -364,23 +392,25 @@ These widgets write the control's `value` — the declared extension of invarian
 | `packages/core/scss/_container-queries.scss` | `.gr-cq` — `container-type: inline-size`, name from `--gr-name`; re-exports the mixins |
 | `packages/core/scss/_container-mixins.scss` | `gr-container-media($bp, $name)`, `gr-bp-value($key)`, `gr-is-container($key)` — no CSS of its own, so `griffincss-utils` can `@use` it without dragging `.gr-cq` into a second package |
 | `packages/core/scss/_functions.scss` | SCSS parser + utility functions |
-| `packages/core/scss/_reset.scss` | Minimal CSS reset + the `@media print` block (black on white, `<details>` expanded via `::details-content`, break-avoid rules) |
+| `packages/core/scss/_reset.scss` | Minimal CSS reset + the `@media print` block (black on white, `<details>` expanded via `::details-content`, break-avoid rules). No `[hidden]` any more — see `_hidden.scss` |
+| `packages/core/scss/_hidden.scss` | `[hidden]:not([hidden="until-found"]) { display: none }` — the only rule of the last layer `griffincss.hidden`; loaded by every build that sets a `display` (reset, core, ui, utils, both scoped) |
+| `packages/core/scss/_style-anchors.scss` | The axis anchors on the theme carriers (`:root, [data-gr-theme="light"]`, `[data-gr-theme="dark"]`, `prefers-color-scheme`), gated by `$gr-styles` — the part of the axis that lives in `griffincss.tokens`; `_styles.scss` keeps only the `[data-gr-style]` carrier blocks for `griffincss.style` |
 | `packages/core/scss/_grid-parser.scss` | Static grid rules (`.gr-grid`, layout gap `[class*="gr-l-"]`), re-exports the layout mixins |
 | `packages/core/scss/_layout-mixins.scss` | `gr-grid-layout()` — compile-time twin of the runtime |
-| `packages/core/scss/_grid-helpers.scss` | `.gr-container`, `.gr-expand-root` + `.gr-container-expand` (full-bleed via `cqw`), auto-fit/fill, `.gr-grid-1…12` (+ responsive), `.gr-grid-rows`, span utilities |
-| `packages/core/scss/_flex.scss` | Flex utilities + responsive variants |
+| `packages/core/scss/_grid-helpers.scss` | `.gr-container`, `.gr-expand-root` + `.gr-container-expand` (full-bleed via `cqw`), auto-fit/fill, `.gr-grid-1…12` (+ responsive `-{bp}` and container `-c{bp}` variants from one mixin), `.gr-grid-rows`, span utilities |
+| `packages/core/scss/_flex.scss` | Flex utilities + responsive variants; container variants (`-c{bp}`) only for direction and wrap |
 | `packages/core/scss/_gap.scss` | `.gr-gap-sm/.gr-gap/.gr-gap-lg` — one gap set for grid, flex and layouts; loaded last |
 | `packages/core/src/griffincss.js` | JS runtime (hand-written, copied to dist on build) |
-| `packages/core/src/griffincss-theme.js` | Theme switcher runtime — separate file, separate `<script>`, optional |
+| `packages/core/src/griffincss-theme.js` | Theme switcher runtime — separate file, separate `<script>`, optional. Every attribute change goes through `apply()`, which first calls `freeze()`: a class `gr-theme-switching` on `<html>` and an **unlayered** `<style>` with `transition: none` for everything under it, both removed after two `requestAnimationFrame`s (Stage 45) — the theme changes in one frame instead of 0.2 s of patches, and a colour read right after `set()` is already final. Second and last `<style>` maker in the library; carries the `<script>` nonce like the core runtime |
 | `packages/utils/src/griffincss-utils.js` | Utils runtime — border-radius cascade of arbitrary depth **and arbitrary values** (`.gr-mt-[13px]`). Streams during parsing, observes the live tree, emits into `griffincss.utils` through the core's `_emit`/`_flush`. Rule table between `gr:rule-table` markers is generated by `scripts/sync-rule-table.mjs`; the `PROPS` table maps a class prefix to the declarations of its static twin, and `arbitrary.test.js` compares both against the compiled CSS. Bracket contents are validated like a layout string in the core — length, no `}`, `;` or `/*` — and rejected input is a `console.warn` plus a skip, never a broken rule |
 | `packages/ui/package.json` | `griffincss-ui` metadata and build scripts |
 | `packages/ui/scss/griffincss-ui.scss` | UI package entry |
 | `packages/ui/scss/griffincss-ui-scoped.scss` | Same components prefixed with `:where(.griffin)` |
 | `packages/ui/scss/_button.scss` | `.gr-btn` + nine variants over three local custom props; one `:hover`/`:active` rule for all of them via `color-mix()` |
 | `packages/ui/scss/_link.scss` | `.gr-link` + variants; exists because the reset strips colour and underline from `<a>` |
-| `packages/ui/scss/_form.scss` | `.gr-input` / `.gr-textarea` / `.gr-select` as one control family, `.gr-field`, `.gr-input-group`, `:user-invalid`; the select draws its own arrow from two gradients in `currentcolor` — the UA arrow ignores `padding-inline-end` |
-| `packages/ui/scss/_choice.scss` | `.gr-checkbox` / `.gr-radio` on `accent-color`, `.gr-switch` drawn with `background-image`, `.gr-segmented` from a real radio group |
-| `packages/ui/scss/_card.scss` | `.gr-card` flex column, header/body/footer, stretched-link `.gr-card-interactive` |
+| `packages/ui/scss/_form.scss` | `.gr-input` / `.gr-textarea` / `.gr-select` as one control family, `.gr-field` (+ `[data-gr-state="error"]` painting the nested controls — the wrapper state server-side validators set), `.gr-input-group` (edges by the first/last **visible** child through `:nth-child(1 of S)` on top of the old `:first-child` rules, which stay as the soft fallback below Chrome 111 / Firefox 113), `:user-invalid`; the select draws its own arrow from two gradients in `currentcolor` — the UA arrow ignores `padding-inline-end` |
+| `packages/ui/scss/_choice.scss` | `.gr-checkbox` / `.gr-radio` on `accent-color`, `.gr-switch` drawn with `background-image`, `.gr-segmented` from a real radio group (edges by `label:first-of-type` / `:last-of-type`, so a `<legend>` or a trailing hidden field does not break them), `.gr-choice` + `-start` / `-row` modifiers (flex utilities live in `core` and lose to the component's `align-items` / `display` in `ui`) |
+| `packages/ui/scss/_card.scss` | `.gr-card` flex column, header/body/footer, stretched-link `.gr-card-interactive`, `.gr-card-overlay` (overlay surface for panels on a grey page). Reads `--gr-card-bg/-border/-radius/-pad` with fallbacks and declares none of them (gotcha 38) |
 | `packages/ui/scss/_table.scss` | `.gr-table` + element selectors inside, density modifiers, `.gr-table-wrap`, `.gr-table-sticky` (line drawn by inset shadow — a collapsed border does not travel with a sticky cell); stripes and hover are translucent tints of `currentcolor`, so they stay visible on any backdrop; hover is a `background-image` layer, not a `background-color` — same specificity as the stripe, so a colour would replace it instead of adding to it |
 | `packages/ui/scss/_alert.scss` | Status message; `.gr-alert-title` is mandatory — the status must read as a word, not only as a colour |
 | `packages/ui/scss/_badge.scss` | `.gr-badge`, `.gr-tag`, `.gr-dot`, counter |
@@ -625,3 +655,36 @@ These widgets write the control's `value` — the declared extension of invarian
    (15 733 B vs 15 757 B). The rule of thumb the numbers gave: a short declaration
    repeated over few rules compresses to nothing, while a long one over many rules is
    worth writing once. Measure before changing either.
+36. **A transition freeze cannot live in a CSS file of the library.** The theme switch
+   (Stage 45) has to stop every colour transition for one frame, and the transitions it
+   fights sit in three different layers — components in `griffincss.ui`, utilities in
+   `griffincss.utils`, the consumer's theme in its own. Whatever layer of the library the
+   rule went into, one of those would outrank it; `!important` is forbidden by check 5 in
+   `check-dist.mjs`. An unlayered `<style>` written by `griffincss-theme.js` outranks every
+   layer without `!important`, exists for exactly two frames and takes the `nonce` from its
+   `<script>` the same way the FOUC guard does. Two frames, not one: on the first the browser
+   computes the new colours with transitions off; removing the sheet in that same frame
+   would bring the transitions back before the recalc. `check-dist.mjs` now allows exactly
+   two `<style>` makers, both in `packages/core/src`, and demands the nonce line in each.
+37. **A component token that must follow a nested theme is a semantic token.**
+   `--gr-rating-color` used to be declared on `:root` and resolved once there, so a
+   `<section data-gr-theme="dark">` kept the light amber. `--gr-color-rating` (Stage 45)
+   is declared in `gr-semantic-colors` on every theme carrier like the rest of
+   `--gr-color-*`; `.gr-rating` reads `var(--gr-rating-color, var(--gr-color-rating))`,
+   so the per-element override keeps working while nothing declares it globally. The same
+   move is why the token export gained `color-rating` and lost `rating-color`.
+38. **A component token meant for a wrapper override is read with a fallback, never
+   declared on the component.** `.gr-btn` declares `--gr-btn-*` on itself because its
+   variants set them — that is a variant mechanism. The Stage 46 tokens (`--gr-card-*`,
+   `--gr-nav-item-pad`, `--gr-nav-link-radius`, `--gr-modal-body-overflow`,
+   `--gr-modal-transition`, `--gr-tabs-tab-pad`, `--gr-dropdown-pad`,
+   `--gr-dropdown-min-width`, `--gr-accordion-summary-pad`, `--gr-radius-container`) exist so
+   a theme can set one value on a page wrapper; a declaration on the component itself would
+   beat the inherited one and defeat that. So the component reads
+   `var(--gr-card-pad, var(--gr-gap))` and nothing in the library declares the name —
+   `ui.test.js` greps all three builds for `--gr-card-pad:` and fails on a hit. The same
+   reasoning keeps `--gr-radius-container` off `:root`: declared there as `var(--gr-radius)`
+   it would resolve once with the root radius, and a `[data-gr-style="strict"]` island would
+   get round cards next to square controls; the fallback resolves on the element
+   (`component-tokens.spec.mjs` measures the island on three engines). The price is the
+   fallback text repeated in every reader — measured, +248 B for the whole stage.

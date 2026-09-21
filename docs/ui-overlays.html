@@ -213,6 +213,7 @@
   <tr><td><code>.gr-modal-body</code></td><td>Тело; прокручивается только оно</td></tr>
   <tr><td><code>.gr-modal-footer</code></td><td>Подвал с кнопками</td></tr>
   <tr><td><code>.gr-modal-sm</code> / <code>-lg</code> / <code>-full</code></td><td>Размеры</td></tr>
+  <tr><td><code>[data-gr-state="loading"]</code></td><td>Состояние загрузки на самом <code>&lt;dialog&gt;</code>: кольцо по центру, пока содержимое не пришло. Рядом уместен <code>aria-busy="true"</code></td></tr>
 </table>
 
 <div class="demo-block">
@@ -271,6 +272,49 @@
     &lt;form method="dialog"&gt;&lt;button class="gr-btn"&gt;Закрыть&lt;/button&gt;&lt;/form&gt;
   &lt;/div&gt;
 &lt;/dialog&gt;</code></pre>
+
+<h3>Пустое окно: содержимое приходит позже</h3>
+
+<p>
+  Типичный сценарий витрины: окно открывается сразу, а форму обратного
+  звонка, быстрый заказ или выбор города в него кладёт ответ сервера.
+  До ответа <code>&lt;dialog&gt;</code> пуст — и раньше рисовался
+  полоской высотой в рамку, которая через полсекунды рывком раскрывалась
+  в окно. Теперь у окна минимальная высота <code>10rem</code>: пустое
+  окно — плашка, а состояние <code>data-gr-state="loading"</code> рисует
+  в её центре кольцо тем же <code>keyframe</code>, что у
+  <code>.gr-spinner</code>. Ставит и снимает состояние тот же скрипт,
+  что грузит содержимое; программе чтения с экрана о том же говорит
+  <code>aria-busy="true"</code>.
+</p>
+
+<pre><code>const m = document.getElementById('callback');
+m.dataset.grState = 'loading';
+m.setAttribute('aria-busy', 'true');
+m.showModal();
+
+const html = await (await fetch('/callback-form')).text();
+m.innerHTML = html;
+delete m.dataset.grState;
+m.removeAttribute('aria-busy');</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Пустое окно в состоянии загрузки — и то же окно с содержимым через две секунды</div>
+  <button class="gr-btn" type="button" data-open="demo-modal-loading">Открыть пустым</button>
+</div>
+
+<dialog class="gr-modal gr-modal-sm" id="demo-modal-loading" aria-label="Обратный звонок" data-gr-overlay-close></dialog>
+
+<div class="callout">
+  <p>
+    Плавный рост высоты с приходом содержимого — не работа CSS: высота
+    окна <code>auto</code> и до, и после, а переход между двумя
+    <code>auto</code> не анимируется. Это делает слой
+    <code>griffinjs.js</code> по атрибуту <code>data-gr-dialog="grow"</code>
+    на окне — см. подраздел
+    <a href="#griffinjs">«С подключённым <code>griffinjs.js</code>»</a>.
+  </p>
+</div>
 
 <h3>Закрытие щелчком по подложке</h3>
 
@@ -588,7 +632,11 @@
   и щелчку мимо. Popover-панель контроллер кладёт под кнопку сам — по
   <code>getBoundingClientRect</code>, одинаково во всех браузерах, без
   зависимости от CSS anchor positioning; при нехватке места снизу
-  переворачивает вверх, при прокрутке — догоняет кнопку.
+  переворачивает вверх, при прокрутке — догоняет кнопку. Закрытие
+  <code>&lt;details&gt;</code> идёт с анимацией темы: обёртка получает
+  <code>data-gr-state="closing"</code> и держит <code>open</code> до конца
+  перехода панели (рецепт — на странице
+  <a href="griffinjs-menus.html#closing">мегаменю</a>).
 </p>
 
 <pre><code>&lt;details class="gr-dropdown" data-gr-dropdown&gt;…&lt;/details&gt;
@@ -662,8 +710,9 @@
   выше. Он добавляет <code>data-gr-open="#id"</code> на кнопке вместо
   <code>onclick</code>, стек окон, блокировку прокрутки страницы под окном
   (в том числе на iOS), паузу видео при закрытии, содержимое с сервера
-  по <code>data-gr-src</code> и синхронизацию с адресом
-  (<code>data-gr-dialog="hash"</code>). Подробно — на странице
+  по <code>data-gr-src</code>, синхронизацию с адресом
+  (<code>data-gr-dialog="hash"</code>) и плавный рост окна с приходом
+  содержимого (<code>data-gr-dialog="grow"</code>). Подробно — на странице
   <a href="griffinjs-overlays.html">GriffinJS → «Окна и комбобокс»</a>.
 </p>
 
@@ -743,15 +792,35 @@
 </div>
 
 <script>
-// Единственная строка JS на всей странице: <dialog> открывается только
-// вызовом showModal(). Закрываются окна и панели сами — формой
-// с method="dialog" внутри.
+// <dialog> открывается только вызовом showModal(). Закрываются окна
+// и панели сами — формой с method="dialog" внутри.
 document.addEventListener('click', function (event) {
   var trigger = event.target.closest('[data-open]');
   if (!trigger) return;
 
   var dialog = document.getElementById(trigger.getAttribute('data-open'));
   if (dialog) dialog.showModal();
+});
+
+// Пустое окно: состояние загрузки на две секунды, потом содержимое —
+// ровно тот сценарий, что описан в подразделе «Пустое окно».
+document.querySelector('[data-open="demo-modal-loading"]').addEventListener('click', function () {
+  var m = document.getElementById('demo-modal-loading');
+
+  m.innerHTML = '';
+  m.dataset.grState = 'loading';
+  m.setAttribute('aria-busy', 'true');
+
+  setTimeout(function () {
+    if (!m.open) return;
+    m.innerHTML = '<div class="gr-modal-header"><h2 class="gr-modal-title">Обратный звонок</h2></div>'
+      + '<div class="gr-modal-body"><div class="gr-field"><label class="gr-label" for="demo-loading-phone">Телефон</label>'
+      + '<input class="gr-input" id="demo-loading-phone" type="tel" placeholder="+7 900 000-00-00"></div></div>'
+      + '<div class="gr-modal-footer"><form method="dialog" class="gr-flex gr-gap"><button class="gr-btn" type="submit">Отмена</button>'
+      + '<button class="gr-btn gr-btn-primary" type="submit">Позвоните мне</button></form></div>';
+    delete m.dataset.grState;
+    m.removeAttribute('aria-busy');
+  }, 2000);
 });
 </script>
 

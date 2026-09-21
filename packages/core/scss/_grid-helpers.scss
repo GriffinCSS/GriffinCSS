@@ -2,6 +2,7 @@
 // Utility classes for common grid patterns
 
 @use 'breakpoints' as bp;
+@use 'container-mixins' as cq;
 
 // Контейнер
 .gr-container {
@@ -60,13 +61,21 @@
 
 // Явные сетки. Класс самодостаточен: сам включает grid и отступ,
 // поэтому дописывать .gr-grid рядом не нужно.
-@for $cols from 1 through 12 {
-  .gr-grid-#{$cols} {
-    display: grid;
-    gap: var(--gr-gap);
-    grid-template-columns: repeat(#{$cols}, minmax(0, 1fr));
+//
+// Набор описан один раз: без суффикса — база, с суффиксом брейкпоинта —
+// от ширины окна, с той же буквой c впереди — от ширины ближайшего
+// предка с .gr-cq. Разойтись три вывода не могут.
+@mixin gr-grid-columns($suffix: '') {
+  @for $cols from 1 through 12 {
+    .gr-grid-#{$cols}#{$suffix} {
+      display: grid;
+      gap: var(--gr-gap);
+      grid-template-columns: repeat(#{$cols}, minmax(0, 1fr));
+    }
   }
 }
+
+@include gr-grid-columns;
 
 // Адаптивные явные сетки (применяются от указанного брейкпоинта)
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
@@ -80,13 +89,21 @@
       gap: var(--gr-gap);
     }
 
-    @for $cols from 1 through 12 {
-      .gr-grid-#{$cols}-#{$bp-name} {
-        display: grid;
-        gap: var(--gr-gap);
-        grid-template-columns: repeat(#{$cols}, minmax(0, 1fr));
-      }
-    }
+    @include gr-grid-columns('-#{$bp-name}');
+  }
+}
+
+// Контейнерные явные сетки: .gr-grid-3-cmd против .gr-grid-3-md — число
+// колонок меняется по ширине гнезда, а не окна. Пороги те же, что
+// у оконных и у контейнерных утилит. Карточка товара, смонтированная
+// то в боковую колонку, то в содержимое, раскладывает свою сетку сама,
+// без JS и без data-gr-layout (внедрение в панели VPN, наблюдение Н1).
+// Пары .gr-grid-c{bp} к .gr-grid нет: без числа колонок класс не меняет
+// ничего, кроме display, а его по гнезду переключают .gr-hidden-c* /
+// .gr-block-c* из утилит.
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-grid-columns('-c#{$bp-name}');
   }
 }
 

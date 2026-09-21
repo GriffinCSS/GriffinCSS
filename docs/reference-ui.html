@@ -139,6 +139,16 @@
   <tr><td><code>.gr-card-interactive</code></td><td>Кликабельна целиком, но в табе — один элемент со ссылкой</td></tr>
 </table>
 
+<p>Токены (Этап 46) — читаются с запасным значением, на компоненте не объявляются, поэтому переопределение на любой обёртке доходит до карточки:</p>
+
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-card-bg</code></td><td><code>--gr-color-surface</code></td><td><code>.gr-card</code>, фон</td></tr>
+  <tr><td><code>--gr-card-border</code></td><td><code>--gr-color-border</code></td><td><code>.gr-card</code>, цвет обводки</td></tr>
+  <tr><td><code>--gr-card-radius</code></td><td><code>--gr-radius-container</code> → <code>--gr-radius</code></td><td><code>.gr-card</code>, скругление</td></tr>
+  <tr><td><code>--gr-card-pad</code></td><td><code>--gr-gap</code></td><td><code>.gr-card-body</code> целиком; <code>-header</code> и <code>-footer</code> — по горизонтали тот же, по вертикали ¾</td></tr>
+</table>
+
 <h2>Таблицы (<code>scss/_table.scss</code>)</h2>
 
 <table>
@@ -147,6 +157,7 @@
   <tr><td><code>.gr-table-striped</code> / <code>-bordered</code> / <code>-compact</code> / <code>-relaxed</code> / <code>-hover</code></td><td>Полосы, полная сетка, плотный и разреженный варианты, подсветка строки</td></tr>
   <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой — вбок уезжает таблица, а не страница</td></tr>
   <tr><td><code>.gr-table-sticky</code></td><td>Липкая шапка внутри прокручиваемой области; линию под ней рисует внутренняя тень — схлопнутая граница с уехавшей ячейкой не едет</td></tr>
+  <tr><td><code>.gr-table-stack</code>, <code>-{sm,md,lg,xl}</code>, <code>-c{sm,md,lg,xl}</code></td><td>Карточки вместо строк: всегда, ниже ширины окна или ниже ширины ближайшего <code>.gr-cq</code>. Суффикс называет порог: <code>-md</code> — карточки, пока уже 768 px. Шапка ужата в пиксель (не <code>display: none</code> — читалке нужна), подпись ячейки — из <code>data-label</code>, без атрибута — без подписи</td></tr>
   <tr><td><code>th[aria-sort]</code></td><td>Указатель направления сортировки у заголовка — рисуется из <code>aria-sort</code>, а не из класса, и потому работает и на таблице, отсортированной сервером</td></tr>
   <tr><td><code>[data-gr-sortable]</code></td><td>Сортировка строк виджетом слоя <a href="griffinjs.html">GriffinJS</a>: атрибут на <code>&lt;table&gt;</code>, <code>aria-sort="none"</code> на сортируемых заголовках, необязательный <code>data-gr-sort-value</code> на ячейке — <a href="ui-tables.html#griffinjs">«Таблицы»</a></td></tr>
 </table>
@@ -202,6 +213,12 @@
   <tr><td><code>.gr-nav-toggle</code> / <code>.gr-nav-collapse</code></td><td>Переключатель на <code>&lt;details&gt;</code> и сворачиваемая навигация</td></tr>
 </table>
 
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-nav-item-pad</code></td><td><code>0</code></td><td><code>.gr-nav &gt; li</code> — отступ пункта; правило темы на самом <code>&lt;li&gt;</code> проиграло бы слою компонентов</td></tr>
+  <tr><td><code>--gr-nav-link-radius</code></td><td><code>--gr-radius</code></td><td><code>.gr-nav-link</code>, скругление; в <code>.gr-nav-underline</code> радиус по-прежнему 0</td></tr>
+</table>
+
 <p>Активный пункт помечается <code>aria-current="page"</code> — тем же признаком, по которому его находит программа чтения с экрана. Отдельного класса на это нет: класс подсветил бы пункт только зрячему.</p>
 
 <p>Сворачивание не прячет навигацию внутрь <code>&lt;details&gt;</code>: содержимое <code>&lt;details&gt;</code> скрывает сам браузер, и вернуть его на широком экране без скрипта нечем. Навигация стоит следующим соседом переключателя, поэтому раскрытием управляет <code>.gr-nav-toggle[open] + .gr-nav-collapse</code>, а с 768px медиазапрос отменяет сворачивание целиком:</p>
@@ -246,6 +263,12 @@
   <tr><td><code>.gr-dropdown-hover</code></td><td>Раскрытие по наведению; с клавиатуры и на сенсорном экране — по фокусу</td></tr>
 </table>
 
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-dropdown-min-width</code></td><td><code>max-content</code></td><td><code>.gr-dropdown-panel</code> — минимальная ширина панели, в обоих путях (абсолютная и <code>popover</code>)</td></tr>
+  <tr><td><code>--gr-dropdown-pad</code></td><td><code>0</code></td><td><code>.gr-dropdown-panel</code> — поле вокруг содержимого; сама панель — коробка позиционирования, рамку и фон даёт <code>.gr-menu</code> внутри</td></tr>
+</table>
+
 <p>Два пути, оба без скрипта. <code>&lt;details class="gr-dropdown"&gt;</code> работает везде, но не закрывается по Esc и по клику мимо — <code>&lt;details&gt;</code> о них не знает. <code>&lt;button popovertarget&gt;</code> с панелью <code>popover</code> получает и то, и другое от браузера; привязать её к кнопке умеет только CSS anchor positioning, поэтому там, где его нет, панель раскрывается листом у нижнего края экрана. Положение не то — меню доступно и закрывается штатно.</p>
 
 <p>Третий способ — <code>.gr-dropdown-hover</code>: панель держится, пока указатель на обёртке, и уходит с четвертьсекундной задержкой; зазор до панели перекрыт невидимым мостиком, иначе наведение прерывалось бы на полпути. Скрипт не нужен и здесь: показ — <code>:hover</code> внутри <code>@media (hover: hover)</code>, а на сенсорном экране и с клавиатуры — <code>:focus-within</code>, поэтому кнопка обязана быть <code>&lt;button&gt;</code>. Цена способа: <code>aria-expanded</code> без скрипта не обновить (кнопке ставят <code>aria-haspopup="true"</code> и молчат об открытости), а закрытия по Esc платформа тут не даёт — наведение для браузера не «открытое состояние». Годится для навигации; меню с «Удалить» и «Выйти» делают на <code>&lt;details&gt;</code> или на попапе, где состояние настоящее.</p>
@@ -259,6 +282,11 @@
   <tr><td><code>.gr-accordion-trigger</code></td><td>Заголовок — <code>&lt;summary&gt;</code>; стрелка своя, родная снята</td></tr>
   <tr><td><code>.gr-accordion-panel</code></td><td>Содержимое раздела</td></tr>
   <tr><td><code>.gr-accordion-flush</code></td><td>Без рамки и фона — внутрь карточки или колонки текста</td></tr>
+</table>
+
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-accordion-summary-pad</code></td><td><code>--gr-gap</code></td><td><code>.gr-accordion-trigger</code> — по горизонтали целиком, по вертикали половина</td></tr>
 </table>
 
 <p>Эксклюзивность (открыт только один раздел) даёт платформа: общий атрибут <code>name</code> у соседних <code>&lt;details&gt;</code>. CSS на это не нужен вовсе.</p>
@@ -276,6 +304,11 @@
   <tr><td><code>.gr-tabs-pills</code> / <code>-stretch</code></td><td>Заливка вместо линии; ряд во всю ширину</td></tr>
 </table>
 
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-tabs-tab-pad</code></td><td><code>--gr-control-padding-x</code></td><td><code>.gr-tab</code>, горизонтальный отступ вкладки</td></tr>
+</table>
+
 <p>Без скрипта это ссылки-якоря и подряд идущие секции: страница читается и печатается целиком. Со скриптом (<code>griffincss-ui.js</code>) появляются <code>role="tablist"</code>, стрелки, Home/End и roving tabindex, а неактивные панели прячет атрибут <code>hidden</code> — не правило библиотеки: <code>display: none</code> убрал бы панель с экрана, но оставил бы её в порядке обхода.</p>
 
 <h2>Модальное окно (<code>scss/_modal.scss</code>)</h2>
@@ -285,6 +318,13 @@
   <tr><td><code>.gr-modal</code></td><td>Окно на <code>&lt;dialog&gt;</code></td></tr>
   <tr><td><code>.gr-modal-header</code> / <code>-title</code> / <code>-body</code> / <code>-footer</code></td><td>Пояса; прокручивается только тело</td></tr>
   <tr><td><code>.gr-modal-sm</code> / <code>-lg</code> / <code>-full</code></td><td>Размеры</td></tr>
+</table>
+
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-modal-body-overflow</code></td><td><code>auto</code></td><td><code>.gr-modal-body</code>, <code>overflow-y</code>: окну с собственной прокруткой внутри (карта, список) — <code>hidden</code></td></tr>
+  <tr><td><code>--gr-modal-transition</code></td><td><code>--gr-transition</code></td><td>Длительность и кривая перехода окна — все четыре свойства (<code>opacity</code>, <code>translate</code>, <code>overlay</code>, <code>display</code>)</td></tr>
+  <tr><td><code>--gr-radius-container</code></td><td><code>--gr-radius</code></td><td>Скругление окна — токен ядра, общий с карточкой, меню и сообщением (<code>reference-core.html</code>)</td></tr>
 </table>
 
 <p>Верхний слой без <code>z-index</code>, удержание фокуса внутри окна, закрытие по Esc, возврат фокуса на кнопку, инертность страницы под окном — всё это даёт <code>&lt;dialog&gt;</code>. Открывает окно <code>showModal()</code>, закрывает <code>&lt;form method="dialog"&gt;</code> внутри него — без единой строки собственного JS.</p>
@@ -355,7 +395,8 @@
   <tr><td><code>.gr-rating</code></td><td>Пять знаков, залитых по оценке: отзыв о товаре, средний балл в списке. Только отображение — ввод оценки остаётся за потребителем</td></tr>
   <tr><td><code>--gr-rating</code></td><td>Оценка от 0 до 5 на самом элементе. Дробная рисуется частью знака: 4,5 — ровно 90 % ширины ряда</td></tr>
   <tr><td><code>--gr-rating-symbol</code></td><td>Знак, токен ядра. По умолчанию звезда, записанная экранированием <code>"\2605"</code>: литеральный символ сделал бы собранный CSS не-ASCII, и Sass приписал бы к файлу BOM</td></tr>
-  <tr><td><code>--gr-rating-color</code></td><td>Цвет залитого знака, токен ядра. По умолчанию <code>--gr-color-warning-surface</code>; пустой знак — оттенок <code>currentcolor</code></td></tr>
+  <tr><td><code>--gr-color-rating</code></td><td>Цвет залитого знака — семантический токен темы (<code>reference-core.html</code>): его же читает всё, что изображает оценку рядом с рядом. По умолчанию <code>--gr-color-warning-surface</code>; пустой знак — оттенок <code>currentcolor</code></td></tr>
+  <tr><td><code>--gr-rating-color</code></td><td>Переопределение цвета на одном ряду (или в своём <code>:root</code>): <code>style="--gr-rating-color: var(--gr-color-danger)"</code>. В <code>:root</code> библиотеки не объявлена — объявленная там, она резолвилась бы один раз и не следовала бы теме вложенной секции</td></tr>
 </table>
 
 <p>Два одинаковых ряда знаков друг над другом: нижний (<code>::before</code>) задаёт ширину и рисует пустые знаки, верхний (<code>::after</code>) залит и обрезан по доле оценки. Заливка одного ряда через <code>background-clip: text</code> потребовала бы <code>color: transparent</code>, а прозрачный текст исчезает в режиме принудительных цветов вместе со всей оценкой.</p>

@@ -55,7 +55,10 @@ export const ENGINES = ['engines/scroll.js', 'engines/fade.js'];
 // motion двум, gesture одному движку, media одному виджету. В ядре
 // остаётся то, без чего не обходится ни один виджет. Порядок — от лёгкого
 // к тяжёлому; загрузка их не требует, все обращения лежат внутри фабрик.
-export const SHARED = ['core/anchor.js', 'core/media.js', 'core/motion.js', 'core/gesture.js', 'core/track.js'];
+// loader (Этап 48c) — догрузка бандла полей по потребности: нужна только
+// странице, где поля стоят без своего тега, и в ядро не входит по той же
+// причине — набор из двух файлов за неё не платит.
+export const SHARED = ['core/loader.js', 'core/anchor.js', 'core/media.js', 'core/motion.js', 'core/gesture.js', 'core/track.js'];
 export const WIDGETS = [
   'widgets/slider.js', 'widgets/gallery.js', 'widgets/lightbox.js', 'widgets/parallax.js',
   'widgets/megamenu.js', 'widgets/dropdown.js', 'widgets/tooltip.js',

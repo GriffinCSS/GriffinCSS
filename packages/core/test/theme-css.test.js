@@ -6,11 +6,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { compileScss, topLevelBlocks, layerBody } = require('./helpers/css');
+const { compileScss, topLevelBlocks, layerBody, layersBody } = require('./helpers/css');
 
-// Весь вывод пакета лежит внутри @layer griffincss.core — разворачиваем слой,
-// чтобы разбирать блоки темы как верхнеуровневые.
-const CSS = layerBody(compileScss("@use 'griffincss-core';"), 'griffincss.core');
+// Вывод пакета лежит в двух слоях (Этап 46): токены и носители темы —
+// в @layer griffincss.tokens, правила режима со свойствами — в griffincss.core.
+// Разворачиваем оба, чтобы разбирать блоки темы как верхнеуровневые.
+const CSS = layersBody(compileScss("@use 'griffincss-core';"), ['griffincss.tokens', 'griffincss.core']);
 
 // Sass снимает кавычки в атрибутных селекторах: [data-gr-theme="dark"]
 // компилируется в [data-gr-theme=dark]. Сравниваем в этом виде, а в тестах

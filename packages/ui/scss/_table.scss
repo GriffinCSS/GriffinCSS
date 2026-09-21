@@ -8,6 +8,8 @@
 // у ячеек остались бы двойные линии и зазоры border-spacing.
 
 @use 'sass:string';
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
 
 .gr-table {
   inline-size: 100%;
@@ -112,12 +114,101 @@
   }
 }
 
+// --- Карточки вместо строк --------------------------------------------------
+
+// Ниже порога таблица кабинета — заказы, транзакции, бонусы — становится
+// стопкой карточек: строка — блок с обводкой, ячейки в столбик, подпись
+// колонки — из data-label ячейки (фидбек темы griffin по 0.25.0, п. 5).
+//
+// Шапка спрятана по образцу .gr-sr-only (без объявлений для строчных
+// элементов — у блока-обёртки им нечего делать), а не через display: none:
+// программе чтения с экрана заголовки колонок нужны.
+// Подпись — только у ячейки с data-label: пустой ::before у ячейки без
+// атрибута занимал бы свою долю строки и сдвигал значение. Без атрибута
+// ячейка идёт без подписи — не ломается, но и не подписана.
+//
+// Суффикс называет ПОРОГ: .gr-table-stack-md — карточки ниже 768px ширины
+// окна, .gr-table-stack-cmd — ниже 768px ширины ближайшего предка с .gr-cq;
+// от порога и выше — обычная таблица. Это обратная сторона суффиксов
+// «от брейкпоинта» у остальных адаптивных классов: класс описывает узкое
+// состояние, а широкое — просто таблица. Без суффикса — карточки всегда.
+@mixin gr-table-stack($s) {
+  #{$s},
+  #{$s} tbody,
+  #{$s} tfoot,
+  #{$s} tr {
+    display: block;
+  }
+
+  #{$s} thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  #{$s} tr {
+    margin-block-end: var(--gr-gap);
+    border: var(--gr-border-width) solid var(--gr-color-border);
+    border-radius: var(--gr-radius-container, var(--gr-radius));
+  }
+
+  #{$s} tr:last-child {
+    margin-block-end: 0;
+  }
+
+  // Ячейка — строка «подпись — значение». gap даёт зазор между ними,
+  // подпись занимает свою долю, значение — остальное.
+  #{$s} tr > * {
+    display: flex;
+    gap: var(--gr-gap);
+    white-space: normal;
+  }
+
+  #{$s} tr > :last-child {
+    border-block-end: 0;
+  }
+
+  // text-align: start — подпись не следует за .gr-text-end ячейки: класс
+  // ставят ради чисел, а подпись обязана стоять в начале своей доли.
+  // Остальное (шрифт, кегль через em) подпись наследует от ячейки, как
+  // любой ::before; класс шрифта для значения ставится на самом значении.
+  #{$s} tr > [data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    color: var(--gr-color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: start;
+  }
+}
+
+@include gr-table-stack('.gr-table-stack');
+
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width < $bp-value) {
+    @include gr-table-stack('.gr-table-stack-#{$bp-name}');
+  }
+
+  @include cq.gr-container-below($bp-name) {
+    @include gr-table-stack('.gr-table-stack-c#{$bp-name}');
+  }
+}
+
 // --- Прокрутка и липкая шапка -----------------------------------------------
 
 // Широкая таблица не сжимается ниже своего содержимого, поэтому без обёртки
 // вбок уезжала бы вся страница, а не одна таблица. Прокручиваемая область
 // объявлена tabindex="0" в разметке — иначе до неё не добраться с клавиатуры.
+//
+// position: relative — обёртка становится содержащим блоком для абсолютно
+// позиционированных потомков. Без него .gr-sr-only внутри кнопки-иконки
+// (кнопка не позиционирована) считался от блока снаружи прокрутки, вставал
+// у правого края широкой таблицы за её пределами и растягивал документ:
+// страница уезжала вбок ровно от того, что обёртка должна была удержать.
 .gr-table-wrap {
+  position: relative;
   inline-size: 100%;
   max-block-size: 100%;
   overflow: auto;

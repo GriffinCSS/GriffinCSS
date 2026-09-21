@@ -63,8 +63,16 @@
   <tr><td>Медиа</td><td>При закрытии <code>&lt;video&gt;</code>/<code>&lt;audio&gt;</code> — на паузу, <code>&lt;iframe&gt;</code> разгружается и возвращается при следующем открытии; <code>media: false</code> отключает</td></tr>
   <tr><td>Ajax</td><td><code>data-gr-src</code> на окне: фрагмент грузится при первом открытии в <code>[data-gr-content]</code> (или в само окно); состояния <code>loading</code> → <code>open</code> | <code>error</code></td></tr>
   <tr><td>Hash</td><td><code>data-gr-dialog="hash"</code>: открытие пишет <code>#id</code> в историю, «Назад» закрывает окно, страница с <code>#id</code> в адресе показывает его сразу</td></tr>
+  <tr><td>Рост</td><td><code>data-gr-dialog="grow"</code>: смена высоты окна больше 24 px — плавно, от прежней высоты к новой (<code>element.animate</code> по <code>block-size</code>, темп — <code>--gr-modal-transition</code> или <code>--gr-transition</code>). Открытие и закрытие не трогаются, при <code>prefers-reduced-motion</code> — сразу. Только по атрибуту: <code>ResizeObserver</code> на каждом окне — цена, которую не все просили</td></tr>
   <tr><td>События</td><td><code>griffin:open</code> и <code>griffin:close</code> на окне, со всплытием</td></tr>
 </table>
+
+<p>
+  Рост — для окна, чьё содержимое приходит ajax'ом: плашка в <code>10rem</code>
+  со спиннером (состояние <code>loading</code> компонента) не прыгает к форме,
+  а вырастает до неё. Порог в 24 px отсекает ввод в <code>textarea</code>
+  с автовысотой: строка текста — не приход содержимого.
+</p>
 
 <pre><code>&lt;button class="gr-btn" type="button" data-gr-open="#cart"&gt;Корзина&lt;/button&gt;
 
@@ -116,6 +124,7 @@
   <tr><td><code>hash</code></td><td><code>false</code></td><td>Синхронизация с адресом: <code>#id</code> при открытии, «Назад» закрывает</td></tr>
   <tr><td><code>lock</code></td><td><code>true</code></td><td>Блокировать прокрутку страницы под окном</td></tr>
   <tr><td><code>media</code></td><td><code>true</code></td><td>Останавливать видео, аудио и iframe при закрытии</td></tr>
+  <tr><td><code>grow</code></td><td><code>false</code></td><td>Плавный рост и уменьшение высоты: <code>ResizeObserver</code> на окне, порог 24 px</td></tr>
 </table>
 
 <p>

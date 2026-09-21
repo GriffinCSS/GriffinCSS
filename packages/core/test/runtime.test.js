@@ -393,3 +393,126 @@ test('observe без MutationObserver — тихий no-op', () => {
 
   assert.doesNotThrow(() => griffin.observe());
 });
+
+// --- 47b: наблюдение по умолчанию и предупреждение о лишней области --------
+
+// Наблюдение Н2 (панель VPN): FOUC-защита ловит любой поздний контейнер
+// по атрибуту — обещание показать его. Давать обещание и не следить
+// нельзя, поэтому после init() автостарт следит за деревом сам.
+test('после автостарта поздний контейнер раскладывается без refresh()', async () => {
+  const body = el('body');
+  const { griffin } = setupDom(body, {}, { script: el('script') });
+
+  griffin._autoStart();
+
+  const late = el('div', { 'data-gr-layout': 'a1b1' }, [el('div'), el('div')]);
+  body.appendChild(late);
+
+  assert.equal(MockMutationObserver.instances.length, 1, 'один наблюдатель на живое дерево');
+  MockMutationObserver.instances[0].fireAdded([late]);
+
+  await sleep(60);
+
+  assert.ok(late.classList.contains('gr-ready'), 'поздний контейнер открыт');
+  assert.deepEqual(late.children.map((c) => c.className), ['gr-area-a', 'gr-area-b']);
+});
+
+test('data-observe="false" оставляет поздний контейнер на refresh()', () => {
+  const body = el('body');
+  const { griffin } = setupDom(body, {}, { script: el('script', { 'data-observe': 'false' }) });
+
+  griffin._autoStart();
+  body.appendChild(el('div', { 'data-gr-layout': 'a1b1' }));
+
+  assert.equal(MockMutationObserver.instances.length, 0, 'наблюдателя нет');
+});
+
+test('в потоковом режиме наблюдение начинается после DOMContentLoaded', async () => {
+  const body = el('body');
+  const { doc, griffin } = setupDom(body, {}, { readyState: 'loading', script: el('script') });
+
+  griffin._autoStart();
+
+  const parse = MockMutationObserver.instances[0];
+
+  doc.fire('DOMContentLoaded');
+
+  assert.ok(parse.disconnected, 'наблюдатель парсинга остановлен');
+  assert.equal(MockMutationObserver.instances.length, 2, 'наблюдатель живого дерева поднят');
+
+  const late = el('div', { 'data-gr-layout': 'a1b1' }, [el('div')]);
+  body.appendChild(late);
+  MockMutationObserver.instances[1].fireAdded([late]);
+
+  await sleep(60);
+
+  assert.ok(late.classList.contains('gr-ready'), 'поздний контейнер открыт');
+});
+
+test('destroy() снимает и наблюдение, поднятое автостартом', () => {
+  const { griffin } = setupDom(el('body'), {}, { script: el('script') });
+
+  griffin._autoStart();
+  griffin.destroy();
+
+  assert.ok(MockMutationObserver.instances[0].disconnected, 'наблюдатель отключён');
+});
+
+// Фидбек темы griffin по 0.25.0, п. 19: область, которой нет ни в одном
+// наборе, скрывается авто-скрытием без единого слова. Область, которой нет
+// лишь в части наборов, — скрытие по замыслу, о нём не предупреждают.
+function withWarnings(run) {
+  const warnings = [];
+  const original = console.warn;
+
+  console.warn = (...args) => warnings.push(args.join(' '));
+
+  try {
+    run();
+  } finally {
+    console.warn = original;
+  }
+
+  return warnings;
+}
+
+test('область вне всех наборов контейнера — предупреждение, один раз', () => {
+  const stray = el('div', { class: 'gr-area-z' });
+  const container = el('div', { 'data-gr-layout': 'a1b1', 'data-gr-layout-md': 'a1-c1' }, [
+    el('div', { class: 'gr-area-a' }),
+    el('div', { class: 'gr-area-c' }),
+    stray,
+  ]);
+  const { griffin } = setupDom(el('body', {}, [container]));
+
+  const warnings = withWarnings(() => {
+    griffin.init();
+    griffin.refresh();
+  });
+
+  assert.equal(warnings.length, 1, warnings.join('\n'));
+  assert.match(warnings[0], /^Griffincss: /);
+  assert.match(warnings[0], /"z"/);
+  assert.ok(!warnings.some((w) => w.includes('"c"')), 'область из одного набора — не ошибка');
+  assert.ok(stray.classList.contains('gr-area-z'), 'класс из разметки не трогается');
+});
+
+test('область вне всех наборов у ребёнка из потока — то же предупреждение', () => {
+  const body = el('body');
+  const { griffin } = setupDom(body, {}, { readyState: 'loading', script: el('script') });
+
+  const warnings = withWarnings(() => {
+    griffin._autoStart();
+
+    const container = el('div', { 'data-gr-layout': 'a1b1' });
+    body.appendChild(container);
+    MockMutationObserver.instances[0].fireAdded([container]);
+
+    const child = el('div', { class: 'gr-area-z' });
+    container.appendChild(child);
+    MockMutationObserver.instances[0].fireAdded([child]);
+  });
+
+  assert.equal(warnings.length, 1, warnings.join('\n'));
+  assert.match(warnings[0], /"z"/);
+});

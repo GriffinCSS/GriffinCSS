@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Скелет страницы — Griffincss</title>
 
-<!-- Порядок слоёв — первым объявлением в документе. Свой слой app стоит
-     между ядром и компонентами: правило по элементу отсюда не перебьёт
-     ни .gr-btn на ссылке, ни .gr-mb-0 на абзаце — без !important. -->
-<style>@layer griffincss.reset, griffincss.core, app, griffincss.ui, griffincss.utils, griffincss.style;</style>
+<!-- Порядок слоёв — первым объявлением в документе. Свой подслой
+     griffincss.app стоит между ядром и компонентами: правило по элементу
+     отсюда не перебьёт ни .gr-btn на ссылке, ни .gr-mb-0 на абзаце — без
+     !important. Имя обязано быть вложенным: слой верхнего уровня (app)
+     встал бы после всего griffincss.* и перебивал бы всю библиотеку.
+     С 0.26.0 подслой старше токенов: :root { --gr-font-sans: … } отсюда
+     переопределяет токены всех пакетов — они лежат в griffincss.tokens. -->
+<style>@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.app, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;</style>
 
 <!-- Пути — как в дереве документации. В проекте: griffincss-core/dist/…,
      griffincss-ui/dist/…, griffincss-utils/dist/…. Ресет опционален. -->
@@ -16,17 +20,31 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
 <link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
 <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">   <!-- стили слоя виджетов; без виджетов — не нужен -->
 
-<!-- Синхронно и в <head>: атрибуты темы, стиля и режима встают до первой
-     отрисовки, и сохранённая тёмная тема не мигает светлой. -->
+<!-- Синхронно и в <head> — только эти два: рантайм темы ставит атрибуты
+     темы, стиля и режима до первой отрисовки (сохранённая тёмная тема
+     не мигает светлой), рантайм раскладок — FOUC-защиту и раскладки
+     data-gr-layout по мере разбора документа. -->
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+
+<!-- Всё остальное — defer. Рантайм компонентов (подложка окна, крестики,
+     тосты, клавиатура вкладок), рантайм утилит (каскад скруглений,
+     произвольные значения) и слой виджетов до первой отрисовки ничего
+     не ставят, и в блокирующем пути им делать нечего. Выполняются
+     по порядку после разбора документа, до DOMContentLoaded; свой
+     стартовый код — тоже defer, после них. Слой без виджетов на странице
+     не нужен — уберите строку вместе с griffinjs.css. -->
+<script defer src="../packages/ui/dist/griffincss-ui.js"></script>
+<script defer src="../packages/utils/dist/griffincss-utils.js"></script>
+<script defer src="../packages/ui/dist/griffinjs.js"></script>
 
 <!-- Типографика оставлена автору сознательно: ресет обнуляет поля и не задаёт
      шрифт, чтобы не спорить с вашим. Без этих четырёх строк страница набрана
      Times с абзацами встык. -->
 <style>
-@layer app {
+@layer griffincss.app {
   body { font-family: var(--gr-font-sans); }
   h1, h2, h3 { margin-block: var(--gr-gap-lg) var(--gr-gap-sm); line-height: 1.2; }
   p, ul, ol, pre, table { margin-block: 0 var(--gr-gap); }

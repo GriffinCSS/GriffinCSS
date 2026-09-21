@@ -1,0 +1,70 @@
+// Griffincss — Якоря оси оформления по темам
+// Часть оси, которая живёт не в слое griffincss.style, а в griffincss.tokens
+// (Этап 46): это объявления на носителях ТЕМЫ — :root, [data-gr-theme],
+// системная настройка, — а не на носителе стиля. Всё, что объявлено на
+// носителе темы, обязано лежать в одном слое с остальными токенами, иначе
+// подслой темы потребителя, стоящий сразу после tokens, не смог бы
+// переопределить якорь: слой style старше любого подслоя.
+//
+// Набор селекторов повторяет _theme-tokens.scss: якорь обязан быть объявлен
+// на каждом носителе темы, иначе светлый островок внутри тёмной секции
+// посчитал бы стиль от тёмных значений. Якорь наследуется, поэтому сам
+// сдвиг может стоять на любом уровне ниже.
+//
+// Селекторы перечислены один раз, а условия — внутри: два блока с одинаковой
+// преамбулой стоили бы лишних байт в каждом артефакте и ничего не давали бы.
+// Якоря при этом попадают в файл только вместе со своим стилем — в этом
+// и состоит основная экономия от $gr-styles.
+
+@use 'style-config' as cfg;
+@use 'style-values' as sv;
+
+$_gr-lifted: cfg.gr-style-enabled(strict) or cfg.gr-style-enabled(compact);
+$_gr-soft: cfg.gr-style-enabled(airy);
+$_gr-press: cfg.gr-style-enabled(compact);
+
+:root,
+[data-gr-theme="light"] {
+  @if $_gr-lifted {
+    @include sv.gr-anchors-lifted-light;
+  }
+
+  @if $_gr-soft {
+    @include sv.gr-anchors-soft-light;
+  }
+
+  @if $_gr-press {
+    @include sv.gr-anchors-press-light;
+  }
+}
+
+[data-gr-theme="dark"] {
+  @if $_gr-lifted {
+    @include sv.gr-anchors-lifted-dark;
+  }
+
+  @if $_gr-soft {
+    @include sv.gr-anchors-soft-dark;
+  }
+
+  @if $_gr-press {
+    @include sv.gr-anchors-press-dark;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-gr-theme]),
+  [data-gr-theme="auto"] {
+    @if $_gr-lifted {
+      @include sv.gr-anchors-lifted-dark;
+    }
+
+    @if $_gr-soft {
+      @include sv.gr-anchors-soft-dark;
+    }
+
+    @if $_gr-press {
+      @include sv.gr-anchors-press-dark;
+    }
+  }
+}

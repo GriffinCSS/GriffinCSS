@@ -31,16 +31,18 @@
   </div>
 </div>
 
-<h2 id="porog">Порог: четыре возможности и одна мягкая</h2>
+<h2 id="porog">Порог: четыре возможности и две мягкие</h2>
 
 <p>
   Griffincss стоит на каскадных слоях, контейнерных запросах,
   <code>:has()</code> и <code>subgrid</code>. Слои несёт
   каждый собранный файл — на них держится вся специфичность библиотеки;
   остальные три требуются только тем сборкам и утилитам, что перечислены
-  в таблице. Пятая строка — <code>field-sizing</code> — порога
-  не задаёт: без неё поле лишь не растёт само, и это единственная
-  возможность в таблице, у которой отказ ничего не ломает.
+  в таблице. Пятая и шестая возможности — <code>field-sizing</code>
+  и <code>:nth-child(… of S)</code> — порога не задают: без первой поле
+  лишь не растёт само, без второй группа с аддонами считает края
+  по любым потомкам, как до 0.26.0. У обеих отказ ничего не ломает —
+  это мягкая деградация, а не порог.
 </p>
 
 <p>
@@ -86,6 +88,13 @@
     <td>только автовысота <code>.gr-textarea</code> в <code>griffincss-ui.css</code>; ниже порога правило отброшено — высота прежняя, ручка <code>resize</code> на месте</td>
     <td class="gr-whitespace-nowrap">—</td>
     <td>—<br><span class="gr-text-sm gr-text-ink-secondary">в <code>caniuse-lite</code> свойства нет, и <code>npm run coverage</code> его не меряет; версии — по данным MDN</span></td>
+  </tr>
+  <tr>
+    <td><code>:nth-child(… of S)</code></td>
+    <td>Chrome 111 · Edge 111 · Firefox 113 · Safari 9</td>
+    <td>только края <code>.gr-input-group</code> по видимым полям в <code>griffincss-ui.css</code>; ниже порога правило отброшено, а прежние <code>:first-child</code> / <code>:last-child</code> остаются — группа выглядит как до 0.26.0 (скрытое поле последним оставляет край прямым)</td>
+    <td class="gr-whitespace-nowrap">—</td>
+    <td>—<br><span class="gr-text-sm gr-text-ink-secondary">в замер не входит: порога не задаёт; версии — по данным MDN</span></td>
   </tr>
   <tr>
     <td><code>subgrid</code> (!)</td>

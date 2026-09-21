@@ -10,6 +10,7 @@
 // Движение — здесь. JS пишет только aria-*, data-gr-state и --gr-progress.
 
 @use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
 
 .gr-track {
   display: flex;
@@ -45,12 +46,50 @@
   }
 }
 
+// Доля слайда описана один раз: без суффикса — база, с суффиксом
+// брейкпоинта — от ширины окна, с буквой c — от ширины ближайшего предка
+// с .gr-cq (Этап 47d): виджет в слоте меряется слотом. Виджету дорожки
+// всё равно, откуда пришла доля — perView он считает по геометрии.
+@mixin gr-track-per-view($suffix) {
+  @each $n in (1, 2, 3, 4) {
+    .gr-track-#{$n}#{$suffix} > * {
+      flex-basis: calc((100% - var(--gr-gap) * #{$n - 1}) / #{$n});
+    }
+  }
+}
+
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
   @media (width >= $bp-value) {
-    @each $n in (1, 2, 3, 4) {
-      .gr-track-#{$n}-#{$bp-name} > * {
-        flex-basis: calc((100% - var(--gr-gap) * #{$n - 1}) / #{$n});
-      }
+    @include gr-track-per-view('-#{$bp-name}');
+  }
+}
+
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-media($bp-name) {
+    @include gr-track-per-view('-c#{$bp-name}');
+  }
+}
+
+// Лента столбиком в узком гнезде (Этап 47d, фидбек темы griffin, п. 8):
+// подборка товаров в боковой колонке — список, в содержимом — лента.
+// Порог — ширина ближайшего предка с .gr-cq, суффикс называет его
+// (как у .gr-table-stack-c*): .gr-track-stack-csm — столбик, пока гнездо
+// уже 640px. Оконных порогов нет: в узком окне лента остаётся лентой,
+// свайп и есть её мобильный режим. Слайды отпускаются по главной оси —
+// flex-basis: auto бьёт долю .gr-track-N > * тем, что стоит позже: между
+// 640 и 768 px гнезда .gr-track-2-csm и .gr-track-stack-cmd совпадают,
+// и столбик обязан стоять в файле после долей.
+// Слайдеру не подходит: его кнопки и точки останутся на месте.
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @include cq.gr-container-below($bp-name) {
+    .gr-track-stack-c#{$bp-name} {
+      flex-direction: column;
+      overflow-x: visible;
+      scroll-snap-type: none;
+    }
+
+    .gr-track-stack-c#{$bp-name} > * {
+      flex-basis: auto;
     }
   }
 }

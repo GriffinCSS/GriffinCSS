@@ -39,3 +39,20 @@
   container-type: inline-size;
   container-name: var(--gr-name, none);
 }
+
+// Имена слотов раскладки классом — соглашение библиотеки (фидбек темы
+// griffin по 0.25.0, п. 8): виджет магазина монтируют то в боковую колонку,
+// то в содержимое, и его CSS обращается к слоту по имени, а инлайновый
+// style="--gr-name: aside" в теме запрещён. Четыре имени — страница,
+// содержимое, боковая колонка, карточка; своё имя по-прежнему через
+// --gr-name. Шорткат container: <имя> / <тип> — те же два объявления,
+// что у .gr-cq. Вариант data-gr-cq="aside" не сделан: attr() внутри
+// container-name не поддерживается ни одним движком.
+//
+//   <aside class="gr-cq-aside">…</aside>
+//   @container aside (width < 40rem) { .promo { … } }
+@each $name in (page, main, aside, card) {
+  .gr-cq-#{$name} {
+    container: #{$name} / inline-size;
+  }
+}

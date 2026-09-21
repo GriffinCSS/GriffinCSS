@@ -4,11 +4,18 @@
 //
 // Нижний слой каскада: правила ресета проигрывают и утилитам, и
 // пользовательскому CSS — независимо от порядка подключения файлов.
+// Одно исключение — [hidden]: оно едет в последнем слое griffincss.hidden,
+// как и в остальных сборках, иначе display любого компонента было бы
+// старше него (см. _hidden.scss).
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
 // Весь вывод ресета — в нижнем слое griffincss.reset.
 @layer griffincss.reset {
   @include meta.load-css('reset');
+}
+
+@layer griffincss.hidden {
+  @include meta.load-css('hidden');
 }

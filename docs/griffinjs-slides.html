@@ -90,8 +90,9 @@
 <table>
   <tr><th>Класс / атрибут</th><th>Назначение</th></tr>
   <tr><td><code>.gr-track</code></td><td>Дорожка: flex, <code>scroll-snap-type: x mandatory</code>, без полосы прокрутки</td></tr>
-  <tr><td><code>.gr-track-2</code> / <code>-3</code> / <code>-4</code></td><td>Слайдов в ряд; суффикс брейкпоинта — <code>.gr-track-1-sm .gr-track-3-md</code></td></tr>
+  <tr><td><code>.gr-track-2</code> / <code>-3</code> / <code>-4</code></td><td>Слайдов в ряд; суффикс брейкпоинта — <code>.gr-track-1-sm .gr-track-3-md</code>; с буквой <code>c</code> — по ширине ближайшего <code>.gr-cq</code>: <code>.gr-track-3-cmd</code></td></tr>
   <tr><td><code>.gr-track-scale</code></td><td>Соседи активного слайда чуть меньше — на <code>--gr-progress</code>; без скрипта — натуральная величина</td></tr>
+  <tr><td><code>.gr-track-stack-c{sm,md,lg,xl}</code></td><td>Столбик, пока ближайший предок с <code>.gr-cq</code> уже порога (640 / 768 / 1024 / 1280 px): подборка в боковой колонке — список, в содержимом — лента. Оконных порогов нет: в узком окне лента остаётся лентой. Слайдеру не подходит — кнопки и точки останутся</td></tr>
   <tr><td><code>data-gr-track</code> <span class="badge badge-accent">нужен griffinjs.js</span></td><td>Клавиатура (←→ с учётом RTL, Home, End), <code>aria-current</code> и <code>inert</code> на слайдах, <code>--gr-progress</code>, событие <code>griffin:change</code></td></tr>
 </table>
 
@@ -109,6 +110,31 @@
     <div class="gr-card gr-p-4">Наушники</div>
     <div class="gr-card gr-p-4">Часы</div>
     <div class="gr-card gr-p-4">Аксессуары</div>
+  </div>
+</div>
+
+<pre><code>&lt;aside class="gr-cq-aside"&gt;
+  &lt;div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары"&gt;
+    &lt;div class="gr-card gr-p-4"&gt;…&lt;/div&gt;
+    …
+  &lt;/div&gt;
+&lt;/aside&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Одна разметка: в узком гнезде (14rem) — столбик, во всю ширину колонки — лента</div>
+  <div class="gr-cq gr-mb-4" style="inline-size: 14rem; max-inline-size: 100%">
+    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары, узкая колонка">
+      <div class="gr-card gr-p-3">Кресло «Дюна»</div>
+      <div class="gr-card gr-p-3">Торшер «Свет»</div>
+      <div class="gr-card gr-p-3">Полка «Норд»</div>
+    </div>
+  </div>
+  <div class="gr-cq">
+    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары, широкая колонка">
+      <div class="gr-card gr-p-3">Кресло «Дюна»</div>
+      <div class="gr-card gr-p-3">Торшер «Свет»</div>
+      <div class="gr-card gr-p-3">Полка «Норд»</div>
+      <div class="gr-card gr-p-3">Стол «Лофт»</div>
+    </div>
   </div>
 </div>
 

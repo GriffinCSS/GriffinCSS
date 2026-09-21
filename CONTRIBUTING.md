@@ -352,7 +352,7 @@ Rules for modifying existing SCSS files in the library.
    - `packages/ui/scss/griffincss-ui.scss` and `griffincss-ui-scoped.scss` — layer `griffincss.ui`
    - `packages/utils/scss/griffincss-utils.scss` and `griffincss-utils-scoped.scss` — layer `griffincss.utils`
 
-   Layer order: `@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils;` —
+   Layer order: `@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;` —
    declared in full by every entry point, so the result does not depend on `<link>` order.
 3. **`_tokens.scss`, `_breakpoints.scss`, `_theme-tokens.scss`, `_theme-rules.scss` and
    `_theme-values.scss` live only in `packages/core/`.** `griffincss-ui` and `griffincss-utils`
@@ -405,10 +405,14 @@ Rules for modifying existing SCSS files in the library.
   reports the divergence and the build gate fails — the runtime would be handing out
   rules that contradict the compiled CSS.
 - **Keep new CSS inside the layer.** Entry points emit everything through
-  `@include meta.load-css(...)` inside `@layer griffincss.{reset,core,ui,utils}`; a partial that
-  emits CSS is picked up automatically. Never open a layer inside a partial — `check-dist.mjs`
+  `@include meta.load-css(...)` inside `@layer griffincss.{reset,core,ui,utils,style}`; a partial
+  that emits CSS is picked up automatically. Never open a layer inside a partial — `check-dist.mjs`
   fails on any top-level rule outside its layer, and a rule outside layers silently outranks
-  the whole library.
+  the whole library. Two layers are shared by all entry points (Stage 46): `griffincss.tokens`
+  takes `_tokens.scss` and `_theme-tokens.scss` (and `_style-anchors.scss` in the axis files) —
+  a `--gr-*` declaration on `:root`, `[data-gr-theme]` or `[data-gr-a11y]` anywhere else fails
+  check 4a — and `griffincss.hidden` takes `_hidden.scss` last. A new token carrier goes into
+  the tokens block of the entry point, never into the package layer.
 - **Match existing code style:**
   - Indentation: 2 spaces
   - Comments: `//` style, bilingual where applicable
@@ -444,21 +448,28 @@ Rules for modifying existing SCSS files in the library.
 ### File Dependency Map
 
 ```
-packages/core/scss/griffincss-core.scss        @layer griffincss.core
-├── _tokens.scss          → _breakpoints.scss   (generates --gr-bp-*)
-├── _theme-tokens.scss    → _theme-values.scss  (token carriers; every entry point)
+packages/core/scss/griffincss-core.scss        @layer griffincss.tokens + griffincss.core + griffincss.hidden
+├── _tokens.scss          → _breakpoints.scss   (generates --gr-bp-*; layer tokens)
+├── _theme-tokens.scss    → _theme-values.scss  (token carriers; every entry point; layer tokens)
+├── _hidden.scss          (no deps; layer hidden, last; every build with a display)
 ├── _theme-rules.scss     → _theme-values.scss  (low-vision property rules; core and ui only)
 ├── _grid-helpers.scss    → _breakpoints.scss
 ├── _grid-parser.scss     → _layout-mixins.scss (@forward)
 │   └── _layout-mixins.scss → _breakpoints.scss, _functions.scss
 └── _flex.scss            → _breakpoints.scss
 
-packages/core/scss/griffincss-reset.scss       @layer griffincss.reset
-└── _reset.scss           (no deps)
+packages/core/scss/griffincss-reset.scss       @layer griffincss.reset + griffincss.hidden
+├── _reset.scss           (no deps)
+└── _hidden.scss          ([hidden] moved here from the reset in Stage 46)
 
-packages/ui/scss/griffincss-ui.scss            @layer griffincss.ui
-├── griffincss-core/scss/tokens        (peer dep; no local copy)
-├── griffincss-core/scss/theme-tokens
+packages/core/scss/griffincss-styles.scss      @layer griffincss.tokens + griffincss.style
+├── _style-anchors.scss   → _style-config.scss, _style-values.scss  (anchors on :root / [data-gr-theme]; layer tokens)
+└── _styles.scss          → _style-config.scss, _style-values.scss, _theme-values.scss  ([data-gr-style] carriers; layer style)
+
+packages/ui/scss/griffincss-ui.scss            @layer griffincss.tokens + griffincss.ui + griffincss.hidden
+├── griffincss-core/scss/tokens        (peer dep; no local copy; layer tokens)
+├── griffincss-core/scss/theme-tokens  (layer tokens)
+├── griffincss-core/scss/hidden        (layer hidden)
 ├── griffincss-core/scss/theme-rules   (the a[href] rule must outrank .gr-link-* in this layer)
 └── _alert / _avatar / _badge / _button / _card / _choice / _form / _table
     (no deps — components read tokens through var(), not through @use)
@@ -466,9 +477,10 @@ packages/ui/scss/griffincss-ui.scss            @layer griffincss.ui
 packages/ui/scss/griffincss-ui-scoped.scss — the same, prefixed with :where(.griffin);
     tokens and theme stay outside the scope, [data-gr-theme] sits on <html>
 
-packages/utils/scss/griffincss-utils.scss      @layer griffincss.utils
-├── griffincss-core/scss/tokens        (peer dep → the core copy, no local one)
-├── griffincss-core/scss/theme-tokens  (tokens only — never theme-rules, see step 3 above)
+packages/utils/scss/griffincss-utils.scss      @layer griffincss.tokens + griffincss.utils + griffincss.hidden
+├── griffincss-core/scss/tokens        (peer dep → the core copy, no local one; layer tokens)
+├── griffincss-core/scss/theme-tokens  (tokens only — never theme-rules, see step 3 above; layer tokens)
+├── griffincss-core/scss/hidden        (layer hidden)
 ├── _border-radius.scss   → griffincss-core/scss/breakpoints
 ├── _colors.scss          (no deps)
 ├── _spacing.scss         → griffincss-core/scss/breakpoints
@@ -567,7 +579,7 @@ Rules for modifying `packages/core/src/griffincss.js` — the DOM-scanning grid 
    (`@media { @container { … } }`), or it would cover the other axis' range and
    the winner would depend on rule order rather than on width.
 4. **All generated CSS goes inside `@layer griffincss.core`,** preceded by the full order
-   declaration `@layer griffincss.reset, griffincss.core, griffincss.utils;`. The block ends
+   declaration (seven layers, the same string as in the SCSS entry points). The block ends
    with `/* end */` before the closing brace — `cssSection()` in the tests slices sections by
    comment markers and would otherwise pick up the brace. Emitting a rule outside the layer
    makes the runtime outrank every stylesheet, including the user's.

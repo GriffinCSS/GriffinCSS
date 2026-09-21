@@ -245,6 +245,62 @@
   </div>
 </div>
 
+<h3>По ширине контейнера</h3>
+
+<p>
+  Те же классы с буквой <code>c</code> в суффиксе считают колонки от ширины
+  ближайшего предка с <code>.gr-cq</code>, а не окна: <code>.gr-grid-3-cmd</code>
+  против <code>.gr-grid-3-md</code>. Шкала — та же карта брейкпоинтов
+  (<a href="container-queries.html">контейнерные запросы</a>). Это раскладка
+  для блока, который монтируют в любое гнездо страницы — в боковую колонку
+  или в содержимое: в узком гнезде одна колонка, в широком три, и число
+  колонок не зависит от того, где блок оказался.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Колонки</th><th>Применение</th></tr>
+  <tr><td><code>.gr-grid-1-csm</code> … <code>.gr-grid-12-csm</code></td><td>1–12</td><td>От 640px ширины контейнера</td></tr>
+  <tr><td><code>.gr-grid-1-cmd</code> … <code>.gr-grid-12-cmd</code></td><td>1–12</td><td>От 768px ширины контейнера</td></tr>
+  <tr><td><code>.gr-grid-1-clg</code> … <code>.gr-grid-12-clg</code></td><td>1–12</td><td>От 1024px ширины контейнера</td></tr>
+  <tr><td><code>.gr-grid-1-cxl</code> … <code>.gr-grid-12-cxl</code></td><td>1–12</td><td>От 1280px ширины контейнера</td></tr>
+</table>
+
+<pre><code>&lt;aside class="gr-cq"&gt;
+  &lt;div class="gr-grid-1 gr-grid-2-csm gr-grid-3-cmd"&gt;
+    &lt;div&gt;В колонке уже 640px — одна&lt;/div&gt;
+    &lt;div&gt;От 640px гнезда — две&lt;/div&gt;
+    &lt;div&gt;От 768px гнезда — три&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/aside&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Ширина окна одна — гнёзда разные: сверху 15rem, снизу вся ширина колонки</div>
+  <div class="gr-cq gr-mb-4" style="inline-size: 15rem; max-inline-size: 100%">
+    <div class="gr-grid-1 gr-grid-2-csm gr-grid-3-cmd">
+      <div class="card-demo"><h4>1</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Гнездо 15rem — одна колонка</p></div>
+      <div class="card-demo"><h4>2</h4></div>
+      <div class="card-demo"><h4>3</h4></div>
+    </div>
+  </div>
+  <div class="gr-cq">
+    <div class="gr-grid-1 gr-grid-2-csm gr-grid-3-cmd">
+      <div class="card-demo"><h4>1</h4><p class="gr-m-0 gr-mt-1 gr-text-xs">Гнездо шире 640px — две, шире 768px — три</p></div>
+      <div class="card-demo"><h4>2</h4></div>
+      <div class="card-demo"><h4>3</h4></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Пары <code>.gr-grid-c*</code> к <code>.gr-grid</code> нет: без числа колонок
+    класс менял бы один <code>display</code>, а показ и скрытие по гнезду
+    уже делают <code>.gr-hidden-c*</code> / <code>.gr-block-c*</code> из утилит.
+    Раскладка областей по ширине контейнера — <code>data-gr-layout-c*</code>
+    на странице <a href="container-queries.html">контейнерных запросов</a>.
+  </p>
+</div>
+
 <h2>Ряды равной высоты</h2>
 
 <p>

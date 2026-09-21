@@ -588,7 +588,11 @@
 <p>
   Панель отбора, таблица в прокручиваемой обёртке и страницы под ней.
   <code>gr-table-wrap</code> с <code>tabindex="0"</code> — чтобы до
-  прокрутки можно было добраться с клавиатуры. Период — пара нативных
+  прокрутки можно было добраться с клавиатуры; ниже 640 px прокрутка
+  не понадобится — <code>.gr-table-stack-sm</code> складывает каждую строку
+  в карточку с подписями из <code>data-label</code>
+  (<a href="ui-tables.html#kartochki-vmesto-strok">«Карточки вместо
+  строк»</a>). Период — пара нативных
   полей даты, сумма — текстовое поле: без скрипта оба работают как есть,
   с подключённым <code>griffinjs-fields.js</code> поля периода связываются
   атрибутом <code>to</code> (второе не раньше первого), а сумма получает
@@ -629,15 +633,15 @@
       <button class="gr-btn gr-btn-primary gr-btn-sm" type="button">Применить</button>
     </div>
     <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Заказы">
-      <table class="gr-table gr-table-hover gr-table-compact">
+      <table class="gr-table gr-table-hover gr-table-compact gr-table-stack-sm">
         <thead>
-          <tr><th>Номер</th><th>Клиент</th><th>Статус</th><th>Сумма</th></tr>
+          <tr><th>Номер</th><th>Клиент</th><th>Статус</th><th class="gr-text-end">Сумма</th></tr>
         </thead>
         <tbody>
-          <tr><td class="gr-font-mono">A-10482</td><td>Кузнецова А.</td><td><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-font-mono gr-text-end">12 400 ₽</td></tr>
-          <tr><td class="gr-font-mono">A-10481</td><td>Орлов Д.</td><td><span class="gr-badge gr-badge-warning">В сборке</span></td><td class="gr-font-mono gr-text-end">3 950 ₽</td></tr>
-          <tr><td class="gr-font-mono">A-10480</td><td>Гаврилова Е.</td><td><span class="gr-badge gr-badge-danger">Отменён</span></td><td class="gr-font-mono gr-text-end">7 100 ₽</td></tr>
-          <tr><td class="gr-font-mono">A-10479</td><td>Северов И.</td><td><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-font-mono gr-text-end">21 800 ₽</td></tr>
+          <tr><td data-label="Номер"><span class="gr-font-mono">A-10482</span></td><td data-label="Клиент">Кузнецова А.</td><td data-label="Статус"><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-text-end" data-label="Сумма"><span class="gr-font-mono">12 400 ₽</span></td></tr>
+          <tr><td data-label="Номер"><span class="gr-font-mono">A-10481</span></td><td data-label="Клиент">Орлов Д.</td><td data-label="Статус"><span class="gr-badge gr-badge-warning">В сборке</span></td><td class="gr-text-end" data-label="Сумма"><span class="gr-font-mono">3 950 ₽</span></td></tr>
+          <tr><td data-label="Номер"><span class="gr-font-mono">A-10480</span></td><td data-label="Клиент">Гаврилова Е.</td><td data-label="Статус"><span class="gr-badge gr-badge-danger">Отменён</span></td><td class="gr-text-end" data-label="Сумма"><span class="gr-font-mono">7 100 ₽</span></td></tr>
+          <tr><td data-label="Номер"><span class="gr-font-mono">A-10479</span></td><td data-label="Клиент">Северов И.</td><td data-label="Статус"><span class="gr-badge gr-badge-success">Оплачен</span></td><td class="gr-text-end" data-label="Сумма"><span class="gr-font-mono">21 800 ₽</span></td></tr>
         </tbody>
       </table>
     </div>

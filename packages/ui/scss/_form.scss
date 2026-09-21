@@ -168,6 +168,14 @@
 // :user-invalid, а не :invalid — пустое обязательное поле не должно краснеть
 // до того, как человек его тронул. Атрибут aria-invalid рядом: его ставит
 // серверная проверка, которой правила браузера не касаются.
+//
+// Третий источник — состояние на обёртке: .gr-field[data-gr-state="error"]
+// (фидбек темы griffin, п. 7). Скрипты, которые красят ошибки после ответа
+// сервера, получают список полей и ставят состояние на обёртку — так
+// работает OpenCart (.form-group.has-error) и большинство валидаторов,
+// и до сих пор обёртке .gr-field соответствовать было нечему. Состояние
+// красит вложенные контролы; aria-invalid на контроле остаётся источником
+// для программы чтения с экрана — виджет validate ставит оба.
 .gr-input:user-invalid,
 .gr-textarea:user-invalid,
 .gr-select:user-invalid,
@@ -175,7 +183,11 @@
 .gr-input[aria-invalid="true"],
 .gr-textarea[aria-invalid="true"],
 .gr-select[aria-invalid="true"],
-.gr-file[aria-invalid="true"] {
+.gr-file[aria-invalid="true"],
+.gr-field[data-gr-state="error"] .gr-input,
+.gr-field[data-gr-state="error"] .gr-textarea,
+.gr-field[data-gr-state="error"] .gr-select,
+.gr-field[data-gr-state="error"] .gr-file {
   border-color: var(--gr-color-danger);
 }
 
@@ -377,6 +389,22 @@
   border-radius: 0;
 }
 
+// Края — по видимым полям. Скрытые потомки в группе — обычная практика
+// форм: полное значение составного поля (телефон = код + номер) в
+// <input type="hidden">, признак формы, панель подсказки, которую живой
+// поиск дописывает внутрь, спутник поля даты или суммы из второго бандла.
+// По :first-child / :last-child скругление доставалось скрытому узлу,
+// и видимый край группы оставался прямым (фидбек темы griffin, п. 1).
+//
+// Два яруса правил, а не один. Прежние :first-child / :last-child
+// остаются запасным путём: форма `:nth-child(… of S)` появилась
+// в Chrome 111 и Firefox 113 — позже каскадных слоёв (99 / 97), — и там,
+// где она неизвестна, правило отбрасывается целиком, а группа выглядит
+// как раньше. Мягкая деградация названа в docs/compatibility.html.
+// Правила по видимым стоят ниже и специфичнее (0,3,0 против 0,2,0),
+// поэтому в новых движках побеждают они.
+$_gr-group-visible: ':not([type="hidden"], [hidden], template, script, datalist)';
+
 .gr-input-group > :first-child {
   border-start-start-radius: var(--gr-radius);
   border-end-start-radius: var(--gr-radius);
@@ -389,6 +417,19 @@
 
 .gr-input-group > * + * {
   margin-inline-start: calc(-1 * var(--gr-border-width));
+}
+
+// Первое видимое поле — ещё и без сдвига на рамку: скрытый узел перед ним
+// делает его для `* + *` вторым, и без этой строки оно уезжало бы на 1px.
+.gr-input-group > :nth-child(1 of #{$_gr-group-visible}) {
+  margin-inline-start: 0;
+  border-start-start-radius: var(--gr-radius);
+  border-end-start-radius: var(--gr-radius);
+}
+
+.gr-input-group > :nth-last-child(1 of #{$_gr-group-visible}) {
+  border-start-end-radius: var(--gr-radius);
+  border-end-end-radius: var(--gr-radius);
 }
 
 // Поле в группе тянется, аддон — нет.

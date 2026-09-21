@@ -91,15 +91,49 @@
   <tr><th>Класс</th><th>Вид</th></tr>
   <tr><td><code>.gr-card-raised</code></td><td>Тень вместо границы</td></tr>
   <tr><td><code>.gr-card-flat</code></td><td>Только фон: ни границы, ни тени</td></tr>
+  <tr><td><code>.gr-card-overlay</code></td><td>Белый лист на сером фоне страницы: поверхность всплывающего слоя, обводка прежняя. Панель витрины — buybox, сводка заказа, шаги оформления</td></tr>
   <tr><td><code>.gr-card-interactive</code></td><td>Кликабельна целиком; при наведении усиливается граница и появляется тень</td></tr>
 </table>
 
 <div class="demo-block">
-  <div class="demo-block-title">Обычная, приподнятая, плоская</div>
-  <div class="gr-grid-1 gr-grid-3-md gr-gap">
+  <div class="demo-block-title">Обычная, приподнятая, плоская — и на сером</div>
+  <div class="gr-grid-1 gr-grid-2-md gr-gap">
     <div class="gr-card"><div class="gr-card-body">.gr-card</div></div>
     <div class="gr-card gr-card-raised"><div class="gr-card-body">.gr-card-raised</div></div>
     <div class="gr-card gr-card-flat"><div class="gr-card-body">.gr-card-flat</div></div>
+    <div class="gr-p-4 gr-bg-sunken" style="border-radius: var(--gr-radius)">
+      <div class="gr-card gr-card-overlay"><div class="gr-card-body">.gr-card-overlay на сером</div></div>
+    </div>
+  </div>
+</div>
+
+<h2>Токены карточки</h2>
+
+<p>
+  Четыре ручки по образцу <code>--gr-btn-*</code>: карточка читает их
+  с запасным значением и сама не объявляет, поэтому переопределение
+  работает на <strong>любой обёртке</strong> — на секции, на странице,
+  в подслое темы. Правило темы на самой карточке проиграло бы слою
+  компонентов при любой специфичности; токен на обёртке — нет.
+  Умолчания равны прежним значениям: без переопределений карточка
+  выглядит как раньше.
+</p>
+
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Что задаёт</th></tr>
+  <tr><td><code>--gr-card-bg</code></td><td><code>--gr-color-surface</code></td><td>Фон</td></tr>
+  <tr><td><code>--gr-card-border</code></td><td><code>--gr-color-border</code></td><td>Цвет обводки</td></tr>
+  <tr><td><code>--gr-card-radius</code></td><td><code>--gr-radius-container</code>, иначе <code>--gr-radius</code></td><td>Скругление</td></tr>
+  <tr><td><code>--gr-card-pad</code></td><td><code>--gr-gap</code></td><td>Отступ тела; у шапки и подвала — по горизонтали тот же, по вертикали ¾</td></tr>
+</table>
+
+<pre><code>/* Все панели кабинета — белые с плотным отступом: один токен на обёртке */
+.account { --gr-card-bg: var(--gr-color-surface-overlay); --gr-card-pad: var(--gr-gap-sm); }</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Токены на обёртке: фон, обводка и отступ карточек внутри</div>
+  <div class="gr-grid-1 gr-grid-2-md gr-gap" style="--gr-card-bg: var(--gr-color-surface-overlay); --gr-card-border: var(--gr-color-accent); --gr-card-pad: var(--gr-gap-sm)">
+    <div class="gr-card"><div class="gr-card-header">Заказ № 1042</div><div class="gr-card-body">Оплачен, собирается.</div></div>
+    <div class="gr-card"><div class="gr-card-header">Заказ № 1043</div><div class="gr-card-body">Ожидает оплаты.</div></div>
   </div>
 </div>
 

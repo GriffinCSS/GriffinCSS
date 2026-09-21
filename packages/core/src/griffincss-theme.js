@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Theme Runtime v0.25.0
+ * Griffincss — Theme Runtime v0.26.0
  * Переключение цветовой темы, стратегии оформления и режима для слабовидящих:
  * атрибуты data-gr-theme, data-gr-style и data-gr-a11y на <html>.
  * Все три оси независимы. Выбор запоминается в localStorage.
@@ -26,7 +26,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.25.0';
+  var VERSION = '0.26.0';
 
   var THEME_ATTR = 'data-gr-theme';
   var A11Y_ATTR = 'data-gr-a11y';
@@ -39,6 +39,19 @@
   var THEMES = ['light', 'dark', 'auto'];
   var LOW_VISION = 'low-vision';
 
+  // Смена темы — за один кадр, а не пятнами (фидбек темы griffin, п. 17).
+  // У компонентов переходы цвета 0,2 с, и при переключении каждый ехал
+  // к новому цвету сам по себе: шапка уже тёмная, карточки ещё нет.
+  // На время переключения на <html> ставится класс, а в <head> —
+  // безслойный <style> с этим правилом; снимаются оба через два кадра.
+  // Правило не кладётся ни в один CSS-файл: переходы компонентов (ui),
+  // утилит (utils) и темы потребителя стоят в разных слоях, и в каком бы
+  // слое библиотеки оно ни лежало, кто-то из них его перебьёт; безслойное
+  // объявление старше всех слоёв без !important. Тот же путь, каким
+  // грид-рантайм ставит защиту от FOUC, и nonce — оттуда же.
+  var SWITCHING = 'gr-theme-switching';
+  var FREEZE_CSS = '.gr-theme-switching,.gr-theme-switching *,.gr-theme-switching ::before,.gr-theme-switching ::after{transition:none}';
+
   // standard в списке нет намеренно: он равносилен отсутствию атрибута,
   // и ставить его в разметку незачем. Значением атрибута он при этом
   // остаётся — стандартный островок внутри воздушной страницы собирает CSS,
@@ -49,6 +62,9 @@
   var started = false;
   var mediaDark = null;
   var mediaContrast = null;
+  var nonce = '';         // nonce тега <script>: пропуск под строгим CSP
+  var freezeEl = null;    // <style> гашения, создаётся один раз
+  var freezing = 0;       // номер текущего гашения: позднее продлевает раннее
 
   function root() {
     return document.documentElement;
@@ -135,7 +151,39 @@
     return detail;
   }
 
+  // Два кадра, не один. На первом браузер считает стили с новыми цветами
+  // при погашенных переходах и рисует их; сними гашение в этом же кадре —
+  // переходы вернулись бы до пересчёта и цвета поехали бы. На втором
+  // цвета уже на месте, и возврат переходов ничего не двигает.
+  function freeze() {
+    var raf = window.requestAnimationFrame;
+
+    if (typeof raf !== 'function' || !document.head) return;
+
+    if (!freezeEl) {
+      freezeEl = document.createElement('style');
+      freezeEl.textContent = FREEZE_CSS;
+      if (nonce) freezeEl.nonce = nonce;
+    }
+
+    if (!freezeEl.parentNode) document.head.appendChild(freezeEl);
+    root().classList.add(SWITCHING);
+
+    var token = ++freezing;
+
+    raf(function () {
+      raf(function () {
+        if (token !== freezing) return;
+
+        freezeEl.remove();
+        root().classList.remove(SWITCHING);
+      });
+    });
+  }
+
   function apply(attr, key, value) {
+    freeze();
+
     if (value === null) {
       root().removeAttribute(attr);
       store(key, null);
@@ -224,6 +272,10 @@
 
     try {
       var script = document.currentScript;
+      // Свойство, а не атрибут: содержимое атрибута браузер прячет
+      // после разбора. Читается до проверки data-auto: гашение нужно
+      // и тому, кто запускает рантайм вручную.
+      if (script) nonce = script.nonce || '';
       if (script && script.getAttribute('data-auto') === 'false') return;
       if (script && script.getAttribute('data-persist') === 'false') options.persist = false;
     } catch (e) { /* currentScript недоступен */ }

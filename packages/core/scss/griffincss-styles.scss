@@ -10,12 +10,18 @@
 // Состав файла настраивается списком:
 //   @use 'griffincss-core/scss/style-config' with ($gr-styles: (strict));
 //
-// Слой griffincss.style — последний, старший из библиотечных. Иначе никак:
-// griffincss-ui.css и griffincss-utils.css кладут собственный :root в свои
-// слои, а слой перебивает любую специфичность.
+// Ось живёт в двух слоях (Этап 46). Якоря по темам — объявления на :root
+// и [data-gr-theme] — едут в griffincss.tokens вместе с остальными токенами:
+// подслой темы потребителя обязан уметь их переопределить. Блоки на носителе
+// [data-gr-style] — в griffincss.style, старше tokens: стиль обязан бить тему,
+// это его работа. Пользовательский CSS вне слоёв выигрывает у обоих.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
+
+@layer griffincss.tokens {
+  @include meta.load-css('style-anchors');
+}
 
 @layer griffincss.style {
   @include meta.load-css('styles');

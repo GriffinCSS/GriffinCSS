@@ -211,6 +211,44 @@
   </div>
 </div>
 
+<h2>Контейнерные варианты</h2>
+
+<p>
+  Направление и перенос переключаются и по ширине <em>контейнера</em> — ближайшего
+  предка с <code>.gr-cq</code>. Суффикс тот же, с буквой <code>c</code> впереди:
+  <code>.gr-flex-row-cmd</code> против <code>.gr-flex-row-md</code>, шкала —
+  та же карта брейкпоинтов. Так собирается блок, который стоит то в боковой
+  колонке, то в содержимом: столбик в узком гнезде, ряд в широком, без второй
+  разметки и без JS.
+</p>
+
+<table>
+  <tr><th>Базовый класс</th><th>Контейнерный вариант</th><th>Применение</th></tr>
+  <tr><td><code>.gr-flex-row</code></td><td><code>.gr-flex-row-c{sm,md,lg,xl}</code></td><td>row от ширины контейнера</td></tr>
+  <tr><td><code>.gr-flex-col</code></td><td><code>.gr-flex-col-c{sm,md,lg,xl}</code></td><td>column от ширины контейнера</td></tr>
+  <tr><td><code>.gr-flex-wrap</code></td><td><code>.gr-flex-wrap-c{sm,md,lg,xl}</code></td><td>wrap от ширины контейнера</td></tr>
+</table>
+
+<pre><code>&lt;div class="gr-cq"&gt;
+  &lt;div class="gr-flex gr-flex-col gr-flex-row-csm gr-gap"&gt;
+    &lt;div&gt;В гнезде уже 640px — столбик&lt;/div&gt;
+    &lt;div&gt;От 640px ширины гнезда — ряд&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="callout">
+  <p>
+    <strong>Только направление и перенос.</strong> Выравнивания
+    (<code>.gr-flex-center</code>, <code>.gr-flex-items-*</code>,
+    <code>.gr-flex-self-*</code>), <code>.gr-flex-1</code> и сам
+    <code>display</code> контейнерных вариантов не получили: по ширине гнезда
+    меняется, куда течёт ряд, а не как он выровнен, и каждый суффикс — ещё
+    четыре правила на класс. Показать или спрятать блок по гнезду —
+    <code>.gr-hidden-c*</code> / <code>.gr-block-c*</code> из утилит
+    (<a href="container-queries.html">контейнерные запросы</a>).
+  </p>
+</div>
+
 <h2>Примеры использования</h2>
 
 <p>

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="../packages/core/dist/griffincss-core.css">
 <link rel="stylesheet" href="../packages/ui/dist/griffincss-ui.css">
 <link rel="stylesheet" href="../packages/utils/dist/griffincss-utils.css">
+<link rel="stylesheet" href="../packages/ui/dist/griffinjs.css">
 <link rel="stylesheet" href="../packages/core/dist/griffincss-styles.css">
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
@@ -69,7 +70,7 @@
   <h1>Контейнерные запросы</h1>
   <p>Адаптивность по ширине контейнера, а не по ширине окна. Тот же строй классов, та же шкала брейкпоинтов, разница в одну букву: <code>-md</code> смотрит на окно, <code>-cmd</code> — на ближайшего предка с <code>.gr-cq</code>.</p>
   <div class="hero-badges">
-    <span class="badge badge-accent">Ядро + утилиты</span>
+    <span class="badge badge-accent">Ядро + утилиты + компоненты</span>
     <span class="badge">packages/core/scss/_container-queries.scss</span>
   </div>
 </div>
@@ -105,6 +106,7 @@
   <tr><th>Класс</th><th>CSS</th><th>Назначение</th></tr>
   <tr><td><code>.gr-cq</code></td><td><code>container-type: inline-size</code><br><code>container-name: var(--gr-name, none)</code></td><td>Элемент становится контейнером запроса по инлайн-оси</td></tr>
   <tr><td><code>--gr-name</code></td><td><code>@property</code>, <code>inherits: false</code></td><td>Имя контейнера, если нужно обратиться к нему через голову ближайшего</td></tr>
+  <tr><td><code>.gr-cq-page</code>, <code>.gr-cq-main</code>, <code>.gr-cq-aside</code>, <code>.gr-cq-card</code></td><td><code>container: page / inline-size</code> и т.д.</td><td>Контейнер с именем классом — четыре слота раскладки как соглашение библиотеки (см. «Виджеты по гнезду»)</td></tr>
 </table>
 
 <pre><code>&lt;div class="gr-cq"&gt;
@@ -143,10 +145,14 @@
   </p>
 </div>
 
-<h2>Какие утилиты получили контейнерные варианты</h2>
+<h2>Какие классы получили контейнерные варианты</h2>
 
 <table>
   <tr><th>Модуль</th><th>Примеры</th></tr>
+  <tr><td><a href="core-grid-helpers.html">Явные сетки</a> (ядро)</td><td><code>.gr-grid-1-csm</code> … <code>.gr-grid-12-cxl</code> — число колонок по ширине гнезда</td></tr>
+  <tr><td><a href="core-flex.html">Flex</a> (ядро)</td><td><code>.gr-flex-row-cmd</code>, <code>.gr-flex-col-csm</code>, <code>.gr-flex-wrap-clg</code> — направление и перенос; выравниваний нет</td></tr>
+  <tr><td><a href="ui-tables.html#kartochki-vmesto-strok">Таблица</a> (компоненты)</td><td><code>.gr-table-stack-cmd</code> — карточки, пока гнездо уже порога</td></tr>
+  <tr><td><a href="griffinjs-slides.html">Лента</a> (<code>griffinjs.css</code>)</td><td><code>.gr-track-3-cmd</code> — слайдов в ряд, <code>.gr-track-stack-csm</code> — столбик, пока гнездо уже порога</td></tr>
   <tr><td><a href="spacing.html">Spacing</a></td><td><code>.gr-p-4-cmd</code>, <code>.gr-px-8-clg</code>, <code>.gr-my-6-csm</code>, <code>.gr-mx-auto-cxl</code></td></tr>
   <tr><td><a href="sizing.html">Sizing</a></td><td><code>.gr-w-full-cmd</code>, <code>.gr-w-1/2-clg</code>, <code>.gr-h-auto-csm</code></td></tr>
   <tr><td><a href="typography.html">Typography</a></td><td><code>.gr-text-lg-csm</code>, <code>.gr-font-bold-clg</code>, <code>.gr-text-center-csm</code>, <code>.gr-truncate-cxl</code></td></tr>
@@ -158,9 +164,10 @@
     <strong>Остальные модули контейнерных вариантов не получили.</strong>
     Цвет, тень, граница, позиционирование, прозрачность и переходы от ширины
     контейнера не зависят по смыслу, а каждый селектор — это байты в файле,
-    который скачивает каждый. Перечень модулей проверяется тестом
-    <code>packages/utils/test/utils.test.js</code>, так что расшириться молча
-    он не может.
+    который скачивает каждый. Перечень модулей проверяется тестами
+    (<code>packages/utils/test/utils.test.js</code> для утилит,
+    <code>packages/core/test/container.test.js</code> для ядра), так что
+    расшириться молча он не может.
   </p>
   <p>
     Логические отступы <code>.gr-ms-*</code>, <code>.gr-me-*</code>,
@@ -230,6 +237,68 @@
           <p class="gr-text-sm gr-text-ink-secondary gr-mb-0">От 640px контейнера — картинка слева, текст справа. Сузьте окно, и обе карточки станут вертикальными.</p>
         </div>
       </article>
+    </div>
+  </div>
+</div>
+
+<h2 id="vidzhety-po-gnezdu">Виджеты по гнезду</h2>
+
+<p>
+  Виджет магазина — подборка товаров, промо, таймер — монтируют в любую
+  позицию раскладки: в боковую колонку, в содержимое, в карточку товара.
+  Его вид должен зависеть от ширины гнезда, а не окна, и его CSS должен
+  уметь обратиться к гнезду по имени через голову ближайшего безымянного
+  <code>.gr-cq</code>. Имя классом, а не инлайновым
+  <code>style="--gr-name: aside"</code>: инлайновый стиль в теме обычно
+  запрещён. Четыре имени — соглашение, чтобы тема и модули договаривались
+  об одних словах:
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Имя</th><th>Кто это</th></tr>
+  <tr><td><code>.gr-cq-page</code></td><td><code>page</code></td><td>Страница целиком — обёртка макета</td></tr>
+  <tr><td><code>.gr-cq-main</code></td><td><code>main</code></td><td>Содержимое — основная колонка</td></tr>
+  <tr><td><code>.gr-cq-aside</code></td><td><code>aside</code></td><td>Боковая колонка</td></tr>
+  <tr><td><code>.gr-cq-card</code></td><td><code>card</code></td><td>Карточка — товар, пост, панель</td></tr>
+</table>
+
+<pre><code>&lt;aside class="gr-cq-aside"&gt;
+  &lt;section class="promo"&gt;…&lt;/section&gt;
+&lt;/aside&gt;
+
+/* CSS виджета: порог по гнезду, а не по окну */
+@container aside (width &lt; 40rem) { .promo { … } }</code></pre>
+
+<p>
+  Пороги — те же, что у суффиксов: <code>-csm</code> / <code>-cmd</code> /
+  <code>-clg</code> / <code>-cxl</code> = 640 / 768 / 1024 / 1280 px ширины
+  гнезда. Так виджет собирается из готовых классов без своего CSS:
+  <a href="core-grid-helpers.html">сетка</a> <code>.gr-grid-1 .gr-grid-3-cmd</code>,
+  <a href="core-flex.html">флекс</a> <code>.gr-flex-col .gr-flex-row-csm</code>,
+  <a href="ui-tables.html#kartochki-vmesto-strok">таблица</a>
+  <code>.gr-table-stack-cmd</code>, <a href="griffinjs-slides.html">лента</a>
+  <code>.gr-track-stack-csm .gr-track-3-cmd</code> — столбик в узкой колонке,
+  три в ряд в широкой.
+  Своё имя по-прежнему через <code>--gr-name</code>; вариант
+  <code>data-gr-cq="…"</code> не сделан — <code>attr()</code> внутри
+  <code>container-name</code> не поддерживается ни одним движком.
+</p>
+
+<div class="demo-block">
+  <div class="demo-block-title">Лента в двух гнёздах при одной ширине окна: сверху 14rem, снизу вся ширина колонки</div>
+  <div class="gr-cq-aside cq-narrow gr-mb-4" style="inline-size: 14rem">
+    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в боковой колонке">
+      <div class="cq-card gr-radius-2">Кресло «Дюна»</div>
+      <div class="cq-card gr-radius-2">Торшер «Свет»</div>
+      <div class="cq-card gr-radius-2">Полка «Норд»</div>
+    </div>
+  </div>
+  <div class="gr-cq-main">
+    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в содержимом">
+      <div class="cq-card gr-radius-2">Кресло «Дюна»</div>
+      <div class="cq-card gr-radius-2">Торшер «Свет»</div>
+      <div class="cq-card gr-radius-2">Полка «Норд»</div>
+      <div class="cq-card gr-radius-2">Стол «Лофт»</div>
     </div>
   </div>
 </div>

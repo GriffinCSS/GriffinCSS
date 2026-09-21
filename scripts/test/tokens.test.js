@@ -115,6 +115,19 @@ test('перевод HSL в hex держится внутри разброса �
   assert.equal(light['hsl-status-warning-surface'].$value, '#f59b14');
 });
 
+test('цвет оценки — семантический токен: в экспорте типом color, в тёмной теме своё значение', () => {
+  // Этап 45b: --gr-color-rating объявлен в теме на каждом носителе, как
+  // остальные --gr-color-*, поэтому в экспорт приезжает резолвнутым цветом
+  // и меняется вместе с темой. Переменной компонента --gr-rating-color
+  // в :root больше нет — и в экспорте её нет.
+  const { light, dark } = sets();
+
+  assert.equal(light['color-rating'].$type, 'color');
+  assert.equal(light['color-rating'].$value, light['color-warning-surface'].$value, 'по умолчанию — поверхностный цвет предупреждения');
+  assert.notEqual(dark['color-rating'].$value, light['color-rating'].$value, 'тёмная тема оставила светлый цвет оценки');
+  assert.equal(light['rating-color'], undefined, 'переменная компонента уехала в экспорт как токен');
+});
+
 test('якорь бренда приезжает в экспорт, а оси берут от него разные пары', () => {
   const { light, dark } = sets();
   const low = sets()['low-vision'];

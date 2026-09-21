@@ -25,16 +25,20 @@
 // остаётся в DOM внутри .griffin, поэтому префикс до него достаёт.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
-// Весь вывод пакета — в слое griffincss.ui.
-@layer griffincss.ui {
+// Токены и тема — вне области и в общем слое griffincss.tokens, как
+// в обычной сборке (Этап 46): атрибут data-gr-theme стоит на <html>,
+// то есть заведомо снаружи области .griffin.
+@layer griffincss.tokens {
   @include meta.load-css('griffincss-core/scss/tokens');
-
-  // Тема — тоже вне области: атрибут data-gr-theme стоит на <html>,
-  // то есть заведомо снаружи области .griffin. Оба файла, как в обычной
-  // сборке: правила режима обязаны лежать в одном слое с вариантами ссылки.
   @include meta.load-css('griffincss-core/scss/theme-tokens');
+}
+
+// Остальной вывод пакета — в слое griffincss.ui.
+@layer griffincss.ui {
+  // Правила режима со свойствами — в одном слое с вариантами ссылки,
+  // как в обычной сборке.
   @include meta.load-css('griffincss-core/scss/theme-rules');
 
   // @keyframes — вне области: имя анимации ищется глобально, префикс
@@ -70,4 +74,10 @@
     @include meta.load-css('toast');
     @include meta.load-css('tooltip');
   }
+}
+
+// [hidden] — вне области: атрибут обязан работать на любом элементе страницы,
+// а не только внутри .griffin.
+@layer griffincss.hidden {
+  @include meta.load-css('griffincss-core/scss/hidden');
 }

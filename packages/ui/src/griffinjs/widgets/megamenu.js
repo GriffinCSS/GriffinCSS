@@ -27,7 +27,16 @@
  *     закрывает и возвращает фокус на заголовок;
  *   * закрытие щелчком мимо полосы и уходом фокуса;
  *   * ajax-панели: data-gr-src на пункте грузится при первом открытии,
- *     состояния loading → ready | error пишутся на пункт.
+ *     состояния loading → ready | error пишутся на пункт;
+ *   * закрытие с состоянием (Этап 48d): панель, чей уход тема анимирует,
+ *     не пропадает в первом же кадре — на пункт ставится
+ *     data-gr-state="closing", open снимается по transitionend/animationend
+ *     самой панели или по таймауту в длительность --gr-transition плюс
+ *     50 мс. Щелчок по заголовку открытого пункта идёт тем же путём.
+ *     Во всех браузерах, без развилки по ::details-content: Firefox 153
+ *     поддерживает селектор и allow-discrete, но закрытие не анимирует —
+ *     замер в browser/closing.spec.mjs (решение владельца 2026-09-21).
+ *     CSS слоя переходов не задаёт — при 0s закрывается сразу.
  *
  * Пункт — <details>, не вложенный в другой <details> полосы, с панелью
  * после <summary>. Переключатель шапки (.gr-nav-toggle) панели не имеет
@@ -87,6 +96,18 @@
     node.focus();
 
     return document.activeElement === node;
+  }
+
+  // Длительность --gr-transition у узла, мс: «0.2s ease» → 200, «150ms» → 150,
+  // пусто или 0s → 0. Одно чтение вычисленного стиля при закрытии.
+  function duration(node) {
+    var value = '';
+
+    try { value = getComputedStyle(node).getPropertyValue('--gr-transition'); } catch (e) { /* без CSSOM */ }
+
+    var m = /(\d*\.?\d+)(m?s)/.exec(value);
+
+    return m ? parseFloat(m[1]) * (m[2] === 's' ? 1000 : 1) : 0;
   }
 
   G.defineWidget('megamenu', { needs: ['media'] }, function (el, opts) {
@@ -159,6 +180,7 @@
       setAttr(item.summary, 'aria-expanded', item.el.open ? 'true' : 'false');
 
       listen(item.el, 'toggle', function () { sync(item); });
+      listen(item.summary, 'click', function (event) { onSummaryClick(event, item); });
     }
 
     function sync(item) {
@@ -166,10 +188,13 @@
 
       setAttr(item.summary, 'aria-expanded', isOpen ? 'true' : 'false');
 
-      if (!isOpen) return;
+      if (!isOpen) {
+        settleClosing(item);
+        return;
+      }
 
       for (var i = 0; i < items.length; i++) {
-        if (items[i] !== item && items[i].el.open) items[i].el.open = false;
+        if (items[i] !== item) close(items[i]);
       }
 
       load(item);
@@ -177,11 +202,69 @@
 
     function open(item) {
       cancelTimers();
-      if (item && !item.el.open) item.el.open = true;
+      if (!item) return;
+
+      // Указатель вернулся на закрывающийся пункт — он остаётся открытым.
+      if (item.closing) {
+        settleClosing(item);
+        setAttr(item.el, 'data-gr-state', item.was);
+      }
+
+      if (!item.el.open) item.el.open = true;
     }
 
+    // --- Закрытие с состоянием closing ----------------------------------------
+
+    // open снимается не сразу: пункт получает data-gr-state="closing", и его
+    // панель уходит переходом темы; конец — transitionend/animationend самой
+    // панели (не потомка) или таймаут. Прежнее состояние пункта (ajax:
+    // ready | error) возвращается на место.
     function close(item) {
-      if (item && item.el.open) item.el.open = false;
+      if (!item || !item.el.open || item.closing) return;
+
+      var wait = duration(item.panel);
+
+      if (!wait) {
+        item.el.open = false;
+        return;
+      }
+
+      item.was = item.el.getAttribute('data-gr-state');
+      item.onEnd = function (event) { if (event.target === item.panel) finishClosing(item); };
+      item.closing = setTimeout(function () { finishClosing(item); }, wait + 50);
+
+      item.panel.addEventListener('transitionend', item.onEnd);
+      item.panel.addEventListener('animationend', item.onEnd);
+      setAttr(item.el, 'data-gr-state', 'closing');
+    }
+
+    function settleClosing(item) {
+      if (!item.closing) return;
+
+      clearTimeout(item.closing);
+      item.closing = null;
+      item.panel.removeEventListener('transitionend', item.onEnd);
+      item.panel.removeEventListener('animationend', item.onEnd);
+    }
+
+    function finishClosing(item) {
+      if (!item.closing) return;
+
+      settleClosing(item);
+      setAttr(item.el, 'data-gr-state', item.was);
+      item.el.open = false;
+    }
+
+    // Щелчок (и Enter/Space) по заголовку открытого пункта: платформа сняла бы
+    // open в тот же кадр — перехватывается и идёт через closing. Щелчок
+    // по закрывающемуся пункту — передумали: он остаётся открытым.
+    function onSummaryClick(event, item) {
+      if (!item.el.open) return;
+
+      event.preventDefault();
+
+      if (item.closing) open(item);
+      else close(item);
     }
 
     function closeAll() {
@@ -284,6 +367,7 @@
       if (item === active || item === pending) {
         if (closeTimer) clearTimeout(closeTimer);
         closeTimer = null;
+        if (item.closing) open(item);
         return;
       }
 
@@ -456,6 +540,7 @@
 
     function destroy() {
       cancelTimers();
+      for (var i = 0; i < items.length; i++) finishClosing(items[i]);
       if (unmedia) unmedia();
       events.removeAll();
       attrs.restore();

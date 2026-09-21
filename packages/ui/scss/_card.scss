@@ -5,15 +5,26 @@
 // Колонка на flex, а не блок: подвал должен прижиматься к низу, когда
 // карточки в ряду выровнены по высоте (.gr-grid-rows, align-items: stretch),
 // а тело — забирать остаток.
+//
+// Токены карточки — --gr-card-bg, -border, -radius, -pad — читаются
+// с запасным значением и на самом компоненте НЕ объявляются (Этап 46,
+// фидбек темы griffin, п. 4). Объявленный на .gr-card, токен перебивал бы
+// переопределение на обёртке — а ради него всё и затевалось: правило темы
+// на том же элементе проигрывает слою ui всегда, и тема держала свой
+// .th-panel из 39 правил вместо .gr-card с одним токеном на странице.
+// Запасные значения равны прежним литералам — вид не меняется.
+//
+// Радиус — трёхступенчатый: свой токен карточки, иначе радиус контейнера
+// (--gr-radius-container, тот же у окна, меню и сообщения), иначе --gr-radius.
 
 .gr-card {
   display: flex;
   box-sizing: border-box;
   flex-direction: column;
   min-inline-size: 0;
-  border: var(--gr-border-width) solid var(--gr-color-border);
-  border-radius: var(--gr-radius);
-  background-color: var(--gr-color-surface);
+  border: var(--gr-border-width) solid var(--gr-card-border, var(--gr-color-border));
+  border-radius: var(--gr-card-radius, var(--gr-radius-container, var(--gr-radius)));
+  background-color: var(--gr-card-bg, var(--gr-color-surface));
   color: var(--gr-color-text);
   overflow: hidden;
 }
@@ -22,13 +33,13 @@
 // независимо от того, сколько в теле текста.
 .gr-card-body {
   flex: 1 1 auto;
-  padding: var(--gr-gap);
+  padding: var(--gr-card-pad, var(--gr-gap));
 }
 
 .gr-card-header,
 .gr-card-footer {
-  padding-block: calc(var(--gr-gap) * 0.75);
-  padding-inline: var(--gr-gap);
+  padding-block: calc(var(--gr-card-pad, var(--gr-gap)) * 0.75);
+  padding-inline: var(--gr-card-pad, var(--gr-gap));
 }
 
 .gr-card-header {
@@ -66,6 +77,16 @@
   border-color: transparent;
   background-color: var(--gr-color-surface);
   box-shadow: none;
+}
+
+// На сером: панель витрины — buybox, сводка заказа, шаги оформления —
+// стоит на сером фоне страницы и обязана быть белым листом с волосяной
+// обводкой, иначе сливается с фоном. Поверхность всплывающего слоя
+// в обеих темах означает «выше страницы»; обводка — прежняя, от базовой
+// карточки. То же даёт --gr-card-bg на обёртке; класс — для разметки,
+// в которой токенов не ставят.
+.gr-card-overlay {
+  background-color: var(--gr-color-surface-overlay);
 }
 
 // --- Кликабельная карточка --------------------------------------------------

@@ -243,7 +243,7 @@ test('рантайм объявляет порядок слоёв и держи�
   const css = generatedCSS(doc);
 
   assert.ok(
-    css.startsWith('@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;'),
+    css.startsWith('@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;'),
     'порядок слоёв объявлен первой строкой: ' + css.slice(0, 80),
   );
 

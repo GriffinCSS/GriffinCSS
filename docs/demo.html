@@ -10,7 +10,7 @@
        палитре, потому что образец обязан выглядеть одинаково в любой теме.
        Слой docs объявлен до пакетов и стоит перед griffincss.utils:
        любая утилита перекрывает здешние правила. */
-    @layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.utils;
+    @layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.docs, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
     @layer griffincss.docs {
       body { font-family: var(--gr-font-sans); }

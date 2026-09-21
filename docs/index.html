@@ -28,11 +28,11 @@
     Компактная, расширяемая, без лишнего кода. Описывайте сложные сетки одной строкой.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">v0.25.0</span>
+    <span class="badge badge-accent">v0.26.0</span>
     <span class="badge">Dart Sass</span>
     <span class="badge">CSS Grid</span>
     <span class="badge">Flexbox</span>
-    <span class="badge">JS <!--gr:size:js-all-->10,1 КБ<!--/gr:size:js-all--> gzip</span>
+    <span class="badge">JS <!--gr:size:js-all-->10,5 КБ<!--/gr:size:js-all--> gzip</span>
     <span class="badge">MIT</span>
   </div>
 </div>
@@ -130,7 +130,17 @@
 <pre><code>&lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-ui/dist/griffincss-ui.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-utils/dist/griffincss-utils.css"&gt;
-&lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;</code></pre>
+&lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;
+&lt;script defer src="griffincss-ui/dist/griffincss-ui.js"&gt;&lt;/script&gt;
+&lt;script defer src="griffincss-utils/dist/griffincss-utils.js"&gt;&lt;/script&gt;</code></pre>
+
+<p>
+  Синхронно, в <code>&lt;head&gt;</code>, — только рантайм раскладок
+  (и рантайм темы, если она есть): они ставят своё до первой отрисовки.
+  Остальные рантаймы и слой виджетов — <code>defer</code>: в блокирующем
+  пути им делать нечего. Подробно — в <a href="runtime.html#head">«Что
+  в &lt;head&gt;, что defer»</a>.
+</p>
 
 <h3>2. Скелет страницы</h3>
 
@@ -150,21 +160,26 @@
 &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
 &lt;title&gt;Новая страница&lt;/title&gt;
 
-&lt;!-- Порядок слоёв — первым объявлением в документе; app — ваш слой --&gt;
-&lt;style&gt;@layer griffincss.reset, griffincss.core, app, griffincss.ui, griffincss.utils, griffincss.style;&lt;/style&gt;
+&lt;!-- Порядок слоёв — первым объявлением в документе; griffincss.app — ваш подслой:
+     старше токенов, младше компонентов и утилит --&gt;
+&lt;style&gt;@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.app, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;&lt;/style&gt;
 
 &lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-reset.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-core/dist/griffincss-core.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-ui/dist/griffincss-ui.css"&gt;
 &lt;link rel="stylesheet" href="griffincss-utils/dist/griffincss-utils.css"&gt;
 
-&lt;!-- Синхронно: атрибуты темы встают до первой отрисовки --&gt;
+&lt;!-- Синхронно — только эти два: атрибуты темы и раскладки встают до первой отрисовки --&gt;
 &lt;script src="griffincss-core/dist/griffincss-theme.js"&gt;&lt;/script&gt;
 &lt;script src="griffincss-core/dist/griffincss.js"&gt;&lt;/script&gt;
 
+&lt;!-- Остальное — defer: до отрисовки ничего не ставит --&gt;
+&lt;script defer src="griffincss-ui/dist/griffincss-ui.js"&gt;&lt;/script&gt;
+&lt;script defer src="griffincss-utils/dist/griffincss-utils.js"&gt;&lt;/script&gt;
+
 &lt;!-- Типографика — ваша. Четыре строки, без которых Times и абзацы встык --&gt;
 &lt;style&gt;
-@layer app {
+@layer griffincss.app {
   body { font-family: var(--gr-font-sans); }
   h1, h2, h3 { margin-block: var(--gr-gap-lg) var(--gr-gap-sm); line-height: 1.2; }
   p, ul, ol, pre, table { margin-block: 0 var(--gr-gap); }

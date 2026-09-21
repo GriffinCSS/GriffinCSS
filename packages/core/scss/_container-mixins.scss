@@ -59,3 +59,24 @@
     }
   }
 }
+
+// Обратная сторона той же шкалы: контейнер УЖЕ брейкпоинта. Для классов,
+// которые описывают узкое состояние и снимаются от порога — карточки
+// вместо таблицы (.gr-table-stack-cmd), столбик вместо ленты
+// (.gr-track-stack-csm). Range-запись та же, знак другой; пара к базовому
+// диапазону рантайма (width < …).
+//
+//   @include gr-container-below(md) { .gr-table-stack-cmd { … } }
+@mixin gr-container-below($bp, $name: null) {
+  $value: gr-bp-value($bp);
+
+  @if $name {
+    @container #{$name} (width < #{$value}) {
+      @content;
+    }
+  } @else {
+    @container (width < #{$value}) {
+      @content;
+    }
+  }
+}

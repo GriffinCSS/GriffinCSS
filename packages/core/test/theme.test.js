@@ -201,3 +201,70 @@ test('ось стиля независима от темы и режима до�
     { theme: 'dark', a11y: 'low-vision', style: 'compact' },
   );
 });
+
+// --- Этап 45c: смена темы за один кадр ---------------------------------------
+
+// Гашение переходов на время переключения: безслойный <style> от скрипта
+// и класс gr-theme-switching на <html>, оба снимаются через два кадра.
+const freezeStyle = (doc) => doc.head.children.find((node) => node.tagName === 'STYLE' && node.textContent.includes('transition:none')) || null;
+
+test('переключение гасит переходы безслойным <style> на два кадра', () => {
+  const { doc, theme, frame } = setupThemeDom();
+
+  theme.set('dark');
+
+  const style = freezeStyle(doc);
+
+  assert.ok(style, 'нет <style> с transition: none в <head>');
+  assert.ok(!style.textContent.includes('@layer'), 'правило легло в слой — переходы компонентов в ui его перебьют');
+  assert.ok(!style.textContent.includes('!important'), '!important в правиле ни к чему: безслойное объявление и так старше слоёв');
+  assert.match(style.textContent, /\.gr-theme-switching \*/, 'правило не покрывает потомков');
+  assert.match(style.textContent, /::before/, 'правило не покрывает ::before');
+  assert.match(style.textContent, /::after/, 'правило не покрывает ::after');
+  assert.ok(doc.documentElement.classList.contains('gr-theme-switching'), 'нет класса на <html> — теме не за что зацепиться');
+
+  // Первый кадр: браузер считает стили с новыми цветами при погашенных
+  // переходах. Снимать рано — переходы вернулись бы до пересчёта.
+  frame();
+  assert.ok(freezeStyle(doc), '<style> снят на первом кадре — цвета поедут переходами');
+  assert.ok(doc.documentElement.classList.contains('gr-theme-switching'));
+
+  // Второй кадр: цвета уже на месте, переходы возвращаются без движения.
+  frame();
+  assert.equal(freezeStyle(doc), null, '<style> не снят на втором кадре');
+  assert.ok(!doc.documentElement.classList.contains('gr-theme-switching'), 'класс остался на <html>');
+});
+
+test('второе переключение в окне гашения продлевает его, а не снимает раньше времени', () => {
+  const { doc, theme, frame } = setupThemeDom();
+
+  theme.set('dark');
+  frame();
+  theme.a11y(true);
+  frame();
+
+  assert.ok(freezeStyle(doc), 'второй кадр первого переключения снял гашение под вторым');
+  assert.equal(doc.head.children.filter((node) => node.tagName === 'STYLE').length, 1, 'на каждое переключение — свой <style>');
+
+  frame();
+  assert.equal(freezeStyle(doc), null);
+});
+
+test('<style> гашения несёт nonce тега <script> — под строгим CSP его иначе выбросят', () => {
+  const script = el('script', { nonce: 'gr0test' });
+  const { doc, theme } = setupThemeDom({ script });
+
+  theme.set('dark');
+
+  assert.equal(freezeStyle(doc).nonce, 'gr0test');
+});
+
+test('без requestAnimationFrame тема переключается, гашения просто нет', () => {
+  const { doc, theme } = setupThemeDom({ noFrames: true });
+
+  theme.set('dark');
+
+  assert.equal(doc.documentElement.getAttribute('data-gr-theme'), 'dark');
+  assert.equal(freezeStyle(doc), null);
+  assert.ok(!doc.documentElement.classList.contains('gr-theme-switching'));
+});

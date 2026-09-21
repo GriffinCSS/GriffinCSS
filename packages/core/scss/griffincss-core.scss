@@ -4,28 +4,40 @@
 // Рантайм-парсер раскладок: dist/griffincss.js
 // Для компилтайм-раскладок: @use 'griffincss-core/scss/grid-parser' и @include gr-grid-layout(...)
 //
-// Весь вывод — в слое griffincss.core. Пользовательский CSS вне слоёв
-// выигрывает у библиотеки без !important, каким бы ни был порядок подключения.
-// Порядок слоёв объявлен целиком, поэтому любая сборка библиотеки задаёт его
-// одинаково — какая бы ни загрузилась первой.
+// Пользовательский CSS вне слоёв выигрывает у библиотеки без !important,
+// каким бы ни был порядок подключения. Порядок слоёв объявлен целиком,
+// поэтому любая сборка библиотеки задаёт его одинаково — какая бы
+// ни загрузилась первой. Семь слоёв (Этап 46):
 //
-// Пятый слой griffincss.style — старший из библиотечных. В нём живут только
-// токены оси оформления (griffincss-styles.css, отдельная точка входа).
-// Последним он обязан быть потому, что griffincss-ui.css и griffincss-utils.css
-// кладут собственный :root в свои слои: слой перебивает любую специфичность,
-// и ось из слоя ядра проиграла бы им молча. Пользовательский CSS вне слоёв
-// выигрывает и у него.
+//   reset   — ресет (опциональная точка входа);
+//   tokens  — :root, темы, режим, якоря. Один слой на все пакеты: каждый
+//             несёт свою копию (самодостаточность), но копии одинаковы,
+//             и подслой темы потребителя сразу после tokens перебивает их
+//             при любой специфичности. Раньше каждый пакет клал токены
+//             в свой слой, и :root { --gr-font-sans } из подслоя между core
+//             и ui проигрывал той же строке из ui и utils;
+//   core    — сетка, флекс, раскладки, правила режима со свойствами;
+//   ui      — компоненты;
+//   utils   — утилиты;
+//   style   — токены оси оформления на носителе [data-gr-style]: они обязаны
+//             бить тему, поэтому стоят старше tokens;
+//   hidden  — [hidden] { display: none }: старше любого display компонента.
+//
+// Пользовательский CSS вне слоёв выигрывает у всех семи.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
-// Весь вывод пакета — в слое griffincss.core.
-@layer griffincss.core {
+// Токены — в общий слой, а не в слой пакета: см. шапку.
+@layer griffincss.tokens {
   @include meta.load-css('tokens');
-
-  // Тема двумя файлами: токены едут во все три пакета, правила со
-  // свойствами — только сюда и в компоненты. Причина — в шапках файлов.
   @include meta.load-css('theme-tokens');
+}
+
+// Остальной вывод пакета — в слое griffincss.core.
+@layer griffincss.core {
+  // Правила режима со свойствами едут сюда и в компоненты, но не в utils
+  // и не в tokens — причина в шапке _theme-rules.scss.
   @include meta.load-css('theme-rules');
   @include meta.load-css('container-queries');
   @include meta.load-css('grid-helpers');
@@ -35,4 +47,8 @@
   // Модификаторы отступа — последними: у них та же специфичность,
   // что у .gr-grid, .gr-l-* и флекс-контейнеров, поэтому решает порядок.
   @include meta.load-css('gap');
+}
+
+@layer griffincss.hidden {
+  @include meta.load-css('hidden');
 }

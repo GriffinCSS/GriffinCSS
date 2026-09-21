@@ -30,7 +30,7 @@
   padding: var(--gr-gap);
   border: var(--gr-border-width) solid var(--gr-alert-fill);
   border-inline-start-width: calc(var(--gr-border-width) * 4);
-  border-radius: var(--gr-radius);
+  border-radius: var(--gr-radius-container, var(--gr-radius));
 
   // Подложка — фон страницы под вуалью из цвета полосы: 0,9·фон + 0,1·полоса,
   // то же, что давало смешение. Тень внутренняя и потому лежит под рамкой,

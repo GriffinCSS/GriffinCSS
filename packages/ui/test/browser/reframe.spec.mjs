@@ -8,6 +8,9 @@
 // а не фреймворк. React перезаписывает className не при каждой
 // перерисовке, а при изменении пропа, — тест на фреймворке доказывал бы
 // факты о React.
+//
+// С Этапа 47 наблюдение включено по умолчанию: положительный случай —
+// голый тег <script>, отрицательный контроль — data-observe="false".
 
 import { test, expect } from '@playwright/test';
 
@@ -16,10 +19,9 @@ const PAGE = '/reframe-fixture.html';
 const html = (observe) => `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><title>Перерисовка</title>
 <link rel="stylesheet" href="/packages/core/dist/griffincss-core.css">
-<script src="/packages/core/dist/griffincss.js"></script>
+<script src="/packages/core/dist/griffincss.js"${observe ? '' : ' data-observe="false"'}></script>
 </head><body>
 <div id="box" data-gr-layout="a1b1"><div>a</div><div>b</div></div>
-${observe ? '<script>window.addEventListener("DOMContentLoaded", function () { Griffincss.observe(); });</script>' : ''}
 </body></html>`;
 
 async function open(page, observe) {
@@ -59,7 +61,7 @@ test('контейнер после разбора открыт', async ({ page 
   expect(before.display).toBe('grid');
 });
 
-test('под observe() перезапись className не оставляет контейнер невидимым', async ({ page }) => {
+test('под наблюдением по умолчанию перезапись className не оставляет контейнер невидимым', async ({ page }) => {
   await open(page, true);
   await rewrite(page);
 
@@ -75,9 +77,9 @@ test('под observe() перезапись className не оставляет к
 });
 
 // Отрицательный контроль и он же — содержание шестой оговорки:
-// без observe() возвращать маркеры некому, и контейнер остаётся тёмным.
-// Без этого теста первый ничего не доказывал бы.
-test('без observe() перезапись className гасит контейнер', async ({ page }) => {
+// с data-observe="false" возвращать маркеры некому, и контейнер остаётся
+// тёмным. Без этого теста первый ничего не доказывал бы.
+test('с data-observe="false" перезапись className гасит контейнер', async ({ page }) => {
   await open(page, false);
   await rewrite(page);
   await page.waitForTimeout(300);

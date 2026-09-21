@@ -21,7 +21,9 @@ import { join, extname, resolve } from 'node:path';
 
 // At-правила, внутри которых лежат обычные правила, а не объявления.
 // Остальные (@property, @font-face, @keyframes) — непрозрачные блоки.
-const NESTED = new Set(['media', 'supports', 'container', 'layer', 'scope', 'document']);
+// @starting-style — тоже вложенный (Этап 48a): непрозрачным он уносил
+// в отсечённый файл стартовые кадры тоста и окна, которых на странице нет.
+const NESTED = new Set(['media', 'supports', 'container', 'layer', 'scope', 'document', 'starting-style']);
 
 // Конец строкового литерала: i указывает на открывающую кавычку.
 function skipString(css, i) {
@@ -244,6 +246,38 @@ function safelistMatcher(patterns) {
   return (name) => exact.has(name) || expressions.some((re) => re.test(name));
 }
 
+// --- пресеты safelist -------------------------------------------------------
+
+// Классы, которые ставят скрипты пакета ui — рантайм компонентов
+// (griffincss-ui.js) и слой виджетов (griffinjs*.js): тост, регион тостов,
+// список и теги комбобокса, лайтбокс, кнопки слайдера, панель календаря,
+// список файлов, сводка ошибок. В разметке страницы их нет — они
+// собираются в рантайме, — и отсечение по разметке их не увидит.
+// Список НЕ ВЕДЁТСЯ РУКАМИ: тест packages/utils/test/purge-preset.test.js
+// собирает его из src/ (строковые литералы вне комментариев, без
+// селекторов и идентификаторов) и роняет npm test при расхождении.
+// Подключается ключом --preset ui — к любому файлу пакета:
+// griffincss-ui.css, griffinjs.css, griffinjs-fields.css.
+export const PRESETS = {
+  ui: [
+    'gr-btn', 'gr-btn-ghost', 'gr-btn-icon', 'gr-btn-sm',
+    'gr-combobox-empty', 'gr-combobox-group', 'gr-combobox-list', 'gr-combobox-option',
+    'gr-combobox-tag', 'gr-combobox-tag-remove', 'gr-combobox-tags',
+    'gr-counter',
+    'gr-datetime-clock', 'gr-datetime-clock-input', 'gr-datetime-day', 'gr-datetime-grid',
+    'gr-datetime-head', 'gr-datetime-nav', 'gr-datetime-panel', 'gr-datetime-row',
+    'gr-datetime-rows', 'gr-datetime-title', 'gr-datetime-weekday', 'gr-datetime-year',
+    'gr-file-item', 'gr-file-list', 'gr-file-name', 'gr-file-remove', 'gr-file-size',
+    'gr-lightbox', 'gr-lightbox-caption', 'gr-lightbox-close', 'gr-lightbox-counter',
+    'gr-lightbox-item', 'gr-lightbox-next', 'gr-lightbox-prev', 'gr-lightbox-track',
+    'gr-modal', 'gr-slide', 'gr-slider-dot', 'gr-slider-pause',
+    'gr-toast', 'gr-toast-*', 'gr-toast-body', 'gr-toast-icon', 'gr-toast-leaving',
+    'gr-toast-region', 'gr-toast-region-*', 'gr-toast-title',
+    'gr-track',
+    'gr-validate', 'gr-validate-list', 'gr-validate-title',
+  ],
+};
+
 // --- отсечение --------------------------------------------------------------
 
 // Имена анимаций, на которые ссылаются уцелевшие правила: @keyframes
@@ -397,7 +431,7 @@ export function collectFiles(target, files = []) {
 }
 
 function parseArgs(argv) {
-  const options = { css: 'packages/utils/dist/griffincss-utils.css', out: null, safelist: [], content: [] };
+  const options = { css: 'packages/utils/dist/griffincss-utils.css', out: null, safelist: [], presets: [], content: [] };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -405,6 +439,17 @@ function parseArgs(argv) {
     if (arg === '--css') options.css = argv[++i];
     else if (arg === '--out') options.out = argv[++i];
     else if (arg === '--safelist') options.safelist.push(...String(argv[++i]).split(',').filter(Boolean));
+    else if (arg === '--preset') {
+      const name = String(argv[++i]);
+
+      if (!Object.prototype.hasOwnProperty.call(PRESETS, name)) {
+        console.error(`purge: неизвестный пресет ${name}; есть: ${Object.keys(PRESETS).join(', ')}`);
+        process.exit(1);
+      }
+
+      options.presets.push(name);
+      options.safelist.push(...PRESETS[name]);
+    }
     else if (arg.startsWith('--')) {
       console.error(`purge: неизвестная опция ${arg}`);
       process.exit(1);
@@ -423,7 +468,7 @@ function main(argv) {
 
   if (!options.content.length) {
     console.error('purge: не указано ни одного файла разметки');
-    console.error('  использование: node scripts/purge.mjs [--css файл] [--out файл] [--safelist a,b*] <файлы или каталоги>');
+    console.error('  использование: node scripts/purge.mjs [--css файл] [--out файл] [--safelist a,b*] [--preset ui] <файлы или каталоги>');
     process.exit(1);
   }
 
@@ -468,6 +513,12 @@ function main(argv) {
     if (!result.styles.kept.length) {
       console.error('purge: стиль, который ставится в рантайме (el.dataset.grStyle), укажите в --safelist');
     }
+  }
+
+  // Пресет назван в отчёте: по счётчикам видно, что safelist собран
+  // правильно, а по этой строке — из чего он собран.
+  for (const name of options.presets) {
+    console.error(`purge: пресет ${name} — классы, которые ставят скрипты пакета ${name}; имён в safelist: ${PRESETS[name].length}`);
   }
 
   if (!options.safelist.length) {

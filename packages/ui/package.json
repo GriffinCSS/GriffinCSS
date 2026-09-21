@@ -1,6 +1,6 @@
 {
   "name": "griffincss-ui",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "description": "Griffincss UI — компоненты интерфейса: кнопки, поля, карточки, таблицы, статусы; на токенах ядра, с обеими темами и режимом для слабовидящих. Плюс GriffinJS — опциональный слой виджетов: слайдер, галерея, лайтбокс, параллакс, мегаменю, дропдаун, подсказка, окна, комбобокс",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
@@ -36,7 +36,7 @@
     "src/"
   ],
   "peerDependencies": {
-    "griffincss-core": "^0.25.0"
+    "griffincss-core": "^0.26.0"
   },
   "keywords": [
     "css",

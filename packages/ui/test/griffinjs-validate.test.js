@@ -156,3 +156,55 @@ test('не форма — виджет не поднимается', () => {
 
   G.destroy();
 });
+
+test('состояние ошибки встаёт на обёртку .gr-field вместе с aria-invalid и уходит с ней', () => {
+  // Этап 45b: CSS красит контролы поля по .gr-field[data-gr-state="error"],
+  // aria-invalid на контроле остаётся источником для программы чтения
+  // с экрана — виджет ставит оба. Контрол без обёртки получает только
+  // aria-invalid; обёртка с двумя контролами держит состояние, пока
+  // хотя бы один из них не пройден.
+  const { G, doc } = setup(PARTS);
+  const { node, name, mail } = form(doc);
+  const field = node.querySelector('.gr-field');
+  const pair = el('div', { class: 'gr-field' }, [
+    control({ name: 'a' }, false, 'Ошибка.'),
+    control({ name: 'b' }, false, 'Ошибка.'),
+  ]);
+
+  node.appendChild(pair);
+  G.start();
+  submit(node);
+
+  assert.equal(field.getAttribute('data-gr-state'), 'error', 'обёртка непройденного поля без состояния');
+  assert.equal(name.getAttribute('aria-invalid'), 'true', 'aria-invalid на контроле снят');
+  assert.equal(mail.getAttribute('aria-invalid'), 'true');
+  assert.equal(pair.getAttribute('data-gr-state'), 'error');
+
+  // Первый из пары исправлен — второй ещё нет: состояние остаётся.
+  const [a, b] = pair.children;
+
+  a.validity = { valid: true };
+  a.dispatchEvent(event('input', a));
+  assert.equal(a.getAttribute('aria-invalid'), null);
+  assert.equal(pair.getAttribute('data-gr-state'), 'error', 'состояние снято, пока второй контрол не пройден');
+
+  b.validity = { valid: true };
+  b.dispatchEvent(event('input', b));
+  assert.equal(pair.getAttribute('data-gr-state'), null, 'состояние осталось после исправления обоих');
+
+  // Поле исправлено — обёртка теряет состояние вместе с aria-invalid.
+  name.validity = { valid: true };
+  name.dispatchEvent(event('input', name));
+  assert.equal(name.getAttribute('aria-invalid'), null);
+  assert.equal(field.getAttribute('data-gr-state'), null, 'состояние на обёртке пережило исправление поля');
+
+  // Повторная отправка: снова обе метки, destroy снимает обе.
+  name.validity = { valid: false };
+  submit(node);
+  assert.equal(field.getAttribute('data-gr-state'), 'error');
+
+  G.destroy();
+
+  assert.equal(field.getAttribute('data-gr-state'), null, 'destroy не снял состояние с обёртки');
+  assert.equal(name.getAttribute('aria-invalid'), null);
+});

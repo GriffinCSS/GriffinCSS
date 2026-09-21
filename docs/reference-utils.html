@@ -389,7 +389,7 @@ document.addEventListener('griffincss:themechange', function (e) {
   <tr><td><strong>Трансформация</strong></td><td><code>.gr-uppercase</code> / <code>lowercase</code> / <code>capitalize</code></td></tr>
   <tr><td><strong>Интервал</strong></td><td><code>.gr-leading-tight</code> (1.25) … <code>.gr-leading-loose</code> (2)</td></tr>
   <tr><td><strong>Декор</strong></td><td><code>.gr-underline</code> / <code>no-underline</code> / <code>line-through</code></td></tr>
-  <tr><td><strong>Стиль</strong></td><td><code>.gr-italic</code> / <code>not-italic</code></td></tr>
+  <tr><td><strong>Стиль</strong></td><td><code>.gr-italic</code> / <code>not-italic</code>, <code>.gr-tabular-nums</code> (цифры одной ширины)</td></tr>
   <tr><td><strong>Переносы</strong></td><td><code>.gr-break-words</code> / <code>truncate</code> / <code>whitespace-*</code></td></tr>
   <tr><td><strong>Перенос строк</strong></td><td><code>.gr-text-balance</code> (заголовки), <code>.gr-text-pretty</code> (абзацы)</td></tr>
   <tr><td><strong>Обрезка по строкам</strong></td><td><code>.gr-line-clamp-1</code> … <code>.gr-line-clamp-6</code>, <code>.gr-line-clamp-none</code></td></tr>
@@ -598,14 +598,18 @@ Griffincss.utils.stop();               // снять всё наблюдение
 <pre><code>// my-griffincss-utils.scss — своя точка входа вместо готовой
 @use 'sass:meta';
 
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
+
+// Токены — в общий слой tokens, как у всех сборок: копия та же, что
+// в ядре, и подслой темы после tokens её перебивает. Только токены темы:
+// правила режима со свойствами (theme-rules) в утилиты не подключают —
+// из старшего слоя они побеждали бы компоненты.
+@layer griffincss.tokens {
+  @include meta.load-css('griffincss-core/scss/tokens');
+  @include meta.load-css('griffincss-core/scss/theme-tokens');
+}
 
 @layer griffincss.utils {
-  @include meta.load-css('griffincss-core/scss/tokens');
-
-  // Только токены темы. Правила режима со свойствами (theme-rules) в этот
-  // слой не подключают: он старший, и оттуда они побеждают компоненты.
-  @include meta.load-css('griffincss-core/scss/theme-tokens');
   @include meta.load-css('griffincss-utils/scss/keyframes');
   @include meta.load-css('griffincss-utils/scss/animations');
   @include meta.load-css('griffincss-utils/scss/border-radius');
@@ -631,6 +635,11 @@ Griffincss.utils.stop();               // снять всё наблюдение
   @include meta.load-css('griffincss-utils/scss/transforms');
   @include meta.load-css('griffincss-utils/scss/typography');
   @include meta.load-css('griffincss-utils/scss/visibility');
+}
+
+// [hidden] старше любого display — последним слоем, как у всех сборок.
+@layer griffincss.hidden {
+  @include meta.load-css('griffincss-core/scss/hidden');
 }
 
 // ВТОРАЯ ПОЛОВИНА: переменные, на которые ссылается карта.

@@ -95,14 +95,16 @@ test('радио в потоке и фокусируема, фокус с кла
 
   // Фокус клавиатурой, а не focus(): программный фокус не даёт
   // :focus-visible в Chromium. Отправная точка — сегментный переключатель
-  // выше; между ним и группой — кнопки вкладок примера, поэтому Tab
-  // жмётся до попадания в радио. WebKit по умолчанию обходит радио
-  // по Tab (настройка macOS) — там по всем контролам ходит Option+Tab.
+  // выше; между ним и группой — второй переключатель с <legend>, строки
+  // выбора с модификаторами (Этап 45: флажок, две ссылки в подписи, два
+  // тумблера) и кнопки вкладок примера, поэтому Tab жмётся до попадания
+  // в радио. WebKit по умолчанию обходит радио по Tab (настройка macOS) —
+  // там по всем контролам ходит Option+Tab.
   const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 
   await page.locator('input[name="demo-period"]:checked').focus();
 
-  for (let i = 0; i < 10 && !(await radio.evaluate((el) => el === document.activeElement)); i++) {
+  for (let i = 0; i < 30 && !(await radio.evaluate((el) => el === document.activeElement)); i++) {
     await page.keyboard.press(tab);
   }
 

@@ -46,6 +46,12 @@ function layerBody(css, name) {
   throw new Error('Griffincss test: незакрытый @layer ' + name);
 }
 
+// Тела нескольких слоёв подряд — для файлов, которые с Этапа 46 раскладывают
+// вывод по двум слоям: токены в griffincss.tokens, остальное в своём.
+function layersBody(css, names) {
+  return names.map((name) => layerBody(css, name)).join('\n');
+}
+
 // Разбирает CSS на блоки верхнего уровня: [{ prelude, body }].
 function topLevelBlocks(css) {
   const blocks = [];
@@ -75,4 +81,4 @@ function topLevelBlocks(css) {
   return blocks;
 }
 
-module.exports = { normalizeCss, compileScss, topLevelBlocks, layerBody };
+module.exports = { normalizeCss, compileScss, topLevelBlocks, layerBody, layersBody };

@@ -31,10 +31,13 @@ $gr-nav-expand: map.get(bp.$gr-breakpoints, md);
 // Ряд на <ul>: обёртка <li> не должна ни добавлять полей, ни мешать пункту
 // растянуться по ширине колонки. :where() держит специфичность нулевой,
 // чтобы класс на самом <li> оставался сильнее.
+// Отступ пункта — токеном с нулевым умолчанием (Этап 46): правило темы
+// на самом <li> проигрывает этому по слою, и тема оборачивала пункт лишним
+// узлом. То же у радиуса ссылки ниже.
 .gr-nav > :where(li) {
   display: flex;
   margin: 0;
-  padding: 0;
+  padding: var(--gr-nav-item-pad, 0);
   list-style: none;
 }
 
@@ -61,7 +64,7 @@ $gr-nav-expand: map.get(bp.$gr-breakpoints, md);
   padding-block: 0;
   padding-inline: calc(var(--gr-control-padding-x) * 0.75);
   border: 0;
-  border-radius: var(--gr-radius);
+  border-radius: var(--gr-nav-link-radius, var(--gr-radius));
   background-color: transparent;
   color: var(--gr-nav-fg);
   font-family: inherit;

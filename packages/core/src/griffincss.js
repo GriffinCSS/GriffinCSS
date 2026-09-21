@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.25.0
+ * Griffincss — Runtime Grid Parser v0.26.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.25.0';
+  var VERSION = '0.26.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -43,8 +43,10 @@
   // Каскадные слои: правила рантайма живут в том же слое, что и статический
   // griffincss-core.css, поэтому пользовательский CSS вне слоёв выигрывает
   // без !important. Порядок объявляется целиком — на случай, когда подключён
-  // только рантайм, без CSS-файлов.
-  var LAYER_ORDER = '@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;';
+  // только рантайм, без CSS-файлов. Семь слоёв с Этапа 46: tokens — общий
+  // слой токенов всех пакетов, hidden — [hidden] старше любого display;
+  // в оба рантайм ничего не пишет.
+  var LAYER_ORDER = '@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;';
   var LAYER = 'griffincss.core';
 
   // Имена слоёв выводятся из той же строки: порядок вывода буферов
@@ -555,7 +557,7 @@
       if (touched[i].el === el) return touched[i];
     }
 
-    var record = { el: el, layoutClass: null, areas: [], names: [] };
+    var record = { el: el, layoutClass: null, areas: [], names: [], known: [], warned: [] };
     touched.push(record);
 
     return record;
@@ -625,6 +627,41 @@
     return [];
   }
 
+  // Имена областей всех наборов элемента — базового и каждого брейкпоинта.
+  function allNames(set) {
+    var names = [];
+
+    for (var i = 0; i < set.length; i++) {
+      for (var n = 0; n < set[i].names.length; n++) {
+        if (names.indexOf(set[i].names[n]) === -1) names.push(set[i].names[n]);
+      }
+    }
+
+    return names;
+  }
+
+  // Явный gr-area-* ребёнка, которого нет ни в одном наборе контейнера, —
+  // всегда ошибка разметки: авто-скрытие спрячет ребёнка на любой ширине,
+  // и без предупреждения он пропадает молча. Имя из части наборов —
+  // скрытие по замыслу, о нём молчим. Один раз на имя и контейнер:
+  // наблюдатель проходит по дереву снова и снова.
+  function checkArea(record, name) {
+    if (record.known.indexOf(name) !== -1 || record.warned.indexOf(name) !== -1) return;
+
+    record.warned.push(name);
+    console.warn('Griffincss: area "' + name + '" is not in any layout of its container (' + record.known.join(', ') + ')');
+  }
+
+  function checkAreas(el, record) {
+    var children = el.children;
+
+    for (var i = 0; i < children.length; i++) {
+      var name = areaNameOf(children[i]);
+
+      if (name) checkArea(record, name);
+    }
+  }
+
   // Первое имя базовой раскладки, не стоящее ни на одном ребёнке —
   // ни явным классом из разметки, ни выданным рантаймом.
   function freeAreaName(el, record) {
@@ -672,9 +709,10 @@
   // уже кому-то выдано, контейнер пересчитывается целиком, иначе итог
   // зависел бы от порядка прихода детей.
   function admitChild(el, record, child) {
-    if (record.names.length === 0) return;
-
     var explicit = areaNameOf(child);
+
+    if (explicit) checkArea(record, explicit);
+    if (record.names.length === 0) return;
 
     if (explicit) {
       for (var i = 0; i < record.areas.length; i++) {
@@ -741,7 +779,9 @@
     el.classList.add(className);
     record.layoutClass = className;
     record.names = baseNames(set);
+    record.known = allNames(set);
 
+    checkAreas(el, record);
     assignAreaClasses(el, record);
     markReady(el);
 
@@ -944,15 +984,19 @@
   }
 
   // Автостарт: только в браузере.
-  // Запрет автоинициализации — data-auto="false" на теге <script>.
+  //   data-auto="false"    — не запускаться вовсе;
+  //   data-stream="false"  — без потокового режима, один проход в конце;
+  //   data-observe="false" — без наблюдения за живым деревом.
   function autoStart() {
     var autoInit = true;
     var streaming = true;
+    var watching = true;
 
     try {
       var script = document.currentScript;
       if (script && script.getAttribute('data-auto') === 'false') autoInit = false;
       if (script && script.getAttribute('data-stream') === 'false') streaming = false;
+      if (script && script.getAttribute('data-observe') === 'false') watching = false;
       // Свойство, а не атрибут: содержимое атрибута браузер прячет
       // после разбора. Читается здесь, потому что позже
       // document.currentScript уже null.
@@ -966,18 +1010,28 @@
       if (document.head) flushCSS();
     } catch (e) { /* <head> ещё не готов — защиту поставит init() */ }
 
+    // Финальный проход и наблюдение за живым деревом. Наблюдение включено
+    // по умолчанию (Этап 47): FOUC-защита ловит любой поздний контейнер
+    // по атрибуту — это обещание его показать, а без наблюдателя показать
+    // его некому, и вставленный после загрузки блок оставался прозрачным,
+    // пока автор не вызовет refresh() сам. Тот же выбор, что у рантайма
+    // утилит. Корень — body, как у публичного observe(): его повторный
+    // вызов из чужого кода не заведёт второго наблюдателя.
+    function settle() {
+      scanner.stopParseObserver();
+      init();
+      if (watching) scanner.observe();
+    }
+
     if (document.readyState === 'loading') {
       // Потоковый режим: контейнеры раскладываются по мере разбора
       // документа, а init() на DOMContentLoaded остаётся финальной
       // сверкой — он идемпотентен для уже обработанных элементов.
       if (streaming) observeParsing();
 
-      document.addEventListener('DOMContentLoaded', function () {
-        scanner.stopParseObserver();
-        init();
-      });
+      document.addEventListener('DOMContentLoaded', settle);
     } else {
-      init();
+      settle();
     }
   }
 

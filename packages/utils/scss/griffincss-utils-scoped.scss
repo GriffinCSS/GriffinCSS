@@ -15,17 +15,19 @@
 // в наборе.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
-// Весь вывод пакета — в слое griffincss.utils.
-@layer griffincss.utils {
+// Токены и тема — вне области и в общем слое griffincss.tokens, как
+// в обычной сборке (Этап 46): атрибут data-gr-theme стоит на <html>,
+// то есть заведомо снаружи области .griffin. Только токены: правила режима
+// отсюда побеждали бы компоненты.
+@layer griffincss.tokens {
   @include meta.load-css('griffincss-core/scss/tokens');
-
-  // Тема — тоже вне области: атрибут data-gr-theme стоит на <html>,
-  // то есть заведомо снаружи области .griffin. Только токены, как
-  // в обычной сборке утилит: правила режима отсюда побеждали бы компоненты.
   @include meta.load-css('griffincss-core/scss/theme-tokens');
+}
 
+// Остальной вывод пакета — в слое griffincss.utils.
+@layer griffincss.utils {
   // @keyframes — вне области: имя анимации ищется глобально, префикс
   // области к нему неприменим.
   @include meta.load-css('keyframes');
@@ -47,4 +49,9 @@
     @include meta.load-css('typography');
     @include meta.load-css('visibility');
   }
+}
+
+// [hidden] — вне области: атрибут обязан работать на любом элементе страницы.
+@layer griffincss.hidden {
+  @include meta.load-css('griffincss-core/scss/hidden');
 }

@@ -134,7 +134,6 @@
   display: block;
   padding-block: 0.375rem;
   padding-inline: var(--gr-ui-gap);
-  border-inline-start: var(--gr-border-width) solid var(--gr-color-border);
   color: var(--gr-color-text-secondary);
   font-size: 0.875rem;
   text-align: center;
@@ -143,18 +142,27 @@
   transition: background-color var(--gr-transition), color var(--gr-transition);
 }
 
+// Внутренняя рамка — у сегмента, перед которым стоит другой сегмент,
+// а не у каждого с последующим снятием у первого. Края и рамка считаются
+// по ярлыкам, а не по любым потомкам: у <fieldset> штатное имя — <legend>
+// (в том числе скрытый, .gr-sr-only), и первым потомком он отнимал
+// у первого сегмента скругление и левую рамку, а хвостовой <script>
+// или скрытое поле — скругление у последнего (фидбек темы griffin, п. 2).
+.gr-segmented label ~ label span {
+  border-inline-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
 // Скругление крайних сегментов задаётся явно, а не берётся из overflow:
 // hidden на обёртке. Обрезка по overflow идёт по внутреннему краю рамки,
 // но с ВНЕШНИМ радиусом, поэтому в углах между заливкой и рамкой оставался
 // зазор — фон переключателя не совпадал с его границами. Свои радиусы
 // у сегментов ложатся по рамке точно.
-.gr-segmented label:first-child span {
-  border-inline-start: 0;
+.gr-segmented label:first-of-type span {
   border-start-start-radius: var(--gr-segmented-radius);
   border-end-start-radius: var(--gr-segmented-radius);
 }
 
-.gr-segmented label:last-child span {
+.gr-segmented label:last-of-type span {
   border-start-end-radius: var(--gr-segmented-radius);
   border-end-end-radius: var(--gr-segmented-radius);
 }
@@ -199,6 +207,30 @@
 .gr-choice:has(:disabled) {
   color: var(--gr-color-text-disabled);
   cursor: not-allowed;
+}
+
+// Два модификатора, а не рецепты из утилит (фидбек темы griffin, п. 6).
+// Утилиты флекса лежат в слое core и проигрывают align-items и display
+// компонента в ui при любой специфичности; .gr-w-full живёт в utils,
+// а пакет компонентов обязан собираться и без него.
+//
+// Согласие «Я прочитал условия…» в две-три строки: контрол стоит
+// по первой строке, а не по центру блока. Сдвиг — к середине первой
+// строки: при line-height 1,4 квадратик 1,15em ложился бы по её верху.
+.gr-choice-start {
+  align-items: flex-start;
+}
+
+.gr-choice-start > input {
+  margin-block-start: 0.15em;
+}
+
+// Строка настроек «подпись — тумблер»: блочный флекс во всю ширину,
+// подпись слева, переключатель у правого края, кликается вся строка.
+// В инлайновом контексте автор берёт .gr-choice.
+.gr-choice-row {
+  display: flex;
+  justify-content: space-between;
 }
 
 // --- Образец цвета и плашка размера -----------------------------------------

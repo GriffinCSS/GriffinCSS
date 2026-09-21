@@ -59,7 +59,10 @@
   min-block-size: var(--gr-control-height);
   margin: 0;
   padding-block: 0;
-  padding-inline: var(--gr-control-padding-x);
+
+  // Отступ вкладки — токеном (Этап 46): правило темы на .gr-tab
+  // проигрывает слою ui, а ряд вкладок в шапке витрины хочет быть плотнее.
+  padding-inline: var(--gr-tabs-tab-pad, var(--gr-control-padding-x));
   border: 0;
 
   // Линия объявлена прозрачной у всех вкладок сразу: появись она только

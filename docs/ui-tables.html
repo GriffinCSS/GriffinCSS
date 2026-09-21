@@ -44,6 +44,7 @@
   <tr><td><code>.gr-table-hover</code></td><td>Подсветка строки под указателем</td></tr>
   <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой</td></tr>
   <tr><td><code>.gr-table-sticky</code></td><td>Шапка остаётся видна при прокрутке тела</td></tr>
+  <tr><td><code>.gr-table-stack</code>, <code>-{sm,md,lg,xl}</code>, <code>-c{sm,md,lg,xl}</code></td><td>Карточки вместо строк: всегда, ниже ширины окна или ниже ширины контейнера</td></tr>
 </table>
 
 <div class="callout">
@@ -197,6 +198,107 @@
     таблица, а не сама ячейка, — и с уехавшей липкой шапкой она не двигается:
     линия оставалась на исходном месте и пропадала из виду. Тень принадлежит
     элементу и едет вместе с ним.
+  </p>
+</div>
+
+<h2 id="kartochki-vmesto-strok">Карточки вместо строк</h2>
+
+<p>
+  Таблице кабинета — заказы, транзакции, бонусы, состав заказа — на телефоне
+  места нет: пять колонок в 375 px не помещаются, а прокрутка вбок прячет
+  половину строки. <code>.gr-table-stack</code> ниже порога превращает каждую
+  строку в карточку: ячейки в столбик, у каждой — подпись колонки из
+  <code>data-label</code>, строка обведена и скруглена как контейнер
+  (<code>--gr-radius-container</code>). Шапка при этом <strong>не</strong>
+  <code>display: none</code> — она ужата в пиксель, как <code>.gr-sr-only</code>,
+  и программа чтения с экрана по-прежнему связывает ячейки с заголовками колонок.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>Карточки</th></tr>
+  <tr><td><code>.gr-table-stack</code></td><td>Всегда</td></tr>
+  <tr><td><code>.gr-table-stack-sm</code> … <code>-xl</code></td><td>Ниже 640 / 768 / 1024 / 1280 px ширины <em>окна</em>; от порога — таблица</td></tr>
+  <tr><td><code>.gr-table-stack-csm</code> … <code>-cxl</code></td><td>Ниже той же ширины <em>контейнера</em> — ближайшего предка с <code>.gr-cq</code></td></tr>
+</table>
+
+<div class="callout">
+  <p>
+    <strong>Суффикс называет порог, а не «от брейкпоинта».</strong> У остальных
+    адаптивных классов <code>-md</code> значит «от 768 px и выше»; здесь класс
+    описывает узкое состояние, а широкое — просто таблица, поэтому
+    <code>.gr-table-stack-md</code> — «карточки, пока уже 768 px». Контейнерный
+    порог нужен кабинету с боковой колонкой: таблица в содержимом складывается
+    от ширины своей колонки, а не окна.
+  </p>
+</div>
+
+<pre><code>&lt;table class="gr-table gr-table-stack-md"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th scope="col"&gt;Заказ&lt;/th&gt;&lt;th scope="col"&gt;Дата&lt;/th&gt;&lt;th scope="col"&gt;Статус&lt;/th&gt;&lt;th scope="col" class="gr-text-end"&gt;Сумма&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td data-label="Заказ"&gt;#1042&lt;/td&gt;
+      &lt;td data-label="Дата"&gt;12.09.2026&lt;/td&gt;
+      &lt;td data-label="Статус"&gt;&lt;span class="gr-badge gr-badge-success"&gt;Доставлен&lt;/span&gt;&lt;/td&gt;
+      &lt;td data-label="Сумма" class="gr-text-end gr-tabular-nums"&gt;24 800 ₽&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Сузьте окно ниже 768 px — строки станут карточками</div>
+  <table class="gr-table gr-table-stack-md">
+    <thead>
+      <tr><th scope="col">Заказ</th><th scope="col">Дата</th><th scope="col">Статус</th><th scope="col" class="gr-text-end">Сумма</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-label="Заказ">#1042</td>
+        <td data-label="Дата">12.09.2026</td>
+        <td data-label="Статус"><span class="gr-badge gr-badge-success">Доставлен</span></td>
+        <td data-label="Сумма" class="gr-text-end gr-tabular-nums">24 800 ₽</td>
+      </tr>
+      <tr>
+        <td data-label="Заказ">#1043</td>
+        <td data-label="Дата">14.09.2026</td>
+        <td data-label="Статус"><span class="gr-badge gr-badge-warning">В пути</span></td>
+        <td data-label="Сумма" class="gr-text-end gr-tabular-nums">1 200 ₽</td>
+      </tr>
+      <tr>
+        <td data-label="Заказ">#1044</td>
+        <td data-label="Дата">19.09.2026</td>
+        <td data-label="Статус"><span class="gr-badge">Оформлен</span></td>
+        <td data-label="Сумма" class="gr-text-end gr-tabular-nums">318 400 ₽</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>Без <code>data-label</code> ячейка идёт без подписи.</strong> Она не
+    ломается — значение занимает всю строку карточки, — но читатель видит число
+    без имени колонки. Подпись ставится на каждой ячейке, которой она нужна;
+    ячейка с самоочевидным содержимым (кнопка «Подробнее», название товара)
+    может обойтись без неё, и тогда пустого места под подпись у неё нет.
+  </p>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Числа вправо, заголовки в две строки — утилитами, а не классами
+    таблицы.</strong> <code>.gr-text-end</code> на <code>&lt;td&gt;</code>
+    перебивает <code>text-align: start</code> компонента, а
+    <code>.gr-whitespace-normal</code> на <code>&lt;th&gt;</code> снимает
+    <code>nowrap</code> с заголовка: утилиты лежат в слое
+    <code>griffincss.utils</code>, который старше <code>griffincss.ui</code>,
+    и побеждают при любой специфичности. Разряды в колонке чисел выравнивает
+    <code>.gr-tabular-nums</code>. В карточках <code>.gr-text-end</code>
+    на ячейке ничего не двигает — значение и так стоит за подписью, а подпись
+    держится начала своей доли. Класс шрифта (<code>.gr-font-mono</code>)
+    ставится на значение, а не на ячейку: подпись наследует шрифт ячейки,
+    как любой <code>::before</code>.
   </p>
 </div>
 

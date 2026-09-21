@@ -12,8 +12,10 @@
  * сообщение», где сообщение — платформенное, в языке браузера, а подпись —
  * <label> поля (или его aria-label, или name). Фокус после отправки —
  * на первой ссылке; Enter по ней ведёт к полю. Непройденные поля получают
- * aria-invalid="true" — их красит CSS семьи .gr-field, — и теряют его,
- * как только исправлены; список же обновляется следующей отправкой.
+ * aria-invalid="true" — источник для программы чтения с экрана, — а их
+ * обёртка .gr-field, если она есть, состояние data-gr-state="error":
+ * его и красит CSS семьи. Оба снимаются, как только поле исправлено;
+ * список же обновляется следующей отправкой.
  *
  * Пузырь браузера на время жизни виджета снимается (novalidate): двум
  * сообщениям об одном и том же незачем спорить. Проверку это не отменяет —
@@ -84,9 +86,26 @@
       return control.getAttribute('id');
     }
 
+    function fieldOf(control) {
+      return G.closest(control, '.gr-field');
+    }
+
+    // Обёртка держит состояние, пока хотя бы один её контрол не пройден.
+    function release(control) {
+      var field = fieldOf(control);
+
+      for (var i = 0; field && i < marked.length; i++) if (fieldOf(marked[i]) === field) return;
+      if (field) attrs.set(field, 'data-gr-state', null);
+    }
+
     function unmark() {
-      for (var i = 0; i < marked.length; i++) attrs.set(marked[i], 'aria-invalid', null);
+      var was = marked;
+
       marked = [];
+      for (var i = 0; i < was.length; i++) {
+        attrs.set(was[i], 'aria-invalid', null);
+        release(was[i]);
+      }
     }
 
     function render(failed) {
@@ -112,6 +131,7 @@
         item.appendChild(link);
         list.appendChild(item);
         attrs.set(failed[i], 'aria-invalid', 'true');
+        if (fieldOf(failed[i])) attrs.set(fieldOf(failed[i]), 'data-gr-state', 'error');
         marked.push(failed[i]);
       }
 
@@ -165,6 +185,7 @@
       if (at !== -1 && !invalid(control)) {
         attrs.set(control, 'aria-invalid', null);
         marked.splice(at, 1);
+        release(control);
       }
     }
 

@@ -62,11 +62,17 @@
 
 <pre><code>&lt;link rel="stylesheet" href="griffincss-ui.css"&gt;
 &lt;link rel="stylesheet" href="griffinjs.css"&gt;
-&lt;script src="griffinjs.js"&gt;&lt;/script&gt;</code></pre>
+&lt;script defer src="griffinjs.js"&gt;&lt;/script&gt;</code></pre>
 
 <p>
-  Атрибут <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code>
-  отключает автозапуск — как у остальных рантаймов библиотеки.
+  <code>defer</code> — потому что до первой отрисовки слою ставить нечего:
+  разметка до его старта живёт базой без скрипта, а в блокирующем пути
+  остаются только тема и раскладки (<a href="runtime.html#head">«Что
+  в &lt;head&gt;, что defer»</a>). Атрибут <code>data-auto="false"</code>
+  на теге отключает автозапуск — как у остальных рантаймов библиотеки;
+  <code>data-fields</code> и <code>data-countries</code> называют пути
+  второго бандла, который слой догрузит сам, встретив первое поле
+  (<a href="griffinjs-fields.html#dogruzka">«Догрузка по потребности»</a>).
 </p>
 
 <p>
@@ -106,9 +112,9 @@
   <tr><td><a href="griffinjs-slides.html">Лайтбокс</a></td><td><code>&lt;dialog&gt;</code> + дорожка, группы по атрибуту, видео и iframe</td><td>ссылка на большое изображение</td></tr>
   <tr><td><a href="griffinjs-parallax.html">Параллакс</a></td><td><code>--gr-progress</code> на любом блоке; рецепты эффектов в CSS</td><td>статичный блок (запасное значение в <code>var()</code>)</td></tr>
   <tr><td><a href="griffinjs-slides.html#dvizhok-fade">Движок fade</a></td><td>стопка слайдов, переход прозрачностью, следование за пальцем</td><td>первый слайд</td></tr>
-  <tr><td><a href="griffinjs-menus.html">Мегаменю</a></td><td>наведение с задержкой намерения и безопасным треугольником, одна открытая панель, клавиатура disclosure navigation, ajax-панели, аккордеон на узком экране</td><td><code>.gr-navbar</code> + <code>&lt;details&gt;</code> в пунктах <code>.gr-nav</code>: щелчок раскрывает панель, CSS кладёт её под полосу</td></tr>
-  <tr><td><a href="ui-overlays.html#griffinjs">Дропдаун</a> <span class="badge">контроллер</span></td><td>роли меню, клавиатура menu button, <kbd>Esc</kbd> и щелчок мимо для <code>&lt;details&gt;</code>, позиция popover-панели без anchor positioning, наведение с задержкой</td><td><code>.gr-dropdown</code> как есть: <code>&lt;details&gt;</code>, popover или наведение из <code>ui</code></td></tr>
-  <tr><td><a href="griffinjs-overlays.html">Окна</a> <span class="badge">контроллер</span></td><td><code>data-gr-open</code>, стек, блокировка прокрутки под окном (и на iOS), остановка видео, ajax-содержимое, hash с кнопкой «Назад»</td><td><code>.gr-modal</code> / <code>.gr-drawer</code> как есть: <code>showModal()</code> и <code>&lt;form method="dialog"&gt;</code></td></tr>
+  <tr><td><a href="griffinjs-menus.html">Мегаменю</a></td><td>наведение с задержкой намерения и безопасным треугольником, одна открытая панель, клавиатура disclosure navigation, ajax-панели, закрытие с анимацией темы (<code>closing</code>), аккордеон на узком экране</td><td><code>.gr-navbar</code> + <code>&lt;details&gt;</code> в пунктах <code>.gr-nav</code>: щелчок раскрывает панель, CSS кладёт её под полосу</td></tr>
+  <tr><td><a href="ui-overlays.html#griffinjs">Дропдаун</a> <span class="badge">контроллер</span></td><td>роли меню, клавиатура menu button, <kbd>Esc</kbd> и щелчок мимо для <code>&lt;details&gt;</code>, закрытие с анимацией темы (<code>closing</code>), позиция popover-панели без anchor positioning, наведение с задержкой</td><td><code>.gr-dropdown</code> как есть: <code>&lt;details&gt;</code>, popover или наведение из <code>ui</code></td></tr>
+  <tr><td><a href="griffinjs-overlays.html">Окна</a> <span class="badge">контроллер</span></td><td><code>data-gr-open</code>, стек, блокировка прокрутки под окном (и на iOS), остановка видео, ajax-содержимое, hash с кнопкой «Назад», плавный рост окна по <code>grow</code></td><td><code>.gr-modal</code> / <code>.gr-drawer</code> как есть: <code>showModal()</code> и <code>&lt;form method="dialog"&gt;</code></td></tr>
   <tr><td><a href="griffinjs-overlays.html#komboboks">Комбобокс</a></td><td>роли combobox/listbox, <code>aria-activedescendant</code>, дебаунс, отмена запроса, кеш, группы, подсветка, выбор</td><td>обычное поле в форме поиска</td></tr>
   <tr><td><a href="ui-forms.html#griffinjs">Ползунок</a> <span class="badge">контроллер</span></td><td>доля пройденного пути — след до ручки красит CSS; пара «от — до» держит порядок значений, шлёт <code>griffin:change</code> и параметром <code>fields</code> связывается с числовыми полями</td><td><code>.gr-range</code> как есть: ползунок работает, следа нет (в Firefox есть — его рисует платформа)</td></tr>
   <tr><td><a href="ui-tables.html#griffinjs">Сортируемая таблица</a> <span class="badge">контроллер</span></td><td>круг <code>aria-sort</code> «нет → по возрастанию → по убыванию», стабильная перестановка строк, числа и ISO-даты числами, остальное — <code>Intl.Collator</code> с локалью документа, клавиатура на заголовке</td><td><code>.gr-table</code> как есть: порядок строк тот, что пришёл с сервера; указатель направления рисуется из <code>aria-sort</code> и без скрипта</td></tr>
@@ -140,23 +146,23 @@
 
 <!-- gr:griffinjs-deps -->
 <p>
-  Весь слой одним файлом — <b>18,0 КБ gzip</b>. Но берут его обычно не целиком:
-  ядро, нужное любому набору, весит <b>2,6 КБ</b>, а остальное подключается
+  Весь слой одним файлом — <b>19,1 КБ gzip</b>. Но берут его обычно не целиком:
+  ядро, нужное любому набору, весит <b>2,7 КБ</b>, а остальное подключается
   по потребности. Каждый модуль объявляет, что берёт из ядра, и таблица собрана
   из этих объявлений при сборке — разойтись с кодом ей нечем.
 </p>
 
 <table>
   <tr><th>Виджет</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
-  <tr><td><code>data-gr-track</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code></td><td>6,5 КБ</td></tr>
+  <tr><td><code>data-gr-track</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code></td><td>6,6 КБ</td></tr>
   <tr><td><code>data-gr-slider</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code></td><td>7,6 КБ</td></tr>
-  <tr><td><code>data-gr-gallery</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code> + <code>griffinjs-gallery.js</code></td><td>7,9 КБ</td></tr>
+  <tr><td><code>data-gr-gallery</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code> + <code>griffinjs-gallery.js</code></td><td>8,0 КБ</td></tr>
   <tr><td><code>data-gr-lightbox</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-lightbox.js</code></td><td>7,8 КБ</td></tr>
-  <tr><td><code>data-gr-parallax</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-parallax.js</code></td><td>3,4 КБ</td></tr>
-  <tr><td><code>data-gr-megamenu</code></td><td><code>griffinjs-media.js</code> + <code>griffinjs-megamenu.js</code></td><td>4,6 КБ</td></tr>
-  <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>4,7 КБ</td></tr>
-  <tr><td><code>data-gr-tooltip</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-tooltip.js</code></td><td>3,8 КБ</td></tr>
-  <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>3,9 КБ</td></tr>
+  <tr><td><code>data-gr-parallax</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-parallax.js</code></td><td>3,5 КБ</td></tr>
+  <tr><td><code>data-gr-megamenu</code></td><td><code>griffinjs-media.js</code> + <code>griffinjs-megamenu.js</code></td><td>4,9 КБ</td></tr>
+  <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>4,9 КБ</td></tr>
+  <tr><td><code>data-gr-tooltip</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-tooltip.js</code></td><td>3,9 КБ</td></tr>
+  <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>4,3 КБ</td></tr>
   <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>5,2 КБ</td></tr>
   <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,4 КБ</td></tr>
   <tr><td><code>data-gr-sortable</code></td><td><code>griffinjs-sortable.js</code></td><td>3,5 КБ</td></tr>

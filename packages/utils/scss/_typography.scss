@@ -112,6 +112,13 @@ $gr-leading: (
 .gr-italic     { font-style: italic; }
 .gr-not-italic { font-style: normal; }
 
+// Табличные цифры: каждая цифра одной ширины, и разряды в колонке чисел
+// стоят друг под другом. Нужна ячейкам сумм и количеств (Этап 47c, рецепт
+// «числа в таблице»); внутри компонентов то же объявление несут бейдж,
+// ярлык меню и пагинация. Без адаптивных вариантов: выравнивание разрядов
+// не зависит от ширины.
+.gr-tabular-nums { font-variant-numeric: tabular-nums; }
+
 // Whitespace and wrapping
 .gr-break-words {
   overflow-wrap: break-word;

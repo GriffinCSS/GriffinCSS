@@ -28,7 +28,7 @@
  * Это же и рекомендуемый способ подключать библиотеку к своему проекту.
  */
 
-@layer griffincss.reset, griffincss.core, griffincss.docs, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.docs, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
 @layer griffincss.docs {
 

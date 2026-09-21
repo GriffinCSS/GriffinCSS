@@ -7,7 +7,7 @@
       "url": "https://tr.designtokens.org/format/",
       "dialect": "значения строками: цвет — hex (#rrggbb или #rrggbbaa), размер — длина CSS (0.5rem, 16px)",
       "library": "griffincss",
-      "version": "0.25.0",
+      "version": "0.26.0",
       "source": "packages/core/dist/griffincss-core.css",
       "generator": "scripts/build-tokens.mjs",
       "variables": "имя токена — имя переменной CSS без префикса: «color-bg» это --gr-color-bg",
@@ -539,10 +539,6 @@
     "rating-symbol": {
       "$value": "★"
     },
-    "rating-color": {
-      "$type": "color",
-      "$value": "#f59b14"
-    },
     "z-dropdown": {
       "$type": "number",
       "$value": 1000
@@ -690,6 +686,10 @@
     "color-on-info": {
       "$type": "color",
       "$value": "#ffffff"
+    },
+    "color-rating": {
+      "$type": "color",
+      "$value": "#f59b14"
     }
   },
   "dark": {
@@ -1217,10 +1217,6 @@
     "rating-symbol": {
       "$value": "★"
     },
-    "rating-color": {
-      "$type": "color",
-      "$value": "#f0aa42"
-    },
     "z-dropdown": {
       "$type": "number",
       "$value": 1000
@@ -1368,6 +1364,10 @@
     "color-on-info": {
       "$type": "color",
       "$value": "#121212"
+    },
+    "color-rating": {
+      "$type": "color",
+      "$value": "#f0aa42"
     }
   },
   "low-vision": {
@@ -1896,10 +1896,6 @@
     "rating-symbol": {
       "$value": "★"
     },
-    "rating-color": {
-      "$type": "color",
-      "$value": "#f59b14"
-    },
     "z-dropdown": {
       "$type": "number",
       "$value": 1000
@@ -2047,6 +2043,10 @@
     "color-on-info": {
       "$type": "color",
       "$value": "#ffffff"
+    },
+    "color-rating": {
+      "$type": "color",
+      "$value": "#f59b14"
     }
   }
 }

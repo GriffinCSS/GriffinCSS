@@ -124,7 +124,7 @@
   <tr><th></th><th>Без скрипта</th><th>Со скриптом</th></tr>
   <tr><td>Открытие</td><td>щелчок по заголовку</td><td>щелчок, наведение с задержкой (мышь и перо), <kbd>↓</kbd> с клавиатуры</td></tr>
   <tr><td>Несколько панелей</td><td>могут быть открыты все</td><td>открыта одна: следующая закрывает предыдущую</td></tr>
-  <tr><td>Закрытие</td><td>тот же щелчок</td><td>плюс щелчок мимо полосы, уход указателя, <kbd>Esc</kbd>, уход фокуса</td></tr>
+  <tr><td>Закрытие</td><td>тот же щелчок, панель пропадает сразу</td><td>плюс щелчок мимо полосы, уход указателя, <kbd>Esc</kbd>, уход фокуса; уход панели анимирует тема — <a href="#closing">состояние <code>closing</code></a></td></tr>
   <tr><td>Клавиатура</td><td><kbd>Tab</kbd>, <kbd>Enter</kbd>/<kbd>Space</kbd> на заголовке</td><td>плюс <kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd> по ряду, <kbd>↓</kbd> в панель, <kbd>↑</kbd> <kbd>↓</kbd> внутри, <kbd>Esc</kbd> назад</td></tr>
   <tr><td>Состояние для программ чтения</td><td>родное у <code>&lt;summary&gt;</code></td><td>плюс <code>aria-expanded</code> и <code>aria-controls</code> на заголовке</td></tr>
   <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии</td></tr>
@@ -193,6 +193,53 @@
   </p>
 </div>
 
+<h3 id="closing">Закрытие с анимацией: состояние <code>closing</code></h3>
+
+<p>
+  Платформа снимает <code>open</code> у <code>&lt;details&gt;</code> в тот же
+  кадр, и панель пропадает без перехода — сколько бы <code>transition</code>
+  тема ни писала. Виджет закрывает иначе: ставит на пункт
+  <code>data-gr-state="closing"</code>, ждёт <code>transitionend</code>
+  или <code>animationend</code> самой панели (не потомка) — с таймаутом
+  в длительность <code>--gr-transition</code> плюс 50 мс — и лишь затем
+  снимает <code>open</code>. Прежнее состояние пункта (<code>ready</code>
+  у ajax-панели) возвращается на место. Щелчок по заголовку открытого
+  пункта, <kbd>Enter</kbd> и <kbd>Space</kbd> на нём идут тем же путём;
+  щелчок по закрывающемуся пункту отменяет закрытие — панель остаётся.
+  Так во всех браузерах, и у темы одно правило: дропдаун
+  на <code>&lt;details&gt;</code> закрывается так же, с состоянием на обёртке
+  <code>.gr-dropdown</code> и переходом на <code>.gr-dropdown-panel</code>.
+</p>
+
+<pre><code>.gr-megamenu-panel { transition: opacity var(--gr-transition); }
+.gr-megamenu-item[data-gr-state="closing"] &gt; .gr-megamenu-panel { opacity: 0; }
+
+.gr-dropdown-panel { transition: opacity var(--gr-transition); }
+.gr-dropdown[data-gr-state="closing"] &gt; .gr-dropdown-panel { opacity: 0; }</code></pre>
+
+<p>
+  CSS слоя переходов на закрытие не задаёт: анимирует тема. Без её правил
+  закрытие идёт через таймаут (250 мс при токене по умолчанию — на глаз
+  не отличить), при <code>--gr-transition: 0s</code> — сразу.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Почему не <code>::details-content</code>.</strong> Современные
+    движки умеют анимировать уход содержимого <code>&lt;details&gt;</code>
+    сами — переходом на <code>::details-content</code> с
+    <code>transition-behavior: allow-discrete</code>, — и первая версия
+    виджета там состояния не ставила. Замер на трёх движках
+    (<code>browser/closing.spec.mjs</code>): Chromium и WebKit анимируют,
+    а Firefox 153 при поддержке обоих признаков переводит
+    <code>content-visibility</code> в <code>hidden</code> в том же кадре,
+    и переход не начинается. Развилка по признакам оставляла бы Firefox
+    без анимации, поэтому состояние ставится везде (решение владельца
+    2026-09-21). Переход на <code>::details-content</code> в теме
+    не пишите: вместе с правилом по состоянию он дал бы два ухода подряд.
+  </p>
+</div>
+
 <h3>Узкий экран</h3>
 
 <p>
@@ -211,6 +258,7 @@
 
 menu.items          // [{ el, summary, panel, loaded }]
 menu.open(menu.items[0]);
+menu.close(menu.items[0]);   // через состояние closing
 menu.closeAll();
 menu.current();     // открытый пункт или null
 menu.destroy();     // снимает всё: атрибуты, слушатели, таймеры</code></pre>

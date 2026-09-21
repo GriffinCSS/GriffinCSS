@@ -17,23 +17,25 @@
 // margin-bottom.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
-// Весь вывод пакета — в слое griffincss.ui.
-@layer griffincss.ui {
+// Токены и тема подключаются и здесь, а не только в ядре: собранный файл
+// самодостаточен. Но эмитятся они в общий слой griffincss.tokens, а не в ui
+// (Этап 46): копия та же, что в ядре и в утилитах, и все копии стоят в одном
+// слое — подслой темы потребителя сразу после tokens перебивает их при любой
+// специфичности. Раньше копия в ui была старше и подслоя, и ядра.
+@layer griffincss.tokens {
   @include meta.load-css('griffincss-core/scss/tokens');
+  @include meta.load-css('griffincss-core/scss/theme-tokens');
+}
 
-  // Тема подключается и здесь, а не только в ядре: слой griffincss.ui старше
-  // griffincss.core, поэтому переопределения темы, приехавшие только
-  // с griffincss-core.css, проиграли бы базовому :root из этой сборки —
-  // независимо от специфичности селектора.
-  //
-  // Правила режима со свойствами тоже здесь — в отличие от utils. Правило
+// Остальной вывод пакета — в слое griffincss.ui.
+@layer griffincss.ui {
+  // Правила режима со свойствами — здесь, в отличие от utils. Правило
   // [data-gr-a11y="low-vision"] a[href] (0,1,1) обязано побеждать варианты
   // ссылки .gr-link-quiet и .gr-link-inherit (0,1,0), а для этого лежать
   // с ними в одном слое: из ядра оно бы им проиграло. Компонент с заливкой
   // защищается от него сам — a.gr-btn в _button.scss стоит позже по порядку.
-  @include meta.load-css('griffincss-core/scss/theme-tokens');
   @include meta.load-css('griffincss-core/scss/theme-rules');
 
   // @keyframes живут отдельным файлом ради scoped-сборки — см. _keyframes.scss.
@@ -70,4 +72,8 @@
   // и обязаны идти после их базовых правил. В griffincss-ui-scoped.scss
   // модуля нет намеренно, см. его шапку.
   @include meta.load-css('style-rules');
+}
+
+@layer griffincss.hidden {
+  @include meta.load-css('griffincss-core/scss/hidden');
 }

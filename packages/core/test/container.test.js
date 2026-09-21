@@ -5,9 +5,10 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { compileScss, normalizeCss, topLevelBlocks, layerBody } = require('./helpers/css');
+const { compileScss, normalizeCss, topLevelBlocks, layersBody } = require('./helpers/css');
 
-const CORE = layerBody(compileScss("@use 'griffincss-core';"), 'griffincss.core');
+// @property --gr-name с Этапа 46 едет в слое токенов, .gr-cq — в ядре.
+const CORE = layersBody(compileScss("@use 'griffincss-core';"), ['griffincss.tokens', 'griffincss.core']);
 
 const norm = (text) => text.replace(/\s+/g, ' ').replace(/"/g, '').trim();
 
@@ -37,6 +38,19 @@ test('--gr-name не наследуется: вложенный .gr-cq не пе
   assert.match(property.body, /inherits:\s*false/);
 });
 
+// 47d (фидбек темы griffin, п. 8): имя контейнера классом, а не инлайновым
+// style="--gr-name: …" — инлайновый стиль в теме запрещён. Четыре имени —
+// соглашение библиотеки для слотов раскладки; attr() в container-name
+// не поддерживается, поэтому data-gr-cq="…" не делается.
+test('.gr-cq-{page,main,aside,card} — контейнер с именем классом', () => {
+  for (const name of ['page', 'main', 'aside', 'card']) {
+    const rule = normalizeCss(blockBody(`.gr-cq-${name}`, CORE));
+
+    assert.ok(rule, `.gr-cq-${name} нет в ядре`);
+    assert.equal(rule, `container:${name}/inline-size;`);
+  }
+});
+
 test('gr-container-media выдаёт range-синтаксис на значении из карты', () => {
   const css = normalizeCss(compileScss(
     "@use 'container-mixins' as cq;\n"
@@ -53,6 +67,17 @@ test('gr-container-media умеет именованный контейнер', 
   ));
 
   assert.equal(css, '@container card (width>=1024px){.probe{color:red}}');
+});
+
+// 47c: обратная сторона той же шкалы — «ниже порога». Нужна классам,
+// описывающим узкое состояние: карточки вместо таблицы, столбик вместо ленты.
+test('gr-container-below выдаёт запрос «уже порога» на том же значении', () => {
+  const css = normalizeCss(compileScss(
+    "@use 'container-mixins' as cq;\n"
+    + '@include cq.gr-container-below(md) { .probe { color: red; } }',
+  ));
+
+  assert.equal(css, '@container (width<768px){.probe{color:red}}');
 });
 
 test('контейнерный ключ читает значение того же брейкпоинта, что и оконный', () => {
@@ -152,4 +177,50 @@ test('FOUC-защита ловит и контейнерные атрибуты'
 
   assert.ok(cssSection(doc, 'FOUC guard').includes('[data-gr-layout-cmd]'), 'атрибут не попал в защиту');
   assert.ok(container.classList.contains('gr-ready'), 'контейнер остался закрытым защитой');
+});
+
+// --- 47a: контейнерные варианты сетки и флекса ------------------------------
+
+// Тела всех верхнеуровневых блоков слоя ядра с заданной прелюдией —
+// @container (width >= 768px) встречается в файле не один раз.
+function queryBodies(prelude) {
+  return topLevelBlocks(CORE)
+    .filter((b) => norm(b.prelude) === norm(prelude))
+    .map((b) => b.body)
+    .join('\n');
+}
+
+function ruleIn(css, selector) {
+  const found = topLevelBlocks(css).find((b) => norm(b.prelude) === selector);
+  return found ? normalizeCss(found.body).replace(/;$/, '') : '';
+}
+
+test('.gr-grid-N-c{bp} повторяет .gr-grid-N-{bp} внутри @container', () => {
+  for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
+    const container = queryBodies(`@container (width >= ${value})`);
+    const media = queryBodies(`@media (width >= ${value})`);
+
+    for (let n = 1; n <= 12; n += 1) {
+      const rule = ruleIn(container, `.gr-grid-${n}-c${bp}`);
+
+      assert.ok(rule, `.gr-grid-${n}-c${bp} не найден в @container (width >= ${value})`);
+      assert.equal(rule, ruleIn(media, `.gr-grid-${n}-${bp}`), `.gr-grid-${n}-c${bp} разошёлся с оконным вариантом`);
+    }
+  }
+});
+
+test('.gr-flex-{row,col,wrap}-c{bp} — направление и перенос по ширине контейнера', () => {
+  const container = queryBodies('@container (width >= 768px)');
+
+  assert.equal(ruleIn(container, '.gr-flex-row-cmd'), 'flex-direction:row');
+  assert.equal(ruleIn(container, '.gr-flex-col-cmd'), 'flex-direction:column');
+  assert.equal(ruleIn(container, '.gr-flex-wrap-cmd'), 'flex-wrap:wrap');
+});
+
+test('контейнерных вариантов выравнивания флекса нет: их не просили', () => {
+  const container = queryBodies('@container (width >= 768px)');
+
+  for (const selector of ['.gr-flex-center-cmd', '.gr-flex-between-cmd', '.gr-flex-items-start-cmd', '.gr-flex-self-end-cmd', '.gr-flex-nowrap-cmd', '.gr-flex-cmd', '.gr-grid-cmd']) {
+    assert.equal(ruleIn(container, selector), '', `${selector} появился без решения`);
+  }
 });

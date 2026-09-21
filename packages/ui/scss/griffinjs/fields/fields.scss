@@ -14,7 +14,7 @@
 
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
 // Весь вывод — в griffincss.ui, как у компонентов.
 @layer griffincss.ui {

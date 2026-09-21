@@ -38,15 +38,19 @@
 
 // --- Панель -----------------------------------------------------------------
 
+// Ширина и отступ панели — токенами (Этап 46): панель — голая коробка
+// позиционирования, рамку и фон даёт .gr-menu внутри, а теме нужна панель
+// заданной ширины под свою разметку и с полем вокруг неё.
 .gr-dropdown-panel {
   position: absolute;
   z-index: var(--gr-z-dropdown);
   inset-block-start: calc(100% + var(--gr-ui-gap) * 0.5);
   inset-inline-start: 0;
   box-sizing: border-box;
-  min-inline-size: max-content;
+  min-inline-size: var(--gr-dropdown-min-width, max-content);
   max-inline-size: min(20rem, 90vw);
   margin: 0;
+  padding: var(--gr-dropdown-pad, 0);
 }
 
 // Раскрытие к концу строки — для панели у правого края шапки, которая иначе
@@ -74,7 +78,7 @@
   max-inline-size: 100%;
   margin: 0;
   border: 0;
-  padding: 0;
+  padding: var(--gr-dropdown-pad, 0);
   background: none;
   color: inherit;
   overflow: visible;
@@ -102,7 +106,7 @@
     position-anchor: --gr-dropdown-anchor;
     inset-block: calc(anchor(end) + var(--gr-ui-gap) * 0.5) auto;
     inset-inline: anchor(start) auto;
-    min-inline-size: max-content;
+    min-inline-size: var(--gr-dropdown-min-width, max-content);
     max-inline-size: min(20rem, 90%);
 
     // Если снизу места нет — панель переворачивается вверх, если не хватает

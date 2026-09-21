@@ -11,24 +11,25 @@
 // но проигрывают пользовательскому CSS вне слоёв.
 
 @use 'sass:meta';
-@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;
+@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;
 
-// Весь вывод пакета — в слое griffincss.utils.
-@layer griffincss.utils {
+// Токены и тема подключаются и здесь, а не только в ядре: собранный файл
+// самодостаточен. Эмитятся они в общий слой griffincss.tokens (Этап 46):
+// копия та же, что в ядре и в компонентах, и все копии стоят в одном слое.
+//
+// Только токены. Правила режима со свойствами (theme-rules) сюда не едут:
+// слой utils старший из трёх, и правило [data-gr-a11y="low-vision"] a[href]
+// отсюда побеждало любой компонент по слою — цвет ссылки ложился поверх
+// заливки a.gr-btn-primary (1,0 : 1). Утилитам эти правила ничего не дают:
+// они повторяли бы ядро один в один. Тест: в блоках темы этой сборки нет
+// ни одного объявления, кроме токенов (packages/utils/test/utils.test.js).
+@layer griffincss.tokens {
   @include meta.load-css('griffincss-core/scss/tokens');
-
-  // Токены темы подключаются и здесь, а не только в ядре: слой
-  // griffincss.utils старше griffincss.core, поэтому переопределения темы,
-  // приехавшие только с griffincss-core.css, проиграли бы базовому :root
-  // из этой сборки — независимо от специфичности селектора.
-  //
-  // Только токены. Правила режима со свойствами (theme-rules) сюда не едут:
-  // этот слой старший, и правило [data-gr-a11y="low-vision"] a[href] отсюда
-  // побеждало любой компонент по слою — цвет ссылки ложился поверх заливки
-  // a.gr-btn-primary (1,0 : 1). Утилитам эти правила ничего не дают: они
-  // повторяли бы ядро один в один. Тест: в блоках темы этой сборки нет
-  // ни одного объявления, кроме токенов (packages/utils/test/utils.test.js).
   @include meta.load-css('griffincss-core/scss/theme-tokens');
+}
+
+// Остальной вывод пакета — в слое griffincss.utils.
+@layer griffincss.utils {
   @include meta.load-css('keyframes');
   @include meta.load-css('animations');
   @include meta.load-css('border-radius');
@@ -45,4 +46,8 @@
   @include meta.load-css('transforms');
   @include meta.load-css('typography');
   @include meta.load-css('visibility');
+}
+
+@layer griffincss.hidden {
+  @include meta.load-css('griffincss-core/scss/hidden');
 }

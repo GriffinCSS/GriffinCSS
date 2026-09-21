@@ -61,12 +61,14 @@
   <tr><td><code>--gr-color-focus</code></td><td><code>hsl(var(--gr-hsl-focus))</code></td><td>Кольцо фокуса</td></tr>
   <tr><td><code>--gr-color-success</code> / <code>warning</code> / <code>danger</code> / <code>info</code></td><td><code>hsl(var(--gr-hsl-status-*))</code></td><td>Статусы — значения, безопасные для текста</td></tr>
   <tr><td><code>--gr-color-warning-surface</code> / <code>--gr-color-on-warning</code></td><td><code>hsl(var(--gr-hsl-status-warning-surface))</code> / <code>hsl(var(--gr-hsl-on-status-warning))</code></td><td>Заливка предупреждения и чернила на ней: единственный статус, чей текстовый цвет нельзя использовать как фон</td></tr>
+  <tr><td><code>--gr-color-rating</code></td><td><code>hsl(var(--gr-hsl-status-warning-surface))</code></td><td>Цвет звёзд и всего, что изображает оценку: ряд <code>.gr-rating</code>, ввод оценки, полосы распределения, значок у подписи. Отдельный токен, потому что текстовый <code>--gr-color-warning</code> затемнён ради контраста и рядом со звёздами читается коричневым</td></tr>
   <tr><td><code>--gr-border-width</code></td><td><code>1px</code> → <code>2px</code> в режиме для слабовидящих</td><td>Ширина границы по умолчанию</td></tr>
   <tr><td><code>--gr-focus-width</code></td><td><code>2px</code> → <code>3px</code> в режиме</td><td>Толщина кольца фокуса</td></tr>
   <tr><td><code>--gr-leading-base</code></td><td><code>1.5</code> → <code>1.7</code> в режиме</td><td>Интерлиньяж <code>body</code></td></tr>
   <tr><td><code>--gr-tracking-base</code></td><td><code>normal</code> → <code>0.02em</code> в режиме</td><td>Трекинг <code>body</code></td></tr>
   <tr><td><code>--gr-a11y-scale</code></td><td><code>1.25</code></td><td>Во сколько раз режим увеличивает кегль</td></tr>
-  <tr><td><code>--gr-radius</code></td><td><code>0.5rem</code></td><td>Скругление</td></tr>
+  <tr><td><code>--gr-radius</code></td><td><code>0.5rem</code></td><td>Скругление элементов управления</td></tr>
+  <tr><td><code>--gr-radius-container</code></td><td>не объявлен; читается как <code>var(--gr-radius-container, var(--gr-radius))</code></td><td>Скругление контейнеров — карточки, окна, меню, сообщения. Без объявления равен <code>--gr-radius</code>, и запасное значение считается на самом элементе: островок стиля с другим <code>--gr-radius</code> получает свои углы. Объявите его в своём CSS, если контейнер должен скругляться иначе — рецепт «радиус + отступ» на <a href="theme.html">странице темы</a></td></tr>
   <tr><td><code>--gr-transition</code></td><td><code>0.2s ease</code></td><td>Переходы</td></tr>
   <tr><td><code>--gr-shadow-color</code></td><td><code>0, 0%, 0%</code></td><td>HSL-компоненты цвета тени — общие для всех ступеней</td></tr>
   <tr><td><code>--gr-shadow-strength</code></td><td><code>1</code> → <code>2.6</code> в тёмной теме</td><td>Множитель плотности тени; геометрия не меняется</td></tr>
@@ -150,7 +152,7 @@
 
 <p>Посмотреть разницу вживую: <code>npm run demo:stream</code> поднимает сервер, отдающий <a href="stream.html">docs/stream.html</a> порциями с паузой; рядом — та же страница с выключенным режимом.</p>
 
-<p>Для динамически добавляемых элементов: <code>Griffincss.refresh(root?)</code>. Для наблюдения за DOM-изменениями: <code>Griffincss.observe(root?)</code> — перерисовка идёт с дебаунсом и только по указанному корню. Наблюдатель следит за добавлением узлов, но не за атрибутами: если <code>data-gr-layout</code> поменялся на уже существующем элементе, вызовите <code>refresh()</code> сами. Повторный проход безопасен — прежний класс <code>.gr-l-*</code> снимается, а выданные раньше <code>gr-area-*</code> переназначаются по новой раскладке (проставленные в разметке вручную остаются).</p>
+<p>Динамически добавленные контейнеры рантайм раскладывает сам: после <code>init()</code> он наблюдает за <code>body</code> (с 0.26.0; выключатель — <code>data-observe="false"</code> на теге скрипта), перерисовка идёт с дебаунсом и только по корню наблюдения. <code>Griffincss.observe(root?)</code> — наблюдение по своему корню, когда автоматическое выключено; <code>Griffincss.refresh(root?)</code> — проход вручную. Наблюдатель следит за добавлением узлов, но не за атрибутами: если <code>data-gr-layout</code> поменялся на уже существующем элементе, вызовите <code>refresh()</code> сами. Повторный проход безопасен — прежний класс <code>.gr-l-*</code> снимается, а выданные раньше <code>gr-area-*</code> переназначаются по новой раскладке (проставленные в разметке вручную остаются). Ребёнок с <code>gr-area-*</code>, которого нет ни в одной раскладке контейнера, получает предупреждение в консоли: авто-скрытие спрятало бы его на любой ширине молча.</p>
 
 <p><strong>Дедупликация</strong>: одинаковый набор раскладок → одинаковый хеш → один класс и одно правило. Каждое имя области даёт один <code>.gr-area-*</code>. Сгенерированный CSS организован в три секции: <code>/* FOUC guard */</code>, <code>/* Grid Layouts */</code> и <code>/* Grid Areas */</code>.</p>
 
@@ -217,7 +219,8 @@
   <tr><td><code>.gr-grid-auto-fit</code></td><td>repeat(auto-fit, minmax(<code>--gr-grid-min</code>, 1fr)), по умолчанию 250px</td></tr>
   <tr><td><code>.gr-grid-auto-fill</code></td><td>repeat(auto-fill, minmax(<code>--gr-grid-min</code>, 1fr)), по умолчанию 250px</td></tr>
   <tr><td><code>.gr-grid-1</code> … <code>.gr-grid-12</code></td><td>Явные сетки на 1–12 колонок (сами включают grid и отступ)</td></tr>
-  <tr><td><code>.gr-grid-1-sm</code> … <code>.gr-grid-12-xl</code></td><td>Адаптивные сетки</td></tr>
+  <tr><td><code>.gr-grid-1-sm</code> … <code>.gr-grid-12-xl</code></td><td>Адаптивные сетки — от ширины окна</td></tr>
+  <tr><td><code>.gr-grid-1-csm</code> … <code>.gr-grid-12-cxl</code></td><td>Контейнерные сетки — число колонок от ширины ближайшего предка с <code>.gr-cq</code></td></tr>
   <tr><td><code>.gr-grid-rows</code></td><td>Все ряды равной высоты — <code>grid-auto-rows: 1fr</code></td></tr>
   <tr><td><code>.gr-grid-place-center</code></td><td>place-items: center</td></tr>
   <tr><td><code>.gr-grid-col-span-1</code> … <code>.gr-grid-col-span-12</code></td><td>Column span</td></tr>
@@ -257,6 +260,8 @@
   <tr><th>Класс / атрибут</th><th>Описание</th></tr>
   <tr><td><code>.gr-cq</code></td><td><code>container-type: inline-size</code> — элемент становится контейнером запроса</td></tr>
   <tr><td><code>--gr-name</code></td><td>Имя контейнера, если нужно обратиться к нему через голову ближайшего</td></tr>
+  <tr><td><code>.gr-cq-page</code> / <code>-main</code> / <code>-aside</code> / <code>-card</code></td><td>Контейнер с именем классом: <code>container: aside / inline-size</code> — четыре слота раскладки как соглашение библиотеки</td></tr>
+  <tr><td><code>-c&lt;брейкпоинт&gt;</code> в ядре</td><td><code>.gr-grid-3-cmd</code>, <code>.gr-flex-row-csm</code>, <code>.gr-flex-col-cmd</code>, <code>.gr-flex-wrap-clg</code></td></tr>
   <tr><td><code>-c&lt;брейкпоинт&gt;</code> у утилит</td><td><code>.gr-p-4-cmd</code>, <code>.gr-text-lg-clg</code>, <code>.gr-hidden-csm</code>, <code>.gr-w-full-cxl</code></td></tr>
   <tr><td><code>data-gr-layout-c&lt;брейкпоинт&gt;</code></td><td>Контейнерная раскладка: <code>data-gr-layout-cmd="a1b2"</code></td></tr>
 </table>
@@ -322,7 +327,7 @@
   <tr><td><code>.gr-gap-sm</code> / <code>.gr-gap</code> / <code>.gr-gap-lg</code></td><td>Отступ — общие классы, см. «Отступы» выше</td></tr>
 </table>
 
-<p>Все flex-утилиты имеют адаптивные варианты: <code>.gr-flex-md</code>, <code>.gr-flex-center-lg</code>, и т.д.</p>
+<p>Все flex-утилиты имеют адаптивные варианты: <code>.gr-flex-md</code>, <code>.gr-flex-center-lg</code>, и т.д. Контейнерные варианты — только у направления и переноса: <code>.gr-flex-row-c*</code>, <code>.gr-flex-col-c*</code>, <code>.gr-flex-wrap-c*</code>.</p>
 
 <h2>Печать / Print</h2>
 

@@ -15,6 +15,7 @@ const ROOT = path.join(__dirname, '..', '..', '..');
 const ui = fs.readFileSync(path.join(__dirname, '..', 'dist', 'griffincss-ui.css'), 'utf8');
 const scoped = fs.readFileSync(path.join(__dirname, '..', 'dist', 'griffincss-ui-scoped.css'), 'utf8');
 const core = fs.readFileSync(path.join(ROOT, 'packages/core/dist/griffincss-core.css'), 'utf8');
+const griffinjs = fs.readFileSync(path.join(__dirname, '..', 'dist', 'griffinjs.css'), 'utf8');
 const utils = fs.readFileSync(path.join(ROOT, 'packages/utils/dist/griffincss-utils.css'), 'utf8');
 
 // Преамбулы всех правил артефакта — то, что стоит перед «{» и не начинается
@@ -242,6 +243,18 @@ test('подсветка строки ложится поверх полосы, 
   );
 });
 
+test('обёртка прокрутки — содержащий блок для абсолютных потомков', () => {
+  // .gr-sr-only внутри кнопки-иконки позиционирован абсолютно; кнопка
+  // не позиционирована, и без position: relative на обёртке его containing
+  // block лежал снаружи — узел вставал у правого края широкой таблицы
+  // за пределами прокрутки и растягивал документ на 53 px (ui-tables.html
+  // на 375 px). Обёртка обязана удерживать всё, что в ней прокручивается.
+  const block = ui.slice(ui.indexOf('.gr-table-wrap{'));
+  const rule = block.slice(0, block.indexOf('}') + 1);
+
+  assert.ok(rule.includes('position:relative'), 'обёртка не удерживает абсолютных потомков');
+});
+
 test('липкая шапка везёт линию с собой', () => {
   // При border-collapse: collapse границу рисует таблица, а не ячейка,
   // поэтому с уехавшей шапкой она не двигается. Линию даёт внутренняя тень.
@@ -255,6 +268,92 @@ test('липкая шапка везёт линию с собой', () => {
 test('у таблицы есть и плотный, и разреженный варианты', () => {
   assert.ok(ui.includes('.gr-table-compact th,'), 'нет .gr-table-compact');
   assert.ok(ui.includes('.gr-table-relaxed th,'), 'нет .gr-table-relaxed');
+});
+
+// Этап 47c (фидбек темы griffin по 0.25.0, п. 5): ниже порога строка
+// таблицы кабинета становится карточкой. Шапка остаётся читалке, подпись
+// ячейки — из data-label, без него ячейка идёт без подписи.
+function stackRules(css, selector) {
+  const from = css.indexOf(selector);
+
+  assert.notEqual(from, -1, `${selector} нет в сборке`);
+
+  return css.slice(from, from + 1200);
+}
+
+test('.gr-table-stack: строка — блок с обводкой, ячейка — флекс с подписью из data-label', () => {
+  const block = stackRules(ui, '.gr-table-stack,');
+
+  assert.match(block, /\.gr-table-stack tr\{[^}]*border:var\(--gr-border-width\) solid var\(--gr-color-border\)/, 'строка без обводки');
+  assert.match(block, /\.gr-table-stack tr>\*\{display:flex/, 'ячейка не флекс');
+  assert.match(block, /\.gr-table-stack tr>\[data-label\]::before\{content:attr\(data-label\)/, 'подписи из data-label нет');
+  assert.ok(!/\.gr-table-stack tr>\*::before/.test(block), 'подпись рисуется и без data-label — пустой ::before сдвигает значение');
+});
+
+test('.gr-table-stack прячет шапку от глаз, но не от читалки', () => {
+  const block = stackRules(ui, '.gr-table-stack thead{');
+  const rule = block.slice(0, block.indexOf('}') + 1);
+
+  assert.ok(rule.includes('clip-path:inset(50%)'), 'шапка не спрятана визуально');
+  assert.ok(!rule.includes('display:none'), 'display: none выбрасывает шапку из дерева доступности');
+});
+
+// Этап 47d (фидбек темы griffin, п. 8): лента в узком гнезде — столбик
+// одним модификатором, вместо перебивания overflow-x и scroll-snap в слое
+// темы. Только контейнерные пороги: в узком окне лента остаётся лентой —
+// свайп и есть её мобильный режим.
+test('.gr-track-stack-c{bp} — столбик ниже ширины контейнера', () => {
+  for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
+    const from = griffinjs.indexOf(`@container (width < ${value}){.gr-track-stack-c${bp}{`);
+
+    assert.notEqual(from, -1, `.gr-track-stack-c${bp} не завёрнут в @container (width < ${value})`);
+
+    const block = griffinjs.slice(from, from + 400);
+
+    assert.match(block, /flex-direction:column/, 'лента не стала столбиком');
+    assert.match(block, /scroll-snap-type:none/, 'снап остался');
+    assert.match(block, new RegExp(`\\.gr-track-stack-c${bp}>\\*\\{flex-basis:auto`), 'слайды не отпущены по высоте');
+  }
+
+  assert.ok(!griffinjs.includes('.gr-track-stack-sm'), 'оконный порог ленты появился без решения');
+  assert.ok(!/\.gr-track-stack\{/.test(griffinjs), 'бессуффиксный столбик появился без решения');
+});
+
+// Число слайдов в ряд по ширине гнезда (решение владельца 2026-09-21):
+// виджет в слоте меряется слотом, и .gr-track-3-cmd — пара к столбику
+// .gr-track-stack-csm. Столбик обязан стоять в файле позже: между 640
+// и 768 px гнезда .gr-track-2-csm и .gr-track-stack-cmd совпадают,
+// и побеждает порядок.
+test('.gr-track-N-c{bp} — слайдов в ряд по ширине контейнера, столбик старше', () => {
+  for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
+    const from = griffinjs.indexOf(`@container (width >= ${value}){.gr-track-1-c${bp}>*{`);
+
+    assert.notEqual(from, -1, `.gr-track-N-c${bp} не завёрнуты в @container (width >= ${value})`);
+
+    const block = griffinjs.slice(from, from + 600);
+
+    for (const n of [2, 3, 4]) {
+      const share = `>*{flex-basis:calc((100% - var(--gr-gap)*${n - 1})/${n})}`;
+
+      assert.ok(block.includes(`.gr-track-${n}-c${bp}${share}`), `.gr-track-${n}-c${bp}: доли слайда нет`);
+      assert.ok(griffinjs.includes(`.gr-track-${n}-${bp}${share}`), `.gr-track-${n}-c${bp}: доля разошлась с оконным вариантом`);
+    }
+
+    assert.ok(from < griffinjs.indexOf(`.gr-track-stack-c${bp}{`), `столбик -c${bp} стоит раньше долей и проиграл бы им`);
+  }
+});
+
+test('порог .gr-table-stack-{bp} / -c{bp} — ниже брейкпоинта, окно или контейнер', () => {
+  for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
+    const media = ui.indexOf(`@media(width < ${value}){.gr-table-stack-${bp},`);
+    const container = ui.indexOf(`@container (width < ${value}){.gr-table-stack-c${bp},`);
+
+    assert.notEqual(media, -1, `.gr-table-stack-${bp} не завёрнут в @media (width < ${value})`);
+    assert.notEqual(container, -1, `.gr-table-stack-c${bp} не завёрнут в @container (width < ${value})`);
+  }
+
+  // Бесcуффиксный класс — всегда карточки: он не завёрнут ни во что.
+  assert.ok(!/@media[^{]*\{\.gr-table-stack,/.test(ui), 'бессуффиксный вариант оказался под @media');
 });
 
 test('заливка сегментного переключателя ложится точно по рамке', () => {
@@ -271,13 +370,13 @@ test('заливка сегментного переключателя ложи�
   );
 
   for (const edge of ['first', 'last']) {
-    const selector = `.gr-segmented label:${edge}-child span{`;
+    const selector = `.gr-segmented label:${edge}-of-type span{`;
     const from = ui.indexOf(selector);
 
-    assert.ok(from > 0, `нет правила для ${edge}-child`);
+    assert.ok(from > 0, `нет правила для ${edge}-of-type`);
     assert.ok(
       ui.slice(from, ui.indexOf('}', from)).includes('var(--gr-segmented-radius)'),
-      `крайний сегмент ${edge}-child не скруглён по внутреннему радиусу`,
+      `крайний сегмент ${edge}-of-type не скруглён по внутреннему радиусу`,
     );
   }
 });
@@ -510,7 +609,7 @@ test('тело окна прокручивается, а шапка и подв�
   const body = ui.slice(ui.indexOf('.gr-modal-body{'));
   const rule = body.slice(0, body.indexOf('}') + 1);
 
-  assert.ok(rule.includes('overflow-y:auto'), 'тело окна не прокручивается');
+  assert.ok(rule.includes('overflow-y:var(--gr-modal-body-overflow, auto)'), 'тело окна не прокручивается');
   assert.ok(rule.includes('flex:1 1 auto'), 'тело окна не забирает остаток высоты');
 
   for (const belt of ['.gr-modal-header{', '.gr-modal-footer{']) {
@@ -1548,7 +1647,7 @@ test('рейтинг рисуется знаком из переменной, а
 
   for (const [name, css] of [['ui', ui], ['core', core], ['utils', utils]]) {
     assert.ok(css.includes('--gr-rating-symbol:'), `нет токена знака в griffincss-${name}.css`);
-    assert.ok(css.includes('--gr-rating-color:'), `нет токена цвета заливки в griffincss-${name}.css`);
+    assert.ok(css.includes('--gr-color-rating:'), `нет токена цвета оценки в griffincss-${name}.css`);
   }
 
   const rules = ratingRules(ui);
@@ -1603,14 +1702,14 @@ test('цвета рейтинга — токен заливки и оттено�
   // настоящим и перекрашенный рейтинг приглушает свой цвет.
   const rules = ratingRules(ui);
 
-  assert.ok(rules.includes('color:var(--gr-rating-color)'), 'залитый знак красится не токеном');
+  assert.ok(rules.includes('color:var(--gr-rating-color, var(--gr-color-rating))'), 'залитый знак красится не токеном');
   assert.ok(
     /\.gr-rating::before\{[^}]*opacity:\.3/.test(rules),
     'пустой знак написан готовым цветом, а не приглушённым currentcolor',
   );
   assert.ok(
-    /--gr-rating-color:\s*var\(--gr-color-warning-surface\)/.test(ui),
-    'токен заливки выведен не из семантического цвета',
+    /--gr-color-rating:\s*hsl\(var\(--gr-hsl-status-warning-surface\)\)/.test(ui),
+    'токен оценки выведен не из поверхностного цвета предупреждения',
   );
 });
 
@@ -1655,4 +1754,241 @@ test('поле счётчика умеет остаться без систем�
     !/\.gr-input::-webkit-(inner|outer)-spin-button/.test(ui),
     'стрелки сняты у всех числовых полей сразу',
   );
+});
+
+// --- Этап 45: края групп по видимым полям, состояния и модификаторы ----------
+
+// Селектор видимого потомка группы: скрытое поле формы, узел с hidden,
+// <template>, <script> и <datalist> края не считают. Так его сжимает Sass.
+const VISIBLE = ':not([type=hidden],[hidden],template,script,datalist)';
+
+test('края группы с аддонами считаются по видимым полям, прежние правила остаются запасным путём', () => {
+  // Фидбек темы griffin (0.25.0, п. 1): полное значение составного поля
+  // лежит в <input type="hidden"> последним ребёнком группы, а панель
+  // живого поиска дописывается скриптом внутрь неё. По :last-child
+  // скругление доставалось скрытому узлу, и видимый край группы
+  // оставался прямым. Новые правила стоят ПОВЕРХ прежних, а не вместо:
+  // в Chrome 99–110 и Firefox 97–112 форма `of S` неизвестна, правило
+  // отбрасывается, и группа выглядит как раньше — мягкая деградация.
+  const first = `.gr-input-group>:nth-child(1 of ${VISIBLE}){`;
+  const last = `.gr-input-group>:nth-last-child(1 of ${VISIBLE}){`;
+
+  for (const [selector, edge] of [[first, 'start'], [last, 'end']]) {
+    const at = ui.indexOf(selector);
+
+    assert.ok(at > 0, `нет правила ${selector}`);
+
+    const rule = ui.slice(at, ui.indexOf('}', at));
+
+    assert.ok(rule.includes(`border-start-${edge}-radius:var(--gr-radius)`), `у первого/последнего видимого нет скругления ${edge}`);
+    assert.ok(rule.includes(`border-end-${edge}-radius:var(--gr-radius)`), `у первого/последнего видимого нет скругления ${edge}`);
+    assert.ok(scoped.includes(selector), `нет правила ${selector} в scoped-сборке`);
+  }
+
+  // Первое видимое поле после скрытого не сдвигается на рамку: прежнее
+  // `* + *` его задевает, и один сдвиг здесь обязан обнулиться.
+  const at = ui.indexOf(first);
+
+  assert.ok(ui.slice(at, ui.indexOf('}', at)).includes('margin-inline-start:0'), 'первое видимое поле после скрытого сдвинуто на рамку');
+
+  // Запасной путь на месте.
+  assert.ok(ui.includes('.gr-input-group>:first-child{'), 'прежнее правило :first-child снято — старые браузеры остались без скругления');
+  assert.ok(ui.includes('.gr-input-group>:last-child{'), 'прежнее правило :last-child снято');
+  assert.ok(ui.includes('.gr-input-group>*+*{'), 'прежний сдвиг на рамку снят');
+
+  // Новые правила стоят позже прежних и потому побеждают при равенстве.
+  assert.ok(ui.indexOf(first) > ui.indexOf('.gr-input-group>:first-child{'), 'правило по видимым стоит раньше запасного');
+  assert.ok(ui.indexOf(last) > ui.indexOf('.gr-input-group>:last-child{'), 'правило по видимым стоит раньше запасного');
+});
+
+test('края сегментного переключателя считаются по ярлыкам, а не по любым потомкам', () => {
+  // Фидбек, п. 2: <legend class="gr-sr-only"> — штатное имя <fieldset>,
+  // и как первый потомок он отнимал у первого сегмента скругление
+  // и левую рамку. Края — по label:first-of-type / label:last-of-type,
+  // внутренняя рамка — только у сегмента, перед которым стоит другой.
+  for (const edge of ['first', 'last']) {
+    const selector = `.gr-segmented label:${edge}-of-type span{`;
+    const from = ui.indexOf(selector);
+
+    assert.ok(from > 0, `нет правила для ${edge}-of-type`);
+    assert.ok(ui.slice(from, ui.indexOf('}', from)).includes('var(--gr-segmented-radius)'), `крайний сегмент ${edge}-of-type не скруглён`);
+    assert.ok(!ui.includes(`.gr-segmented label:${edge}-child span{`), `край по-прежнему считается по ${edge}-child`);
+  }
+
+  const inner = ui.indexOf('.gr-segmented label~label span{');
+
+  assert.ok(inner > 0, 'внутренняя рамка сегментов не привязана к соседству ярлыков');
+  assert.ok(ui.slice(inner, ui.indexOf('}', inner)).includes('border-inline-start:var(--gr-border-width) solid'), 'внутренняя рамка не там');
+
+  const all = ui.indexOf('.gr-segmented span{');
+
+  assert.ok(!ui.slice(all, ui.indexOf('}', all)).includes('border-inline-start'), 'рамка стоит на каждом сегменте, и первому её приходится снимать');
+});
+
+test('у строки выбора два модификатора: по первой строке и строка с тумблером', () => {
+  // Фидбек, п. 6: согласие в три строки и строка настроек «подпись —
+  // тумблер». Композицией не собрать: утилиты флекса лежат в core
+  // и проигрывают align-items и display компонента в ui при любой
+  // специфичности, а .gr-w-full живёт в utils — пакет компонентов
+  // обязан собираться и без него.
+  const start = ui.indexOf('.gr-choice-start{');
+
+  assert.ok(start > 0, 'нет .gr-choice-start');
+  assert.ok(ui.slice(start, ui.indexOf('}', start)).includes('align-items:flex-start'), 'контрол не по первой строке');
+
+  // Контрол сдвинут к середине первой строки: у строки 1,4em высоты
+  // квадратик 1,15em стоял бы по верху.
+  const shift = ui.indexOf('.gr-choice-start>input{');
+
+  assert.ok(shift > 0, 'контрол в .gr-choice-start не сдвинут к первой строке');
+  assert.ok(ui.slice(shift, ui.indexOf('}', shift)).includes('margin-block-start:.15em'), 'сдвиг контрола не тот');
+
+  const row = ui.indexOf('.gr-choice-row{');
+
+  assert.ok(row > 0, 'нет .gr-choice-row');
+
+  const rule = ui.slice(row, ui.indexOf('}', row));
+
+  assert.ok(rule.includes('display:flex'), 'строка с тумблером не блочный флекс');
+  assert.ok(rule.includes('justify-content:space-between'), 'подпись и тумблер не разведены по краям');
+
+  for (const name of ['.gr-choice-start', '.gr-choice-row']) {
+    assert.ok(scoped.includes(`${name}{`), `нет ${name} в scoped-сборке`);
+    assert.ok(!utils.includes(`${name}{`) && !core.includes(`${name}{`), `${name} утёк в чужой пакет`);
+  }
+});
+
+test('состояние ошибки на обёртке поля красит вложенные контролы', () => {
+  // Фидбек, п. 7: серверная проверка получает список полей и ставит
+  // состояние на обёртку — так работает OpenCart (.form-group.has-error)
+  // и большинство валидаторов. aria-invalid на контроле остаётся
+  // источником для программы чтения с экрана; виджет validate ставит оба.
+  for (const control of ['.gr-input', '.gr-textarea', '.gr-select', '.gr-file']) {
+    const selector = `.gr-field[data-gr-state=error] ${control}`;
+    const at = ui.indexOf(selector);
+
+    assert.ok(at > 0, `нет правила ${selector}`);
+    assert.ok(ui.slice(at, ui.indexOf('}', at)).includes('border-color:var(--gr-color-danger)'), `${control} в поле с ошибкой красится не цветом статуса`);
+  }
+});
+
+test('цвет оценки — семантический токен темы, а не переменная компонента', () => {
+  // Фидбек, п. 9: рядом со звёздами всё «предупреждающее» — полосы
+  // распределения, значок у подписи, ввод оценки — выходило коричневым:
+  // текстовый --gr-color-warning затемнён ради контраста. Токен
+  // --gr-color-rating объявлен в теме на каждом носителе, и его читают
+  // и ряд знаков, и всё, что изображает оценку. --gr-rating-color
+  // остаётся переопределением на элементе, но в :root больше не стоит:
+  // объявленный там, он резолвился бы один раз и не следовал бы теме
+  // вложенной секции.
+  for (const [name, css] of [['ui', ui], ['core', core], ['utils', utils]]) {
+    assert.ok(/:root,\[data-gr-theme\],\[data-gr-a11y\]\{[^}]*--gr-color-rating:\s*hsl\(var\(--gr-hsl-status-warning-surface\)\)/.test(css), `нет --gr-color-rating на носителях темы в griffincss-${name}.css`);
+    assert.ok(!/--gr-rating-color:/.test(css), `--gr-rating-color по-прежнему объявлен в griffincss-${name}.css`);
+  }
+
+  const rules = ratingRules(ui);
+
+  assert.ok(rules.includes('color:var(--gr-rating-color, var(--gr-color-rating))'), 'ряд знаков читает не семантический токен');
+});
+
+test('пустое окно — плашка, а не полоска; состояние загрузки рисует кольцо', () => {
+  // Фидбек, п. 3: окно открывается сразу, а содержимое приходит ajax'ом;
+  // до ответа <dialog> пуст и рисуется полоской высотой в рамку. Минимальная
+  // высота и состояние loading — здесь; плавный рост высоты — в слое (48d).
+  const at = ui.indexOf('.gr-modal{');
+
+  assert.ok(ui.slice(at, ui.indexOf('}', at)).includes('min-block-size:10rem'), 'у пустого окна нет минимальной высоты');
+
+  const loading = ui.indexOf('.gr-modal[data-gr-state=loading]::before{');
+
+  assert.ok(loading > 0, 'нет состояния загрузки');
+
+  const rule = ui.slice(loading, ui.indexOf('}', loading));
+
+  assert.ok(rule.includes('animation:gr-spin'), 'кольцо не крутится тем же keyframe, что .gr-spinner');
+  assert.ok(rule.includes('border-block-start-color:var(--gr-color-accent)'), 'у кольца нет акцентной дуги');
+  assert.ok(rule.includes('margin:auto'), 'кольцо не по центру окна');
+  assert.ok(scoped.includes('.gr-modal[data-gr-state=loading]::before{'), 'нет состояния загрузки в scoped-сборке');
+
+  // Вращение при уменьшенной анимации замедляется, но не снимается —
+  // как у .gr-spinner: остановленное кольцо сообщает «зависло».
+  assert.match(ui, /prefers-reduced-motion: reduce\)\{[^@]*\.gr-modal\[data-gr-state=loading\]::before\{animation-duration:2\.4s\}/, 'кольцо загрузки не замедлено при уменьшенной анимации');
+});
+
+// --- Этап 46: токены компонентов по списку темы, радиус контейнера ------------
+
+// Правило по селектору целиком — от преамбулы до закрывающей скобки.
+function ruleOf(css, selector) {
+  const at = css.indexOf(selector);
+
+  assert.ok(at >= 0, `нет правила ${selector}`);
+
+  return css.slice(at, css.indexOf('}', at));
+}
+
+test('токены компонентов читаются с запасным значением и нигде не объявляются', () => {
+  // Фидбек темы griffin (0.25.0, пп. 4 и 12): правило темы на структурном
+  // ребёнке проигрывает слою ui всегда, и тема держала свои классы. Токен
+  // читается через var(--gr-<name>-*, <прежний литерал>) и НЕ объявляется
+  // на компоненте: объявленный на нём, он перебивал бы переопределение
+  // на обёртке — а ради него всё и затевалось. Значения по умолчанию равны
+  // прежним литералам, вид не меняется.
+  const reads = [
+    ['.gr-card{', 'background-color:var(--gr-card-bg, var(--gr-color-surface))'],
+    ['.gr-card{', 'border:var(--gr-border-width) solid var(--gr-card-border, var(--gr-color-border))'],
+    ['.gr-card{', 'border-radius:var(--gr-card-radius, var(--gr-radius-container, var(--gr-radius)))'],
+    ['.gr-card-body{', 'padding:var(--gr-card-pad, var(--gr-gap))'],
+    ['.gr-card-header,.gr-card-footer{', 'padding-inline:var(--gr-card-pad, var(--gr-gap))'],
+    ['.gr-nav>:where(li){', 'padding:var(--gr-nav-item-pad, 0)'],
+    ['.gr-nav-link{', 'border-radius:var(--gr-nav-link-radius, var(--gr-radius))'],
+    ['.gr-modal-body{', 'overflow-y:var(--gr-modal-body-overflow, auto)'],
+    ['.gr-tab{', 'padding-inline:var(--gr-tabs-tab-pad, var(--gr-control-padding-x))'],
+    ['.gr-dropdown-panel{', 'min-inline-size:var(--gr-dropdown-min-width, max-content)'],
+    ['.gr-dropdown-panel{', 'padding:var(--gr-dropdown-pad, 0)'],
+    ['.gr-accordion-trigger{', 'padding-inline:var(--gr-accordion-summary-pad, var(--gr-gap))'],
+  ];
+
+  for (const [selector, declaration] of reads) {
+    assert.ok(ruleOf(ui, selector).includes(declaration), `${selector} не читает «${declaration}»`);
+    // В scoped-сборке префикс стоит у каждого селектора группы.
+    const prefixed = selector.split(',').map((part) => `:where(.griffin) ${part}`).join(',');
+
+    assert.ok(ruleOf(scoped, prefixed).includes(declaration), `${selector} в scoped-сборке не читает «${declaration}»`);
+  }
+
+  // Переход окна — тем же токеном во всех четырёх свойствах. Правило
+  // с переходом лежит в @supports и находится по своему началу: первый
+  // @supports в файле — у выдвижной панели.
+  const modal = ruleOf(ui, '.gr-modal{opacity:0;translate:0 var(--gr-gap);transition:');
+
+  assert.equal((modal.match(/var\(--gr-modal-transition, var\(--gr-transition\)\)/g) || []).length, 4, 'переход окна читает токен не во всех свойствах');
+
+  for (const token of ['--gr-card-bg', '--gr-card-border', '--gr-card-radius', '--gr-card-pad', '--gr-nav-item-pad', '--gr-nav-link-radius', '--gr-modal-body-overflow', '--gr-modal-transition', '--gr-tabs-tab-pad', '--gr-dropdown-pad', '--gr-dropdown-min-width', '--gr-accordion-summary-pad', '--gr-radius-container']) {
+    for (const [name, css] of [['ui', ui], ['core', core], ['utils', utils]]) {
+      assert.ok(!new RegExp(`${token}\\s*:`).test(css), `${token} объявлен в griffincss-${name}.css — переопределение на обёртке проиграло бы`);
+    }
+  }
+});
+
+test('радиус контейнера читают карточка, окно, меню и сообщение; по умолчанию он равен --gr-radius', () => {
+  // Фидбек, п. 18: правило «контейнер с отступом скруглён на radius + отступ»
+  // теме нечем было выразить — один токен на контролы и контейнеры. Отдельный
+  // токен без собственного объявления: fallback var(--gr-radius) считается
+  // на самом элементе, поэтому островок стиля с --gr-radius: 0 получает
+  // прямые углы и у карточек — объявление на :root резолвилось бы
+  // один раз корневым значением. Умолчание = прежний вид во всех стратегиях.
+  for (const selector of ['.gr-modal{', '.gr-menu{', '.gr-alert{']) {
+    assert.ok(ruleOf(ui, selector).includes('border-radius:var(--gr-radius-container, var(--gr-radius))'), `${selector} не читает радиус контейнера`);
+  }
+});
+
+test('карточка на сером — .gr-card-overlay: поверхность всплывающего слоя, обводка прежняя', () => {
+  // Фидбек, п. 4: панели витрины стоят на сером фоне страницы и обязаны быть
+  // белыми с волосяной обводкой — иначе сливаются с фоном. Вариант меняет
+  // только фон: рамка у базовой карточки уже есть. .gr-card-raised не тронут.
+  const rule = ruleOf(ui, '.gr-card-overlay{');
+
+  assert.ok(rule.includes('background-color:var(--gr-color-surface-overlay)'), 'фон не поверхность всплывающего слоя');
+  assert.ok(!rule.includes('border-color:transparent'), 'обводка снята — карточка сольётся с фоном');
+  assert.ok(ruleOf(ui, '.gr-card-raised{').includes('box-shadow:var(--gr-shadow-md)'), '.gr-card-raised изменилась');
 });

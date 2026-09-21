@@ -36,12 +36,13 @@ export const SITES = [
     ],
   },
   { file: 'docs/index.html', ids: ['js-all'] },
-  { file: 'docs/runtime.html', ids: ['js-core-raw', 'js-core', 'js-all', 'bundle'] },
+  { file: 'docs/runtime.html', ids: ['js-core-raw', 'js-core', 'js-all', 'bundle', 'js-pkg-core'] },
   {
     file: 'docs/griffinjs-architecture.html',
     ids: [
       'griffinjs-core',
       'griffinjs-track:n', 'griffinjs-motion:n', 'griffinjs-gesture:n', 'griffinjs-media:n', 'griffinjs-anchor:n',
+      'griffinjs-loader:n',
       'griffinjs-scroll:n', 'griffinjs-fade:n',
       'griffinjs-slider:n', 'griffinjs-gallery:n', 'griffinjs-lightbox:n', 'griffinjs-parallax:n',
       'griffinjs-megamenu:n', 'griffinjs-dropdown:n', 'griffinjs-tooltip:n',

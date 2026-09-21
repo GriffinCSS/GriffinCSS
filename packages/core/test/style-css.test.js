@@ -6,9 +6,10 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { compileScss, topLevelBlocks, layerBody } = require('./helpers/css');
+const { compileScss, topLevelBlocks, layersBody } = require('./helpers/css');
 
-const CORE = layerBody(compileScss("@use 'griffincss-core';"), 'griffincss.core');
+// Токены ядра с Этапа 46 лежат в griffincss.tokens, правила — в griffincss.core.
+const CORE = layersBody(compileScss("@use 'griffincss-core';"), ['griffincss.tokens', 'griffincss.core']);
 
 // Sass снимает кавычки в атрибутных селекторах: [data-gr-style="strict"]
 // компилируется в [data-gr-style=strict]. Сравниваем в этом виде, а в тестах
@@ -77,7 +78,7 @@ test('точка входа стилей объявляет полный пор�
 
   assert.ok(
     css.trimStart().startsWith(
-      '@layer griffincss.reset, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style;',
+      '@layer griffincss.reset, griffincss.tokens, griffincss.core, griffincss.ui, griffincss.utils, griffincss.style, griffincss.hidden;',
     ),
     'порядок слоёв не объявлен первым — файл, загрузившийся раньше прочих, задал бы другой',
   );
@@ -98,7 +99,10 @@ test('неизвестное имя в списке роняет сборку с
 // не изменился бы вовсе. На <html> дефект незаметен: :root и [data-gr-style]
 // там один элемент, и каскад складывает их.
 
-const STYLES = layerBody(compileStyles(null), 'griffincss.style');
+// Ось с Этапа 46 — в двух слоях: якоря по темам в griffincss.tokens,
+// блоки носителя [data-gr-style] в griffincss.style.
+const AXIS = ['griffincss.tokens', 'griffincss.style'];
+const STYLES = layersBody(compileStyles(null), AXIS);
 
 const carrierBlocks = topLevelBlocks(STYLES).filter((b) =>
   norm(b.prelude).includes('[data-gr-style]'),
@@ -106,7 +110,7 @@ const carrierBlocks = topLevelBlocks(STYLES).filter((b) =>
 const carrierBody = carrierBlocks.map((b) => b.body).join('\n');
 
 test('слой griffincss.style непуст', () => {
-  assert.ok(STYLES, 'слоя griffincss.style в выводе нет');
+  assert.ok(layersBody(compileStyles(null), ['griffincss.style']), 'слоя griffincss.style в выводе нет');
 });
 
 test('носитель оси пересчитывает семантические цвета', () => {
@@ -141,7 +145,7 @@ test('standard — валидное значение атрибута и воз�
 });
 
 test('стандартный островок собирается даже с одним заказанным стилем', () => {
-  const only = layerBody(compileStyles(['strict']), 'griffincss.style');
+  const only = layersBody(compileStyles(['strict']), AXIS);
 
   assert.ok(
     only.includes('[data-gr-style=standard]'),
@@ -312,7 +316,7 @@ test('каждая пастельная заливка приходит со с�
 });
 
 test('список $gr-styles определяет состав файла', () => {
-  const only = layerBody(compileStyles(['strict']), 'griffincss.style');
+  const only = layersBody(compileStyles(['strict']), AXIS);
 
   assert.ok(only.includes('[data-gr-style=strict]'), 'заказанный стиль отсутствует');
   assert.ok(!only.includes('[data-gr-style=airy]'), 'незаказанный стиль попал в вывод');
@@ -320,7 +324,7 @@ test('список $gr-styles определяет состав файла', () 
 });
 
 test('пустой список не даёт ни одного блока стиля', () => {
-  const empty = layerBody(compileStyles([]), 'griffincss.style');
+  const empty = layersBody(compileStyles([]), AXIS);
 
   assert.ok(!/\[data-gr-style=(airy|strict|compact)\]/.test(empty), empty);
 });
@@ -451,7 +455,7 @@ test('якоря воздушного стиля объявлены для об�
 });
 
 test('якоря стиля попадают в файл только вместе со своим стилем', () => {
-  const onlyStrict = layerBody(compileStyles(['strict']), 'griffincss.style');
+  const onlyStrict = layersBody(compileStyles(['strict']), AXIS);
 
   assert.ok(!onlyStrict.includes('--gr-hsl-accent-soft'), 'якоря незаказанного стиля в файле');
   assert.ok(onlyStrict.includes('--gr-hsl-border-soft'), 'якоря заказанного стиля пропали');
