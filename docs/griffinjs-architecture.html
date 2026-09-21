@@ -46,7 +46,7 @@
   Участник жизненного цикла (<code>G.use</code>) кроме <code>start</code>
   и <code>destroy</code> может объявить <code>init(root)</code>: ядро зовёт его
   после подъёма виджетов в корне — на старте и на каждой порции сканера.
-  На этом стоит <strong>догрузка бандла полей</strong> (Этап 48c) —
+  На этом стоит <strong>догрузка бандла полей</strong> —
   <code>griffinjs-loader.js</code>, общая часть вне ядра: единственное,
   что она знает поимённо, — не виджет, а файл поставки, девять имён второго
   бандла <code>griffinjs-fields.js</code> (список тот же, что в сборке, и тест
@@ -193,7 +193,7 @@ GriffinJS.unmount(el, 'counter');</code></pre>
   <li>Ни одной развилки по User-Agent; по возможностям — только <code>'onscrollend' in window</code>; указатель — по <code>pointerType</code> события.</li>
   <li>Разметка без скрипта остаётся рабочей: у каждого виджета есть «база без JS».</li>
   <li>Всё, что рантайм ставит на элемент, снимается <code>destroy()</code>.</li>
-  <li>JS читает только <code>data-gr-*</code> и пишет только состояния. <strong>Расширение Этапа 38, объявленное явно:</strong> поля второго бандла — маска, телефон, дата, сумма, одноразовый код, файл, мультивыбор комбобокса — пишут <code>value</code> контрола (иначе форматировать набранное нельзя). Договор такого поля: после каждой своей записи оно шлёт <code>input</code>, а по уходу фокуса <code>change</code>; не пишет в контрол, на котором не смонтировано; <code>destroy()</code> возвращает нативный тип, имя и значение. <strong>Второе расширение, Этап 39:</strong> поле, пишущее <code>value</code>, пишет и <b>валидность</b> контрола — маска ставит <code>setCustomValidity</code> на недоборе и <code>aria-invalid</code> по уходу фокуса, дата так же помечает невозможное значение и выход за границы, сумма — выход за границы через спутник <code>type="number"</code>, — и <code>destroy()</code> возвращает валидность вместе со значением. <strong>Третье, Этап 43:</strong> виджет пишет <code>min</code>/<code>max</code> чужого поля только через собственный API соседа (<code>limit</code> у пары дат «с — по»), и авторская граница при этом остаётся, если она уже. Кто форматирует набранное, тот отвечает и за то, отправится ли оно. Ввод оценки расширением не является — он пишет <code>--gr-rating</code>, число для CSS, которое разрешает второй инвариант.</li>
+  <li>JS читает только <code>data-gr-*</code> и пишет только состояния. <strong>Расширение, объявленное явно:</strong> поля второго бандла — маска, телефон, дата, сумма, одноразовый код, файл, мультивыбор комбобокса — пишут <code>value</code> контрола (иначе форматировать набранное нельзя). Договор такого поля: после каждой своей записи оно шлёт <code>input</code>, а по уходу фокуса <code>change</code>; не пишет в контрол, на котором не смонтировано; <code>destroy()</code> возвращает нативный тип, имя и значение. <strong>Второе расширение:</strong> поле, пишущее <code>value</code>, пишет и <b>валидность</b> контрола — маска ставит <code>setCustomValidity</code> на недоборе и <code>aria-invalid</code> по уходу фокуса, дата так же помечает невозможное значение и выход за границы, сумма — выход за границы через спутник <code>type="number"</code>, — и <code>destroy()</code> возвращает валидность вместе со значением. <strong>Третье:</strong> виджет пишет <code>min</code>/<code>max</code> чужого поля только через собственный API соседа (<code>limit</code> у пары дат «с — по»), и авторская граница при этом остаётся, если она уже. Кто форматирует набранное, тот отвечает и за то, отправится ли оно. Ввод оценки расширением не является — он пишет <code>--gr-rating</code>, число для CSS, которое разрешает второй инвариант.</li>
 </ol>
 
 <h2>Модульная сборка и размеры</h2>
@@ -206,7 +206,7 @@ GriffinJS.unmount(el, 'counter');</code></pre>
 </p>
 
 <p>
-  <strong>В ядре — только то, чем пользуются все</strong> (Этап 22).
+  <strong>В ядре — только то, чем пользуются все.</strong>
   Дорожка нужна трём виджетам из двенадцати, анимация — двум, жест —
   одному движку, медиазапросы — одному виджету: держать их в ядре значило
   бы брать плату со всех за то, чем пользуется меньшинство. Каждая такая
@@ -231,7 +231,7 @@ GriffinJS.unmount(el, 'counter');</code></pre>
   <tr><td><code>griffinjs-megamenu.js</code> / <code>-dropdown.js</code> / <code>-tooltip.js</code></td><td><!--gr:size:griffinjs-megamenu:n-->2,5<!--/gr:size:griffinjs-megamenu:n--> / <!--gr:size:griffinjs-dropdown:n-->2,1<!--/gr:size:griffinjs-dropdown:n--> / <!--gr:size:griffinjs-tooltip:n-->0,9<!--/gr:size:griffinjs-tooltip:n--></td><td>семейство выпадающего</td></tr>
   <tr><td><code>griffinjs-dialog.js</code> / <code>-combobox.js</code> / <code>-range.js</code> / <code>-sortable.js</code></td><td><!--gr:size:griffinjs-dialog:n-->2,1<!--/gr:size:griffinjs-dialog:n--> / <!--gr:size:griffinjs-combobox:n-->3,0<!--/gr:size:griffinjs-combobox:n--> / <!--gr:size:griffinjs-range:n-->1,1<!--/gr:size:griffinjs-range:n--> / <!--gr:size:griffinjs-sortable:n-->1,2<!--/gr:size:griffinjs-sortable:n--></td><td>окна, комбобокс, ползунок и сортируемая таблица</td></tr>
   <tr><td><strong><code>griffinjs.js</code></strong></td><td><strong><!--gr:size:griffinjs-->19,1 КБ<!--/gr:size:griffinjs--></strong></td><td>всё вместе (бюджет 19,3); ядро — <!--gr:size:griffinjs-core:n-->2,7<!--/gr:size:griffinjs-core:n--> при бюджете 2,8, набор слайдера — <!--gr:size:griffinjs-slider-set:n-->7,6<!--/gr:size:griffinjs-slider-set:n--> при бюджете 7,7</td></tr>
-  <tr><td><code>griffinjs-mask.js</code> / <code>-phone.js</code> / <code>-datetime.js</code> / <code>-file.js</code> / <code>-number.js</code></td><td><!--gr:size:griffinjs-mask:n-->1,7<!--/gr:size:griffinjs-mask:n--> / <!--gr:size:griffinjs-phone:n-->1,9<!--/gr:size:griffinjs-phone:n--> / <!--gr:size:griffinjs-datetime:n-->4,6<!--/gr:size:griffinjs-datetime:n--> / <!--gr:size:griffinjs-file:n-->1,5<!--/gr:size:griffinjs-file:n--> / <!--gr:size:griffinjs-number:n-->2,0<!--/gr:size:griffinjs-number:n--></td><td>поля второго бандла (Этап 38): маска, телефон, дата и время, файл; сумма с разрядами (Этап 43)</td></tr>
+  <tr><td><code>griffinjs-mask.js</code> / <code>-phone.js</code> / <code>-datetime.js</code> / <code>-file.js</code> / <code>-number.js</code></td><td><!--gr:size:griffinjs-mask:n-->1,7<!--/gr:size:griffinjs-mask:n--> / <!--gr:size:griffinjs-phone:n-->1,9<!--/gr:size:griffinjs-phone:n--> / <!--gr:size:griffinjs-datetime:n-->4,6<!--/gr:size:griffinjs-datetime:n--> / <!--gr:size:griffinjs-file:n-->1,5<!--/gr:size:griffinjs-file:n--> / <!--gr:size:griffinjs-number:n-->2,0<!--/gr:size:griffinjs-number:n--></td><td>поля второго бандла: маска, телефон, дата и время, файл, сумма с разрядами</td></tr>
   <tr><td><code>griffinjs-rating.js</code> / <code>-otp.js</code> / <code>-counter.js</code> / <code>-validate.js</code></td><td><!--gr:size:griffinjs-rating:n-->0,8<!--/gr:size:griffinjs-rating:n--> / <!--gr:size:griffinjs-otp:n-->1,1<!--/gr:size:griffinjs-otp:n--> / <!--gr:size:griffinjs-counter:n-->0,8<!--/gr:size:griffinjs-counter:n--> / <!--gr:size:griffinjs-validate:n-->1,4<!--/gr:size:griffinjs-validate:n--></td><td>ввод оценки, одноразовый код, счётчик символов, сводка ошибок</td></tr>
   <tr><td><strong><code>griffinjs-fields.js</code></strong></td><td><strong><!--gr:size:griffinjs-fields-->11,2 КБ<!--/gr:size:griffinjs-fields--></strong></td><td>все поля без ядра (бюджет 11,2); набор «ядро + anchor + поля» — <!--gr:size:griffinjs-fields-set:n-->13,8<!--/gr:size:griffinjs-fields-set:n--> при бюджете 13,9; таблица стран <code>griffinjs-countries.js</code> — <!--gr:size:griffinjs-countries:n-->0,9<!--/gr:size:griffinjs-countries:n--> при бюджете 0,9. В <code>griffinjs.js</code> поля не входят ни одним байтом</td></tr>
 </table>
@@ -241,15 +241,12 @@ GriffinJS.unmount(el, 'counter');</code></pre>
   49,4 КБ, <code>uikit-core.min.js</code> — 33,1 КБ,
   <code>swiper-bundle.min.js</code> — 41,0 КБ плюс 4,7 КБ своего CSS.
   Слой легче полного UIkit в 2,6 раза на потолке, набор слайдера легче
-  связки Swiper в 5,9 раза. Запас полного файла, оставленный Этапом 28
-  под сортируемую таблицу, потрачен на неё же: виджет стоил 724 Б
-  из 926. Этап 38 поднял потолок ещё раз, до 17,8 КБ, — под единственную
-  правку старого бандла, мультивыбор в комбобоксе (+495 Б); восемь новых
-  полей в него не вошли и лежат вторым файлом со своими потолками;
-  Этап 43 добавил туда девятое — сумму с разрядами — и связку дат «с — по»
-  (18,1 КБ). Этап 48 — 19,3 КБ под три покупки по фидбеку темы: догрузку
-  бандла полей (общей частью, не ядром), закрытие <code>&lt;details&gt;</code>
-  с анимацией темы у мегаменю и дропдауна, плавный рост окна.
+  связки Swiper в 5,9 раза. Потолок полного файла рос только под названные
+  покупки: сортируемая таблица (724 Б), мультивыбор в комбобоксе (+495 Б —
+  единственная правка старого бандла ради полей: сами поля лежат вторым
+  файлом со своими потолками), затем 19,3 КБ под догрузку бандла полей
+  (общей частью, не ядром), закрытие <code>&lt;details&gt;</code>
+  с анимацией темы у мегаменю и дропдауна и плавный рост окна.
   У ядра и набора слайдера запаса нет: рост в них не планируется,
   новая общая возможность кладётся в общие модули, а не в ядро — так
   и легла догрузка полей, ядру достались 37 Б хука. Бюджеты проверяет <code>check-dist</code>; слой

@@ -60,6 +60,7 @@
     "build:css": "sass scss/griffincss-ui.scss dist/griffincss-ui.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:scoped": "sass scss/griffincss-ui-scoped.scss dist/griffincss-ui-scoped.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:js": "node ../../scripts/build-js.mjs",
-    "build:griffinjs": "node ../../scripts/build-griffinjs.mjs"
+    "build:griffinjs": "node ../../scripts/build-griffinjs.mjs",
+    "prepublishOnly": "node -e \"const v=require('./package.json').version;if(/-dev$/.test(v)){console.error('Griffincss: версия '+v+' с суффиксом -dev — публикуют из публичного дерева (npm run release:public), а не из Dev');process.exit(1)}\""
   }
 }

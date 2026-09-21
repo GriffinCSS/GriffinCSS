@@ -54,6 +54,7 @@
     "build:reset": "sass scss/griffincss-reset.scss dist/griffincss-reset.css --style=compressed --no-source-map",
     "build:styles": "sass scss/griffincss-styles.scss dist/griffincss-styles.css --style=compressed --no-source-map",
     "build:style-files": "node ../../scripts/build-styles.mjs",
-    "build:js": "node ../../scripts/build-js.mjs"
+    "build:js": "node ../../scripts/build-js.mjs",
+    "prepublishOnly": "node -e \"const v=require('./package.json').version;if(/-dev$/.test(v)){console.error('Griffincss: версия '+v+' с суффиксом -dev — публикуют из публичного дерева (npm run release:public), а не из Dev');process.exit(1)}\""
   }
 }

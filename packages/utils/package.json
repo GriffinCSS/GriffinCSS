@@ -46,6 +46,7 @@
     "build": "npm run build:css && npm run build:scoped && npm run build:js",
     "build:css": "sass scss/griffincss-utils.scss dist/griffincss-utils.css --load-path=../../node_modules --style=compressed --no-source-map",
     "build:scoped": "sass scss/griffincss-utils-scoped.scss dist/griffincss-utils-scoped.css --load-path=../../node_modules --style=compressed --no-source-map",
-    "build:js": "node ../../scripts/build-js.mjs"
+    "build:js": "node ../../scripts/build-js.mjs",
+    "prepublishOnly": "node -e \"const v=require('./package.json').version;if(/-dev$/.test(v)){console.error('Griffincss: версия '+v+' с суффиксом -dev — публикуют из публичного дерева (npm run release:public), а не из Dev');process.exit(1)}\""
   }
 }
