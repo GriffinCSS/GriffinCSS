@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Theme Runtime v0.26.0
+ * Griffincss — Theme Runtime v0.26.1
  * Переключение цветовой темы, стратегии оформления и режима для слабовидящих:
  * атрибуты data-gr-theme, data-gr-style и data-gr-a11y на <html>.
  * Все три оси независимы. Выбор запоминается в localStorage.
@@ -26,7 +26,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.26.0';
+  var VERSION = '0.26.1';
 
   var THEME_ATTR = 'data-gr-theme';
   var A11Y_ATTR = 'data-gr-a11y';

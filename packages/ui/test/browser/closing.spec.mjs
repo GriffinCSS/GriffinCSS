@@ -96,10 +96,14 @@ test('дропдаун: щелчок по кнопке открытого <detai
   await expect(root).toHaveJSProperty('open', true);
   await expect(root).toHaveAttribute('data-gr-state', 'open');
 
+  // open читается в наблюдателе, в момент смены состояния: отдельная
+  // проверка «closing, затем open === true» на медленной машине
+  // проигрывала гонку — закрытие за 250 мс успевало завершиться между
+  // двумя ожиданиями, и тест мигал.
   await page.evaluate(() => {
     const root = document.getElementById('gr-lab-dd-details');
     const seen = [];
-    const mo = new MutationObserver(() => seen.push(root.getAttribute('data-gr-state')));
+    const mo = new MutationObserver(() => seen.push([root.getAttribute('data-gr-state'), root.open]));
 
     mo.observe(root, { attributes: true, attributeFilter: ['data-gr-state'] });
     window.__grSeen = seen;
@@ -107,12 +111,10 @@ test('дропдаун: щелчок по кнопке открытого <detai
 
   await summary.click();
 
-  await expect(root).toHaveAttribute('data-gr-state', 'closing');
-  await expect(root).toHaveJSProperty('open', true);
   await expect(root).toHaveJSProperty('open', false, { timeout: 2000 });
   await expect(root).toHaveAttribute('data-gr-state', 'ready');
 
-  expect(await page.evaluate(() => window.__grSeen)).toEqual(['closing', 'ready']);
+  expect(await page.evaluate(() => window.__grSeen)).toEqual([['closing', true], ['ready', false]]);
 });
 
 test('дропдаун: второй щелчок во время закрытия отменяет его — панель остаётся', async ({ page }) => {
