@@ -68,8 +68,15 @@
   <code>defer</code> — потому что до первой отрисовки слою ставить нечего:
   разметка до его старта живёт базой без скрипта, а в блокирующем пути
   остаются только тема и раскладки (<a href="runtime.html#head">«Что
-  в &lt;head&gt;, что defer»</a>). Атрибут <code>data-auto="false"</code>
-  на теге отключает автозапуск — как у остальных рантаймов библиотеки;
+  в &lt;head&gt;, что defer»</a>). Стартует слой, когда поставка
+  зарегистрирована целиком: отложенный тег — на <code>DOMContentLoaded</code>,
+  после всех <code>defer</code>-тегов, включая <code>griffinjs-fields.js</code>
+  и <code>griffinjs-countries.js</code>; тег, вставленный скриптом в готовый
+  документ, — сразу после своего файла. Набор «ядро + нужное», вставляемый
+  скриптом по одному тегу, поднимают вручную: <code>data-auto="false"</code>
+  на теге ядра и <code>GriffinJS.start()</code> после последнего модуля.
+  Атрибут <code>data-auto="false"</code>
+  отключает автозапуск — как у остальных рантаймов библиотеки;
   <code>data-fields</code> и <code>data-countries</code> называют пути
   второго бандла, который слой догрузит сам, встретив первое поле
   (<a href="griffinjs-fields.html#dogruzka">«Догрузка по потребности»</a>).
@@ -146,8 +153,8 @@
 
 <!-- gr:griffinjs-deps -->
 <p>
-  Весь слой одним файлом — <b>19,1 КБ gzip</b>. Но берут его обычно не целиком:
-  ядро, нужное любому набору, весит <b>2,7 КБ</b>, а остальное подключается
+  Весь слой одним файлом — <b>19,2 КБ gzip</b>. Но берут его обычно не целиком:
+  ядро, нужное любому набору, весит <b>2,8 КБ</b>, а остальное подключается
   по потребности. Каждый модуль объявляет, что берёт из ядра, и таблица собрана
   из этих объявлений при сборке — разойтись с кодом ей нечем.
 </p>
@@ -155,17 +162,17 @@
 <table>
   <tr><th>Виджет</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
   <tr><td><code>data-gr-track</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code></td><td>6,6 КБ</td></tr>
-  <tr><td><code>data-gr-slider</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code></td><td>7,6 КБ</td></tr>
-  <tr><td><code>data-gr-gallery</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code> + <code>griffinjs-gallery.js</code></td><td>8,0 КБ</td></tr>
-  <tr><td><code>data-gr-lightbox</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-lightbox.js</code></td><td>7,8 КБ</td></tr>
-  <tr><td><code>data-gr-parallax</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-parallax.js</code></td><td>3,5 КБ</td></tr>
-  <tr><td><code>data-gr-megamenu</code></td><td><code>griffinjs-media.js</code> + <code>griffinjs-megamenu.js</code></td><td>4,9 КБ</td></tr>
-  <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>4,9 КБ</td></tr>
+  <tr><td><code>data-gr-slider</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code></td><td>7,7 КБ</td></tr>
+  <tr><td><code>data-gr-gallery</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-slider.js</code> + <code>griffinjs-gallery.js</code></td><td>8,1 КБ</td></tr>
+  <tr><td><code>data-gr-lightbox</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-track.js</code> + <code>griffinjs-scroll.js</code> + <code>griffinjs-lightbox.js</code></td><td>7,9 КБ</td></tr>
+  <tr><td><code>data-gr-parallax</code></td><td><code>griffinjs-motion.js</code> + <code>griffinjs-parallax.js</code></td><td>3,6 КБ</td></tr>
+  <tr><td><code>data-gr-megamenu</code></td><td><code>griffinjs-media.js</code> + <code>griffinjs-megamenu.js</code></td><td>5,0 КБ</td></tr>
+  <tr><td><code>data-gr-dropdown</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-dropdown.js</code></td><td>5,0 КБ</td></tr>
   <tr><td><code>data-gr-tooltip</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-tooltip.js</code></td><td>3,9 КБ</td></tr>
-  <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>4,3 КБ</td></tr>
-  <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>5,2 КБ</td></tr>
-  <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,4 КБ</td></tr>
-  <tr><td><code>data-gr-sortable</code></td><td><code>griffinjs-sortable.js</code></td><td>3,5 КБ</td></tr>
+  <tr><td><code>data-gr-dialog</code></td><td><code>griffinjs-dialog.js</code></td><td>4,4 КБ</td></tr>
+  <tr><td><code>data-gr-combobox</code></td><td><code>griffinjs-combobox.js</code></td><td>5,3 КБ</td></tr>
+  <tr><td><code>data-gr-range</code></td><td><code>griffinjs-range.js</code></td><td>3,5 КБ</td></tr>
+  <tr><td><code>data-gr-sortable</code></td><td><code>griffinjs-sortable.js</code></td><td>3,6 КБ</td></tr>
 </table>
 <!-- /gr:griffinjs-deps -->
 

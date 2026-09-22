@@ -118,8 +118,9 @@ export function stringify(nodes) {
 // --- классы в селекторах ----------------------------------------------------
 
 // Селектор режется по запятым верхнего уровня: скобки и строки внутри
-// :is(), :not() и [attr="a,b"] запятыми не считаются.
-function splitSelector(selector) {
+// :is(), :not() и [attr="a,b"] запятыми не считаются. Экспорт — для
+// сверки объявлений по селекторам (diff-css.mjs).
+export function splitSelector(selector) {
   const parts = [];
   let depth = 0;
   let start = 0;
@@ -150,6 +151,55 @@ const unescape = (name) => name.replace(/\\(.)/g, '$1');
 
 function classesInPart(part) {
   return [...part.matchAll(CLASS_IN_SELECTOR)].map(([, name]) => unescape(name));
+}
+
+// Функциональные псевдоклассы. Класс внутри них — не условие всего правила
+// (фидбек темы griffin по 0.26.0, п. 7: `.gr-breadcrumb > :where(li,
+// .gr-breadcrumb-item)` выбрасывался у крошек без класса на пунктах, хотя
+// `li` подходил всегда). В :not() отсутствие класса делает правило шире,
+// а не мёртвым; в :is()/:where()/:has() список — альтернативы, и правило
+// живо, пока подходит хоть одна (тег, атрибут, `*`, встреченный класс) —
+// та же логика, что у списка селекторов верхнего уровня, рекурсивно.
+// Мёртвые альтернативы внутри списка не вырезаются: цена — байты,
+// а переписывание вложенных списков — отдельный риск.
+const FUNCTIONAL = /:(not|is|where|has)\(/g;
+
+// Индекс закрывающей скобки для открывающей в позиции `open`.
+function parenEnd(text, open) {
+  let depth = 0;
+
+  for (let i = open; i < text.length; i++) {
+    const c = text[i];
+
+    if (c === '"' || c === "'") i = skipString(text, i) - 1;
+    else if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) return i;
+  }
+
+  return text.length;
+}
+
+function partAlive(part, isKept) {
+  let outside = '';
+  let i = 0;
+
+  while (i < part.length) {
+    FUNCTIONAL.lastIndex = i;
+    const m = FUNCTIONAL.exec(part);
+
+    if (!m) { outside += part.slice(i); break; }
+
+    const open = m.index + m[0].length - 1;
+    const close = parenEnd(part, open);
+
+    outside += part.slice(i, m.index);
+    i = close + 1;
+
+    if (m[1] === 'not') continue;
+    if (!splitSelector(part.slice(open + 1, close)).some((alt) => partAlive(alt, isKept))) return false;
+  }
+
+  return classesInPart(outside).every((cls) => isKept(cls));
 }
 
 // --- классы в разметке ------------------------------------------------------
@@ -321,7 +371,7 @@ function filterNodes(nodes, isKept, counters, axis) {
     }
 
     const parts = splitSelector(node.selector).filter((part) =>
-      classesInPart(part).every((cls) => isKept(cls))
+      partAlive(part, isKept)
       // Безымянный `[data-gr-style]` держит токены всех стилей: он нужен,
       // пока уцелел хоть один, и не нужен, если ось не встретилась вовсе.
       && stylesInPart(part).every((value) => (value === null ? axis.used : axis.keep(value))),

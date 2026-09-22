@@ -346,18 +346,49 @@
 
   // Автостарт: только в браузере и только если его не отключили атрибутом
   // data-auto="false" на теге <script>.
+  //
+  // Момент старта — когда поставка зарегистрирована целиком. Ядро — первый
+  // IIFE бандла, и старт при выполнении собственного файла обгоняет
+  // defineWidget модулей дальше в том же файле; под defer так и было:
+  // readyState уже «interactive», старт шёл сразу, init(document) не
+  // находил ни одного виджета, поздних никто не поднимал (фидбек темы
+  // griffin по 0.26.0, п. 1). Три момента:
+  //   * разбор идёт (loading) — DOMContentLoaded, как прежде;
+  //   * свой тег отложен (defer) — тоже DOMContentLoaded: отложенные теги
+  //     выполняются после разбора и ДО события, значит к нему выполнятся
+  //     и griffinjs-fields.js с griffinjs-countries.js следующими тегами —
+  //     та же схема, что синхронные теги в подвале. Не readystatechange:
+  //     «interactive» наступает ДО отложенных тегов;
+  //   * иначе (документ готов, тег вставлен скриптом) — микрозадачей:
+  //     после текущего файла целиком, до любого следующего тега. Набору
+  //     «ядро + нужное», вставленному скриптом, нужен data-auto="false"
+  //     и GriffinJS.start() после последнего тега.
+  // Тег с defer, вставленный скриптом после DOMContentLoaded, отложенным
+  // не является, и события он не дождётся; страховка от вечного
+  // ожидания — readystatechange: при «interactive» следующее — «complete».
   function autoStart() {
-    try {
-      var script = document.currentScript;
-      if (script && script.getAttribute('data-auto') === 'false') return;
-    } catch (e) { /* currentScript недоступен */ }
+    var script = null;
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () { start(); });
+    try { script = document.currentScript; } catch (e) { /* currentScript недоступен */ }
+
+    if (script && script.getAttribute('data-auto') === 'false') return;
+
+    var deferred = !!script && script.hasAttribute('defer') && !script.hasAttribute('async');
+
+    if (document.readyState === 'loading' || (deferred && document.readyState !== 'complete')) {
+      var ready = function () {
+        document.removeEventListener('DOMContentLoaded', ready);
+        document.removeEventListener('readystatechange', ready);
+        start();
+      };
+
+      document.addEventListener('DOMContentLoaded', ready);
+      if (deferred) document.addEventListener('readystatechange', ready);
+
       return;
     }
 
-    start();
+    Promise.resolve().then(start);
   }
 
   var api = {

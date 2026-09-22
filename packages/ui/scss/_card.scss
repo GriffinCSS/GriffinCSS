@@ -16,6 +16,11 @@
 //
 // Радиус — трёхступенчатый: свой токен карточки, иначе радиус контейнера
 // (--gr-radius-container, тот же у окна, меню и сообщения), иначе --gr-radius.
+//
+// Обрезка — тоже токеном (фидбек темы griffin по 0.26.0, п. 5): overflow:
+// hidden нужен медиа во всю ширину, а панели кабинета без снимка он режет
+// абсолютный список подсказки под полем; overflow компонента из app
+// не перебить.
 
 .gr-card {
   display: flex;
@@ -26,7 +31,7 @@
   border-radius: var(--gr-card-radius, var(--gr-radius-container, var(--gr-radius)));
   background-color: var(--gr-card-bg, var(--gr-color-surface));
   color: var(--gr-color-text);
-  overflow: hidden;
+  overflow: var(--gr-card-overflow, hidden);
 }
 
 // Тело забирает остаток высоты, поэтому подвал остаётся внизу

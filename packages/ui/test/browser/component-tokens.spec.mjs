@@ -24,7 +24,7 @@ const html = (style, overrides) => `<!doctype html>
 <style>
 :root { --gr-transition: 0s; }
 ${overrides ? `.wrap {
-  --gr-card-bg: rgb(1, 2, 3); --gr-card-border: rgb(4, 5, 6); --gr-card-radius: 21px; --gr-card-pad: 3px;
+  --gr-card-bg: rgb(1, 2, 3); --gr-card-border: rgb(4, 5, 6); --gr-card-radius: 21px; --gr-card-pad: 3px; --gr-card-overflow: visible;
   --gr-nav-item-pad: 5px; --gr-nav-link-radius: 2px;
   --gr-modal-body-overflow: hidden; --gr-modal-transition: 1.5s linear;
   --gr-tabs-tab-pad: 7px; --gr-dropdown-min-width: 111px; --gr-dropdown-pad: 4px;
@@ -65,6 +65,7 @@ const probe = (page) => page.evaluate(() => {
     cardBorder: s('card').borderTopColor,
     cardRadius: s('card').borderTopLeftRadius,
     cardPad: s('card-body').paddingTop,
+    cardOverflow: s('card').overflowY,
     cardHeadPadInline: s('card-head').paddingLeft,
     overlayBg: s('card-overlay').backgroundColor,
     overlayBorderWidth: s('card-overlay').borderTopWidth,
@@ -96,6 +97,10 @@ test('переопределение токена на обёртке меняе
   expect(m.cardRadius).toBe('21px');
   expect(m.cardPad).toBe('3px');
   expect(m.cardHeadPadInline).toBe('3px');
+  // Обрезка карточки — токеном (фидбек темы griffin по 0.26.0, п. 5):
+  // абсолютный список подсказки под полем в панели кабинета резался
+  // у нижнего края, а overflow компонента из app не перебить.
+  expect(m.cardOverflow).toBe('visible');
   expect(m.navItemPad).toBe('5px');
   expect(m.navLinkRadius).toBe('2px');
   expect(m.modalOverflow).toBe('hidden');
@@ -129,6 +134,7 @@ for (const style of [null, 'airy', 'strict', 'compact']) {
     // Умолчания токенов — прежние литералы.
     expect(m.navItemPad).toBe('0px');
     expect(m.panelPad).toBe('0px');
+    expect(m.cardOverflow).toBe('hidden');
     expect(m.modalOverflow).toBe('auto');
     // Карточка на сером: фон — поверхность всплывающего слоя, обводка
     // на месте. В строгом и журнальном стилях поверхность карточки и так

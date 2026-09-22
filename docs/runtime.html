@@ -206,7 +206,11 @@ Griffincss.version;   // '0.26.0'</code></pre>
   есть, а потом гаснут и раскладываются. Остальным рантаймам и слою виджетов
   до первой отрисовки ставить нечего — их место в <code>defer</code>:
   они выполняются по порядку после разбора документа, до
-  <code>DOMContentLoaded</code>, и стартуют сразу, не дожидаясь события.
+  <code>DOMContentLoaded</code>. Рантаймы компонентов и утилит стартуют
+  сразу, не дожидаясь события; слой виджетов с отложенного тега ждёт
+  <code>DOMContentLoaded</code> — к нему выполнятся и следующие отложенные
+  теги слоя (<code>griffinjs-fields.js</code>, <code>griffinjs-countries.js</code>),
+  и старт увидит поставку целиком, как при синхронных тегах в подвале.
 </p>
 
 <pre><code>&lt;script src="griffincss-theme.js"&gt;&lt;/script&gt;             &lt;!-- синхронно: атрибуты темы до отрисовки --&gt;
@@ -221,7 +225,7 @@ Griffincss.version;   // '0.26.0'</code></pre>
   <tr><td><code>griffincss.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>с <code>defer</code> — контейнеры отрисованы как есть, затем гаснут FOUC-защитой и раскладываются; потокового режима нет</td></tr>
   <tr><td><code>griffincss-ui.js</code></td><td><code>defer</code></td><td>синхронно в <code>&lt;head&gt;</code> он всё равно ждёт <code>DOMContentLoaded</code> — выигрыша нет, а блокирующий путь длиннее. Панели вкладок до старта видны все (база без скрипта); если это заметно, ставьте <code>hidden</code> неактивным в разметке</td></tr>
   <tr><td><code>griffincss-utils.js</code></td><td><code>defer</code></td><td>синхронно он достраивает углы вложенных <code>.gr-radius</code> по мере разбора, с <code>defer</code> — одним проходом после; первый уровень и его прямые дети скруглены статикой в обоих случаях</td></tr>
-  <tr><td><code>griffinjs.js</code></td><td><code>defer</code></td><td>до старта разметка живёт базой без скрипта — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, дорожка со scroll-snap; это рабочее состояние, а не поломка</td></tr>
+  <tr><td><code>griffinjs.js</code></td><td><code>defer</code></td><td>до старта разметка живёт базой без скрипта — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, дорожка со scroll-snap; это рабочее состояние, а не поломка. Старт — на <code>DOMContentLoaded</code>, после всех отложенных тегов; тег, вставленный скриптом в готовый документ, стартует сразу после своего файла</td></tr>
   <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->9,0 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,2 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
 </table>
 

@@ -62,6 +62,18 @@
     <div class="gr-area-a gr-p-4 gr-bg-surface">Основная колонка</div>
     <div class="gr-area-b gr-p-4 gr-bg-surface">Боковая</div>
   </div>
+
+  <!-- Один виджет слоя: без скрипта это обычный <details>, со скриптом
+       кнопка и меню получают роли и клавиатуру. -->
+  <details class="gr-dropdown" data-gr-dropdown>
+    <summary class="gr-btn">Действия</summary>
+    <div class="gr-dropdown-panel">
+      <ul class="gr-menu">
+        <li><button class="gr-menu-item" type="button">Переименовать</button></li>
+        <li><button class="gr-menu-item" type="button">Удалить</button></li>
+      </ul>
+    </div>
+  </details>
 </main>
 
 </body>

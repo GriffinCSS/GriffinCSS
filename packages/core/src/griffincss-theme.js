@@ -49,8 +49,14 @@
   // слое библиотеки оно ни лежало, кто-то из них его перебьёт; безслойное
   // объявление старше всех слоёв без !important. Тот же путь, каким
   // грид-рантайм ставит защиту от FOUC, и nonce — оттуда же.
+  //
+  // Гасятся переходы цвета, а не всё, что движется: элемент с классом
+  // gr-theme-keep и его поддерево остаются вне правила — плашка
+  // переключателя, значок кнопки режима, любой переход, которым тема
+  // отвечает на само переключение (фидбек темы griffin по 0.26.0, п. 3).
   var SWITCHING = 'gr-theme-switching';
-  var FREEZE_CSS = '.gr-theme-switching,.gr-theme-switching *,.gr-theme-switching ::before,.gr-theme-switching ::after{transition:none}';
+  var KEEP = ':not(.gr-theme-keep,.gr-theme-keep *)';
+  var FREEZE_CSS = '.gr-theme-switching,.gr-theme-switching ' + KEEP + ',.gr-theme-switching ' + KEEP + '::before,.gr-theme-switching ' + KEEP + '::after{transition:none}';
 
   // standard в списке нет намеренно: он равносилен отсутствию атрибута,
   // и ставить его в разметку незачем. Значением атрибута он при этом
@@ -155,10 +161,16 @@
   // при погашенных переходах и рисует их; сними гашение в этом же кадре —
   // переходы вернулись бы до пересчёта и цвета поехали бы. На втором
   // цвета уже на месте, и возврат переходов ничего не двигает.
+  //
+  // Событие смены — там же, ПОСЛЕ снятия гашения: слушатель, который
+  // в ответ двигает что-то своё, иначе попадал в окно transition: none.
+  // Второе переключение в окне продлевает гашение и забирает событие
+  // себе — уходит одно, с итоговым состоянием. Возвращает true, если
+  // гашение поставлено и событие за ним; false — гасить нечем.
   function freeze() {
     var raf = window.requestAnimationFrame;
 
-    if (typeof raf !== 'function' || !document.head) return;
+    if (typeof raf !== 'function' || !document.head) return false;
 
     if (!freezeEl) {
       freezeEl = document.createElement('style');
@@ -177,12 +189,15 @@
 
         freezeEl.remove();
         root().classList.remove(SWITCHING);
+        emit();
       });
     });
+
+    return true;
   }
 
   function apply(attr, key, value) {
-    freeze();
+    var frozen = freeze();
 
     if (value === null) {
       root().removeAttribute(attr);
@@ -192,7 +207,9 @@
       store(key, value);
     }
 
-    return emit();
+    // Возврат — состояние сразу; событие — после гашения, а без него
+    // (нет requestAnimationFrame) — здесь же, как раньше.
+    return frozen ? state() : emit();
   }
 
   function set(value) {

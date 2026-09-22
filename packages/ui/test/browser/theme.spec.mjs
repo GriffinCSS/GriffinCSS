@@ -20,9 +20,15 @@ const html = `<!doctype html>
 <link rel="stylesheet" href="/packages/core/dist/griffincss-core.css">
 <link rel="stylesheet" href="/packages/ui/dist/griffincss-ui.css">
 <script src="/packages/core/dist/griffincss-theme.js" data-persist="false"></script>
-<style>body { padding: 40px; } .gr-card { transition: background-color 1s linear; }</style>
+<style>
+body { padding: 40px; }
+.gr-card { transition: background-color 1s linear; }
+.mover { inline-size: 20px; block-size: 20px; background: red; transition: translate 1s linear; }
+</style>
 </head><body>
 <div class="gr-card" id="card"><div class="gr-card-body">Карточка</div></div>
+<div class="mover" id="plain"></div>
+<div class="gr-theme-keep"><div class="mover" id="keep"></div></div>
 </body></html>`;
 
 async function open(page) {
@@ -84,4 +90,40 @@ test('отрицательный контроль: смена атрибута �
   expect(m.before).not.toBe(m.final);
   expect(m.first, `переход не идёт — контроль ничего не проверяет: ${JSON.stringify(m)}`).not.toBe(m.final);
   expect(m.marked).toBe(false);
+});
+
+// Фидбек темы griffin по 0.26.0, п. 3: гашение накрывало и то, что тема
+// анимирует в ответ на переключение — плашка переключателя прыгала на
+// 225 px за кадр. Под .gr-theme-keep переход идёт; событие приходит после
+// снятия гашения, и слушатель может двигать своё без класса.
+test('под .gr-theme-keep переход идёт во время гашения, событие приходит после снятия класса', async ({ page }) => {
+  await open(page);
+
+  const m = await page.evaluate(() => new Promise((resolve) => {
+    const plain = document.getElementById('plain');
+    const keep = document.getElementById('keep');
+    const translate = (el) => getComputedStyle(el).translate;
+    const events = [];
+
+    document.addEventListener('griffincss:themechange', () => events.push({
+      switching: document.documentElement.classList.contains('gr-theme-switching'),
+      frozen: [...document.querySelectorAll('head style')].some((s) => s.textContent.includes('transition:none')),
+    }));
+
+    window.Griffincss.theme.set('dark');
+    plain.style.translate = '200px';
+    keep.style.translate = '200px';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const first = { plain: translate(plain), keep: translate(keep) };
+
+      setTimeout(() => resolve({ first, events, final: { plain: translate(plain), keep: translate(keep) } }), 1300);
+    }));
+  }));
+
+  expect(m.final).toEqual({ plain: '200px', keep: '200px' });
+  expect(m.first.plain, `обычный элемент в окне гашения должен прыгнуть: ${JSON.stringify(m)}`).toBe('200px');
+  expect(m.first.keep, `под .gr-theme-keep переход должен идти: ${JSON.stringify(m)}`).not.toBe('200px');
+  expect(m.first.keep).not.toBe('none');
+  expect(m.events).toEqual([{ switching: false, frozen: false }]);
 });

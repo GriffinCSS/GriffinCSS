@@ -2,7 +2,10 @@
 // рантайм темы и рантайм раскладок, остальные рантаймы и слой — с defer.
 // Проверяется то, что обещает страница рантайма: отложенные файлы стартуют
 // сами при readyState «interactive», не дожидаясь DOMContentLoaded,
-// раскладка сложена, консоль чистая.
+// раскладка сложена, консоль чистая — и слой ПОДНЯЛ виджет, а не только
+// стартовал. Фидбек темы griffin по 0.26.0, п. 1 и 4: под defer старт
+// в обёртке ядра обгонял defineWidget модулей того же файла, и
+// `_started() === true` при нуле смонтированных виджетов проходил гейт.
 
 import { test, expect } from '@playwright/test';
 
@@ -28,15 +31,27 @@ test('starter.html: два синхронных тега, три с defer, вс�
     { file: 'griffinjs.js', defer: true },
   ]);
 
-  const state = await page.evaluate(() => ({
-    theme: !!window.Griffincss.theme,
-    ui: !!window.Griffincss.ui,
-    utils: !!window.Griffincss.utils,
-    layer: window.GriffinJS._started(),
-    ready: document.querySelector('[data-gr-layout]').classList.contains('gr-ready'),
-    display: getComputedStyle(document.querySelector('[data-gr-layout]')).display,
-  }));
+  const state = await page.evaluate(() => {
+    const dropdown = document.querySelector('[data-gr-dropdown]');
 
-  expect(state).toEqual({ theme: true, ui: true, utils: true, layer: true, ready: true, display: 'grid' });
+    return {
+      theme: !!window.Griffincss.theme,
+      ui: !!window.Griffincss.ui,
+      utils: !!window.Griffincss.utils,
+      layer: window.GriffinJS._started(),
+      ready: document.querySelector('[data-gr-layout]').classList.contains('gr-ready'),
+      display: getComputedStyle(document.querySelector('[data-gr-layout]')).display,
+      // Виджет смонтирован, и его следы в разметке — те, что ставит
+      // только скрипт: без него у <summary> нет aria-haspopup, у списка — role.
+      widget: !!window.GriffinJS.instance(dropdown, 'dropdown'),
+      haspopup: dropdown.querySelector('summary').getAttribute('aria-haspopup'),
+      role: dropdown.querySelector('.gr-menu').getAttribute('role'),
+    };
+  });
+
+  expect(state).toEqual({
+    theme: true, ui: true, utils: true, layer: true, ready: true, display: 'grid',
+    widget: true, haspopup: 'menu', role: 'menu',
+  });
   expect(messages).toEqual([]);
 });

@@ -77,6 +77,40 @@ test('селектор из двух классов требует обоих', 
   assert.equal(result.css, '');
 });
 
+// Фидбек темы griffin по 0.26.0, п. 7: крошки `<ol class="gr-breadcrumb"><li>`
+// без .gr-breadcrumb-item теряли выравнивание и разделитель — класс
+// внутри :where(li, .gr-breadcrumb-item) читался как обязательный для
+// всего правила, хотя альтернатива li подходила всегда.
+test('класс внутри :where()/:is() — альтернатива: правило живо, пока подходит хоть одна', async () => {
+  const { purge } = await load();
+  const css = '.gr-breadcrumb>:where(li,.gr-breadcrumb-item){display:flex}'
+    + '.gr-breadcrumb>:where(li,.gr-breadcrumb-item)+:where(li,.gr-breadcrumb-item)::before{content:"/"}'
+    + '.gr-nav :is(.gr-nav-link,.gr-nav-btn){color:red}'
+    + '.gr-x:where(.gr-x-a,.gr-x-b){color:red}';
+  const result = purge(css, new Set(['gr-breadcrumb', 'gr-nav', 'gr-x']));
+
+  assert.ok(result.css.includes('.gr-breadcrumb>:where(li,.gr-breadcrumb-item){'), 'пункты крошек выброшены: ' + result.css);
+  assert.ok(result.css.includes('::before{content:"/"}'), 'разделитель крошек выброшен: ' + result.css);
+  assert.ok(!result.css.includes('.gr-nav :is('), 'ни одна альтернатива не встречена, а правило осталось: ' + result.css);
+  assert.ok(!result.css.includes('.gr-x:where('), 'ни одна альтернатива не встречена, а правило осталось: ' + result.css);
+});
+
+test('класс внутри :not() не обязателен, внутри :has() — альтернатива, вложенность разбирается', async () => {
+  const { purge } = await load();
+  const css = '.gr-btn:not(.gr-btn-ghost){color:red}'
+    + '.gr-field:has(.gr-input,.gr-select){color:red}'
+    + '.gr-field:has(.gr-nope){color:red}'
+    + '.gr-menu :is(li,:where(.gr-nope,.gr-menu-item)){color:red}'
+    + '.gr-menu :is(.gr-nope,:where(.gr-nope2,.gr-nope3)){color:red}';
+  const result = purge(css, new Set(['gr-btn', 'gr-field', 'gr-input', 'gr-menu', 'gr-menu-item']));
+
+  assert.ok(result.css.includes('.gr-btn:not(.gr-btn-ghost){'), 'отсутствие класса в :not() делает правило шире, а не мёртвым: ' + result.css);
+  assert.ok(result.css.includes('.gr-field:has(.gr-input,.gr-select){'), ':has() с встреченной альтернативой выброшен: ' + result.css);
+  assert.ok(!result.css.includes('.gr-field:has(.gr-nope)'), ':has() без единой альтернативы остался: ' + result.css);
+  assert.ok(result.css.includes('.gr-menu :is(li,'), 'вложенный список с живой альтернативой выброшен: ' + result.css);
+  assert.ok(!result.css.includes('.gr-menu :is(.gr-nope,'), 'вложенный список без живых альтернатив остался: ' + result.css);
+});
+
 test('пустой @media не остаётся', async () => {
   const { purge } = await load();
   const css = '@media(width >= 768px){.gr-p-8-md{padding:2rem}}';

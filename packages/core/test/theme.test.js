@@ -218,9 +218,15 @@ test('переключение гасит переходы безслойным 
   assert.ok(style, 'нет <style> с transition: none в <head>');
   assert.ok(!style.textContent.includes('@layer'), 'правило легло в слой — переходы компонентов в ui его перебьют');
   assert.ok(!style.textContent.includes('!important'), '!important в правиле ни к чему: безслойное объявление и так старше слоёв');
-  assert.match(style.textContent, /\.gr-theme-switching \*/, 'правило не покрывает потомков');
-  assert.match(style.textContent, /::before/, 'правило не покрывает ::before');
-  assert.match(style.textContent, /::after/, 'правило не покрывает ::after');
+  // Потомки — все, кроме .gr-theme-keep и его поддерева: то, что тема
+  // анимирует в ответ на переключение (плашка переключателя), гаситься
+  // не должно (фидбек темы griffin по 0.26.0, п. 3).
+  const keep = ':not(.gr-theme-keep,.gr-theme-keep *)';
+
+  assert.ok(style.textContent.includes(`.gr-theme-switching ${keep}{`) || style.textContent.includes(`.gr-theme-switching ${keep},`), 'правило не покрывает потомков или не исключает .gr-theme-keep');
+  assert.ok(style.textContent.includes(`.gr-theme-switching ${keep}::before`), 'правило не покрывает ::before или гасит ::before под .gr-theme-keep');
+  assert.ok(style.textContent.includes(`.gr-theme-switching ${keep}::after`), 'правило не покрывает ::after или гасит ::after под .gr-theme-keep');
+  assert.ok(!/\.gr-theme-switching \*[,{]/.test(style.textContent), 'осталось правило на всех потомков без исключения');
   assert.ok(doc.documentElement.classList.contains('gr-theme-switching'), 'нет класса на <html> — теме не за что зацепиться');
 
   // Первый кадр: браузер считает стили с новыми цветами при погашенных
@@ -267,4 +273,54 @@ test('без requestAnimationFrame тема переключается, гаше
   assert.equal(doc.documentElement.getAttribute('data-gr-theme'), 'dark');
   assert.equal(freezeStyle(doc), null);
   assert.ok(!doc.documentElement.classList.contains('gr-theme-switching'));
+});
+
+// Событие — после снятия гашения: реакция темы на него (плашка едет
+// к выбранному пункту) иначе попадала в окно transition: none и прыгала.
+test('griffincss:themechange приходит после снятия гашения, когда переходы уже вернулись', () => {
+  const { doc, theme, frame } = setupThemeDom();
+  const seen = [];
+
+  doc.addEventListener('griffincss:themechange', (e) => seen.push({
+    resolved: e.detail.resolved,
+    switching: doc.documentElement.classList.contains('gr-theme-switching'),
+    frozen: !!freezeStyle(doc),
+  }));
+
+  const returned = theme.set('dark');
+
+  assert.equal(returned.resolved, 'dark', 'set() по-прежнему возвращает состояние сразу');
+  assert.deepEqual(seen, [], 'событие ушло внутри окна гашения — реакция темы на него не анимируется');
+
+  frame();
+  assert.deepEqual(seen, []);
+
+  frame();
+  assert.deepEqual(seen, [{ resolved: 'dark', switching: false, frozen: false }]);
+});
+
+test('два переключения в окне гашения — одно событие с итоговым состоянием', () => {
+  const { doc, theme, frame } = setupThemeDom();
+  const seen = [];
+
+  doc.addEventListener('griffincss:themechange', (e) => seen.push([e.detail.resolved, e.detail.resolvedA11y]));
+
+  theme.set('dark');
+  frame();
+  theme.a11y(true);
+  frame();
+  assert.deepEqual(seen, [], 'первое переключение отчиталось, пока второе ещё гасит переходы');
+
+  frame();
+  assert.deepEqual(seen, [['dark', 'low-vision']]);
+});
+
+test('без requestAnimationFrame событие приходит синхронно, как раньше', () => {
+  const { doc, theme } = setupThemeDom({ noFrames: true });
+  const seen = [];
+
+  doc.addEventListener('griffincss:themechange', (e) => seen.push(e.detail.resolved));
+  theme.set('dark');
+
+  assert.deepEqual(seen, ['dark']);
 });

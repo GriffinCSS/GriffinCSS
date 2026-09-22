@@ -459,12 +459,21 @@ npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui
 
 <p>
   Замер на странице примеров витрины (<code>patterns.html</code>, компоненты
-  без виджетов слоя): <code>griffincss-ui.css</code> 12 533 → 7 484 Б gzip
-  с пресетом, 6 806 без него — но уже без тостов; <code>griffinjs.css</code>
+  без виджетов слоя): <code>griffincss-ui.css</code> 12 541 → 7 546 Б gzip
+  с пресетом, 6 868 без него — но уже без тостов; <code>griffinjs.css</code>
   2 880 → 1 596 Б. Цена пресета — правила всех компонентов, которые строит
   скрипт, даже не использованных на странице: здесь 678 Б в первом файле
   и 1 457 во втором. Точнее — свой <code>--safelist</code> из списка
   <code>PRESETS.ui</code> в <code>scripts/purge.mjs</code>.
+</p>
+
+<p>
+  Пресет не знает про ось оформления. Значения <code>data-gr-style</code>,
+  которые ставятся не в разметке, а из настроек или рантаймом
+  (<code>Griffincss.theme.style('compact')</code>), в файлах не встречаются,
+  и блоки этих стилей уходят вместе с неиспользованными классами. Перечислите
+  их в <code>--safelist</code> явно — <code>--safelist airy,compact</code>;
+  отчёт скрипта называет, что по оси оставлено и что выброшено.
 </p>
 
 <h2>Почему обёрток не будет</h2>

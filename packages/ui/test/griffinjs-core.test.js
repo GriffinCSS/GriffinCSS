@@ -172,6 +172,93 @@ test('регистрация после старта подписывается 
   assert.equal(doc.count('keydown', false), 1);
 });
 
+// --- автостарт ---------------------------------------------------------------
+
+// Фидбек темы griffin по 0.26.0, п. 1: ядро — первый IIFE бандла, и под
+// defer оно стартовало при выполнении собственного файла (readyState уже
+// «interactive») — раньше defineWidget модулей дальше в том же файле.
+// init(document) не находил ни одного виджета, поздних никто не поднимал.
+// Старт — когда поставка зарегистрирована целиком: отложенный тег ждёт
+// DOMContentLoaded (к нему выполнятся и griffinjs-fields.js
+// с griffinjs-countries.js следующими тегами — та же схема, что синхронные
+// теги в подвале), тег в готовом документе — микрозадачей после своего файла.
+const autoStart = (doc, G, { readyState, script }) => {
+  doc.readyState = readyState;
+  doc.currentScript = script || null;
+  G._autoStart();
+  doc.currentScript = null;
+};
+
+test('автостарт отложенного тега ждёт DOMContentLoaded, а не стартует посреди бандла', () => {
+  const { G, doc } = setup(CORE);
+  const node = mount(doc, el('div', { 'data-gr-late': '' }));
+
+  autoStart(doc, G, { readyState: 'interactive', script: el('script', { defer: '', src: 'griffinjs.js' }) });
+  assert.equal(G._started(), false, 'стартовал до того, как модули бандла зарегистрировались');
+
+  G.defineWidget('late', () => ({}));
+  doc.fire('DOMContentLoaded', {});
+
+  assert.equal(G._started(), true);
+  assert.ok(G.instance(node, 'late'), 'виджет, зарегистрированный после автостарта, не поднят');
+});
+
+test('автостарт при разборе документа — DOMContentLoaded, как прежде', () => {
+  const { G, doc } = setup(CORE);
+
+  autoStart(doc, G, { readyState: 'loading', script: el('script', { src: 'griffinjs.js' }) });
+  assert.equal(G._started(), false);
+
+  // readystatechange → interactive идёт ДО отложенных тегов: стартовать
+  // по нему рано — набор полей с defer ещё не выполнился.
+  doc.readyState = 'interactive';
+  doc.fire('readystatechange', {});
+  assert.equal(G._started(), false, 'стартовал по readystatechange раньше отложенных тегов');
+
+  doc.fire('DOMContentLoaded', {});
+  assert.equal(G._started(), true);
+});
+
+test('тег в готовом документе стартует микрозадачей — после своего файла целиком', async () => {
+  const { G, doc } = setup(CORE);
+  const node = mount(doc, el('div', { 'data-gr-late': '' }));
+
+  autoStart(doc, G, { readyState: 'complete', script: el('script', { src: 'griffinjs.js' }) });
+  assert.equal(G._started(), false, 'стартовал синхронно — модули дальше в файле опоздали');
+
+  G.defineWidget('late', () => ({}));
+  await Promise.resolve();
+
+  assert.equal(G._started(), true);
+  assert.ok(G.instance(node, 'late'));
+});
+
+test('тег с defer, вставленный скриптом после DOMContentLoaded, стартует по complete, а не ждёт вечно', () => {
+  const { G, doc } = setup(CORE);
+
+  autoStart(doc, G, { readyState: 'interactive', script: el('script', { defer: '', src: 'griffinjs.js' }) });
+  assert.equal(G._started(), false);
+
+  doc.readyState = 'complete';
+  doc.fire('readystatechange', {});
+
+  assert.equal(G._started(), true, 'DOMContentLoaded уже прошёл — без страховки слой не стартует никогда');
+  assert.equal(doc.count('readystatechange', false), 0, 'слушатель не снят');
+  assert.equal(doc.count('DOMContentLoaded', false), 0, 'слушатель не снят');
+});
+
+test('data-auto="false" отключает автостарт на любом из путей', async () => {
+  const { G, doc } = setup(CORE);
+
+  autoStart(doc, G, { readyState: 'complete', script: el('script', { 'data-auto': 'false' }) });
+  await Promise.resolve();
+  assert.equal(G._started(), false);
+
+  autoStart(doc, G, { readyState: 'interactive', script: el('script', { defer: '', 'data-auto': 'false' }) });
+  doc.fire('DOMContentLoaded', {});
+  assert.equal(G._started(), false);
+});
+
 // --- scanner ----------------------------------------------------------------
 
 test('сканер поднимает виджеты на появившихся узлах и снимает с удалённых', () => {
