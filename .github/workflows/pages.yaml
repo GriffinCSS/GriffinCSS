@@ -1,0 +1,74 @@
+# Публикация документации на GitHub Pages — зеркало.
+#
+# Этот файл, как и соседний .gitverse/workflows/pages.yaml,
+# создаётся при сборке публичного дерева, а не копируется
+# из приватного. На GitVerse он лежит без дела: площадка читает
+# .gitverse/workflows и на .github не смотрит. Так и задумано: у зеркала
+# нет своих коммитов — дерево одно и то же на обеих площадках.
+#
+# Собирает тот же scripts/build-pages.mjs, что и на GitVerse: два сайта
+# должны быть одинаковыми, иначе зеркало перестаёт быть зеркалом.
+# В страницах сайта пути относительные, поэтому подкаталог
+# в адресе (/<репозиторий>/) их не ломает.
+#
+# В «Страницы» настроек репозитория источником выбирается
+# «GitHub Actions», а не ветка: при ветке сайт соберёт Jekyll
+# и публикация отсюда не сработает.
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Права выдаются явно: у GITHUB_TOKEN по умолчанию нет ни pages,
+# ни id-token, а deploy-pages требует обоих.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Два выпуска подряд не должны выкладываться одновременно;
+# начатую выкладку при этом не рвём — отсюда false.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      - name: Ставим Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # npm ci не нужен: packages/*/dist лежит в репозитории, а у сборки
+      # сайта ноль зависимостей.
+      - name: Собираем _site
+        run: node scripts/build-pages.mjs
+
+      - name: Настраиваем Pages
+        uses: actions/configure-pages@v5
+
+      - name: Загружаем артефакт
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: deploy-pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Публикуем сайт
+        id: deployment
+        uses: actions/deploy-pages@v4

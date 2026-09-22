@@ -818,7 +818,8 @@ GriffinCSS/
 
 | Ресурс | Ссылка |
 |---|---|
-| Репозиторий | <https://gitverse.ru/BarneyScott/GriffinCSS> |
+| Репозиторий | <https://gitverse.ru/BarneyScott/GriffinCSS> — основной: задачи, обсуждения, приём правок |
+| Зеркало | <https://github.com/GriffinCSS/GriffinCSS> — только чтение, копия выпусков |
 | Демо всех возможностей | [docs/demo.html](docs/demo.html) |
 | Рантайм: API и внутреннее устройство | [docs/runtime.html](docs/runtime.html) |
 | Griffincss в React и Vue | [docs/frameworks.html](docs/frameworks.html) |
@@ -840,8 +841,13 @@ npx serve -l 8800 -n .        # или: python3 -m http.server 8800
 ```
 
 **Вопросы и предложения:** заведите issue в
-[репозитории](https://gitverse.ru/BarneyScott/GriffinCSS).
+[репозитории](https://gitverse.ru/BarneyScott/GriffinCSS) — на зеркале
+GitHub задачи и запросы на слияние выключены намеренно: два трекера
+у проекта одного автора означают, что в одном из них не отвечают.
 **Контакт:** bersi82@gmail.com
+
+**Questions and pull requests** go to the main repository on GitVerse.
+The GitHub copy is a read-only mirror of releases.
 
 ---
 
