@@ -265,13 +265,28 @@
     color var(--gr-transition);
 }
 
+// Размер и скругление — токенами с прежними значениями по умолчанию,
+// а не новыми объявлениями: тема задаёт их из своего подслоя (свойства
+// компонента из ui ей не перебить). Так собирается и крупный кружок,
+// и фото варианта — квадрат со скруглением --gr-radius.
 .gr-swatch {
   --gr-swatch: var(--gr-color-surface-sunken);
 
-  inline-size: 1.5rem;
-  block-size: 1.5rem;
-  border-radius: var(--gr-radius-pill);
+  inline-size: var(--gr-swatch-size, 1.5rem);
+  block-size: var(--gr-swatch-size, 1.5rem);
+  border-radius: var(--gr-swatch-radius, var(--gr-radius-pill));
   background-color: var(--gr-swatch);
+}
+
+// Картинка значения или фото варианта — на всю площадь внутри рамки.
+// Скругляется сама картинка, а не обрезка по overflow у образца:
+// overflow он не объявлял, и новое объявление из ui перебило бы тему
+// в её подслое.
+.gr-swatch > img {
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 
 .gr-swatch-tag {
@@ -283,6 +298,15 @@
   color: var(--gr-color-text);
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+// Плашка-ссылка снимает подчёркивание сама, как .gr-nav-link и .gr-page:
+// правило по <a> из слоя темы старше ресета и дошло бы до неё. Длинным
+// свойством, как у a.gr-btn: сокращённое сбросило бы и толщину линии.
+// Зачеркнуть значение, которого нет в наличии, — .gr-line-through:
+// слой утилит старше компонентов.
+a.gr-swatch-tag {
+  text-decoration-line: none;
 }
 
 .gr-choice:has(> .gr-swatch, > .gr-swatch-tag) {
@@ -297,22 +321,37 @@
   pointer-events: none;
 }
 
+// Образец бывает и ссылкой: значение варианта — свой адрес, без скрипта
+// выбор идёт переходами, а поисковик видит все варианты. Выбранное у ссылки —
+// aria-current, как у .gr-nav-link и .gr-page, фокус — на ней самой.
+// Вид тот же, что у радио.
+//
 // Выбранный кружок — кольцо акцента с просветом цвета подложки: и белый
 // образец, и образец цвета акцента читаются на нём одинаково.
-.gr-radio:checked + .gr-swatch {
+.gr-radio:checked + .gr-swatch,
+.gr-swatch[aria-current] {
   box-shadow:
     0 0 0 2px var(--gr-color-surface),
     0 0 0 4px var(--gr-color-accent);
 }
 
-.gr-radio:checked + .gr-swatch-tag {
+// a.gr-swatch-tag[aria-current] в списке не лишний: правило режима для
+// слабовидящих [data-gr-a11y="low-vision"] a[href] весом (0,2,1) красит
+// ссылку в цвет ссылки, а в режиме он совпадает с акцентом — текст
+// выбранной плашки пропал бы на заливке. Равный вес и место позже в слое
+// оставляют чернила заливки; подчёркивание режима остаётся — это ссылка.
+.gr-radio:checked + .gr-swatch-tag,
+.gr-swatch-tag[aria-current],
+a.gr-swatch-tag[aria-current] {
   border-color: var(--gr-color-accent);
   background-color: var(--gr-color-accent);
   color: var(--gr-color-on-accent);
 }
 
 .gr-radio:focus-visible + .gr-swatch,
-.gr-radio:focus-visible + .gr-swatch-tag {
+.gr-radio:focus-visible + .gr-swatch-tag,
+.gr-swatch:focus-visible,
+.gr-swatch-tag:focus-visible {
   outline: var(--gr-focus-width) solid var(--gr-color-focus);
   outline-offset: 2px;
 }

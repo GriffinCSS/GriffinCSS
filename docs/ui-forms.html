@@ -17,6 +17,26 @@
 <script src="../packages/ui/dist/griffinjs-countries.js"></script>
 <script src="../packages/core/dist/griffincss-theme.js"></script>
 <script src="../packages/core/dist/griffincss.js"></script>
+<style>
+/* Рецепт «нет в наличии» из «Примеров использования» — в слое docs, ниже
+   компонентов: там же, где его положит тема в свой подслой griffincss.app. */
+@layer griffincss.docs {
+  .gr-swatch.soldout { position: relative; }
+
+  .gr-swatch.soldout::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to top left,
+      transparent calc(50% - 2px),
+      var(--gr-color-surface) calc(50% - 2px) calc(50% - 1px),
+      var(--gr-color-text-secondary) calc(50% - 1px) calc(50% + 1px),
+      var(--gr-color-surface) calc(50% + 1px) calc(50% + 2px),
+      transparent calc(50% + 2px));
+  }
+}
+</style>
 </head>
 <body>
 
@@ -616,7 +636,8 @@
   <code>.gr-swatch</code> для цвета, <code>.gr-swatch-tag</code> для плашки.
   Форма, клавиатура и объявление состояния остаются платформенными:
   стрелки переключают выбор внутри группы, <kbd>Tab</kbd> входит в неё
-  один раз.
+  один раз. Если у каждого значения свой адрес, те же образцы ставятся
+  на ссылку — <a href="#obrazec-ssylka">ниже</a>.
 </p>
 
 <p>
@@ -677,6 +698,118 @@
   группа работает, только выглядит проще. <code>display: none</code>
   снял бы и клавиатуру, и эту деградацию.
 </p>
+
+<h3 id="obrazec-ssylka">Образец-ссылка</h3>
+
+<p>
+  Когда у каждого варианта товара своя страница, значение — не радио,
+  а ссылка на её адрес: без скрипта выбор идёт обычными переходами,
+  а поисковик видит все варианты. Классы те же, ставятся на
+  <code>&lt;a&gt;</code>. Текущее значение помечается
+  <code>aria-current="true"</code> — тем же атрибутом, что у
+  <code>.gr-nav-link</code> и <code>.gr-page</code>, — и получает тот же
+  вид, что выбранная радио: кольцо у кружка, заливку у плашки. Кольцо
+  фокуса с клавиатуры — на самом образце.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="color-label"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="color-label"&gt;Цвет: терракота&lt;/span&gt;
+  &lt;a class="gr-swatch" href="/sofa-terracotta" aria-current="true" title="Терракота" aria-label="Терракота" style="--gr-swatch: #b06a4e"&gt;&lt;/a&gt;
+  &lt;a class="gr-swatch" href="/sofa-sand" title="Песочный" aria-label="Песочный" style="--gr-swatch: #d9c3a0"&gt;&lt;/a&gt;
+  &lt;a class="gr-swatch" href="/sofa-pine" title="Хвоя" aria-label="Хвоя" style="--gr-swatch: #2f5d50"&gt;&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="group" aria-labelledby="size-label"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="size-label"&gt;Размер: 180 × 200&lt;/span&gt;
+  &lt;a class="gr-swatch-tag" href="/sofa-140"&gt;140 × 200&lt;/a&gt;
+  &lt;a class="gr-swatch-tag" href="/sofa-180" aria-current="true"&gt;180 × 200&lt;/a&gt;
+  &lt;a class="gr-swatch-tag" href="/sofa-220"&gt;220 × 240&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Образцы-ссылки: текущее значение — <code>aria-current</code>, вид как у выбранной радио</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="forms-demo-link-color-label">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-link-color-label">Цвет: терракота</span>
+      <a class="gr-swatch" href="#obrazec-ssylka" aria-current="true" title="Терракота" aria-label="Терракота" style="--gr-swatch: #b06a4e"></a>
+      <a class="gr-swatch" href="#obrazec-ssylka" title="Песочный" aria-label="Песочный" style="--gr-swatch: #d9c3a0"></a>
+      <a class="gr-swatch" href="#obrazec-ssylka" title="Хвоя" aria-label="Хвоя" style="--gr-swatch: #2f5d50"></a>
+      <a class="gr-swatch" href="#obrazec-ssylka" title="Белый" aria-label="Белый" style="--gr-swatch: #ffffff"></a>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="group" aria-labelledby="forms-demo-link-size-label">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-link-size-label">Размер: 180 × 200</span>
+      <a class="gr-swatch-tag" href="#obrazec-ssylka">140 × 200</a>
+      <a class="gr-swatch-tag" href="#obrazec-ssylka" aria-current="true">180 × 200</a>
+      <a class="gr-swatch-tag" href="#obrazec-ssylka">220 × 240</a>
+    </div>
+  </div>
+</div>
+
+<p>
+  Группа ссылок — <code>role="group"</code>, а не
+  <code>radiogroup</code>: стрелками между ссылками не ходят,
+  <kbd>Tab</kbd> проходит каждую. Текущее значение стоит назвать и в подписи
+  оси: кольцо видно глазу, а «Цвет: терракота» прочитается и без него.
+  Подчёркивание ссылки плашка снимает сама, как <code>.gr-nav-link</code>
+  и <code>.gr-page</code>: правило по <code>&lt;a&gt;</code> из слоя темы
+  до неё не доходит. Зачеркнуть значение, которого нет в наличии, —
+  утилитой <code>.gr-line-through</code> (<a href="#net-v-nalichii">рецепт
+  ниже</a>). В режиме для слабовидящих образцы-ссылки подчёркнуты, как все
+  ссылки, а выбранная плашка сохраняет контрастный текст на заливке.
+</p>
+
+<h3 id="foto-varianta">Размер и фото варианта</h3>
+
+<table>
+  <tr><th>Ручка</th><th>По умолчанию</th><th>Что задаёт</th></tr>
+  <tr><td><code>--gr-swatch</code></td><td><code>--gr-color-surface-sunken</code></td><td>Цвет кружка — данные товара, на самом элементе</td></tr>
+  <tr><td><code>--gr-swatch-size</code></td><td><code>1.5rem</code></td><td>Ширину и высоту образца</td></tr>
+  <tr><td><code>--gr-swatch-radius</code></td><td><code>--gr-radius-pill</code></td><td>Скругление: по умолчанию круг</td></tr>
+</table>
+
+<p>
+  Картинка внутри <code>.gr-swatch</code> ложится на всю площадь внутри
+  рамки и скругляется вместе с образцом, а <code>object-fit: cover</code>
+  заполняет её без полей при любой пропорции снимка. Так собираются
+  образец ткани и фото варианта: квадрат <code>3rem</code> со скруглением
+  <code>--gr-radius</code>; кольцо выбранного и фокус — те же, что у кружка.
+  Ручки читаются с запасным значением и на самом образце не объявлены,
+  поэтому доходят с обёртки ряда, из своего слоя темы или из
+  <code>style</code>. Снимок для образца в 48 пикселей берут вдвое
+  крупнее — на плотных экранах он остаётся чётким.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="look-label"
+     style="--gr-swatch-size: 3rem; --gr-swatch-radius: var(--gr-radius)"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="look-label"&gt;Вариант: терракота&lt;/span&gt;
+  &lt;a class="gr-swatch" href="/sofa-terracotta" aria-current="true" title="Терракота"&gt;
+    &lt;img src="sofa-terracotta.jpg" alt="Терракота" width="96" height="96"&gt;
+  &lt;/a&gt;
+  &lt;a class="gr-swatch" href="/sofa-sand" title="Песочный"&gt;
+    &lt;img src="sofa-sand.jpg" alt="Песочный" width="96" height="96"&gt;
+  &lt;/a&gt;
+&lt;/div&gt;
+
+&lt;!-- Ткань: только размер — образец остаётся кругом --&gt;
+&lt;div class="gr-flex gr-flex-items-center gr-gap-sm" style="--gr-swatch-size: 2.25rem"&gt;
+  &lt;a class="gr-swatch" href="/sofa-linen" aria-current="true" title="Лён"&gt;&lt;img src="linen.jpg" alt="Лён" width="72" height="72"&gt;&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Фото варианта — квадрат 3rem, ткань — круг 2.25rem; картинка на всю площадь</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="forms-demo-look-label" style="--gr-swatch-size: 3rem; --gr-swatch-radius: var(--gr-radius)">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-look-label">Вариант: терракота</span>
+      <a class="gr-swatch" href="#foto-varianta" aria-current="true" title="Терракота"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2096'%3E%3Crect%20width='96'%20height='96'%20fill='%23ebe4da'/%3E%3Crect%20x='20'%20y='30'%20width='56'%20height='24'%20rx='6'%20fill='%23b06a4e'/%3E%3Crect%20x='12'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%2394553d'/%3E%3Crect%20x='68'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%2394553d'/%3E%3Crect%20x='24'%20y='52'%20width='48'%20height='14'%20rx='4'%20fill='%23b06a4e'/%3E%3Cpath%20d='M20%2070h4v8h-4zM72%2070h4v8h-4z'%20fill='%235b4a3c'/%3E%3C/svg%3E" alt="Терракота" width="96" height="96"></a>
+      <a class="gr-swatch" href="#foto-varianta" title="Песочный"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2096'%3E%3Crect%20width='96'%20height='96'%20fill='%23ebe4da'/%3E%3Crect%20x='20'%20y='30'%20width='56'%20height='24'%20rx='6'%20fill='%23d9c3a0'/%3E%3Crect%20x='12'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23c2a77c'/%3E%3Crect%20x='68'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23c2a77c'/%3E%3Crect%20x='24'%20y='52'%20width='48'%20height='14'%20rx='4'%20fill='%23d9c3a0'/%3E%3Cpath%20d='M20%2070h4v8h-4zM72%2070h4v8h-4z'%20fill='%235b4a3c'/%3E%3C/svg%3E" alt="Песочный" width="96" height="96"></a>
+      <a class="gr-swatch" href="#foto-varianta" title="Хвоя"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2096'%3E%3Crect%20width='96'%20height='96'%20fill='%23ebe4da'/%3E%3Crect%20x='20'%20y='30'%20width='56'%20height='24'%20rx='6'%20fill='%232f5d50'/%3E%3Crect%20x='12'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23244a40'/%3E%3Crect%20x='68'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23244a40'/%3E%3Crect%20x='24'%20y='52'%20width='48'%20height='14'%20rx='4'%20fill='%232f5d50'/%3E%3Cpath%20d='M20%2070h4v8h-4zM72%2070h4v8h-4z'%20fill='%235b4a3c'/%3E%3C/svg%3E" alt="Хвоя" width="96" height="96"></a>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="forms-demo-fabric-label" style="--gr-swatch-size: 2.25rem">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-fabric-label">Ткань: лён</span>
+      <a class="gr-swatch" href="#foto-varianta" aria-current="true" title="Лён"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20width='24'%20height='24'%20fill='%23d9c3a0'/%3E%3Cpath%20d='M0%206h24M0%2012h24M0%2018h24M6%200v24M12%200v24M18%200v24'%20stroke='%23c2a77c'%20stroke-width='1.5'/%3E%3C/svg%3E" alt="Лён" width="72" height="72"></a>
+      <a class="gr-swatch" href="#foto-varianta" title="Велюр"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20width='24'%20height='24'%20fill='%232f5d50'/%3E%3Cpath%20d='M0%2024L24%200M-6%2018L18%20-6M6%2030L30%206'%20stroke='%23244a40'%20stroke-width='3'/%3E%3C/svg%3E" alt="Велюр" width="72" height="72"></a>
+      <a class="gr-swatch" href="#foto-varianta" title="Рогожка"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Crect%20width='24'%20height='24'%20fill='%23b06a4e'/%3E%3Cpath%20d='M0%200h6v6H0zM12%200h6v6h-6zM6%206h6v6H6zM18%206h6v6h-6zM0%2012h6v6H0zM12%2012h6v6h-6zM6%2018h6v6H6zM18%2018h6v6h-6z'%20fill='%2394553d'/%3E%3C/svg%3E" alt="Рогожка" width="72" height="72"></a>
+    </div>
+  </div>
+</div>
 
 <h2>Ползунок</h2>
 
@@ -755,8 +888,8 @@
   на <a href="sizing.html">Sizing</a>, ритм стопки полей —
   на <a href="spacing.html">Spacing</a>. Здесь — сюжеты про сами
   контролы: ошибка, которую видно и слышно, поисковая строка с аддоном,
-  пароль с кнопкой «показать», страница настроек на тогглах, фильтр цены
-  и счётчик количества.
+  пароль с кнопкой «показать», страница настроек на тогглах, фильтр цены,
+  варианты товара с пометкой «нет в наличии» и счётчик количества.
 </p>
 
 <h3>Ошибка от сервера: видно и слышно</h3>
@@ -935,6 +1068,83 @@ for (const [name, message] of Object.entries(errors)) {
       <input class="gr-input gr-input-sm" id="forms-demo-price-num" type="number" min="0" max="20000" step="500" value="8000" aria-label="Цена, до"
              oninput="document.getElementById('forms-demo-price').value = this.value">
       <span class="gr-input-addon gr-input-sm">₽</span>
+    </div>
+  </div>
+</div>
+
+<h3 id="net-v-nalichii">Варианты товара: нет в наличии, но можно перейти</h3>
+
+<p>
+  Вариант есть, но его нет на складе: ссылка ведёт на его страницу —
+  посмотреть фото, подписаться на поступление, — а образец зачёркнут.
+  <code>:disabled</code> здесь не подходит, как и
+  <code>aria-disabled</code>: значение щёлкается и ссылка работает.
+  Статус произносится текстом внутри ссылки (<code>.gr-sr-only</code>),
+  черта — только для глаза.
+</p>
+
+<p>
+  Плашку зачёркивает утилита <code>.gr-line-through</code>: подчёркивание
+  плашка-ссылка снимает сама, а слой утилит старше и компонентов,
+  и правила режима для слабовидящих, поэтому черта не пропадёт ни в теме,
+  ни в режиме. Правило <code>text-decoration</code> из своего слоя плашку
+  не зачеркнёт: слой компонентов старше. Черту по диагонали на кружке
+  и на фото рисует своё правило: <code>position</code> и
+  <code>::after</code> образец не занимает, и правила из своего слоя
+  достаточно. Просвет цвета подложки по краям черты — тот же приём,
+  что у кольца выбранного: черта видна и на тёмном образце, и на светлом.
+</p>
+
+<pre><code>/* Свой слой: griffincss.app — между ядром и компонентами */
+@layer griffincss.app {
+  .gr-swatch.soldout { position: relative; }
+
+  .gr-swatch.soldout::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to top left,
+      transparent calc(50% - 2px),
+      var(--gr-color-surface) calc(50% - 2px) calc(50% - 1px),
+      var(--gr-color-text-secondary) calc(50% - 1px) calc(50% + 1px),
+      var(--gr-color-surface) calc(50% + 1px) calc(50% + 2px),
+      transparent calc(50% + 2px));
+  }
+}</code></pre>
+
+<pre><code>&lt;div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="stock-color"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="stock-color"&gt;Цвет: терракота&lt;/span&gt;
+  &lt;a class="gr-swatch" href="/sofa-terracotta" aria-current="true" title="Терракота" style="--gr-swatch: #b06a4e"&gt;&lt;span class="gr-sr-only"&gt;Терракота&lt;/span&gt;&lt;/a&gt;
+  &lt;a class="gr-swatch soldout" href="/sofa-pine" title="Хвоя — нет в наличии" style="--gr-swatch: #2f5d50"&gt;&lt;span class="gr-sr-only"&gt;Хвоя, нет в наличии&lt;/span&gt;&lt;/a&gt;
+  &lt;a class="gr-swatch soldout" href="/sofa-white" title="Белый — нет в наличии" style="--gr-swatch: #ffffff"&gt;&lt;span class="gr-sr-only"&gt;Белый, нет в наличии&lt;/span&gt;&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="group" aria-labelledby="stock-size"&gt;
+  &lt;span class="gr-text-sm gr-text-ink-secondary" id="stock-size"&gt;Размер: 180 × 200&lt;/span&gt;
+  &lt;a class="gr-swatch-tag" href="/sofa-140"&gt;140 × 200&lt;/a&gt;
+  &lt;a class="gr-swatch-tag" href="/sofa-180" aria-current="true"&gt;180 × 200&lt;/a&gt;
+  &lt;a class="gr-swatch-tag gr-line-through" href="/sofa-220"&gt;220 × 240&lt;span class="gr-sr-only"&gt;, нет в наличии&lt;/span&gt;&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Нет в наличии: плашка — <code>.gr-line-through</code>, кружок и фото — черта своим правилом</div>
+  <div class="gr-flex gr-flex-col gr-gap">
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="forms-demo-stock-color">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-stock-color">Цвет: терракота</span>
+      <a class="gr-swatch" href="#net-v-nalichii" aria-current="true" title="Терракота" style="--gr-swatch: #b06a4e"><span class="gr-sr-only">Терракота</span></a>
+      <a class="gr-swatch soldout" href="#net-v-nalichii" title="Хвоя — нет в наличии" style="--gr-swatch: #2f5d50"><span class="gr-sr-only">Хвоя, нет в наличии</span></a>
+      <a class="gr-swatch soldout" href="#net-v-nalichii" title="Белый — нет в наличии" style="--gr-swatch: #ffffff"><span class="gr-sr-only">Белый, нет в наличии</span></a>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-gap-sm" role="group" aria-labelledby="forms-demo-stock-look" style="--gr-swatch-size: 3rem; --gr-swatch-radius: var(--gr-radius)">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-stock-look">Вариант: терракота</span>
+      <a class="gr-swatch" href="#net-v-nalichii" aria-current="true" title="Терракота"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2096'%3E%3Crect%20width='96'%20height='96'%20fill='%23ebe4da'/%3E%3Crect%20x='20'%20y='30'%20width='56'%20height='24'%20rx='6'%20fill='%23b06a4e'/%3E%3Crect%20x='12'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%2394553d'/%3E%3Crect%20x='68'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%2394553d'/%3E%3Crect%20x='24'%20y='52'%20width='48'%20height='14'%20rx='4'%20fill='%23b06a4e'/%3E%3Cpath%20d='M20%2070h4v8h-4zM72%2070h4v8h-4z'%20fill='%235b4a3c'/%3E%3C/svg%3E" alt="Терракота" width="96" height="96"></a>
+      <a class="gr-swatch soldout" href="#net-v-nalichii" title="Хвоя — нет в наличии"><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2096'%3E%3Crect%20width='96'%20height='96'%20fill='%23ebe4da'/%3E%3Crect%20x='20'%20y='30'%20width='56'%20height='24'%20rx='6'%20fill='%232f5d50'/%3E%3Crect%20x='12'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23244a40'/%3E%3Crect%20x='68'%20y='44'%20width='16'%20height='26'%20rx='6'%20fill='%23244a40'/%3E%3Crect%20x='24'%20y='52'%20width='48'%20height='14'%20rx='4'%20fill='%232f5d50'/%3E%3Cpath%20d='M20%2070h4v8h-4zM72%2070h4v8h-4z'%20fill='%235b4a3c'/%3E%3C/svg%3E" alt="Хвоя, нет в наличии" width="96" height="96"></a>
+    </div>
+    <div class="gr-flex gr-flex-items-center gr-flex-wrap gr-gap-sm" role="group" aria-labelledby="forms-demo-stock-size">
+      <span class="gr-text-sm gr-text-ink-secondary" id="forms-demo-stock-size">Размер: 180 × 200</span>
+      <a class="gr-swatch-tag" href="#net-v-nalichii">140 × 200</a>
+      <a class="gr-swatch-tag" href="#net-v-nalichii" aria-current="true">180 × 200</a>
+      <a class="gr-swatch-tag gr-line-through" href="#net-v-nalichii">220 × 240<span class="gr-sr-only">, нет в наличии</span></a>
     </div>
   </div>
 </div>

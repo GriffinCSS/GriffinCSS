@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.26.1
+ * Griffincss UI — Runtime v0.26.2
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -50,7 +50,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.26.1';
+  var VERSION = '0.26.2';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 

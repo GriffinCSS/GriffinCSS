@@ -401,9 +401,29 @@ test('образец цвета и плашка размера: радио пр�
   const body = ui.slice(swatch, ui.indexOf('}', swatch));
 
   assert.ok(body.includes('background-color:var(--gr-swatch)'), 'фон образца не из --gr-swatch');
-  assert.ok(ui.includes('.gr-radio:checked+.gr-swatch{'), 'нет состояния выбранного образца');
-  assert.ok(ui.includes('.gr-radio:checked+.gr-swatch-tag{'), 'нет состояния выбранной плашки');
-  assert.ok(ui.includes('.gr-radio:focus-visible+.gr-swatch,'), 'нет фокуса на образце');
+
+  // Размер и скругление — токенами с прежними умолчаниями: тема задаёт их
+  // из подслоя ниже ui, а новое объявление она бы не перебила.
+  assert.ok(body.includes('inline-size:var(--gr-swatch-size, 1.5rem)'), 'ширина образца не из --gr-swatch-size');
+  assert.ok(body.includes('block-size:var(--gr-swatch-size, 1.5rem)'), 'высота образца не из --gr-swatch-size');
+  assert.ok(body.includes('border-radius:var(--gr-swatch-radius, var(--gr-radius-pill))'), 'скругление образца не из --gr-swatch-radius');
+
+  // Выбранное и фокус — одним правилом у радио и у образца-ссылки
+  // (aria-current), чтобы вид не разошёлся. a.gr-swatch-tag[aria-current]
+  // весом (0,2,1) держит чернила заливки против правила режима a[href].
+  assert.ok(ui.includes('.gr-radio:checked+.gr-swatch,.gr-swatch[aria-current]{'), 'нет состояния выбранного образца — у радио и у ссылки');
+  assert.ok(
+    ui.includes('.gr-radio:checked+.gr-swatch-tag,.gr-swatch-tag[aria-current],a.gr-swatch-tag[aria-current]{'),
+    'нет состояния выбранной плашки — у радио и у ссылки',
+  );
+  assert.ok(
+    ui.includes('.gr-radio:focus-visible+.gr-swatch,.gr-radio:focus-visible+.gr-swatch-tag,.gr-swatch:focus-visible,.gr-swatch-tag:focus-visible{'),
+    'нет фокуса на образце — у радио и у ссылки',
+  );
+
+  // Подчёркивание плашка-ссылка снимает сама, длинным свойством: правило
+  // по <a> из слоя темы старше ресета. Зачёркивание — утилитой, из utils.
+  assert.ok(ui.includes('a.gr-swatch-tag{text-decoration-line:none}'), 'плашка-ссылка не снимает подчёркивание');
 });
 
 test('пакет не зависит от утилит: собранный CSS самодостаточен', () => {

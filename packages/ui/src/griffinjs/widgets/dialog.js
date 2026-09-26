@@ -205,11 +205,14 @@
 
     // --- Рост окна ----------------------------------------------------------
 
-    // Пока идёт анимация, наблюдение молчит: промежуточные высоты — её же.
     // Открытие и закрытие (0 ↔ высота) — не рост; мелочь до порога — тоже.
+    // Анимация меняет размер самого окна, поэтому на её время окно снято
+    // с наблюдения: начатая здесь при живом наблюдении, она давала на window
+    // «ResizeObserver loop completed with undelivered notifications».
+    // Промежуточные высоты — её же, слушать их незачем. Вернувшись,
+    // наблюдение первым сообщает текущую высоту: если за время анимации
+    // пришло ещё содержимое, окно дорастёт следующей.
     function onResize() {
-      if (growing) return;
-
       var next = el.getBoundingClientRect().height;
       var prev = known;
 
@@ -221,8 +224,15 @@
 
       if (!ms || typeof el.animate !== 'function') return;
 
+      grow.unobserve(el);
       growing = el.animate([{ blockSize: prev + 'px' }, { blockSize: next + 'px' }], { duration: ms, easing: 'ease' });
-      growing.onfinish = growing.oncancel = function () { growing = null; };
+      growing.onfinish = growing.oncancel = settle;
+    }
+
+    // После destroy() наблюдателя нет: отмена приходит позже и не вернёт его.
+    function settle() {
+      growing = null;
+      if (grow) grow.observe(el);
     }
 
     // --- Hash ---------------------------------------------------------------
@@ -300,7 +310,7 @@
       var at = stack.indexOf(record);
       if (at !== -1) stack.splice(at, 1);
 
-      if (grow) grow.disconnect();
+      if (grow) { grow.disconnect(); grow = null; }
       if (growing) growing.cancel();
       relock();
       restoreMedia();

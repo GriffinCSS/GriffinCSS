@@ -156,7 +156,9 @@ test('destroy снимает состояние с окна и с <html>', () =>
 // По data-gr-dialog="grow": ResizeObserver на окне, смена высоты больше
 // 24 px — element.animate от прежней высоты к новой. Открытие и закрытие
 // (0 ↔ высота) не трогаются, prefers-reduced-motion — без анимации,
-// без атрибута наблюдателя нет вовсе.
+// без атрибута наблюдателя нет вовсе. На время анимации окно снято
+// с наблюдения: она меняет его размер, и под наблюдением это цикл
+// ResizeObserver — ошибка на window во всех движках.
 
 function growSetup(reduced = false, transition = '0.2s ease') {
   const { G, doc } = setup(PARTS);
@@ -165,8 +167,9 @@ function growSetup(reduced = false, transition = '0.2s ease') {
 
   global.ResizeObserver = class {
     constructor(fn) { this.fn = fn; this.targets = []; observers.push(this); }
-    observe(node) { this.targets.push(node); }
-    disconnect() { this.disconnected = true; }
+    observe(node) { if (!this.targets.includes(node)) this.targets.push(node); }
+    unobserve(node) { this.targets = this.targets.filter((t) => t !== node); }
+    disconnect() { this.targets = []; this.disconnected = true; }
   };
   global.matchMedia = () => ({ matches: reduced });
   global.getComputedStyle = (node) => node.style;
@@ -179,8 +182,12 @@ function growSetup(reduced = false, transition = '0.2s ease') {
     return animation;
   };
 
-  // Наблюдение сообщает высоту через прямоугольник окна.
-  const resize = (height) => { d.at(0, 0, 400, height); observers[0].fn([{ target: d }]); };
+  // Наблюдение сообщает высоту через прямоугольник окна — если окно
+  // под наблюдением, как и платформа.
+  const resize = (height) => {
+    d.at(0, 0, 400, height);
+    if (observers[0].targets.includes(d)) observers[0].fn([{ target: d }]);
+  };
 
   return {
     G, doc, d, observers, animations, resize,
@@ -212,12 +219,19 @@ test('grow: наблюдатель только по атрибуту; рост 
     assert.deepEqual(s.animations[0].frames, [{ blockSize: '160px' }, { blockSize: '320px' }]);
     assert.equal(s.animations[0].opts.duration, 200);
 
-    // Пока идёт анимация, промежуточные высоты не начинают новую.
+    // Пока идёт анимация, окно снято с наблюдения: её промежуточные
+    // высоты не приходят и новую не начинают.
+    assert.deepEqual(s.observers[0].targets, [], 'на время анимации окно под наблюдением');
     s.resize(200);
     s.resize(280);
     assert.equal(s.animations.length, 1);
 
+    // Конец анимации возвращает наблюдение; первым оно сообщает
+    // итоговую высоту — это не рост.
     s.animations[0].onfinish();
+    assert.deepEqual(s.observers[0].targets, [s.d], 'после анимации наблюдение не вернулось');
+    s.resize(320);
+    assert.equal(s.animations.length, 1, 'возврат наблюдения анимирован как рост');
 
     // Мелочь до 24 px (ввод в textarea с автовысотой) — без анимации.
     s.resize(340);
@@ -272,6 +286,7 @@ test('grow: при prefers-reduced-motion и при 0s анимации нет; 
 
     z.G.destroy();
     assert.equal(z.animations[0].cancelled, true, 'destroy не отменил анимацию');
+    assert.deepEqual(z.observers[0].targets, [], 'отмена анимации в destroy вернула наблюдение');
   } finally {
     z.teardown();
   }

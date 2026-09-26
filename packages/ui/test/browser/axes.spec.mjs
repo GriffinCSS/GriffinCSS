@@ -36,6 +36,9 @@ const html = (own = '') => `<!doctype html>
     <a class="gr-tab" id="pill-idle" href="#">Другая</a>
   </div>
 </div>
+<p><a class="gr-swatch-tag" id="swatch-link" href="#m" aria-current="true">M</a> <a class="gr-swatch-tag" href="#l">L</a></p>
+<nav class="gr-pagination" aria-label="Страницы"><a class="gr-page" href="#1">1</a><a class="gr-page" id="page-link" href="#2" aria-current="page">2</a></nav>
+<nav class="gr-pagination gr-pagination-joined" aria-label="Страницы"><a class="gr-page" href="#1">1</a><a class="gr-page" id="page-joined" href="#2" aria-current="page">2</a></nav>
 <span id="probe"></span>
 </body></html>`;
 
@@ -139,12 +142,16 @@ const token = (page, name) => page.evaluate(
   name,
 );
 
+// Выбранная плашка-ссылка и текущая страница пагинации — заливка акцентом,
+// и правило режима весом (0,2,1) сильнее их состояния (0,2,0): без своего
+// правила того же веса текст красился бы в цвет ссылки, а в режиме он
+// совпадает с заливкой — 1,00 : 1.
 for (const theme of THEMES) {
-  test(`ссылка-кнопка и активная вкладка-таблетка читаются в режиме: ${theme}`, async ({ page }) => {
+  test(`ссылки с заливкой читаются в режиме — кнопка, вкладка-таблетка, плашка, страница: ${theme}`, async ({ page }) => {
     await open(page);
     await axes(page, { theme, a11y: 'low-vision' });
 
-    for (const id of ['link-btn', 'pill']) {
+    for (const id of ['link-btn', 'pill', 'swatch-link', 'page-link', 'page-joined']) {
       const p = await paint(page, id);
 
       expect(contrast(p.color, p.background), `${id}/${theme}: ${p.color} на ${p.background}`)

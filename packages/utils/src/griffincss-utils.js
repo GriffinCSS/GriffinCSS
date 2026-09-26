@@ -1,5 +1,5 @@
 /*!
- * Griffincss Utils — Runtime v0.26.1
+ * Griffincss Utils — Runtime v0.26.2
  * Достраивает то, чего статический CSS выразить не может.
  * Пишется руками и не компилируется — правится этот файл.
  */
@@ -23,7 +23,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.26.1';
+  var VERSION = '0.26.2';
 
   // Таблица правил выводится из SCSS-карт скриптом scripts/sync-rule-table.mjs.
   // Правьте карты в SCSS, а не этот блок: npm run sync -- --fix перепишет его.

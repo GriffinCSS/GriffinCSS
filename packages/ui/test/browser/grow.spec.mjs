@@ -87,6 +87,50 @@ test('без grow окно прыгает сразу: ни промежуточ�
   expect(trace.frames.filter((f) => f.animations > 0)).toEqual([]);
 });
 
+// Анимация меняет размер наблюдаемого окна, и если она начинается внутри
+// обратного вызова, пока окно под наблюдением, WebKit сообщает на window
+// «ResizeObserver loop completed with undelivered notifications» — ошибку
+// страницы, которую ловят журналы ошибок. Chromium и Firefox молчат.
+test('grow: рост не даёт ошибки цикла ResizeObserver на window', async ({ page }) => {
+  const errors = [];
+
+  page.on('pageerror', (error) => errors.push(error.message));
+  await open(page);
+  await page.evaluate(() => {
+    window.__errors = [];
+    window.addEventListener('error', (event) => window.__errors.push(event.message));
+  });
+
+  const trace = await growTrace(page, 'grow');
+
+  expect(trace.after - trace.before).toBeGreaterThan(100);
+  expect(trace.frames.filter((f) => f.animations > 0).length, 'анимации на окне нет').toBeGreaterThan(0);
+
+  // Второй рост — после первой анимации: наблюдение обязано вернуться.
+  const second = await page.evaluate(() => new Promise((resolve) => {
+    const dialog = document.getElementById('grow');
+    const block = document.createElement('div');
+    let animated = 0;
+
+    block.style.blockSize = '200px';
+    dialog.querySelector('.gr-modal-body').appendChild(block);
+
+    const started = performance.now();
+    const tick = () => {
+      animated = Math.max(animated, dialog.getAnimations().length);
+
+      if (performance.now() - started < 500) requestAnimationFrame(tick);
+      else resolve(animated);
+    };
+
+    requestAnimationFrame(tick);
+  }));
+
+  expect(second, 'второй рост не анимирован: наблюдение не вернулось').toBe(1);
+  expect(errors).toEqual([]);
+  expect(await page.evaluate(() => window.__errors)).toEqual([]);
+});
+
 test('grow при prefers-reduced-motion: без анимации', async ({ page }) => {
   await open(page, { reduced: true });
 
