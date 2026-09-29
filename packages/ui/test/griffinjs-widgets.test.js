@@ -150,7 +150,9 @@ test('лайтбокс: группа по атрибуту, окно с доро
   const links = [
     el('a', { href: 'a.jpg', 'data-gr-lightbox': 'g', 'data-gr-caption': 'Первая' }, [el('img', { alt: 'А' })]),
     el('a', { href: 'b.mp4', 'data-gr-lightbox': 'g' }),
-    el('a', { href: 'https://youtu.be/x', 'data-gr-lightbox': 'g' }),
+    // Во фрейм встаёт только плеер: короткая ссылка youtu.be и страница
+    // ролика отдают X-Frame-Options и в окне не играют.
+    el('a', { href: 'https://www.youtube.com/embed/x', 'data-gr-lightbox': 'g' }),
     el('a', { href: 'solo.jpg', 'data-gr-lightbox': '' }),
   ];
   mount(doc, el('div', {}, links));
@@ -197,6 +199,63 @@ test('лайтбокс: группа по атрибуту, окно с доро
 
   G.destroy();
   assert.equal(G.lightbox._dialog(), null, 'destroy слоя не закрыл окно');
+});
+
+// Кадр открытого окна: что встало и с каким адресом.
+function frameOf(G, doc, link) {
+  doc.fire('click', event('click', link));
+
+  const item = G.lightbox._dialog().querySelector('.gr-lightbox-item');
+  const media = item.children[0];
+  const out = { tag: media.tagName.toLowerCase(), src: media.getAttribute('src') };
+
+  G.lightbox.close();
+
+  return out;
+}
+
+test('лайтбокс: data-gr-src — адрес кадра, href остаётся ссылкой без скрипта', () => {
+  const { G, doc } = setup(PARTS);
+  const video = (href, src) => el('a', { href, 'data-gr-src': src, 'data-gr-lightbox': '' });
+  const rutube = video('https://rutube.ru/video/0a1b2c/', 'https://rutube.ru/play/embed/0a1b2c');
+  const vk = video('https://vkvideo.ru/video-1_2', 'https://vkvideo.ru/video_ext.php?oid=-1&id=2&hash=f00d');
+  const youtube = video('https://www.youtube.com/watch?v=x', 'https://www.youtube.com/embed/x');
+  mount(doc, el('div', {}, [rutube, vk, youtube]));
+
+  G.start();
+
+  assert.deepEqual(frameOf(G, doc, rutube), { tag: 'iframe', src: 'https://rutube.ru/play/embed/0a1b2c' });
+  assert.deepEqual(frameOf(G, doc, vk), { tag: 'iframe', src: 'https://vkvideo.ru/video_ext.php?oid=-1&id=2&hash=f00d' });
+  assert.deepEqual(frameOf(G, doc, youtube), { tag: 'iframe', src: 'https://www.youtube.com/embed/x' });
+  assert.equal(rutube.getAttribute('href'), 'https://rutube.ru/video/0a1b2c/', 'ссылка без скрипта не тронута');
+});
+
+test('лайтбокс: плеер Rutube и VK Видео без data-gr-type угадывается как iframe', () => {
+  const { G, doc } = setup(PARTS);
+  const links = [
+    'https://rutube.ru/play/embed/0a1b2c',
+    'https://vkvideo.ru/video_ext.php?oid=-1&id=2&hash=f00d',
+    'https://vk.com/video_ext.php?oid=-1&id=2&hash=f00d',
+  ].map((src) => el('button', { type: 'button', 'data-gr-src': src, 'data-gr-lightbox': '' }));
+  mount(doc, el('div', {}, links));
+
+  G.start();
+
+  for (const link of links) assert.equal(frameOf(G, doc, link).tag, 'iframe', link.getAttribute('data-gr-src'));
+});
+
+test('лайтбокс: без data-gr-src кадр — по href, а явный data-gr-type старше угадывания', () => {
+  const { G, doc } = setup(PARTS);
+  const photo = el('a', { href: 'photo.jpg', 'data-gr-lightbox': '' });
+  const stream = el('a', { href: 'https://cdn.example.com/stream/7', 'data-gr-type': 'video', 'data-gr-lightbox': '' });
+  const typed = el('a', { href: '#', 'data-gr-src': 'https://rutube.ru/play/embed/0a1b2c', 'data-gr-type': 'image', 'data-gr-lightbox': '' });
+  mount(doc, el('div', {}, [photo, stream, typed]));
+
+  G.start();
+
+  assert.deepEqual(frameOf(G, doc, photo), { tag: 'img', src: 'photo.jpg' });
+  assert.deepEqual(frameOf(G, doc, stream), { tag: 'video', src: 'https://cdn.example.com/stream/7' });
+  assert.deepEqual(frameOf(G, doc, typed), { tag: 'img', src: 'https://rutube.ru/play/embed/0a1b2c' });
 });
 
 test('лайтбокс: щелчок с модификатором отдаётся браузеру', () => {

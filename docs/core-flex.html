@@ -134,6 +134,51 @@
   <tr><td><code>.gr-flex-1</code></td><td><code>flex: 1</code></td></tr>
 </table>
 
+<h2>Порядок (order)</h2>
+
+<p>
+  Один ребёнок уходит в начало или в конец ряда, разметка не меняется.
+  Работает и во флексе, и в сетке: у <code>.gr-grid-*</code> ячейки
+  переставляются так же.
+</p>
+
+<table>
+  <tr><th>Класс</th><th>CSS</th></tr>
+  <tr><td><code>.gr-order-first</code></td><td><code>order: -9999</code></td></tr>
+  <tr><td><code>.gr-order-last</code></td><td><code>order: 9999</code></td></tr>
+  <tr><td><code>.gr-order-none</code></td><td><code>order: 0</code> — порядок разметки</td></tr>
+</table>
+
+<p>
+  Не ±1, а ±9999: элемент остаётся первым или последним и рядом с числовым
+  <code>order</code> из своего CSS. Суффиксы брейкпоинтов — как у остальных
+  флекс-утилит: <code>.gr-order-last .gr-order-none-lg</code> — в конце
+  до 1024px и на своём месте дальше.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-flex-row-lg gr-gap"&gt;
+  &lt;aside class="gr-order-last gr-order-none-lg"&gt;Фильтры&lt;/aside&gt;
+  &lt;main class="gr-flex-1"&gt;Товары&lt;/main&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="demo-block">
+  <div class="demo-block-title">Фильтры под товарами до 1024px, слева — с 1024px (измените ширину окна)</div>
+  <div class="gr-flex gr-flex-col gr-flex-row-lg gr-gap">
+    <div class="flex-demo-item gr-order-last gr-order-none-lg">Фильтры</div>
+    <div class="flex-demo-item gr-flex-1">Товары</div>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Меняется вид, а не порядок чтения.</strong> Программа чтения
+    с экрана и клавиша Tab идут по разметке. Переставляйте то, что фокуса
+    не держит, — картинку ряда. Колонку с полями и ссылками, уехавшую
+    в конец, клавиатура всё равно обойдёт первой: если это мешает, порядок
+    меняют в разметке, а не классом.
+  </p>
+</div>
+
 <h2>Gap-утилиты</h2>
 
 <p>
@@ -185,6 +230,7 @@
   <tr><td><code>.gr-flex-self-end</code></td><td><code>.gr-flex-self-end-sm</code></td><td>align-self: flex-end от 640px</td></tr>
   <tr><td><code>.gr-inline-flex</code></td><td><code>.gr-inline-flex-md</code></td><td>inline-flex от 768px</td></tr>
   <tr><td><code>.gr-flex-1</code></td><td><code>.gr-flex-1-lg</code></td><td>flex: 1 от 1024px</td></tr>
+  <tr><td><code>.gr-order-last</code></td><td><code>.gr-order-last-md</code></td><td>в конце ряда от 768px</td></tr>
 </table>
 
 <div class="callout">
@@ -240,8 +286,9 @@
   <p>
     <strong>Только направление и перенос.</strong> Выравнивания
     (<code>.gr-flex-center</code>, <code>.gr-flex-items-*</code>,
-    <code>.gr-flex-self-*</code>), <code>.gr-flex-1</code> и сам
-    <code>display</code> контейнерных вариантов не получили: по ширине гнезда
+    <code>.gr-flex-self-*</code>), <code>.gr-flex-1</code>, порядок
+    <code>.gr-order-*</code> и сам <code>display</code> контейнерных
+    вариантов не получили: по ширине гнезда
     меняется, куда течёт ряд, а не как он выровнен, и каждый суффикс — ещё
     четыре правила на класс. Показать или спрятать блок по гнезду —
     <code>.gr-hidden-c*</code> / <code>.gr-block-c*</code> из утилит
@@ -365,6 +412,40 @@
   </div>
 </div>
 
+<h3>Текст и картинка: чередование сторон</h3>
+
+<p>
+  Ряды «картинка + текст» на лендинге: на телефоне картинка сверху у всех
+  рядов, на десктопе — попеременно слева и справа. В разметке картинка
+  всегда первая, так она и стоит на узком экране; во втором ряду
+  <code>.gr-order-last-md</code> уводит её вправо с 768px. Сетка —
+  <code>.gr-grid-1 .gr-grid-2-md</code>: порядок ячеек меняется так же,
+  как у флекса. Картинка фокуса не держит, и порядок чтения совпадает
+  с видом: текст ряда идёт за своей картинкой.
+</p>
+
+<pre><code>&lt;section class="gr-grid-1 gr-grid-2-md gr-flex-items-center"&gt;
+  &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius" src="team.jpg" alt="Команда за работой"&gt;
+  &lt;div&gt;&lt;h3&gt;Опыт&lt;/h3&gt;&lt;p&gt;Двенадцать лет запусков.&lt;/p&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section class="gr-grid-1 gr-grid-2-md gr-flex-items-center"&gt;
+  &lt;img class="gr-order-last-md gr-w-full gr-aspect-video gr-object-cover gr-radius" src="office.jpg" alt="Офис"&gt;
+  &lt;div&gt;&lt;h3&gt;Сроки&lt;/h3&gt;&lt;p&gt;Первая версия — за две недели.&lt;/p&gt;&lt;/div&gt;
+&lt;/section&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Картинка второго ряда справа с 768px; на узком экране обе сверху</div>
+  <div class="gr-flex gr-flex-col gr-gap-lg">
+    <section class="gr-grid-1 gr-grid-2-md gr-flex-items-center">
+      <div class="gr-aspect-video gr-radius gr-bg-sunken gr-text-ink-secondary gr-text-sm gr-flex gr-flex-center gr-flex-items-center">картинка первого ряда</div>
+      <div><h4 class="gr-m-0">Опыт</h4><p class="gr-m-0 gr-mt-2 gr-text-ink-secondary">Двенадцать лет запусков.</p></div>
+    </section>
+    <section class="gr-grid-1 gr-grid-2-md gr-flex-items-center">
+      <div class="gr-order-last-md gr-aspect-video gr-radius gr-bg-sunken gr-text-ink-secondary gr-text-sm gr-flex gr-flex-center gr-flex-items-center">картинка второго ряда</div>
+      <div><h4 class="gr-m-0">Сроки</h4><p class="gr-m-0 gr-mt-2 gr-text-ink-secondary">Первая версия — за две недели.</p></div>
+    </section>
+  </div>
+</div>
+
 <h3>Горизонтальная скролл-лента</h3>
 
 <p>
@@ -375,7 +456,10 @@
   не сжимает элемент ниже его минимума, поэтому ширину ленты держит
   <code>.gr-min-w-[160px]</code> произвольным значением. Прищёлкивание
   к краю (scroll-snap) в утилитах не живёт — при желании это две строки
-  своего CSS поверх той же разметки.
+  своего CSS поверх той же разметки. Готовая лента с прищёлкиванием —
+  <code>.gr-track .gr-track-auto</code> из <code>griffinjs.css</code>:
+  скрипт ей не нужен (<a href="griffinjs-slides.html#lenta-bez-skripta">лента
+  без скрипта</a>).
 </p>
 
 <pre><code>&lt;div class="gr-flex gr-flex-nowrap gr-gap gr-overflow-x-auto gr-pb-2"&gt;

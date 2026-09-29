@@ -1,7 +1,7 @@
 /*
  * GriffinJS — галерея: слайдер + полоса превью.
  *
- *   <div class="gr-gallery" data-gr-gallery>
+ *   <div data-gr-gallery>
  *     <div class="gr-track">…большие кадры…</div>
  *     <div class="gr-track gr-gallery-thumbs">
  *       <button type="button"><img …></button> …

@@ -143,7 +143,7 @@
 
 // Стало: узел живёт дольше набора, ключ — на детях
 &lt;div data-gr-slider&gt;
-  {items.map((it) =&gt; &lt;div className="gr-slide" key={it.id}&gt;…&lt;/div&gt;)}
+  {items.map((it) =&gt; &lt;div key={it.id}&gt;…&lt;/div&gt;)}
 &lt;/div&gt;</code></pre>
 
 <p>
@@ -355,7 +355,7 @@ function Slider({ items }) {
     &lt;div ref={ref} className="gr-slider"&gt;
       &lt;div className="gr-track"&gt;
         {items.map((it) =&gt; (
-          &lt;div className="gr-slide" key={it.id}&gt;{it.title}&lt;/div&gt;
+          &lt;div key={it.id}&gt;{it.title}&lt;/div&gt;
         ))}
       &lt;/div&gt;
     &lt;/div&gt;
@@ -408,7 +408,7 @@ onBeforeUnmount(() =&gt; {
 &lt;template&gt;
   &lt;div ref="el" class="gr-slider" v-if="items.length"&gt;
     &lt;div class="gr-track"&gt;
-      &lt;div class="gr-slide" v-for="it in items" :key="it.id"&gt;{{ it.title }}&lt;/div&gt;
+      &lt;div v-for="it in items" :key="it.id"&gt;{{ it.title }}&lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 &lt;/template&gt;</code></pre>
@@ -425,7 +425,7 @@ onBeforeUnmount(() =&gt; {
   раскладки — не ваш</a>.
 </p>
 
-<pre><code>&lt;div data-gr-layout="a3b4-c2d5" className="gr-gap-4"&gt;
+<pre><code>&lt;div data-gr-layout="a3b4-c2d5" className="gr-gap"&gt;
   &lt;aside className="gr-area-a gr-p-4 gr-bg-surface"&gt;…&lt;/aside&gt;
   &lt;main className="gr-area-b gr-p-4"&gt;…&lt;/main&gt;
 &lt;/div&gt;</code></pre>

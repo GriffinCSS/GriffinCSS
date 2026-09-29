@@ -8,7 +8,7 @@
 // griffinjs.css подключается всегда ПОВЕРХ griffincss-ui.css, где он есть.
 //
 // Оформление привязывается к состояниям, а не к классам, которые JS
-// добавляет: [data-gr-state="open"], .gr-slide[aria-current],
+// добавляет: [data-gr-state="open"], .gr-track > [aria-current],
 // var(--gr-progress). Движение — здесь, в CSS; JS transform и opacity
 // не пишет никогда (инварианты слоя — docs/griffinjs-architecture.html).
 //

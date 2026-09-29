@@ -1,0 +1,116 @@
+// Griffincss UI — Prose
+// Форматированный текст, у детей которого нет классов: HTML из редактора,
+// описание товара, запись блога. Класс ставится на обёртку, а ритм,
+// подзаголовки, списки, цитата, ссылки, разделитель и таблица оформляются
+// по тегам.
+//
+//   <div class="gr-prose">{{ description }}</div>
+//
+// Правила детей записаны целиком под :where(): вес у них нулевой, и любой
+// класс на ребёнке сильнее прозы — утилита (.gr-mt-0), компонент (.gr-btn,
+// .gr-alert). Списки и ссылки оформляются только без класса: у .gr-menu,
+// .gr-steps и ссылки-кнопки свой вид. Поля проза ставит сама, а не берёт
+// у ресета: ресет подключают не все, и без него у абзаца поля браузера,
+// с ним — ноль.
+//
+// Меры строки в классе нет: ширину решает место — колонка, карточка, окно.
+// Мера текста — утилита .gr-max-w-prose. Вид таблицы — в _table.scss:
+// <table> в прозе оформлен теми же правилами, что .gr-table.
+
+// Длинная ссылка или слово без пробелов не выталкивают колонку вбок:
+// текст в редакторе пишет кто угодно.
+.gr-prose {
+  overflow-wrap: break-word;
+}
+
+// --- Ритм -------------------------------------------------------------------
+
+// Поле — только между соседями: у прямых детей прозы и у детей цитаты
+// и пункта списка (редактор кладёт абзацы и туда). У крайних детей полей
+// нет — блок не спорит с отступами вокруг себя.
+:where(.gr-prose, .gr-prose blockquote, .gr-prose li) > * {
+  margin-block: 0;
+}
+
+:where(.gr-prose, .gr-prose blockquote, .gr-prose li) > * + * {
+  margin-block-start: var(--gr-gap);
+}
+
+// Подзаголовок ближе к своему тексту, чем к предыдущему, а разделитель
+// отбивает разделы — поле вокруг него крупнее абзацного.
+:where(.gr-prose > * + :is(h1, h2, h3, h4, h5, h6), .gr-prose > * + hr, .gr-prose > hr + *) {
+  margin-block-start: var(--gr-gap-lg);
+}
+
+:where(.gr-prose > :is(h1, h2, h3, h4, h5, h6) + *) {
+  margin-block-start: var(--gr-gap-sm);
+}
+
+// --- Списки -----------------------------------------------------------------
+
+// Маркеры — браузера: ресет снимает их только со списков с role="list".
+// Отступ теснее браузерных 40px — на узком экране они съедали строку.
+// Пункты и вложенный список теснее абзацев.
+:where(.gr-prose :is(ul, ol):not([class])) {
+  padding-inline-start: 1.5em;
+}
+
+:where(.gr-prose :is(ul, ol):not([class]) > li + li, .gr-prose li > :is(ul, ol)) {
+  margin-block-start: var(--gr-gap-sm);
+}
+
+:where(.gr-prose :is(ul, ol):not([class]) > li)::marker {
+  color: var(--gr-color-text-secondary);
+}
+
+// --- Цитата, разделитель, медиа, код -----------------------------------------
+
+// Цитата — линией у начала строки, как в рецепте «Цитата с цветной линией».
+// Поля браузера по бокам (40px у цитаты и у figure) сняты.
+:where(.gr-prose :is(blockquote, figure)) {
+  margin-inline: 0;
+}
+
+:where(.gr-prose blockquote) {
+  padding-inline-start: 1em;
+  border-inline-start: 0.25rem solid var(--gr-color-accent);
+  font-style: italic;
+}
+
+:where(.gr-prose hr) {
+  block-size: 0;
+  border: 0;
+  border-block-start: var(--gr-border-width) solid var(--gr-color-border);
+}
+
+// Картинка и видео не шире колонки и при сужении не сплющиваются.
+:where(.gr-prose :is(img, video)) {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+// Длинная строка кода прокручивается внутри блока, а не всей страницей.
+:where(.gr-prose pre) {
+  overflow-x: auto;
+}
+
+// --- Ссылки -----------------------------------------------------------------
+
+// Ссылка без класса — как .gr-link: цвет ссылки и подчёркивание, которых
+// ресет лишает <a>. Порядок LVHA — как у .gr-link.
+:where(.gr-prose a:not([class])) {
+  color: var(--gr-color-link);
+  text-decoration-line: underline;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 0.2em;
+}
+
+:where(.gr-prose a:not([class]):visited) {
+  color: var(--gr-color-link-visited);
+}
+
+@media (hover: hover) {
+  :where(.gr-prose a:not([class]):hover) {
+    color: var(--gr-color-link-hover);
+  }
+}

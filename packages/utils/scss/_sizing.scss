@@ -57,6 +57,11 @@ $gr-heights: (
 .gr-max-w-none   { max-width: none; }
 .gr-max-w-full   { max-width: 100%; }
 .gr-max-w-page   { max-width: var(--gr-max-width); }
+
+// Мера строки текста: 65 знаков — середина удобных 45–75. Для абзаца,
+// лида героя и .gr-prose, у которой своей меры нет.
+.gr-max-w-prose  { max-width: 65ch; }
+
 .gr-max-h-full   { max-height: 100%; }
 .gr-max-h-screen { max-height: 100svh; }
 

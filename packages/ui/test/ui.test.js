@@ -50,6 +50,7 @@ const MODULES = {
   _tooltip: '.gr-tooltip',
   _empty: '.gr-empty',
   _progress: '.gr-progress',
+  _prose: '.gr-prose',
   _range: '.gr-range',
   _skeleton: '.gr-skeleton',
   _spinner: '.gr-spinner',
@@ -57,7 +58,7 @@ const MODULES = {
   _toast: '.gr-toast',
 };
 
-test('все двадцать семь модулей попали в обе сборки', () => {
+test('все двадцать восемь модулей попали в обе сборки', () => {
   for (const [module, selector] of Object.entries(MODULES)) {
     // В сжатом CSS за классом идёт либо начало блока, либо запятая
     // группового селектора, либо псевдокласс: .gr-checkbox,.gr-radio{…}
@@ -65,6 +66,57 @@ test('все двадцать семь модулей попали в обе с�
 
     assert.ok(present.test(ui), `${module}: нет ${selector} в griffincss-ui.css`);
     assert.ok(present.test(scoped), `${module}: нет ${selector} в scoped-сборке`);
+  }
+});
+
+// Правила детей .gr-prose — с нулевым весом: класс на ребёнке, утилита
+// или компонент, обязан быть сильнее прозы. Правило вида .gr-prose p (0,1,1)
+// перебило бы поля .gr-alert и маркеры .gr-menu внутри форматированного
+// текста — ровно то, от чего проза и держит всё под :where().
+function splitTopLevel(prelude) {
+  const out = [];
+  let depth = 0;
+  let start = 0;
+
+  for (let i = 0; i < prelude.length; i += 1) {
+    if (prelude[i] === '(') depth += 1;
+    else if (prelude[i] === ')') depth -= 1;
+    else if (prelude[i] === ',' && depth === 0) {
+      out.push(prelude.slice(start, i));
+      start = i + 1;
+    }
+  }
+
+  return [...out, prelude.slice(start)].map((s) => s.trim());
+}
+
+// Селектор целиком под одним :where(…) — со скобкой в самом конце
+// (допустим хвост-псевдоэлемент: у ::marker своего веса нет у ребёнка).
+function zeroWeight(selector) {
+  if (!selector.startsWith(':where(')) return false;
+
+  let depth = 0;
+
+  for (let i = 6; i < selector.length; i += 1) {
+    if (selector[i] === '(') depth += 1;
+    else if (selector[i] === ')' && --depth === 0) return /^(::[a-z-]+)?$/.test(selector.slice(i + 1));
+  }
+
+  return false;
+}
+
+test('правила детей .gr-prose — под :where(), с нулевым весом', () => {
+  const prose = parseSelectors(ui).flatMap(splitTopLevel).filter((s) => s.includes('.gr-prose'));
+
+  assert.ok(prose.length > 10, 'правил прозы в сборке нет');
+
+  for (const selector of prose) {
+    if (selector === '.gr-prose') continue;
+
+    // Потомки обёртки — :where(.gr-prose…) > * — тоже нулевые: у * веса нет.
+    const bare = selector.replace(/(>\*)+(\+\*)?$/, '').replace(/>\*\+\*$/, '');
+
+    assert.ok(zeroWeight(selector) || zeroWeight(bare), `правило прозы с весом: ${selector}`);
   }
 });
 

@@ -90,6 +90,27 @@
   flex: 1;
 }
 
+// Порядок: один ребёнок уходит в начало или в конец, разметка не меняется —
+// картинка текстового ряда сверху на телефоне и сбоку на десктопе, боковая
+// колонка после содержимого на узком экране. Работает и во флексе, и в сетке.
+// ±9999, а не ±1: «первым» и «последним» элемент остаётся и рядом с числовым
+// order из своего CSS. Чтение и фокус идут по разметке, а не по виду.
+@mixin gr-order($suffix: '') {
+  .gr-order-first#{$suffix} {
+    order: -9999;
+  }
+
+  .gr-order-last#{$suffix} {
+    order: 9999;
+  }
+
+  .gr-order-none#{$suffix} {
+    order: 0;
+  }
+}
+
+@include gr-order;
+
 // --- Responsive variants ---
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
   @media (width >= $bp-value) {
@@ -100,6 +121,8 @@
 
     .gr-flex-nowrap-#{$bp-name} { flex-wrap: nowrap; }
     .gr-flex-1-#{$bp-name} { flex: 1; }
+
+    @include gr-order('-#{$bp-name}');
 
     @each $j in (start, center, end, between, around, evenly) {
       .gr-flex-#{$j}-#{$bp-name} {

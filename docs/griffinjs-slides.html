@@ -35,6 +35,14 @@
 
     .frame-square { aspect-ratio: 4 / 3; }
 
+    /* Место под тень карточек в дорожке — то же правило показано
+       в разделе «Дорожка»: поле, минус-отступ и тот же отступ снапа. */
+    .track-room {
+      margin-inline: -0.75rem;
+      padding: 0.75rem;
+      scroll-padding-inline: 0.75rem;
+    }
+
     .needs { margin-inline-start: 0.5rem; }
   }
 </style>
@@ -97,46 +105,73 @@
 </table>
 
 <pre><code>&lt;div class="gr-track gr-track-2-sm gr-track-3-md" tabindex="0" aria-label="Категории"&gt;
-  &lt;div class="gr-card gr-p-4"&gt;Первая&lt;/div&gt;
-  &lt;div class="gr-card gr-p-4"&gt;Вторая&lt;/div&gt;
-  …
+  &lt;div class="gr-card gr-p-4"&gt;…&lt;/div&gt;
+  ×6
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Дорожка без скрипта: три в ряд от md</div>
-  <div class="gr-track gr-track-2-sm gr-track-3-md" tabindex="0" aria-label="Категории">
-    <div class="gr-card gr-p-4">Ноутбуки</div>
-    <div class="gr-card gr-p-4">Планшеты</div>
-    <div class="gr-card gr-p-4">Телефоны</div>
-    <div class="gr-card gr-p-4">Наушники</div>
-    <div class="gr-card gr-p-4">Часы</div>
-    <div class="gr-card gr-p-4">Аксессуары</div>
+  <div class="demo-block-title">Дорожка без скрипта: три в ряд от md, остальное — прокруткой</div>
+  <div class="gr-track gr-track-2-sm gr-track-3-md track-room" tabindex="0" aria-label="Категории">
+    <div class="gr-card gr-p-4"><div class="frame frame-1 frame-square gr-mb-3"></div><strong>Ноутбуки</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">124 модели</p></div>
+    <div class="gr-card gr-p-4"><div class="frame frame-2 frame-square gr-mb-3"></div><strong>Планшеты</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">58 моделей</p></div>
+    <div class="gr-card gr-p-4"><div class="frame frame-3 frame-square gr-mb-3"></div><strong>Телефоны</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">211 моделей</p></div>
+    <div class="gr-card gr-p-4"><div class="frame frame-4 frame-square gr-mb-3"></div><strong>Наушники</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">96 моделей</p></div>
+    <div class="gr-card gr-p-4"><div class="frame frame-1 frame-square gr-mb-3"></div><strong>Часы</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">43 модели</p></div>
+    <div class="gr-card gr-p-4"><div class="frame frame-2 frame-square gr-mb-3"></div><strong>Аксессуары</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">380 моделей</p></div>
   </div>
 </div>
 
+<p>
+  Пороги столбика и доли слайда — из одной шкалы, и стыковать их нужно
+  явно: <code>.gr-track-stack-csm</code> снимает столбик с 640px гнезда,
+  и доля нужна с того же порога. С одной <code>.gr-track-3-cmd</code>
+  между 640 и 768px гнезда лента шла бы по одному слайду во всю ширину —
+  основа дорожки <code>flex-basis: 100%</code>. <code>.gr-track-2-csm</code>
+  закрывает промежуток: два в ряд, с 768px — три.
+</p>
+
 <pre><code>&lt;aside class="gr-cq-aside"&gt;
-  &lt;div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары"&gt;
+  &lt;div class="gr-track gr-track-stack-csm gr-track-2-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары"&gt;
     &lt;div class="gr-card gr-p-4"&gt;…&lt;/div&gt;
     …
   &lt;/div&gt;
 &lt;/aside&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Одна разметка: в узком гнезде (14rem) — столбик, во всю ширину колонки — лента</div>
-  <div class="gr-cq gr-mb-4" style="inline-size: 14rem; max-inline-size: 100%">
-    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары, узкая колонка">
-      <div class="gr-card gr-p-3">Кресло «Дюна»</div>
-      <div class="gr-card gr-p-3">Торшер «Свет»</div>
-      <div class="gr-card gr-p-3">Полка «Норд»</div>
+  <div class="demo-block-title">Одна разметка: гнездо уже 640px — столбик, шире — лента: два в ряд, с 768px — три</div>
+  <p class="gr-m-0 gr-mb-2 gr-text-sm gr-text-ink-secondary">Боковая колонка, 14rem</p>
+  <div class="gr-cq gr-mb-6" style="inline-size: 14rem; max-inline-size: 100%">
+    <div class="gr-track gr-track-stack-csm gr-track-2-csm gr-track-3-cmd track-room" tabindex="0" aria-label="Похожие товары, узкая колонка">
+      <div class="gr-card gr-p-3"><div class="frame frame-1 gr-mb-2"></div><strong>Кресло «Дюна»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">24 900 ₽</p></div>
+      <div class="gr-card gr-p-3"><div class="frame frame-2 gr-mb-2"></div><strong>Торшер «Свет»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">8 490 ₽</p></div>
+      <div class="gr-card gr-p-3"><div class="frame frame-3 gr-mb-2"></div><strong>Полка «Норд»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">5 990 ₽</p></div>
     </div>
   </div>
+  <p class="gr-m-0 gr-mb-2 gr-text-sm gr-text-ink-secondary">Содержимое — вся ширина колонки</p>
   <div class="gr-cq">
-    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Похожие товары, широкая колонка">
-      <div class="gr-card gr-p-3">Кресло «Дюна»</div>
-      <div class="gr-card gr-p-3">Торшер «Свет»</div>
-      <div class="gr-card gr-p-3">Полка «Норд»</div>
-      <div class="gr-card gr-p-3">Стол «Лофт»</div>
+    <div class="gr-track gr-track-stack-csm gr-track-2-csm gr-track-3-cmd track-room" tabindex="0" aria-label="Похожие товары, широкая колонка">
+      <div class="gr-card gr-p-3"><div class="frame frame-1 gr-mb-2"></div><strong>Кресло «Дюна»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">24 900 ₽</p></div>
+      <div class="gr-card gr-p-3"><div class="frame frame-2 gr-mb-2"></div><strong>Торшер «Свет»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">8 490 ₽</p></div>
+      <div class="gr-card gr-p-3"><div class="frame frame-3 gr-mb-2"></div><strong>Полка «Норд»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">5 990 ₽</p></div>
+      <div class="gr-card gr-p-3"><div class="frame frame-4 gr-mb-2"></div><strong>Стол «Лофт»</strong><p class="gr-m-0 gr-text-sm gr-text-ink-secondary">17 300 ₽</p></div>
     </div>
   </div>
 </div>
+
+<p>
+  Дорожка — контейнер прокрутки: всё, что выходит за её край, она обрезает,
+  и тень карточки тоже (у <code>.gr-card</code> она есть в стиле
+  «Воздушный»). Место под тень — поле у самой дорожки; минус-отступ того же
+  размера возвращает карточки на линию текста, а тот же
+  <code>scroll-padding-inline</code> — снап: без него прищёлкивание
+  уводило бы первую карточку к самому краю, прямо под обрез. Утилит для
+  <code>scroll-padding</code> в библиотеке нет — это своё правило,
+  на нём стоят обе дорожки раздела:
+</p>
+
+<pre><code>.track-room {
+  margin-inline: -0.75rem;
+  padding: 0.75rem;
+  scroll-padding-inline: 0.75rem;
+}</code></pre>
 
 <h3>Параметры <code>data-gr-track</code></h3>
 
@@ -360,7 +395,7 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
   те же, что у слайдера.
 </p>
 
-<pre><code>&lt;div class="gr-gallery" data-gr-gallery aria-label="Фотографии товара"&gt;
+<pre><code>&lt;div data-gr-gallery aria-label="Фотографии товара"&gt;
   &lt;div class="gr-track"&gt;
     &lt;div class="frame frame-1 frame-square"&gt;1&lt;/div&gt;
     …
@@ -372,7 +407,7 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Галерея с превью <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
-  <div class="gr-gallery" data-gr-gallery aria-label="Фотографии товара" style="max-width:32rem">
+  <div data-gr-gallery aria-label="Фотографии товара" style="max-width:32rem">
     <div class="gr-track">
       <div class="frame frame-1 frame-square">1</div>
       <div class="frame frame-2 frame-square">2</div>
@@ -396,15 +431,16 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
   на один кадр. Окно — <code>&lt;dialog class="gr-modal gr-lightbox"&gt;</code>,
   строится при открытии и уничтожается при закрытии, поэтому видео
   и iframe останавливаются сами. База без JS — обычная ссылка на большое
-  изображение.
+  изображение или на страницу ролика.
 </p>
 
 <table>
   <tr><th>Атрибут</th><th>Смысл</th></tr>
-  <tr><td><code>data-gr-lightbox="группа"</code></td><td>Что открывать; адрес — из <code>href</code> или <code>data-gr-src</code></td></tr>
+  <tr><td><code>data-gr-lightbox="группа"</code></td><td>Что открывать; адрес кадра — <code>data-gr-src</code>, без него — <code>href</code></td></tr>
+  <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта</td></tr>
   <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
   <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
-  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу (mp4/webm, YouTube, Vimeo)</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, плееры YouTube, Vimeo, Rutube и VK Видео — iframe, остальное — картинка</td></tr>
 </table>
 
 <pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;
@@ -557,7 +593,7 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
   две дорожки и ссылки на большие изображения.
 </p>
 
-<pre><code>&lt;div class="gr-gallery" data-gr-gallery aria-label="Фотографии"&gt;
+<pre><code>&lt;div data-gr-gallery aria-label="Фотографии"&gt;
   &lt;div class="gr-track"&gt;
     &lt;a href="large-1.jpg" data-gr-lightbox="product" data-gr-caption="Вид спереди"&gt;&lt;img …&gt;&lt;/a&gt;
     …
@@ -568,7 +604,7 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Галерея + лайтбокс <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
-  <div class="gr-gallery" data-gr-gallery aria-label="Фотографии" style="max-width:28rem">
+  <div data-gr-gallery aria-label="Фотографии" style="max-width:28rem">
     <div class="gr-track">
       <a class="gr-block" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%234a6fd1'/%3E%3C/svg%3E" data-gr-lightbox="product" data-gr-caption="Вид спереди"><div class="frame frame-1 frame-square">Спереди</div></a>
       <a class="gr-block" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%232f9a63'/%3E%3C/svg%3E" data-gr-lightbox="product" data-gr-caption="Вид сбоку"><div class="frame frame-2 frame-square">Сбоку</div></a>
@@ -582,29 +618,135 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
   </div>
 </div>
 
-<h3>Лента без скрипта</h3>
+<h3>Видео с превью: YouTube, Rutube, VK Видео</h3>
 
 <p>
-  Не каждой дорожке нужен слайдер. Лента историй, ряд логотипов, полоса
-  тегов — <code>.gr-track</code> с шириной слайдов через утилиты
-  и ничего больше. Это же — «база без JS» любого слайдера на странице,
-  где <code>griffinjs.js</code> не подключён.
+  Превью ролика — ссылка с картинкой, и открывает она окно с плеером.
+  Адресов у видео два. <code>href</code> — страница ролика: по ней уходит
+  ссылка без скрипта, её открывает щелчок с Ctrl в новой вкладке.
+  <code>data-gr-src</code> — адрес плеера: страницу ролика хостинги
+  во фрейме не показывают, во фрейм встаёт только плеер. Тип
+  <code>iframe</code> лайтбокс узнаёт по адресу плеера сам.
 </p>
 
-<pre><code>&lt;div class="gr-track gr-gap-sm" tabindex="0" aria-label="Истории"&gt;
-  &lt;a class="gr-w-24 gr-flex-none" href="#"&gt;…&lt;/a&gt;
+<table>
+  <tr><th>Хостинг</th><th>Страница ролика — <code>href</code></th><th>Плеер — <code>data-gr-src</code></th></tr>
+  <tr><td>YouTube</td><td><code>https://www.youtube.com/watch?v=ID</code></td><td><code>https://www.youtube.com/embed/ID</code></td></tr>
+  <tr><td>Rutube</td><td><code>https://rutube.ru/video/ID/</code></td><td><code>https://rutube.ru/play/embed/ID</code></td></tr>
+  <tr><td>VK Видео</td><td><code>https://vkvideo.ru/video-OID_ID</code></td><td>из кода вставки: <code>https://vkvideo.ru/video_ext.php?oid=…&amp;id=…&amp;hash=…</code></td></tr>
+  <tr><td>Vimeo</td><td><code>https://vimeo.com/ID</code></td><td><code>https://player.vimeo.com/video/ID</code></td></tr>
+</table>
+
+<p>
+  У VK Видео адрес плеера из адреса страницы не собрать: в коде вставки
+  есть параметр <code>hash</code>, которого на странице нет, — адрес берут
+  целиком из атрибута <code>src</code> фрейма, который даёт «Поделиться».
+  Другим хостингам и своему плееру нужен явный <code>data-gr-type="iframe"</code>:
+  список узнаваемых адресов стареет вместе с адресами хостингов, явный тип — нет.
+  В демо ниже плееры заменены заглушками: страница документации к хостингам
+  не обращается.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-sm gr-gap"&gt;
+  &lt;a class="gr-relative gr-block" href="https://rutube.ru/video/ID/"
+     data-gr-src="https://rutube.ru/play/embed/ID"
+     data-gr-lightbox="video" data-gr-caption="Обзор новинки"&gt;
+    &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius" src="preview.jpg" alt="Обзор новинки"&gt;
+    &lt;span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"&gt;
+      &lt;span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"&gt;
+        &lt;svg width="24" height="24" viewBox="0 0 24 24"&gt;&lt;path d="M8 5v14l11-7z" fill="currentColor"/&gt;&lt;/svg&gt;
+      &lt;/span&gt;
+    &lt;/span&gt;
+  &lt;/a&gt;
   …
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Истории: только CSS</div>
-  <div class="gr-track gr-gap-sm" tabindex="0" aria-label="Истории">
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-1 gr-radius-pill" style="aspect-ratio:1"></div>Новинки</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-2 gr-radius-pill" style="aspect-ratio:1"></div>Акции</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-3 gr-radius-pill" style="aspect-ratio:1"></div>Бренды</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-4 gr-radius-pill" style="aspect-ratio:1"></div>Подарки</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-1 gr-radius-pill" style="aspect-ratio:1"></div>Отзывы</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-2 gr-radius-pill" style="aspect-ratio:1"></div>Блог</a>
-    <a class="gr-w-24 gr-flex-none gr-text-center gr-text-sm" href="#"><div class="frame frame-3 gr-radius-pill" style="aspect-ratio:1"></div>Помощь</a>
+  <div class="demo-block-title">Три превью одной группой: окно листает ролики <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
+  <div class="gr-grid-1 gr-grid-3-sm gr-gap">
+    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20Rutube%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Обзор новинки — Rutube">
+      <div class="gr-aspect-video gr-radius frame-1"></div>
+      <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
+      <span class="gr-sr-only">Обзор новинки, Rutube</span>
+    </a>
+    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20VK%20%D0%92%D0%B8%D0%B4%D0%B5%D0%BE%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Распаковка — VK Видео">
+      <div class="gr-aspect-video gr-radius frame-2"></div>
+      <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
+      <span class="gr-sr-only">Распаковка, VK Видео</span>
+    </a>
+    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20YouTube%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Сборка за минуту — YouTube">
+      <div class="gr-aspect-video gr-radius frame-4"></div>
+      <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
+      <span class="gr-sr-only">Сборка за минуту, YouTube</span>
+    </a>
+  </div>
+</div>
+
+<h3>Лента без скрипта</h3>
+
+<p>
+  Не каждой дорожке нужен слайдер. Лента историй, полоса тегов, ряд
+  логотипов — <code>.gr-track</code> и ничего больше. Это же — «база без JS»
+  любого слайдера на странице, где <code>griffinjs.js</code> не подключён.
+</p>
+
+<p>
+  Ширину слайда задаёт дорожка: у <code>.gr-track &gt; *</code> —
+  <code>flex-basis: 100%</code>, один слайд на окно, а <code>.gr-track-2</code>…<code>-4</code>
+  (и с суффиксами) делят окно на доли. Утилиты ширины на самом слайде этой
+  основе проигрывают. Слайдам своей ширины нужен модификатор
+  <code>.gr-track-auto</code>: ширину даёт содержимое — аватар, атрибуты
+  <code>width</code> и <code>height</code> у картинки, текст кнопки. Слайды
+  не сжимаются: что не поместилось, уходит в прокрутку.
+</p>
+
+<p>
+  Подпись истории — ссылка, которую узнают по месту, а не по цвету:
+  <code>.gr-link-inherit .gr-link-quiet</code> берут цвет текста и прячут
+  подчёркивание до наведения. Тег — кнопка-ссылка: подчёркивание кнопка
+  снимает сама.
+</p>
+
+<pre><code>&lt;div class="gr-track gr-track-auto gr-gap-sm" tabindex="0" aria-label="Истории"&gt;
+  &lt;a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"&gt;
+    &lt;span class="gr-avatar gr-avatar-xl"&gt;&lt;img src="new.jpg" alt=""&gt;&lt;/span&gt;
+    Новинки
+  &lt;/a&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Истории: круг — <code>.gr-avatar-xl</code>, ширина слайда — по кругу и подписи</div>
+  <div class="gr-track gr-track-auto gr-gap-sm" tabindex="0" aria-label="Истории">
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-1"></span>Новинки</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-2"></span>Акции</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-3"></span>Бренды</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-4"></span>Подарки</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-1"></span>Отзывы</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-2"></span>Блог</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-3"></span>Помощь</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-4"></span>Доставка</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-1"></span>Скидки</a>
+    <a class="gr-link gr-link-inherit gr-link-quiet gr-flex gr-flex-col gr-flex-items-center gr-gap-sm gr-text-sm" href="#"><span class="gr-avatar gr-avatar-xl frame-2"></span>Бонусы</a>
+  </div>
+</div>
+
+<pre><code>&lt;div class="gr-track gr-track-auto gr-gap-sm" tabindex="0" aria-label="Популярные запросы"&gt;
+  &lt;a class="gr-btn gr-btn-sm gr-radius-full" href="#"&gt;Смартфоны&lt;/a&gt;
+  &lt;a class="gr-btn gr-btn-sm gr-radius-full" href="#"&gt;Умные часы&lt;/a&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Полоса тегов: ширина тега — его текст с полями кнопки</div>
+  <div class="gr-track gr-track-auto gr-gap-sm" tabindex="0" aria-label="Популярные запросы">
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Смартфоны</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Наушники</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Умные часы</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Ноутбуки</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Планшеты</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Телевизоры</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Фотоаппараты</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Колонки</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Аксессуары</a>
+    <a class="gr-btn gr-btn-sm gr-radius-full" href="#">Игровые консоли</a>
   </div>
 </div>
 

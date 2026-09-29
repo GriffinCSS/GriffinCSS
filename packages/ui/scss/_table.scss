@@ -6,12 +6,18 @@
 //
 // Ресет опционален, поэтому border-collapse задаётся здесь: без него
 // у ячеек остались бы двойные линии и зазоры border-spacing.
+//
+// Таблица внутри .gr-prose оформлена теми же правилами: класс на <table>
+// редактор не поставит. Селекторы прозы — под :where(), с нулевым весом:
+// варианты (.gr-table-compact и другие) на такой таблице по-прежнему
+// сильнее базы.
 
 @use 'sass:string';
 @use 'griffincss-core/scss/breakpoints' as bp;
 @use 'griffincss-core/scss/container-mixins' as cq;
 
-.gr-table {
+.gr-table,
+:where(.gr-prose table) {
   inline-size: 100%;
   border-collapse: collapse;
   color: var(--gr-color-text);
@@ -19,7 +25,8 @@
 }
 
 .gr-table th,
-.gr-table td {
+.gr-table td,
+:where(.gr-prose table :is(th, td)) {
   padding-block: calc(var(--gr-gap) * 0.5);
   padding-inline: calc(var(--gr-gap) * 0.75);
   border-block-end: var(--gr-border-width) solid var(--gr-color-border);
@@ -27,24 +34,28 @@
   vertical-align: top;
 }
 
-.gr-table th {
+.gr-table th,
+:where(.gr-prose table th) {
   color: var(--gr-color-text-secondary);
   font-size: 0.875rem;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.gr-table thead th {
+.gr-table thead th,
+:where(.gr-prose table thead th) {
   border-block-end: calc(var(--gr-border-width) * 2) solid var(--gr-color-border-strong);
 }
 
-.gr-table tfoot td {
+.gr-table tfoot td,
+:where(.gr-prose table tfoot td) {
   border-block-end: 0;
   color: var(--gr-color-text-secondary);
   font-size: 0.875rem;
 }
 
-.gr-table caption {
+.gr-table caption,
+:where(.gr-prose table caption) {
   padding-block-end: calc(var(--gr-gap) * 0.5);
   color: var(--gr-color-text-secondary);
   font-size: 0.875rem;

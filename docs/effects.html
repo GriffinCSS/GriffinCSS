@@ -371,7 +371,7 @@
   Hero или баннер поверх фотографии — трёхслойный сэндвич на знакомых
   слоях: фото <code>.gr-absolute .gr-inset-0 .gr-w-full .gr-h-full
   .gr-object-cover</code>, над ним затемнение — тот же слой
-  с <code>.gr-bg-black .gr-opacity-50</code>, и сверху обычный контент
+  с <code>.gr-bg-black .gr-opacity-75</code>, и сверху обычный контент
   с <code>.gr-relative</code> (позиционированный элемент встаёт над
   непозиционированными соседями без единого z-index)
   и <code>.gr-text-white</code>. Без затемняющего слоя белый текст
@@ -379,23 +379,42 @@
   не украшение, а читаемость.
 </p>
 
+<p>
+  Сколько затемнять, считается по худшему пикселю фото — белому. Белому
+  тексту над ним нужно не меньше 54 % чёрного, чтобы выйти на 4,5 : 1
+  (норма AA): <code>.gr-opacity-50</code> даёт 3,95 : 1 — меньше нормы,
+  <code>.gr-opacity-75</code> — 10,4 : 1, и запаса хватает даже
+  подзаголовку с <code>.gr-opacity-75</code> (6,7 : 1). Затемнение светлее —
+  токен <code>--gr-overlay</code> (55 % чёрного в обеих темах, подложка окна)
+  своим правилом: <code>background-color: var(--gr-overlay)</code> даёт
+  4,74 : 1 белому тексту без прозрачности. Карточка под текстом снимает
+  вопрос совсем: контраст тогда даёт она, а не фото.
+</p>
+
+<p>
+  Белый абзацу — своим классом, а не только наследованием от обёртки:
+  правило темы на <code>p</code> (у этой документации — цвет вторичного
+  текста) сильнее унаследованного цвета, и серый подзаголовок на тёмной
+  подложке читается хуже, чем без затемнения вовсе.
+</p>
+
 <pre><code>&lt;section class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8 gr-text-center"&gt;
   &lt;img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover" src="hero.jpg" alt=""&gt;
-  &lt;div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-50"&gt;&lt;/div&gt;
+  &lt;div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-75"&gt;&lt;/div&gt;
   &lt;div class="gr-relative gr-text-white"&gt;
     &lt;h2 class="gr-mb-2"&gt;Горы ждут&lt;/h2&gt;
-    &lt;p class="gr-opacity-75 gr-mb-4"&gt;Туры выходного дня от 12 000 ₽&lt;/p&gt;
+    &lt;p class="gr-text-white gr-opacity-75 gr-mb-4"&gt;Туры выходного дня от 12 000 ₽&lt;/p&gt;
     &lt;button class="gr-btn gr-bg-white gr-text-primary"&gt;Выбрать тур&lt;/button&gt;
   &lt;/div&gt;
 &lt;/section&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">Фото → затемнение <code>.gr-opacity-50</code> → контент с <code>.gr-relative</code></div>
+  <div class="demo-block-title">Фото → затемнение <code>.gr-opacity-75</code> → контент с <code>.gr-relative</code></div>
   <div class="gr-relative gr-radius-3 gr-overflow-hidden gr-p-8 gr-text-center">
     <img class="gr-absolute gr-inset-0 gr-w-full gr-h-full gr-object-cover" alt="" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20400%20240'%20width='400'%20height='240'%3E%3Crect%20width='400'%20height='240'%20fill='%237d97b8'/%3E%3Cpath%20d='M0%20240l120-140%2090%20100%2080-120%20110%20160z'%20fill='%23516b8c'/%3E%3Ccircle%20cx='330'%20cy='50'%20r='28'%20fill='%23f7f2e8'/%3E%3C/svg%3E">
-    <div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-50"></div>
+    <div class="gr-absolute gr-inset-0 gr-bg-black gr-opacity-75"></div>
     <div class="gr-relative gr-text-white">
       <h4 class="gr-m-0 gr-text-2xl gr-mb-2">Горы ждут</h4>
-      <p class="gr-m-0 gr-opacity-75 gr-mb-4">Туры выходного дня от 12 000 ₽</p>
+      <p class="gr-m-0 gr-text-white gr-opacity-75 gr-mb-4">Туры выходного дня от 12 000 ₽</p>
       <button class="gr-btn gr-bg-white gr-text-primary" type="button">Выбрать тур</button>
     </div>
   </div>

@@ -277,24 +277,26 @@
   <a href="core-flex.html">флекс</a> <code>.gr-flex-col .gr-flex-row-csm</code>,
   <a href="ui-tables.html#kartochki-vmesto-strok">таблица</a>
   <code>.gr-table-stack-cmd</code>, <a href="griffinjs-slides.html">лента</a>
-  <code>.gr-track-stack-csm .gr-track-3-cmd</code> — столбик в узкой колонке,
-  три в ряд в широкой.
+  <code>.gr-track-stack-csm .gr-track-2-csm .gr-track-3-cmd</code> — столбик
+  в узкой колонке, в широкой — два в ряд, с 768px гнезда — три. Долю слайда
+  ставят с того же порога, что снимает столбик: без <code>-2-csm</code>
+  между 640 и 768px гнезда лента шла бы по одному слайду во всю ширину.
   Своё имя по-прежнему через <code>--gr-name</code>; вариант
   <code>data-gr-cq="…"</code> не сделан — <code>attr()</code> внутри
   <code>container-name</code> не поддерживается ни одним движком.
 </p>
 
 <div class="demo-block">
-  <div class="demo-block-title">Лента в двух гнёздах при одной ширине окна: сверху 14rem, снизу вся ширина колонки</div>
+  <div class="demo-block-title">Лента в двух гнёздах при одной ширине окна: сверху 14rem — столбик, снизу вся ширина колонки — лента</div>
   <div class="gr-cq-aside cq-narrow gr-mb-4" style="inline-size: 14rem">
-    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в боковой колонке">
+    <div class="gr-track gr-track-stack-csm gr-track-2-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в боковой колонке">
       <div class="cq-card gr-radius-2">Кресло «Дюна»</div>
       <div class="cq-card gr-radius-2">Торшер «Свет»</div>
       <div class="cq-card gr-radius-2">Полка «Норд»</div>
     </div>
   </div>
   <div class="gr-cq-main">
-    <div class="gr-track gr-track-stack-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в содержимом">
+    <div class="gr-track gr-track-stack-csm gr-track-2-csm gr-track-3-cmd" tabindex="0" aria-label="Подборка в содержимом">
       <div class="cq-card gr-radius-2">Кресло «Дюна»</div>
       <div class="cq-card gr-radius-2">Торшер «Свет»</div>
       <div class="cq-card gr-radius-2">Полка «Норд»</div>

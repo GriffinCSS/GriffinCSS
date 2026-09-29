@@ -88,6 +88,12 @@ test('страница «Слайды»: все виджеты поднимаю�
   await expect(page.locator('.gr-track').first()).toBeVisible();
 });
 
+// Следующую команду жмут, когда дорожка остановилась, а не когда доехала:
+// движок scroll отклоняет команду, пока идёт его плавная прокрутка, и снимает
+// moving только по scrollend. Между «scrollLeft у края» и scrollend есть окно,
+// и под нагрузкой полного прогона щелчок попадал в него — «вперёд» пропадал,
+// индекс оставался 2. Отказ задуман (быстрые нажатия не уводят индекс
+// от дорожки), поэтому тест ждёт то, что выставляет сам виджет: moving.
 test('несколько в ряд: точки по страницам, последняя доезжает до конца, rewind возвращает к началу', async ({ page }) => {
   await open(page);
 
@@ -96,7 +102,7 @@ test('несколько в ряд: точки по страницам, посл
   const state = () => slider.evaluate((el) => {
     const t = window.GriffinJS.instance(el, 'slider').track;
     const track = el.querySelector('.gr-track');
-    return { index: t.index, perView: t.perView, last: t.last, pages: t.pages,
+    return { index: t.index, perView: t.perView, last: t.last, pages: t.pages, moving: t.moving,
       atEnd: Math.abs(track.scrollLeft + track.clientWidth - track.scrollWidth) <= 1 };
   });
 
@@ -105,7 +111,7 @@ test('несколько в ряд: точки по страницам, посл
 
   await dots.nth(1).click();
   await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
-  await expect.poll(async () => (await state()).atEnd).toBe(true);
+  await expect.poll(async () => { const s = await state(); return s.atEnd && !s.moving; }).toBe(true);
   expect((await state()).index).toBe(2);
 
   await slider.locator('[data-gr-next]').click();
@@ -158,11 +164,17 @@ test('страницы с остатком на странице «Слайды�
   const info = () => track.evaluate((el) => {
     const t = window.GriffinJS.instance(el.parentElement, 'slider').track;
     const offsets = [...el.children].map((c) => Math.round(c.offsetLeft - el.offsetLeft));
-    return { index: t.index, left: Math.round(el.scrollLeft), at: offsets.indexOf(Math.round(el.scrollLeft)), end: Math.round(el.scrollWidth - el.clientWidth) };
+    return { index: t.index, moving: t.moving, left: Math.round(el.scrollLeft), at: offsets.indexOf(Math.round(el.scrollLeft)), end: Math.round(el.scrollWidth - el.clientWidth) };
   });
   const dot = (k) => expect(slider.locator('.gr-slider-dot').nth(k)).toHaveAttribute('aria-current', 'true');
+  // Шаг засчитан, когда дорожка и доехала, и остановилась: следующую кнопку
+  // движок иначе отклонит (см. тест «несколько в ряд»).
   const settled = async (index, at) => {
-    await expect.poll(async () => { const s = await info(); return s.index === index && (at === 'end' ? s.left === s.end : s.at === at); }, { timeout: 3000 }).toBe(true);
+    await expect.poll(async () => {
+      const s = await info();
+
+      return s.index === index && (at === 'end' ? s.left === s.end : s.at === at) && !s.moving;
+    }, { timeout: 3000 }).toBe(true);
   };
 
   await slider.scrollIntoViewIfNeeded();
@@ -226,3 +238,102 @@ test('свайп: индекс и точка переключаются до о�
   const t = await track.evaluate(() => window.__t);
   if (t.end !== null) expect(t.change).toBeLessThanOrEqual(t.end);
 });
+
+// «Лента без скрипта» на странице «Слайды»: слайды своей ширины — модификатор
+// .gr-track-auto. Без него flex-basis: 100% базового правила дорожки
+// растягивал каждую «историю» на всю ширину (654 × 654 px на 1280), а утилиты
+// ширины на слайде этой основе проигрывают. Скрипт снят: раздел — о странице
+// без griffinjs.js.
+for (const width of [1280, 390]) {
+  test(`лента без скрипта, ${width} px: истории — круги в ряд, теги — по ширине текста, обе дорожки листаются`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.route('**/griffinjs.js', (route) => route.abort());
+    await page.goto('/docs/griffinjs-slides.html');
+
+    const stories = await page.locator('.gr-track[aria-label="Истории"]').evaluate((track) => {
+      const box = track.getBoundingClientRect();
+      const frames = [...track.children].map((item) => {
+        const frame = item.querySelector('.gr-avatar').getBoundingClientRect();
+
+        return {
+          w: frame.width,
+          h: frame.height,
+          radius: parseFloat(getComputedStyle(item.querySelector('.gr-avatar')).borderTopLeftRadius),
+          inside: item.getBoundingClientRect().left >= box.left - 0.5 && item.getBoundingClientRect().right <= box.right + 0.5,
+        };
+      });
+
+      return { frames, visible: frames.filter((f) => f.inside).length, scrollable: track.scrollWidth > track.clientWidth + 1 };
+    });
+
+    expect(stories.visible).toBeGreaterThanOrEqual(3);
+    for (const f of stories.frames) {
+      expect(Math.abs(f.w - f.h)).toBeLessThanOrEqual(0.5);
+      expect(f.radius).toBeGreaterThanOrEqual(f.w / 2);
+    }
+    expect(stories.scrollable).toBe(true);
+
+    // Ширина тега — его текст плюс поля и рамка: ни растяжения на дорожку,
+    // ни сжатия (лишнее уходит в прокрутку).
+    const tags = await page.locator('.gr-track[aria-label="Популярные запросы"]').evaluate((track) => {
+      const items = [...track.children].map((tag) => {
+        const cs = getComputedStyle(tag);
+        const range = document.createRange();
+
+        range.selectNodeContents(tag);
+
+        return {
+          width: tag.getBoundingClientRect().width,
+          content: range.getBoundingClientRect().width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+            + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth),
+        };
+      });
+
+      return { items, scrollable: track.scrollWidth > track.clientWidth + 1 };
+    });
+
+    expect(tags.items.length).toBeGreaterThanOrEqual(6);
+    for (const t of tags.items) expect(Math.abs(t.width - t.content)).toBeLessThanOrEqual(1);
+    expect(tags.scrollable).toBe(true);
+  });
+}
+
+// «Одна разметка: столбик в узком гнезде, лента в широком» — раздел «Дорожка»
+// и тот же пример на странице контейнерных запросов. Пороги столбика и доли
+// обязаны стыковаться: .gr-track-stack-csm снимает столбик с 640 px гнезда,
+// и если доля слайда начинается только с 768 (.gr-track-3-cmd), между ними
+// лента идёт по одному слайду во всю ширину — ровно так демо и выглядело
+// на окнах 1180–1366 px (колонка доков 654–762 px). Колонка доков уже 640 px —
+// широкое гнездо честно становится столбиком.
+const ONE_MARKUP = [
+  ['/docs/griffinjs-slides.html', 'Похожие товары, узкая колонка', 'Похожие товары, широкая колонка'],
+  ['/docs/container-queries.html', 'Подборка в боковой колонке', 'Подборка в содержимом'],
+];
+
+for (const [url, narrowLabel, wideLabel] of ONE_MARKUP) for (const width of [1024, 1280, 1440]) {
+  test(`лента «одна разметка» ${url.split('/').pop()}, окно ${width} px: в ленте не бывает одного слайда во всю ширину`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(url);
+
+    const probe = (label) => page.locator(`.gr-track[aria-label="${label}"]`).evaluate((track) => {
+      const box = track.getBoundingClientRect();
+      const inside = [...track.children].filter((s) => {
+        const r = s.getBoundingClientRect();
+
+        return r.left >= box.left - 0.5 && r.right <= box.right + 0.5;
+      });
+
+      return { width: box.width, column: getComputedStyle(track).flexDirection === 'column', visible: inside.length };
+    });
+
+    const narrow = await probe(narrowLabel);
+    const wide = await probe(wideLabel);
+
+    expect(narrow.column).toBe(true);
+    if (wide.width < 640) expect(wide.column).toBe(true);
+    else {
+      expect(wide.column).toBe(false);
+      expect(wide.visible).toBe(wide.width < 768 ? 2 : 3);
+    }
+  });
+}

@@ -320,7 +320,7 @@ export const PRESETS = {
     'gr-file-item', 'gr-file-list', 'gr-file-name', 'gr-file-remove', 'gr-file-size',
     'gr-lightbox', 'gr-lightbox-caption', 'gr-lightbox-close', 'gr-lightbox-counter',
     'gr-lightbox-item', 'gr-lightbox-next', 'gr-lightbox-prev', 'gr-lightbox-track',
-    'gr-modal', 'gr-slide', 'gr-slider-dot', 'gr-slider-pause',
+    'gr-modal', 'gr-slider-dot', 'gr-slider-pause',
     'gr-toast', 'gr-toast-*', 'gr-toast-body', 'gr-toast-icon', 'gr-toast-leaving',
     'gr-toast-region', 'gr-toast-region-*', 'gr-toast-title',
     'gr-track',

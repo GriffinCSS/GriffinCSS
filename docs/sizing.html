@@ -96,6 +96,7 @@
   <tr><td><code>.gr-max-w-none</code></td><td><code>max-width: none</code></td><td>Снять ограничение</td></tr>
   <tr><td><code>.gr-max-w-full</code></td><td><code>max-width: 100%</code></td><td>Не шире родителя</td></tr>
   <tr><td><code>.gr-max-w-page</code></td><td><code>max-width: var(--gr-max-width)</code></td><td>Ширина контента, та же, что у <code>.gr-container</code></td></tr>
+  <tr><td><code>.gr-max-w-prose</code></td><td><code>max-width: 65ch</code></td><td>Мера строки текста — 65 знаков: абзац, лид, <a href="typography.html"><code>.gr-prose</code></a></td></tr>
   <tr><td><code>.gr-max-h-full</code></td><td><code>max-height: 100%</code></td><td>Не выше родителя</td></tr>
   <tr><td><code>.gr-max-h-screen</code></td><td><code>max-height: 100svh</code></td><td>Не выше экрана — вместе с <code>.gr-overflow-y-auto</code> даёт прокручиваемую панель</td></tr>
 </table>
@@ -261,7 +262,8 @@
   нет намеренно: ходовые фиксированные размеры уже зашиты в компоненты ui —
   <code>.gr-avatar-xs…-xl</code>, <code>.gr-btn-icon</code>, — а разовый
   квадрат собирается парой произвольных значений
-  <code>.gr-w-[48px] .gr-h-[48px]</code>. Центр содержимого внутри квадрата —
+  <code>.gr-w-[48px] .gr-h-[48px]</code> — или без рантайма, из аватара:
+  рецепт «Преимущества: иконка в плашке» ниже. Центр содержимого внутри квадрата —
   всё тот же <code>.gr-grid-place-center</code>. Во флекс-ряду фиксированной
   фигуре полезен сосед-текст с <code>.gr-min-w-0</code> — иначе длинная
   строка сожмёт квадрат.
@@ -290,6 +292,86 @@
       <span class="gr-avatar gr-avatar-lg">LG</span>
       <span class="gr-avatar gr-avatar-xl">XL</span>
     </div>
+  </div>
+</div>
+
+<h3>Преимущества: иконка в плашке</h3>
+
+<p>
+  Плашка под иконку — тот же фиксированный квадрат, только из готового
+  компонента и без рантайма: <code>.gr-avatar .gr-avatar-square</code>
+  со ступенью размера (<code>-lg</code> — 3rem, <code>-xl</code> — 4rem)
+  центрирует содержимое и во флексе не сжимается. Цвет плашки и значка —
+  утилиты: слой утилит старше компонентов, и <code>.gr-bg-accent
+  .gr-text-on-accent</code> перекрывают заливку аватара, а вместе с акцентом
+  меняется и плашка. Размер вне ступеней — токен <code>--gr-avatar-size</code>
+  своим правилом. Размер значка — атрибутами <code>width</code>
+  и <code>height</code> у <code>&lt;svg&gt;</code>: класса для иконки
+  в библиотеке нет, компонент выравнивает и красит её сам.
+</p>
+
+<pre><code>&lt;div class="gr-grid-1 gr-grid-3-sm gr-gap"&gt;
+  &lt;div&gt;
+    &lt;span class="gr-avatar gr-avatar-square gr-avatar-lg gr-bg-accent gr-text-on-accent"&gt;
+      &lt;svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"&gt;…&lt;/svg&gt;
+    &lt;/span&gt;
+    &lt;h3 class="gr-mt-3 gr-mb-1 gr-text-lg gr-font-semibold"&gt;Сроки в договоре&lt;/h3&gt;
+    &lt;p class="gr-m-0 gr-text-sm gr-text-ink-secondary"&gt;Каждый этап с датой сдачи.&lt;/p&gt;
+  &lt;/div&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Плашка 3rem — <code>.gr-avatar-lg</code>, цвет — утилиты, значок 24px — атрибуты <code>&lt;svg&gt;</code></div>
+  <div class="gr-grid-1 gr-grid-3-sm gr-gap">
+    <div>
+      <span class="gr-avatar gr-avatar-square gr-avatar-lg gr-bg-accent gr-text-on-accent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></span>
+      <h3 class="gr-mt-3 gr-mb-1 gr-text-lg gr-font-semibold">Сроки в договоре</h3>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Каждый этап с датой сдачи; сорвали срок — скидка за каждый день.</p>
+    </div>
+    <div>
+      <span class="gr-avatar gr-avatar-square gr-avatar-lg gr-bg-accent gr-text-on-accent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <h3 class="gr-mt-3 gr-mb-1 gr-text-lg gr-font-semibold">Один менеджер</h3>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Отвечает в мессенджере и знает проект целиком.</p>
+    </div>
+    <div>
+      <span class="gr-avatar gr-avatar-square gr-avatar-lg gr-bg-accent gr-text-on-accent"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></span>
+      <h3 class="gr-mt-3 gr-mb-1 gr-text-lg gr-font-semibold">Быстрые страницы</h3>
+      <p class="gr-m-0 gr-text-sm gr-text-ink-secondary">Зелёные показатели скорости на мобильных — пункт акта приёмки.</p>
+    </div>
+  </div>
+</div>
+
+<h3>Ряд логотипов одной высоты</h3>
+
+<p>
+  Логотипы разной формы выравнивают по высоте, а не по ширине: атрибут
+  <code>height</code> у <code>&lt;img&gt;</code> задаёт высоту, ширину
+  браузер считает сам по пропорции файла. Ресет эту высоту не трогает —
+  <code>height: auto</code> он не ставит, а вот ширину ограничивает
+  шириной родителя. <code>.gr-object-contain</code> страхует узкую колонку:
+  логотип, который в неё не влез, ужимается целиком, без искажений.
+  Нужны одинаковые ячейки, а не одинаковая высота, — сетка
+  <code>.gr-grid-3 .gr-grid-6-md</code> и <code>.gr-w-full .gr-aspect-wide
+  .gr-object-contain</code> на картинке: логотип вписан в ячейку.
+  Приглушить ряд — <a href="effects.html"><code>.gr-opacity-50
+  .gr-grayscale-100</code></a>, пустить лентой с прокруткой —
+  <a href="griffinjs-slides.html#lenta-bez-skripta"><code>.gr-track
+  .gr-track-auto</code></a>.
+</p>
+
+<pre><code>&lt;div class="gr-flex gr-flex-wrap gr-flex-center gr-flex-items-center gr-gap-lg"&gt;
+  &lt;img class="gr-object-contain" src="acme.svg" alt="ACME" height="32"&gt;
+  &lt;img class="gr-object-contain" src="nord.svg" alt="Nord" height="32"&gt;
+  …
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Пять логотипов разной ширины — высота у всех 32px</div>
+  <div class="gr-flex gr-flex-wrap gr-flex-center gr-flex-items-center gr-gap-lg gr-py-2">
+    <img class="gr-object-contain" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2096%2032'%20width='96'%20height='32'%3E%3Ctext%20x='50%25'%20y='23'%20text-anchor='middle'%20font-family='system-ui,sans-serif'%20font-size='20'%20font-weight='800'%20fill='%233a5bd9'%3EACME%3C/text%3E%3C/svg%3E" alt="ACME" height="32">
+    <img class="gr-object-contain" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2072%2032'%20width='72'%20height='32'%3E%3Ctext%20x='50%25'%20y='23'%20text-anchor='middle'%20font-family='system-ui,sans-serif'%20font-size='20'%20font-weight='800'%20fill='%232f8f5b'%3ENord%3C/text%3E%3C/svg%3E" alt="Nord" height="32">
+    <img class="gr-object-contain" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20150%2032'%20width='150'%20height='32'%3E%3Ctext%20x='50%25'%20y='23'%20text-anchor='middle'%20font-family='Georgia,serif'%20font-size='20'%20font-weight='800'%20fill='%238a5a2b'%3EOlive%26amp%3BCo%3C/text%3E%3C/svg%3E" alt="Olive&amp;Co" height="32">
+    <img class="gr-object-contain" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20118%2032'%20width='118'%20height='32'%3E%3Ctext%20x='50%25'%20y='23'%20text-anchor='middle'%20font-family='system-ui,sans-serif'%20font-size='20'%20font-weight='800'%20fill='%23b0306a'%3EVERTEX%3C/text%3E%3C/svg%3E" alt="VERTEX" height="32">
+    <img class="gr-object-contain" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20width='32'%20height='32'%3E%3Ctext%20x='50%25'%20y='23'%20text-anchor='middle'%20font-family='system-ui,sans-serif'%20font-size='20'%20font-weight='800'%20fill='%23c26a00'%3E%CE%94%3C/text%3E%3C/svg%3E" alt="Δ" height="32">
   </div>
 </div>
 

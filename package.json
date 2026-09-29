@@ -1,6 +1,6 @@
 {
   "name": "griffincss",
-  "version": "0.26.2",
+  "version": "0.27.0",
   "private": true,
   "description": "Монорепозиторий Griffincss: ядро griffincss-core, утилиты griffincss-utils и компоненты griffincss-ui",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
@@ -39,7 +39,7 @@
     "watch": "sass --watch packages/core/scss:packages/core/dist packages/ui/scss:packages/ui/dist packages/utils/scss:packages/utils/dist --load-path=node_modules --style=compressed --no-source-map",
     "lint": "stylelint \"packages/*/scss/**/*.scss\"",
     "lint:fix": "stylelint --fix \"packages/*/scss/**/*.scss\"",
-    "test": "node --test \"packages/*/test/*.test.js\" \"scripts/test/*.test.js\" && node --test --test-concurrency=1 \"scripts/test/serial/*.test.js\" && node scripts/sync-griffinjs.mjs && node scripts/sync-sizes.mjs && node scripts/check-dist.mjs && node scripts/check-origin.mjs && node scripts/check-links.mjs",
+    "test": "node --test \"packages/*/test/*.test.js\" \"scripts/test/*.test.js\" && node --test --test-concurrency=1 \"scripts/test/serial/*.test.js\" && node scripts/sync-griffinjs.mjs && node scripts/sync-sizes.mjs && node scripts/check-dist.mjs && node scripts/check-origin.mjs && node scripts/check-links.mjs && node scripts/check-docs-classes.mjs",
     "test:browser": "playwright test",
     "test:browser:all": "node scripts/test-browsers.mjs",
     "check": "npm run lint && npm run build && npm test"

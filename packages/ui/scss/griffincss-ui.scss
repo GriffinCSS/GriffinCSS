@@ -58,6 +58,7 @@
   @include meta.load-css('nav');
   @include meta.load-css('pagination');
   @include meta.load-css('progress');
+  @include meta.load-css('prose');
   @include meta.load-css('range');
   @include meta.load-css('rating');
   @include meta.load-css('skeleton');

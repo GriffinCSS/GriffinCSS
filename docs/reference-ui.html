@@ -163,6 +163,13 @@
   <tr><td><code>[data-gr-sortable]</code></td><td>Сортировка строк виджетом слоя <a href="griffinjs.html">GriffinJS</a>: атрибут на <code>&lt;table&gt;</code>, <code>aria-sort="none"</code> на сортируемых заголовках, необязательный <code>data-gr-sort-value</code> на ячейке — <a href="ui-tables.html#griffinjs">«Таблицы»</a></td></tr>
 </table>
 
+<h2>Форматированный текст (<code>scss/_prose.scss</code>)</h2>
+
+<table>
+  <tr><th>Класс</th><th>Описание</th></tr>
+  <tr><td><code>.gr-prose</code></td><td>Обёртка HTML из редактора: ритм между соседями (<code>--gr-gap</code>; у подзаголовка сверху <code>--gr-gap-lg</code>, снизу <code>--gr-gap-sm</code>), списки и ссылки без класса, цитата с линией акцента, <code>hr</code>, картинки не шире колонки, <code>&lt;table&gt;</code> — вид <code>.gr-table</code>. Правила детей — под <code>:where()</code>: любой класс на ребёнке сильнее. Поля ставит сама, от ресета не зависит; меры строки нет — <code>.gr-max-w-prose</code> из утилит</td></tr>
+</table>
+
 <h2>Сообщения (<code>scss/_alert.scss</code>)</h2>
 
 <table>
@@ -462,10 +469,12 @@
   <tr><th>Класс</th><th>Описание</th></tr>
   <tr><td><code>.gr-steps</code></td><td>Ряд шагов; разметка — <code>&lt;ol&gt;</code></td></tr>
   <tr><td><code>.gr-steps-vertical</code></td><td>Тот же ряд колонкой</td></tr>
+  <tr><td><code>.gr-steps-stack-{sm,md,lg,xl}</code>, <code>-c{sm,md,lg,xl}</code></td><td>Колонкой ниже порога окна или ближайшего <code>.gr-cq</code>, рядом от порога; суффикс называет порог, как у <code>.gr-table-stack-*</code></td></tr>
+  <tr><td><code>.gr-steps-plain</code></td><td>Все шаги равноправны: подпись цвета текста, маркер акцентный, линия нейтральная — перечень этапов без хода процесса</td></tr>
   <tr><td><code>.gr-step</code></td><td>Шаг; по умолчанию — ожидающий</td></tr>
   <tr><td><code>.gr-step-done</code></td><td>Пройденный: линия от него к следующему залита</td></tr>
   <tr><td><code>.gr-step-disabled</code></td><td>Пропущенный или отменённый</td></tr>
-  <tr><td><code>.gr-step-marker</code> / <code>-label</code> / <code>-note</code> / <code>-body</code></td><td>Кружок со знаком, название, пояснение, колонка подписи</td></tr>
+  <tr><td><code>.gr-step-marker</code> / <code>-label</code> / <code>-note</code> / <code>-body</code></td><td>Кружок со знаком, название, пояснение; <code>-body</code> — подпись и пояснение одним блоком: в колонке справа от маркера, в ряду под ним</td></tr>
 </table>
 
 <p>Текущий шаг помечается <code>aria-current="step"</code> — тем же признаком, по которому его находит программа чтения с экрана; класса для него нет. Знак в маркере (номер, галочка) кладут в разметку: цвет не переживает чёрно-белую печать и дальтонизм, знак переживает.</p>

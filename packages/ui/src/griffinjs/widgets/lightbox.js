@@ -2,23 +2,28 @@
  * GriffinJS — лайтбокс: <dialog> + дорожка.
  *
  *   <a href="large.jpg" data-gr-lightbox="promo" data-gr-caption="Подпись"><img src="thumb.jpg" alt="…"></a>
+ *   <a href="https://rutube.ru/video/…/" data-gr-src="https://rutube.ru/play/embed/…" data-gr-lightbox>…</a>
  *
  * Значение атрибута — группа: элементы с одним значением листаются в одном
  * окне; пустое значение — окно на один элемент, и дорожка вырождается
- * в один кадр без кнопок. Тип — по адресу (картинка, видео, iframe для
- * YouTube/Vimeo) или явно: data-gr-type="iframe".
+ * в один кадр без кнопок. Адрес кадра — data-gr-src, без него — href:
+ * у видео это разные адреса — во фрейм встаёт только плеер, страницу ролика
+ * хостинги во фрейме не показывают, а ссылка без скрипта ведёт именно на неё.
+ * Тип — по адресу кадра (картинка, видео, iframe для плееров YouTube, Vimeo,
+ * Rutube и VK Видео) или явно: data-gr-type="iframe".
  *
- * База без JS — ссылка на большое изображение. Окно строится при открытии
- * и уничтожается при закрытии: так видео гарантированно останавливается,
- * а в документе не копится по <dialog> на каждую группу. Верхний слой,
- * ловушка фокуса, Esc, возврат фокуса — от <dialog>.
+ * База без JS — ссылка на большое изображение или на страницу ролика.
+ * Окно строится при открытии и уничтожается при закрытии: так видео
+ * гарантированно останавливается, а в документе не копится по <dialog>
+ * на каждую группу. Верхний слой, ловушка фокуса, Esc, возврат фокуса —
+ * от <dialog>.
  */
 (function (G) {
   'use strict';
 
   var ATTR = 'data-gr-lightbox';
   var VIDEO = /\.(mp4|webm|ogv|mov)(\?|#|$)/i;
-  var EMBED = /youtube\.com|youtu\.be|vimeo\.com/i;
+  var EMBED = /youtube\.com|youtu\.be|vimeo\.com|rutube\.ru|vkvideo\.ru|vk\.com\/video/i;
 
   var dialog = null;
   var track = null;
@@ -36,9 +41,10 @@
     return 'image';
   }
 
-  // Элемент разметки → описание кадра.
+  // Элемент разметки → описание кадра. data-gr-src старше href: у видео
+  // href — страница ролика для перехода без скрипта, а кадр — плеер.
   function itemOf(node) {
-    var src = node.getAttribute('href') || node.getAttribute('data-gr-src') || '';
+    var src = node.getAttribute('data-gr-src') || node.getAttribute('href') || '';
     var img = node.querySelector ? node.querySelector('img') : null;
 
     return {
@@ -105,7 +111,7 @@
     var trackEl = element('div', 'gr-track gr-lightbox-track', { tabindex: '0' });
 
     for (var i = 0; i < n; i++) {
-      var figure = element('figure', 'gr-slide gr-lightbox-item');
+      var figure = element('figure', 'gr-lightbox-item');
 
       figure.appendChild(media(items[i]));
 

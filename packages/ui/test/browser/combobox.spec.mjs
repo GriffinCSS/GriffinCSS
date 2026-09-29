@@ -10,6 +10,14 @@ const ROOT = '#gr-lab-combobox-multi';
 
 const chosen = (page) => page.locator(`${ROOT} select`).evaluate((el) => Array.from(el.selectedOptions).map((o) => o.value));
 
+// Выдача набранного запроса на экране — подсветка <mark> с его текстом.
+// open для этого не годится: его ставит первая же выдача, в том числе
+// промежуточная («a», «ai»), а запрос отложен и каждая буква перезапускает
+// таймер. Под нагрузкой промежуточная выдача успевала встать, ArrowDown
+// подсвечивал её позицию, финальная выдача сбрасывала подсветку — и Enter
+// ничего не выбирал (со свободными тегами — создавал тег из набранного).
+const shown = (root, query) => expect(root.locator('.gr-combobox-option mark').first()).toHaveText(new RegExp(`^${query}$`, 'i'));
+
 test('мультивыбор: теги перед полем, выбор добавляет, крестик и Backspace снимают', async ({ page }) => {
   await page.goto(LAB);
 
@@ -24,7 +32,7 @@ test('мультивыбор: теги перед полем, выбор доб�
 
   await input.click();
   await page.keyboard.type('air');
-  await expect(root).toHaveAttribute('data-gr-state', 'open');
+  await shown(root, 'air');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
 
@@ -35,7 +43,7 @@ test('мультивыбор: теги перед полем, выбор доб�
 
   // Позиции нет в <select>: добавляется и выбирается.
   await page.keyboard.type('zen');
-  await expect(root).toHaveAttribute('data-gr-state', 'open');
+  await shown(root, 'zen');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   expect(await chosen(page)).toEqual(['Acer Aspire', 'AirPods', 'Asus Zenbook']);
@@ -160,7 +168,7 @@ test('free: Enter на своём слове создаёт тег, на акт�
 
   // Подсказка активна — Enter берёт её, а не набранный префикс.
   await page.keyboard.type('нау');
-  await expect(root).toHaveAttribute('data-gr-state', 'open');
+  await shown(root, 'нау');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(labels).toHaveText(['ноутбук', 'react', 'наушники']);

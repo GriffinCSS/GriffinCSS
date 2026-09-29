@@ -20,7 +20,7 @@
  * состояние, только physical.
  *
  * JS пишет только aria-*, inert, --gr-progress и --gr-snap (снап-точки
- * по страницам); оформление активного слайда — .gr-slide[aria-current] в CSS.
+ * по страницам); оформление активного слайда — .gr-track > [aria-current] в CSS.
  */
 (function (G) {
   'use strict';

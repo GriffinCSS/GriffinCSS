@@ -18,11 +18,16 @@
 // Состояний три: пройденный (.gr-step-done), текущий (aria-current="step")
 // и ожидающий — он же состояние по умолчанию. Текущий находится по тому же
 // признаку, по которому его находит программа чтения с экрана; класса
-// для него нет намеренно.
+// для него нет намеренно. Перечню этапов без хода — «Этапы работы»
+// лендинга — состояния не нужны: .gr-steps-plain делает все шаги
+// равноправными.
 //
 // Знак в маркере кладут в разметку: галочка у пройденного шага и номер
 // у остальных — это содержимое, а не оформление. Цвет остаётся вторым
 // признаком поверх знака и позиции, а не единственным.
+
+@use 'griffincss-core/scss/breakpoints' as bp;
+@use 'griffincss-core/scss/container-mixins' as cq;
 
 .gr-steps {
   --gr-step-marker-size: 2rem;
@@ -125,6 +130,26 @@
   line-height: 1.35;
 }
 
+// Подпись и пояснение одним блоком: в колонке он встаёт справа от маркера,
+// в ряду — под ним, и там ведёт себя как её отсутствие: строки друг под
+// другом с тем же зазором, что у шага. Нужен разметке, которая бывает
+// и тем и другим (.gr-steps-stack-*).
+.gr-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gr-ui-gap) * 0.5);
+}
+
+// --- Равноправный список ----------------------------------------------------
+
+// Перечень этапов без хода процесса: подпись цвета текста, маркер
+// акцентный, линия нейтральная. Вес — как у .gr-step, и стоит до состояний:
+// пройденный и текущий шаг в таком списке по-прежнему сильнее.
+:where(.gr-steps-plain) .gr-step {
+  --gr-step-color: var(--gr-color-text);
+  --gr-step-marker-fg: var(--gr-color-accent);
+}
+
 // --- Состояния --------------------------------------------------------------
 
 // Пройденный: его хвост залит акцентом — путь от него дальше проделан.
@@ -157,41 +182,59 @@
 
 // Колонка: маркер слева, подпись справа. На узком экране это единственный
 // работающий вариант — горизонтальный ряд из четырёх шагов там нечитаем.
-.gr-steps-vertical {
-  flex-direction: column;
-  gap: var(--gr-gap);
+// Правила колонки описаны один раз: .gr-steps-vertical — всегда,
+// .gr-steps-stack-{bp} и -c{bp} — ниже порога (см. ниже).
+@mixin gr-steps-vertical($s) {
+  #{$s} {
+    flex-direction: column;
+    gap: var(--gr-gap);
+  }
+
+  #{$s} > :where(li) {
+    flex: none;
+  }
+
+  #{$s} .gr-step {
+    flex: none;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--gr-ui-gap);
+    text-align: start;
+  }
+
+  // В колонке хвост идёт вниз от маркера до маркера следующего шага. Длину
+  // задают оба вылета сразу, а block-size: auto считает её из них: сколько бы
+  // текста ни висело под маркером, линия дотянется — это и есть довод
+  // в пользу хвоста, а не отрезка фиксированной длины.
+  #{$s} .gr-step::after {
+    inset-block: var(--gr-step-marker-size) calc(var(--gr-gap) * -1);
+    inset-inline: calc(var(--gr-step-marker-size) / 2) auto;
+    inline-size: var(--gr-border-width);
+    block-size: auto;
+    margin-block-start: 0;
+    margin-inline-start: calc(var(--gr-border-width) * -0.5);
+  }
+
+  // Подпись и пояснение встают в колонку рядом с маркером (сама колонка —
+  // у .gr-step-body всегда); первая строка — по центру маркера.
+  #{$s} .gr-step-body {
+    gap: calc(var(--gr-ui-gap) * 0.25);
+    padding-block-start: calc((var(--gr-step-marker-size) - 1.3em) / 2);
+  }
 }
 
-.gr-steps-vertical > :where(li) {
-  flex: none;
-}
+@include gr-steps-vertical('.gr-steps-vertical');
 
-.gr-steps-vertical .gr-step {
-  flex: none;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--gr-ui-gap);
-  text-align: start;
-}
+// Столбиком ниже порога, рядом — от порога: суффикс называет порог,
+// как у .gr-table-stack-md. -md — колонка, пока окно уже 768px;
+// -cmd — пока уже 768px ближайший предок с .gr-cq. Разметка одна на оба
+// вида: подпись и пояснение — в .gr-step-body.
+@each $bp-name, $bp-value in bp.$gr-breakpoints {
+  @media (width < $bp-value) {
+    @include gr-steps-vertical('.gr-steps-stack-#{$bp-name}');
+  }
 
-// В колонке хвост идёт вниз от маркера до маркера следующего шага. Длину
-// задают оба вылета сразу, а block-size: auto считает её из них: сколько бы
-// текста ни висело под маркером, линия дотянется — это и есть довод
-// в пользу хвоста, а не отрезка фиксированной длины.
-.gr-steps-vertical .gr-step::after {
-  inset-block: var(--gr-step-marker-size) calc(var(--gr-gap) * -1);
-  inset-inline: calc(var(--gr-step-marker-size) / 2) auto;
-  inline-size: var(--gr-border-width);
-  block-size: auto;
-  margin-block-start: 0;
-  margin-inline-start: calc(var(--gr-border-width) * -0.5);
-}
-
-// Подпись и пояснение встают в колонку: в строке они разъезжались бы
-// по базовой линии маркера.
-.gr-steps-vertical .gr-step-body {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--gr-ui-gap) * 0.25);
-  padding-block-start: calc((var(--gr-step-marker-size) - 1.3em) / 2);
+  @include cq.gr-container-below($bp-name) {
+    @include gr-steps-vertical('.gr-steps-stack-c#{$bp-name}');
+  }
 }
