@@ -19,9 +19,12 @@
  *   * остановка медиа при закрытии: <video>/<audio> на паузу, <iframe>
  *     разгружается и возвращается при следующем открытии;
  *   * ajax-содержимое: data-gr-src грузится один раз в [data-gr-content]
- *     (или в само окно), состояния loading → open | error;
+ *     (или в само окно), состояния loading → open | error. Только ответ
+ *     своего origin с типом text/html: чужой адрес, data: и прочие
+ *     схемы — error без запроса;
  *   * hash: открытие пишет #id в историю, «Назад» закрывает окно,
- *     а страница, открытая с #id, показывает окно сразу;
+ *     а страница, открытая с #id, показывает окно сразу — закрытие
+ *     такого окна снимает #id из адреса на месте, а не шагом назад;
  *   * рост окна (Этап 48d) — data-gr-dialog="grow": ResizeObserver
  *     на окне, и смена высоты больше 24 px идёт анимацией от прежней
  *     к новой (element.animate по block-size — не спорит с transition
@@ -80,6 +83,28 @@
     return (value || '').replace(/^#/, '');
   }
 
+  // Фрагмент — только ответ своего origin с типом text/html: разметку
+  // из innerHTML браузер оживляет, и <img onerror> чужого ответа исполнился
+  // бы в origin страницы. Адрес — http(s) своего origin (у data: origin —
+  // строка 'null'); редирект на чужой отклоняет mode: 'same-origin'; тип
+  // ответа отсекает свой JSON или текст, отражающий запрос.
+  function fragment(src) {
+    var url = null;
+
+    try { url = new URL(src, document.baseURI); } catch (e) { /* не адрес */ }
+
+    if (!url || !/^https?:$/.test(url.protocol) || url.origin !== location.origin) {
+      return Promise.reject(new Error('foreign origin'));
+    }
+
+    return fetch(url.href, { mode: 'same-origin' }).then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!/^text\/html/i.test(response.headers.get('content-type'))) throw new Error('not text/html');
+
+      return response.text();
+    });
+  }
+
   // Прокручиваемый предок внутри окна: жест в теле окна с прокруткой —
   // законный, всё остальное двигало бы страницу.
   function scrollable(node, root) {
@@ -135,6 +160,7 @@
     var loaded = false;
     var frames = [];           // [{el, src}] — разгруженные iframe
     var byHistory = false;     // закрыто кнопкой «Назад»: back() не зовём
+    var pushed = false;        // #id в адресе записало само окно
     var record = { el: el, o: o };
     var grow = null;           // ResizeObserver — только по grow
     var known = 0;             // высота окна по последнему наблюдению
@@ -181,7 +207,7 @@
       loaded = true;
 
       if (typeof fetch !== 'function') {
-        G.warn('окно: fetch недоступен, ' + src + ' не загружен');
+        G.warn('dialog: fetch is unavailable, ' + src + ' not loaded');
         setAttr(el, 'data-gr-state', 'error');
         return;
       }
@@ -190,15 +216,11 @@
 
       setAttr(el, 'data-gr-state', 'loading');
 
-      fetch(src).then(function (response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-
-        return response.text();
-      }).then(function (html) {
+      fragment(src).then(function (html) {
         target.innerHTML = html;
         setAttr(el, 'data-gr-state', isOpen() ? 'open' : 'ready');
       }, function (error) {
-        G.warn('окно: ' + src + ' не загружен: ' + (error && error.message));
+        G.warn('dialog: ' + src + ' not loaded: ' + (error && error.message));
         setAttr(el, 'data-gr-state', 'error');
       });
     }
@@ -244,13 +266,19 @@
     function pushHash() {
       if (!o.hash || !id() || typeof history === 'undefined' || hashIs()) return;
 
-      try { history.pushState(null, '', '#' + id()); } catch (e) { /* file:// и прочее */ }
+      try { history.pushState(null, '', '#' + id()); pushed = true; } catch (e) { /* file:// и прочее */ }
     }
 
+    // Свой #id закрытие убирает шагом назад по истории. #id, пришедший
+    // со ссылкой (страница открыта сразу с окном), так не убрать: «назад»
+    // увёл бы с сайта. Он снимается из адреса на месте, без новой записи.
     function popHash() {
       if (!o.hash || byHistory || typeof history === 'undefined' || !hashIs()) return;
 
-      try { history.back(); } catch (e) { /* без истории */ }
+      try {
+        if (pushed) history.back();
+        else history.replaceState(history.state, '', location.pathname + location.search);
+      } catch (e) { /* без истории */ }
     }
 
     // --- Открытие и закрытие ------------------------------------------------
@@ -291,6 +319,7 @@
       relock();
       stopMedia();
       popHash();
+      pushed = false;
       byHistory = false;
 
       if (el.getAttribute('data-gr-state') !== 'loading') setAttr(el, 'data-gr-state', 'ready');
@@ -356,7 +385,7 @@
   function open(target) {
     var w = instanceOf(target);
 
-    if (!w) { G.warn('окно не найдено: ' + target); return null; }
+    if (!w) { G.warn('dialog not found: ' + target); return null; }
 
     return w.open();
   }

@@ -163,7 +163,7 @@
     // разобрался бы как пара «00: 00», поэтому без ключа берётся строка как есть.
     var format = o.format ? String(o.format) : (el.getAttribute('data-gr-mask') || '').trim();
 
-    if (!format) throw new Error('у маски нет формата');
+    if (!format) throw new Error('the mask has no format');
 
     var tokens;
     var last = null;          // последнее записанное значение

@@ -235,7 +235,7 @@
     var native = el.getAttribute('type');
     var mode = MODES[native];
 
-    if (!mode) throw new Error('нужен type="date", "time" или "datetime-local"');
+    if (!mode) throw new Error('needs type="date", "time" or "datetime-local"');
 
     var attrs = G.recorder();
     var events = G.listeners();    // на всё время жизни
@@ -797,7 +797,7 @@
       var other = target && G.mount(target, 'datetime');
 
       if (other) { peer = other; role = 'from'; other.pair(api); push(); }
-      else G.warn('datetime: поле «по» не найдено — ' + o.to);
+      else G.warn('datetime: the "to" field is not found: ' + o.to);
     }
 
     return api;

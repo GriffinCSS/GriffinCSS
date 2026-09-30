@@ -1,5 +1,5 @@
 /*!
- * GriffinJS — Core v0.27.0
+ * GriffinJS — Core v0.27.1
  * Опциональный слой виджетов с состоянием поверх Griffincss: слайдер,
  * галерея, лайтбокс, параллакс, мегаменю. Подключается одной строкой
  * и одним файлом; страница без него — законное и рабочее состояние.
@@ -45,7 +45,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.0';
+  var VERSION = '0.27.1';
 
   // Реестры. Модуль зовёт defineEngine/defineWidget; ядро — единственное
   // место, которое знает, как их применить.
@@ -84,13 +84,13 @@
     if (typeof opts === 'function') { factory = opts; opts = null; }
 
     if (typeof name !== 'string' || !name) {
-      throw new Error('GriffinJS: ' + kind + ' без имени');
+      throw new Error('GriffinJS: ' + kind + ' without a name');
     }
     if (typeof factory !== 'function') {
-      throw new Error('GriffinJS: ' + kind + ' «' + name + '» — не функция');
+      throw new Error('GriffinJS: ' + kind + ' "' + name + '" is not a function');
     }
     if (registry[name]) {
-      throw new Error('GriffinJS: ' + kind + ' «' + name + '» уже зарегистрирован');
+      throw new Error('GriffinJS: ' + kind + ' "' + name + '" is already registered');
     }
 
     if (opts && opts.needs) needs(name, opts.needs);
@@ -101,11 +101,11 @@
   }
 
   function defineEngine(name, opts, factory) {
-    return define(engines, 'движок', name, opts, factory);
+    return define(engines, 'engine', name, opts, factory);
   }
 
   function defineWidget(name, opts, factory) {
-    return define(widgets, 'виджет', name, opts, factory);
+    return define(widgets, 'widget', name, opts, factory);
   }
 
   // Проверка сборки на старте: модуль подключён, а часть, которую он берёт
@@ -124,7 +124,7 @@
         // Зависимостью бывает и часть G (track, anchor), и целый модуль:
         // галерея строится поверх слайдера.
         if (!api[dep] && !widgets[dep] && !engines[dep]) {
-          warn('«' + names[i] + '» не работает без griffinjs-' + dep + '.js');
+          warn('"' + names[i] + '" does not work without griffinjs-' + dep + '.js');
         }
       }
     }
@@ -228,7 +228,7 @@
   // два слайдера на одной дорожке — ошибка автора, а не два состояния.
   function mount(el, name, opts) {
     if (!el || !widgets[name]) {
-      warn('виджет «' + name + '» не зарегистрирован');
+      warn('widget "' + name + '" is not registered');
       return null;
     }
 
@@ -244,7 +244,7 @@
       record.instance = widgets[name](el, opts, api) || {};
     } catch (e) {
       mounted.splice(mounted.indexOf(record), 1);
-      warn('виджет «' + name + '» не поднялся: ' + (e && e.message));
+      warn('widget "' + name + '" failed to mount: ' + (e && e.message));
       return null;
     }
 

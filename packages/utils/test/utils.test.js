@@ -609,3 +609,17 @@ test('в блоках темы и режима — только токены, н
     }
   }
 });
+
+test('класс пропорции уступает утилите высоты: в обеих сборках пропорции раньше высот', () => {
+  // .gr-aspect-* ставит block-size: auto, чтобы погасить высоту из атрибута
+  // height, а .gr-h-* с тем же весом обязан его перебить — только порядком
+  // в слое. Переставь модули в griffincss-utils.scss — и .gr-h-full
+  // .gr-aspect-square потеряет высоту родителя (browser/aspect.spec.mjs).
+  for (const [name, css] of [['griffincss-utils.css', utils], ['griffincss-utils-scoped.css', scoped]]) {
+    const aspect = css.search(/\.gr-aspect-square\{/);
+    const height = css.search(/\.gr-h-full\{/);
+
+    assert.ok(aspect !== -1 && height !== -1, `${name}: правил нет — разбор сломан`);
+    assert.ok(aspect < height, `${name}: .gr-aspect-square (${aspect}) стоит после .gr-h-full (${height})`);
+  }
+});

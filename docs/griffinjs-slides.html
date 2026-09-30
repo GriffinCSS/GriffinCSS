@@ -437,10 +437,10 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
 <table>
   <tr><th>Атрибут</th><th>Смысл</th></tr>
   <tr><td><code>data-gr-lightbox="группа"</code></td><td>Что открывать; адрес кадра — <code>data-gr-src</code>, без него — <code>href</code></td></tr>
-  <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта</td></tr>
+  <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта. Адрес кадра — <code>http(s)</code>, относительный, <code>data:</code> или <code>blob:</code>; с другой схемой (<code>javascript:</code> во фрейме исполнился бы от имени страницы) кадр не открывается: причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает</td></tr>
   <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
   <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
-  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, плееры YouTube, Vimeo, Rutube и VK Видео — iframe, остальное — картинка</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, плееры YouTube, Vimeo, Rutube и VK Видео — iframe (по хосту адреса, а не по имени хостинга где-нибудь в пути), остальное — картинка</td></tr>
 </table>
 
 <pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;

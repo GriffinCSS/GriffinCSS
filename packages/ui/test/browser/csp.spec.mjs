@@ -233,7 +233,7 @@ test('поля: без nonce на вставленном теге бандл б�
 
   await openFields(page, `default-src 'self'; script-src 'nonce-${NONCE}'; style-src 'self'`, NONCE, true);
 
-  await expect.poll(() => warnings.some((w) => w.includes('бандл полей не загружен')), 'слой не предупредил о заблокированном файле').toBe(true);
+  await expect.poll(() => warnings.some((w) => w.includes('fields bundle failed to load')), 'слой не предупредил о заблокированном файле').toBe(true);
 
   const state = await fieldsState(page);
 

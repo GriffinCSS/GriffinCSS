@@ -5,7 +5,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup, el, mount, event } = require('./helpers/griffinjs-dom');
+const { setup, el, mount, event, response, ORIGIN } = require('./helpers/griffinjs-dom');
 
 const PARTS = ['core/options.js', 'core/registry.js', 'widgets/dialog.js'];
 
@@ -89,7 +89,8 @@ test('ajax: data-gr-src грузится один раз в [data-gr-content], �
   const body = el('div', { 'data-gr-content': '' });
   const d = dialog(doc, 'x', { 'data-gr-dialog': '' , 'data-gr-src': '/win.html' }, [el('div', { class: 'gr-modal-header' }), body]);
   const calls = [];
-  global.fetch = (url) => { calls.push(url); return Promise.resolve({ ok: true, text: () => Promise.resolve('<p>Окно</p>') }); };
+  global.location = { origin: ORIGIN, hash: '', pathname: '/catalog/', search: '' };
+  global.fetch = (url) => { calls.push(url); return Promise.resolve(response('<p>Окно</p>')); };
 
   G.start();
 
@@ -105,6 +106,103 @@ test('ajax: data-gr-src грузится один раз в [data-gr-content], �
   assert.equal(calls.length, 1);
 
   delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+// Предупреждения слоя за время fn(), в том числе асинхронные — до конца промиса.
+async function warnings(fn) {
+  const said = [];
+  const before = console.warn;
+
+  console.warn = (message) => said.push(String(message));
+
+  try { await fn(); } finally { console.warn = before; }
+
+  return said;
+}
+
+test('ajax: чужой origin, data: и прочие схемы окно не грузит — error и предупреждение, запроса нет', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+  const refused = [
+    'https://evil.example/panel.html',
+    '//evil.example/panel.html',
+    'http://example.com/panel.html',
+    'data:text/html,<img src=x onerror=alert(1)>',
+    'javascript:alert(1)',
+  ];
+  const windows = refused.map((src, i) => dialog(doc, 'r' + i, { 'data-gr-dialog': '', 'data-gr-src': src }));
+  global.location = { origin: ORIGIN, hash: '', pathname: '/catalog/', search: '' };
+  global.fetch = (url) => { calls.push(url); return Promise.resolve(response('<img src=x onerror=alert(1)>')); };
+
+  G.start();
+
+  for (const [i, d] of windows.entries()) {
+    const said = await warnings(async () => { G.dialog.open(d); await tick(); await tick(); });
+
+    assert.equal(d.getAttribute('data-gr-state'), 'error', refused[i]);
+    assert.equal(d.innerHTML, '', `вставлено из ${refused[i]}`);
+    assert.ok(said.some((m) => m.includes(refused[i])), `нет предупреждения с адресом: ${refused[i]}`);
+    d.close();
+  }
+
+  assert.deepEqual(calls, [], 'запрос ушёл');
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+test('ajax: страница с непрозрачным origin (файл с диска) — data: и file: не грузятся, хотя origin обоих тоже «null»', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+  const refused = ['data:text/html,<img src=x onerror=alert(1)>', 'panel.html'];
+  const windows = refused.map((src, i) => dialog(doc, 'n' + i, { 'data-gr-dialog': '', 'data-gr-src': src }));
+  doc.baseURI = 'file:///Users/me/site/page.html';
+  global.location = { origin: 'null', hash: '', pathname: '/Users/me/site/page.html', search: '' };
+  global.fetch = (url) => { calls.push(url); return Promise.resolve(response('<img src=x onerror=alert(1)>')); };
+
+  G.start();
+
+  for (const [i, d] of windows.entries()) {
+    await warnings(async () => { G.dialog.open(d); await tick(); await tick(); });
+
+    assert.equal(d.getAttribute('data-gr-state'), 'error', refused[i]);
+    assert.equal(d.innerHTML, '', `вставлено из ${refused[i]}`);
+    d.close();
+  }
+
+  assert.deepEqual(calls, [], 'запрос ушёл');
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+test('ajax: свой адрес — запрос в режиме same-origin; ответ не text/html — error, содержимое не тронуто', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+  const body = el('div', { 'data-gr-content': '' });
+  // Свой JSON, отражающий запрос: json_encode угловые скобки не экранирует.
+  const d = dialog(doc, 'j', { 'data-gr-dialog': '', 'data-gr-src': '/search?q=1' }, [body]);
+  global.location = { origin: ORIGIN, hash: '', pathname: '/catalog/', search: '' };
+  global.fetch = (url, init) => {
+    calls.push([url, init && init.mode]);
+    return Promise.resolve(response('{"query":"<img src=x onerror=alert(1)>"}', 'application/json'));
+  };
+
+  G.start();
+
+  const said = await warnings(async () => { G.dialog.open(d); await tick(); await tick(); });
+
+  assert.deepEqual(calls, [[ORIGIN + '/search?q=1', 'same-origin']]);
+  assert.equal(d.getAttribute('data-gr-state'), 'error');
+  assert.equal(body.innerHTML, '');
+  assert.ok(said.some((m) => m.includes('/search?q=1')));
+
+  delete global.fetch;
+  delete global.location;
   G.destroy();
 });
 
@@ -133,6 +231,42 @@ test('hash: открытие пишет #id в историю, закрытие 
   G.dialog._popstate();
   assert.equal(d.hasAttribute('open'), false);
   assert.equal(backs, 1);
+
+  G.destroy();
+  delete global.location;
+  delete global.history;
+});
+
+test('hash: страница, открытая с #id, — закрытие снимает #id без перехода назад; открытие щелчком — снова pushState и back()', () => {
+  const { G, doc } = setup(PARTS);
+  const pushed = [];
+  const replaced = [];
+  let backs = 0;
+  global.location = { hash: '#h', pathname: '/p', search: '?q=1' };
+  global.history = {
+    state: null,
+    pushState: (s, t, url) => { pushed.push(url); global.location.hash = url; },
+    replaceState: (s, t, url) => { replaced.push(url); global.location.hash = ''; },
+    back: () => { backs += 1; },
+  };
+  const d = dialog(doc, 'h', { 'data-gr-dialog': 'hash' });
+
+  G.start();
+
+  assert.equal(d.hasAttribute('open'), true, 'страница с #h не открыла окно');
+  assert.deepEqual(pushed, [], '#h записан второй раз');
+
+  // #h пришёл со ссылкой: «назад» увёл бы со страницы — адрес теряет #h на месте.
+  d.close();
+  assert.equal(backs, 0, 'закрытие окна, открытого по адресу, ушло назад по истории');
+  assert.deepEqual(replaced, ['/p?q=1']);
+
+  // Открытие щелчком: #h пишет само окно, и закрытие возвращает историю назад.
+  G.dialog.open(d);
+  assert.deepEqual(pushed, ['#h']);
+  d.close();
+  assert.equal(backs, 1);
+  assert.deepEqual(replaced, ['/p?q=1']);
 
   G.destroy();
   delete global.location;

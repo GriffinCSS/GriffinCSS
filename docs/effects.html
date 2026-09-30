@@ -71,16 +71,27 @@
 
 <table>
   <tr><th>Класс</th><th>CSS</th></tr>
-  <tr><td><code>.gr-aspect-square</code></td><td><code>aspect-ratio: 1 / 1</code></td></tr>
-  <tr><td><code>.gr-aspect-video</code></td><td><code>aspect-ratio: 16 / 9</code></td></tr>
-  <tr><td><code>.gr-aspect-wide</code></td><td><code>aspect-ratio: 21 / 9</code></td></tr>
-  <tr><td><code>.gr-aspect-portrait</code></td><td><code>aspect-ratio: 3 / 4</code></td></tr>
+  <tr><td><code>.gr-aspect-square</code></td><td><code>aspect-ratio: 1 / 1; block-size: auto</code></td></tr>
+  <tr><td><code>.gr-aspect-video</code></td><td><code>aspect-ratio: 16 / 9; block-size: auto</code></td></tr>
+  <tr><td><code>.gr-aspect-wide</code></td><td><code>aspect-ratio: 21 / 9; block-size: auto</code></td></tr>
+  <tr><td><code>.gr-aspect-portrait</code></td><td><code>aspect-ratio: 3 / 4; block-size: auto</code></td></tr>
   <tr><td><code>.gr-aspect-auto</code></td><td><code>aspect-ratio: auto</code></td></tr>
 </table>
 
 <p>
   Заданные пропорции резервируют место под картинку до её загрузки —
   вёрстка не прыгает, когда изображение приходит.
+</p>
+
+<p>
+  Пропорция действует, только когда одна из сторон — <code>auto</code>,
+  а атрибут <code>height</code> задаёт высоту: CMS выводит у картинки
+  <code>width</code> и <code>height</code> всегда, код вставки плеера — тоже.
+  Поэтому класс пропорции сам ставит <code>block-size: auto</code>:
+  <code>&lt;img width="900" height="1200" class="gr-w-full gr-aspect-portrait"&gt;</code>
+  в колонке 608 px — 608 × 811, а не 608 × 1200. Утилита высоты сильнее
+  класса пропорции: <code>.gr-h-full .gr-aspect-square</code> — высота
+  родителя, ширина из пропорции.
 </p>
 
 <div class="demo-block">

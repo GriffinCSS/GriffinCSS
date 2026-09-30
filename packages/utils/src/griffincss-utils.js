@@ -1,5 +1,5 @@
 /*!
- * Griffincss Utils — Runtime v0.27.0
+ * Griffincss Utils — Runtime v0.27.1
  * Достраивает то, чего статический CSS выразить не может.
  * Пишется руками и не компилируется — правится этот файл.
  */
@@ -23,7 +23,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.0';
+  var VERSION = '0.27.1';
 
   // Таблица правил выводится из SCSS-карт скриптом scripts/sync-rule-table.mjs.
   // Правьте карты в SCSS, а не этот блок: npm run sync -- --fix перепишет его.
@@ -104,7 +104,7 @@
 
     if (G && typeof G._emit === 'function') return G;
 
-    warn('каскад скруглений требует griffincss.js — подключите ядро');
+    warn('the radius cascade needs griffincss.js: include the core');
 
     return null;
   }
@@ -145,7 +145,7 @@
     }
 
     if (inline && fromClass && inline !== fromClass) {
-      warn(prop + ' задан и классом (' + fromClass + '), и в style (' + inline + ') — значения расходятся');
+      warn(prop + ' is set both by a class (' + fromClass + ') and in style (' + inline + '); the values differ');
     }
 
     return inline || fromClass || null;
@@ -354,7 +354,7 @@
     var value = cls.slice(open + 1, cls.length - 1);
 
     if (value === '' || value.length > MAX_VALUE_LENGTH || BAD_VALUE.test(value)) {
-      warn('произвольное значение в .' + cls + ' отклонено');
+      warn('arbitrary value in .' + cls + ' rejected');
 
       return null;
     }
@@ -362,7 +362,7 @@
     var prefix = propFor(cls.slice(0, open));
 
     if (!prefix) {
-      warn('произвольное значение .' + cls + ' — свойство неизвестно');
+      warn('arbitrary value .' + cls + ': unknown property');
 
       return null;
     }

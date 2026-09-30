@@ -53,7 +53,7 @@
     var target = el.firstElementChild;
     var tip = el.querySelector('[role="tooltip"]') || el.lastElementChild;
 
-    if (!target || !tip || tip === target) throw new Error('у подсказки нет якоря и текста');
+    if (!target || !tip || tip === target) throw new Error('the tooltip has no anchor and text');
 
     var shown = false;
     var timer = null;

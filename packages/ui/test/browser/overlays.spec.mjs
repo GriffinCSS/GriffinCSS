@@ -63,6 +63,24 @@ test.describe('окна', () => {
     await page.keyboard.press('Escape');
     await expect(ajax).toHaveJSProperty('open', false);
   });
+
+  test('hash: страница, открытая с #id панели, — панель открыта сразу, закрытие снимает #id и страницу не покидает', async ({ page }) => {
+    // Запись в истории до стенда: шаг «назад» при закрытии увёл бы на неё.
+    await page.goto('/docs/index.html');
+    await page.goto(LAB + '#gr-lab-drawer');
+
+    const drawer = page.locator('#gr-lab-drawer');
+
+    await expect(drawer).toHaveJSProperty('open', true);
+    await page.evaluate(() => { window.stayed = true; });
+
+    await page.keyboard.press('Escape');
+    await expect(drawer).toHaveJSProperty('open', false);
+    // Проверяется отсутствие перехода: шаг назад, будь он, успевает случиться.
+    await page.waitForTimeout(300);
+
+    expect(await page.evaluate(() => [location.pathname, location.hash, window.stayed === true])).toEqual([LAB, '', true]);
+  });
 });
 
 test('комбобокс: список по вводу, ↓ и Enter выбирают, Esc закрывает без стирания', async ({ page }) => {

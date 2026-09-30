@@ -27,7 +27,9 @@
  *     закрывает и возвращает фокус на заголовок;
  *   * закрытие щелчком мимо полосы и уходом фокуса;
  *   * ajax-панели: data-gr-src на пункте грузится при первом открытии,
- *     состояния loading → ready | error пишутся на пункт;
+ *     состояния loading → ready | error пишутся на пункт. Только ответ
+ *     своего origin с типом text/html: чужой адрес, data: и прочие
+ *     схемы — error без запроса;
  *   * закрытие с состоянием (Этап 48d): панель, чей уход тема анимирует,
  *     не пропадает в первом же кадре — на пункт ставится
  *     data-gr-state="closing", open снимается по transitionend/animationend
@@ -96,6 +98,28 @@
     node.focus();
 
     return document.activeElement === node;
+  }
+
+  // Фрагмент — только ответ своего origin с типом text/html: разметку
+  // из innerHTML браузер оживляет, и <img onerror> чужого ответа исполнился
+  // бы в origin страницы. Адрес — http(s) своего origin (у data: origin —
+  // строка 'null'); редирект на чужой отклоняет mode: 'same-origin'; тип
+  // ответа отсекает свой JSON или текст, отражающий запрос.
+  function fragment(src) {
+    var url = null;
+
+    try { url = new URL(src, document.baseURI); } catch (e) { /* не адрес */ }
+
+    if (!url || !/^https?:$/.test(url.protocol) || url.origin !== location.origin) {
+      return Promise.reject(new Error('foreign origin'));
+    }
+
+    return fetch(url.href, { mode: 'same-origin' }).then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!/^text\/html/i.test(response.headers.get('content-type'))) throw new Error('not text/html');
+
+      return response.text();
+    });
   }
 
   // Длительность --gr-transition у узла, мс: «0.2s ease» → 200, «150ms» → 150,
@@ -282,22 +306,18 @@
       item.loaded = true;
 
       if (typeof fetch !== 'function') {
-        G.warn('мегаменю: fetch недоступен, панель ' + src + ' не загружена');
+        G.warn('megamenu: fetch is unavailable, panel ' + src + ' not loaded');
         setAttr(item.el, 'data-gr-state', 'error');
         return;
       }
 
       setAttr(item.el, 'data-gr-state', 'loading');
 
-      fetch(src).then(function (response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-
-        return response.text();
-      }).then(function (html) {
+      fragment(src).then(function (html) {
         item.panel.innerHTML = html;
         setAttr(item.el, 'data-gr-state', 'ready');
       }, function (error) {
-        G.warn('мегаменю: панель ' + src + ' не загружена: ' + (error && error.message));
+        G.warn('megamenu: panel ' + src + ' not loaded: ' + (error && error.message));
         setAttr(item.el, 'data-gr-state', 'error');
       });
     }

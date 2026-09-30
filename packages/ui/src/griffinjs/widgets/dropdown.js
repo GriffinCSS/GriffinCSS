@@ -104,7 +104,7 @@
     var trigger = el.firstElementChild;
     var panel = trigger && trigger.nextElementSibling;
 
-    if (!trigger || !panel) throw new Error('у дропдауна нет кнопки и панели');
+    if (!trigger || !panel) throw new Error('the dropdown has no button and panel');
 
     var kind = el.tagName === 'DETAILS' ? 'details' : panel.hasAttribute('popover') ? 'popover' : 'css';
     var opened = false;        // для popover и css: <details> знает сам

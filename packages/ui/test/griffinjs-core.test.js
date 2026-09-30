@@ -42,9 +42,9 @@ test('повторная регистрация под тем же именем 
 
   G.defineWidget('slider', () => ({}));
 
-  assert.throws(() => G.defineWidget('slider', () => ({})), /уже зарегистрирован/);
-  assert.throws(() => G.defineWidget('', () => ({})), /без имени/);
-  assert.throws(() => G.defineEngine('fade', null), /не функция/);
+  assert.throws(() => G.defineWidget('slider', () => ({})), /widget "slider" is already registered/);
+  assert.throws(() => G.defineWidget('', () => ({})), /widget without a name/);
+  assert.throws(() => G.defineEngine('fade', null), /engine "fade" is not a function/);
 });
 
 test('start поднимает виджеты по data-gr-<имя>, destroy зовёт их destroy', () => {
@@ -94,7 +94,7 @@ test('mount идемпотентен, mount незарегистрированн
   } finally {
     console.warn = original;
   }
-  assert.match(warnings[0], /GriffinJS: виджет «nope» не зарегистрирован/);
+  assert.match(warnings[0], /GriffinJS: widget "nope" is not registered/);
 });
 
 test('упавшая фабрика не оставляет записи и не роняет остальные', () => {

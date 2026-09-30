@@ -8,6 +8,7 @@
  * Источник — адрес с {q} (ответ — JSON: массив строк или объектов
  * {value, label, href, group, id}, либо {items: […]}) или функция
  * через JS: GriffinJS.mount(el, 'combobox', { source: (q, signal) => Promise }).
+ * С флагом navigate выбор позиции переходит по её href — только http(s).
  * Рендер позиции подменяется render(item) → узел.
  *
  * База без JS — само поле: форма поиска отправляется Enter, как всегда.
@@ -140,12 +141,12 @@
 
     var input = el.querySelector('input');
 
-    if (!input) throw new Error('у комбобокса нет поля ввода');
+    if (!input) throw new Error('the combobox has no input');
 
     var choice = o.multiple ? el.querySelector('select[multiple]') : null;
 
-    if (o.multiple && !choice) throw new Error('для multiple нужен <select multiple> внутри');
-    if (o.free && !choice) { G.warn('комбобокс: free без multiple смысла не имеет — флаг пропущен'); o.free = false; }
+    if (o.multiple && !choice) throw new Error('multiple needs a <select multiple> inside');
+    if (o.free && !choice) { G.warn('combobox: free makes no sense without multiple; flag ignored'); o.free = false; }
 
     var list = el.querySelector('[role="listbox"]');
     var created = false;
@@ -276,7 +277,7 @@
           return response.json();
         });
       } else {
-        G.warn('комбобокс: нет источника (src или source)');
+        G.warn('combobox: no source (src or source)');
         return;
       }
 
@@ -292,7 +293,7 @@
         render(query, found);
       }, function (error) {
         if (error && error.name === 'AbortError') return;
-        G.warn('комбобокс: запрос не удался: ' + (error && error.message));
+        G.warn('combobox: request failed: ' + (error && error.message));
       });
     }
 
@@ -440,9 +441,21 @@
       close();
       G.emit('griffin:select', input, { item: item, index: index, input: input });
 
-      if (o.navigate && item.href && typeof location !== 'undefined') location.href = item.href;
+      if (o.navigate && item.href && typeof location !== 'undefined') navigate(item.href);
 
       return api;
+    }
+
+    // Переход — только по http(s): href приходит из ответа источника,
+    // и javascript: исполнился бы в origin страницы. Выбор при отказе
+    // остаётся — значение в поле, событие ушло.
+    function navigate(href) {
+      var url = null;
+
+      try { url = new URL(href, document.baseURI); } catch (e) { /* не адрес */ }
+
+      if (url && /^https?:$/.test(url.protocol)) location.href = href;
+      else G.warn('combobox: navigation refused: ' + href);
     }
 
     // --- События --------------------------------------------------------------

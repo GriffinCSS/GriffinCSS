@@ -77,7 +77,7 @@
   G.defineWidget('file', function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
 
-    if (typeof DataTransfer !== 'function') throw new Error('без DataTransfer убрать один файл из выбранного нельзя');
+    if (typeof DataTransfer !== 'function') throw new Error('without DataTransfer a single file cannot be removed from the selection');
 
     var attrs = G.recorder();
     var events = G.listeners();

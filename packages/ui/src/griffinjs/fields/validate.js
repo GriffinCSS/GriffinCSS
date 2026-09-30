@@ -45,7 +45,7 @@
   }
 
   G.defineWidget('validate', function (el, opts) {
-    if (String(el.tagName).toLowerCase() !== 'form') throw new Error('нужен <form>');
+    if (String(el.tagName).toLowerCase() !== 'form') throw new Error('needs a <form>');
 
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();

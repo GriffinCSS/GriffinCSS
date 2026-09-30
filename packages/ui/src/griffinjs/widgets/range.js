@@ -74,7 +74,7 @@
     var listeners = G.listeners();
     var fields = [];
 
-    if (!inputs.length) throw new Error('внутри нет ни одного <input type="range">');
+    if (!inputs.length) throw new Error('no <input type="range"> inside');
 
     function doneOf(input) {
       var min = edge(input, 'min', 0);
@@ -172,7 +172,7 @@
       for (var f = 0; f < inputs.length; f++) {
         var field = document.querySelector(selectors[f] || '#');
 
-        if (!field) throw new Error('поле «' + selectors[f] + '» не найдено');
+        if (!field) throw new Error('field "' + selectors[f] + '" not found');
 
         fields.push(field);
         pull(f);

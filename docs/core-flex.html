@@ -421,7 +421,12 @@
   <code>.gr-order-last-md</code> уводит её вправо с 768px. Сетка —
   <code>.gr-grid-1 .gr-grid-2-md</code>: порядок ячеек меняется так же,
   как у флекса. Картинка фокуса не держит, и порядок чтения совпадает
-  с видом: текст ряда идёт за своей картинкой.
+  с видом: текст ряда идёт за своей картинкой. Картинка с источниками
+  в <code>&lt;picture&gt;</code> — класс порядка на самом
+  <code>&lt;picture&gt;</code>: элемент сетки — он, и <code>order</code>
+  у <code>&lt;img&gt;</code> внутри ничего не двигает. Классы кадра
+  (<code>gr-aspect-*</code>, <code>gr-object-*</code>, скругление) остаются
+  на <code>&lt;img&gt;</code>.
 </p>
 
 <pre><code>&lt;section class="gr-grid-1 gr-grid-2-md gr-flex-items-center"&gt;
@@ -429,7 +434,10 @@
   &lt;div&gt;&lt;h3&gt;Опыт&lt;/h3&gt;&lt;p&gt;Двенадцать лет запусков.&lt;/p&gt;&lt;/div&gt;
 &lt;/section&gt;
 &lt;section class="gr-grid-1 gr-grid-2-md gr-flex-items-center"&gt;
-  &lt;img class="gr-order-last-md gr-w-full gr-aspect-video gr-object-cover gr-radius" src="office.jpg" alt="Офис"&gt;
+  &lt;picture class="gr-order-last-md"&gt;
+    &lt;source srcset="office.avif" type="image/avif"&gt;
+    &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius" src="office.jpg" alt="Офис" width="1200" height="675"&gt;
+  &lt;/picture&gt;
   &lt;div&gt;&lt;h3&gt;Сроки&lt;/h3&gt;&lt;p&gt;Первая версия — за две недели.&lt;/p&gt;&lt;/div&gt;
 &lt;/section&gt;</code></pre>
 <div class="demo-block">

@@ -35,7 +35,7 @@
   G.defineWidget('otp', function (el) {
     var cells = el.querySelectorAll('input');
 
-    if (!cells.length) throw new Error('внутри нет ни одной ячейки <input>');
+    if (!cells.length) throw new Error('no <input> cells inside');
 
     var attrs = G.recorder();
     var events = G.listeners();

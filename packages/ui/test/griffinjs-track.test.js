@@ -273,7 +273,7 @@ test('без зарегистрированного движка дорожка 
     console.warn = original;
   }
 
-  assert.match(warnings[0], /движок «scroll» не зарегистрирован/);
+  assert.match(warnings[0], /engine "scroll" is not registered/);
 });
 
 test('loop без поддержки движка вырождается в rewind: страницы по достижимому, перескок с края', () => {

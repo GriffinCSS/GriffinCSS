@@ -268,7 +268,7 @@ test('таблица без country: первая страна по алфави
     assert.equal(select.selectedIndex, 0, 'первая по алфавиту — поведение прежнее');
     assert.equal(select.options[0].getAttribute('data-gr-iso'), 'AU');
     assert.equal(said.length, 1, `предупреждений — ${said.length}: ${said}`);
-    assert.match(said[0], /страна не задана/);
+    assert.match(said[0], /no country set/);
     assert.match(said[0], /country/, 'предупреждение обязано назвать параметр, которым снимается');
 
     G.destroy();

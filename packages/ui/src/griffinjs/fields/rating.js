@@ -37,7 +37,7 @@
     var display = el.querySelector('.gr-rating');
     var radios = el.querySelectorAll('input[type="radio"]');
 
-    if (!display || !radios.length) throw new Error('нужны .gr-rating и <input type="radio"> внутри');
+    if (!display || !radios.length) throw new Error('needs .gr-rating and <input type="radio"> inside');
 
     var attrs = G.recorder();
     var events = G.listeners();

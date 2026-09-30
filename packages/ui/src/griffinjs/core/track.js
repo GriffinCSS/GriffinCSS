@@ -542,7 +542,7 @@
     var factory = G.engines[o.engine];
 
     if (!factory) {
-      G.warn('движок «' + o.engine + '» не зарегистрирован — дорожка без движения');
+      G.warn('engine "' + o.engine + '" is not registered; the track will not move');
     } else {
       engine = factory(api, el, o) || null;
     }

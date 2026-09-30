@@ -77,9 +77,9 @@ test('без config поле без виджета — предупрежден�
   const warnings = capture(() => { G.start(); G.init(doc.body); });
 
   assert.equal(warnings.length, 2, warnings.join('\n'));
-  assert.match(warnings[0], /GriffinJS: поле «mask» не собрано/);
+  assert.match(warnings[0], /GriffinJS: field "mask" is not loaded/);
   assert.match(warnings[0], /GriffinJS\.config\.fields/);
-  assert.match(warnings[1], /поле «phone» не собрано/);
+  assert.match(warnings[1], /field "phone" is not loaded/);
   assert.equal(scripts().length, 0, 'без config тег вставлен');
   assert.equal(G._mounted().length, 0);
   assert.equal(a.attributes.size + b.attributes.size + c.attributes.size, 3, 'узлы тронуты');
@@ -159,7 +159,7 @@ test('ошибка загрузки — предупреждение, база �
   const warnings = capture(() => tag.dispatchEvent(event('error', tag, { bubbles: false })));
 
   assert.equal(warnings.length, 1, warnings.join('\n'));
-  assert.match(warnings[0], /GriffinJS: бандл полей не загружен: \/nope\/griffinjs-fields\.js/);
+  assert.match(warnings[0], /GriffinJS: fields bundle failed to load: \/nope\/griffinjs-fields\.js/);
 
   const again = capture(() => G.init(mount(doc, el('input', { 'data-gr-mask': '00' }))));
 

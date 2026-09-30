@@ -32,7 +32,7 @@
     var attrs = G.recorder();
     var events = G.listeners();
 
-    if (!(max > 0)) throw new Error('у поля нет maxlength — считать не к чему');
+    if (!(max > 0)) throw new Error('the field has no maxlength: nothing to count');
 
     var out = o.out ? document.querySelector(o.out) : null;
     var created = false;

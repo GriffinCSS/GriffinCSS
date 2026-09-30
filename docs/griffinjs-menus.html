@@ -127,7 +127,7 @@
   <tr><td>Закрытие</td><td>тот же щелчок, панель пропадает сразу</td><td>плюс щелчок мимо полосы, уход указателя, <kbd>Esc</kbd>, уход фокуса; уход панели анимирует тема — <a href="#closing">состояние <code>closing</code></a></td></tr>
   <tr><td>Клавиатура</td><td><kbd>Tab</kbd>, <kbd>Enter</kbd>/<kbd>Space</kbd> на заголовке</td><td>плюс <kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd> по ряду, <kbd>↓</kbd> в панель, <kbd>↑</kbd> <kbd>↓</kbd> внутри, <kbd>Esc</kbd> назад</td></tr>
   <tr><td>Состояние для программ чтения</td><td>родное у <code>&lt;summary&gt;</code></td><td>плюс <code>aria-expanded</code> и <code>aria-controls</code> на заголовке</td></tr>
-  <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии</td></tr>
+  <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии — только со своего сайта и только HTML</td></tr>
   <tr><td>Узкий экран</td><td>аккордеон в свёрнутой навигации</td><td>тот же аккордеон, одна открытая панель, <kbd>Esc</kbd></td></tr>
 </table>
 
@@ -175,8 +175,8 @@
   один раз загружает адрес и вставляет ответ как HTML. Состояние пишется
   на пункт: <code>data-gr-state="loading"</code> — панель держит место
   и мигает фоном, <code>ready</code> — загружено, <code>error</code> — сервер
-  не ответил (панель остаётся пустой, ошибка — в консоли). Вложенные
-  виджеты в загруженном фрагменте поднимает сканер слоя.
+  не ответил или ответ не подошёл (панель остаётся пустой, причина —
+  в консоли). Вложенные виджеты в загруженном фрагменте поднимает сканер слоя.
 </p>
 
 <pre><code>&lt;details class="gr-megamenu-item" data-gr-src="/menu/brands.html"&gt;
@@ -186,10 +186,15 @@
 
 <div class="callout callout-warning">
   <p>
-    <strong>Ответ вставляется как есть.</strong> Адрес в <code>data-gr-src</code>
-    должен вести на свой сервер и отдавать фрагмент, которому вы доверяете:
-    скрипт не чистит разметку и не проверяет, что в ней нет
-    <code>&lt;script&gt;</code>.
+    <strong>Только свой сайт и только HTML.</strong> Панель вставляется
+    из ответа того же origin, что у страницы, с типом <code>text/html</code>.
+    Адрес другого сайта, <code>data:</code> и прочие схемы — <code>error</code>
+    без запроса; редирект на другой сайт и ответ другого типа (JSON, текст) —
+    тоже <code>error</code>. Вставленная разметка оживает: обработчик
+    <code>&lt;img onerror&gt;</code> из чужого ответа исполнился бы от имени
+    страницы, а свой JSON, повторяющий запрос, превратился бы в такой HTML.
+    Сам фрагмент скрипт не чистит — это ваш код, как шаблон страницы.
+    Панель с другого сайта грузит свой код по событию <code>toggle</code> пункта.
   </p>
 </div>
 
@@ -407,8 +412,9 @@ menu.destroy();     // снимает всё: атрибуты, слушател
 <p>
   Дерево каталога в CMS меняется, и держать его в шаблоне шапки неудобно:
   пункт получает <code>data-gr-src</code>, а панель приезжает при первом
-  открытии. В примере адрес — <code>data:</code>-URL, на сайте это путь
-  к фрагменту, который отдаёт сервер.
+  открытии. В примере фрагмент лежит рядом со страницей документации —
+  <code>fragments/brands.html</code>; на сайте это путь к фрагменту,
+  который отдаёт сервер.
 </p>
 
 <pre><code>&lt;details class="gr-megamenu-item" data-gr-src="/menu/brands.html"&gt;
@@ -426,7 +432,7 @@ menu.destroy();     // снимает всё: атрибуты, слушател
     <details class="gr-nav-toggle"><summary aria-label="Меню">☰</summary></details>
     <ul class="gr-nav gr-nav-collapse">
       <li>
-        <details class="gr-megamenu-item" data-gr-src="data:text/html;charset=utf-8,%3Cdiv%20class%3D%22gr-flex%20gr-gap-lg%20gr-flex-wrap%22%3E%3Cul%20class%3D%22gr-nav%20gr-nav-vertical%20gr-flex-1%22%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EAcme%3C%2Fa%3E%3C%2Fli%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EGlobex%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3Cul%20class%3D%22gr-nav%20gr-nav-vertical%20gr-flex-1%22%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EInitech%3C%2Fa%3E%3C%2Fli%3E%3Cli%3E%3Ca%20class%3D%22gr-nav-link%22%20href%3D%22%23mm-3%22%3EUmbrella%3C%2Fa%3E%3C%2Fli%3E%3C%2Ful%3E%3C%2Fdiv%3E">
+        <details class="gr-megamenu-item" data-gr-src="fragments/brands.html">
           <summary class="gr-nav-link">Бренды</summary>
           <div class="gr-megamenu-panel"></div>
         </details>

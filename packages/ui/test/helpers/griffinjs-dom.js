@@ -11,6 +11,10 @@ const base = require('./dom');
 
 const SRC = path.join(__dirname, '..', '..', 'src', 'griffinjs');
 
+// Origin страницы под тестом: база адресов мок-документа и location.origin
+// тестов, где виджет сверяет адрес со своим origin.
+const ORIGIN = 'https://example.com';
+
 class Style {
   constructor() { this.props = new Map(); }
   setProperty(name, value) { this.props.set(name, String(value)); }
@@ -226,6 +230,9 @@ class Element extends base.MockElement {
 class Document extends base.MockDocument {
   constructor() {
     super();
+    // Адрес документа — база относительных адресов, как у браузера:
+    // слой разбирает по ней адреса из разметки (new URL(src, document.baseURI)).
+    this.baseURI = ORIGIN + '/catalog/';
     this.documentElement = this.own(new Element('html'));
     this.body = this.own(new Element('body'));
     this.documentElement.appendChild(this.body);
@@ -301,6 +308,21 @@ function setup(parts = []) {
   return { G, doc };
 }
 
+// Ответ fetch, как у браузера: ok и status по коду, заголовки — get()
+// без учёта регистра имени, тело — text() и json(). Тип по умолчанию —
+// HTML, как у сервера, отдающего кусок разметки; null — без заголовка.
+function response(body, type = 'text/html; charset=utf-8', status = 200) {
+  const headers = type === null ? {} : { 'content-type': type };
+
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (name) => headers[String(name).toLowerCase()] ?? null },
+    text: () => Promise.resolve(String(body)),
+    json: () => Promise.resolve(JSON.parse(body)),
+  };
+}
+
 function el(tag, attrs = {}, children = []) {
   const node = new Element(tag, attrs);
   for (const child of children) node.appendChild(child);
@@ -337,4 +359,4 @@ function track(doc, n, width = 100, attrs = {}, perView = 1) {
   return { node, slides };
 }
 
-module.exports = { Element, Document, setup, el, mount, event, track, wide, SRC };
+module.exports = { Element, Document, setup, el, mount, event, track, wide, response, ORIGIN, SRC };

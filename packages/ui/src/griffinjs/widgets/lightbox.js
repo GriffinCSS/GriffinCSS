@@ -10,7 +10,12 @@
  * у видео это разные адреса — во фрейм встаёт только плеер, страницу ролика
  * хостинги во фрейме не показывают, а ссылка без скрипта ведёт именно на неё.
  * Тип — по адресу кадра (картинка, видео, iframe для плееров YouTube, Vimeo,
- * Rutube и VK Видео) или явно: data-gr-type="iframe".
+ * Rutube и VK Видео — по хосту адреса) или явно: data-gr-type="iframe".
+ *
+ * Адрес кадра — http(s), относительный, data: или blob:. Любой другой кадр
+ * не открывает: javascript: во фрейме исполнился бы в origin страницы,
+ * а data-* редакторы и фильтры CMS не проверяют как ссылку. Отвергнутый
+ * кадр из группы выпадает; щелчок по нему остаётся браузеру.
  *
  * База без JS — ссылка на большое изображение или на страницу ролика.
  * Окно строится при открытии и уничтожается при закрытии: так видео
@@ -23,7 +28,10 @@
 
   var ATTR = 'data-gr-lightbox';
   var VIDEO = /\.(mp4|webm|ogv|mov)(\?|#|$)/i;
-  var EMBED = /youtube\.com|youtu\.be|vimeo\.com|rutube\.ru|vkvideo\.ru|vk\.com\/video/i;
+  // Хост и путь разобранного адреса: хостинг — сам хост или его поддомен,
+  // а не подстрока где угодно (картинка …/rutube.ru-logo.png — не плеер).
+  var EMBED = /^([\w-]+\.)*((youtube\.com|youtu\.be|vimeo\.com|rutube\.ru|vkvideo\.ru)\/|vk\.com\/video)/i;
+  var SCHEMES = /^(https?|data|blob):$/;
 
   var dialog = null;
   var track = null;
@@ -31,14 +39,25 @@
   var events = G.listeners();
   var listen = events.add;
 
+  // Адрес по правилам браузера: регистр, пробелы по краям и табы внутри
+  // схемы разбор снимает. Не адрес — null.
+  function parse(src) {
+    try {
+      return new URL(src, document.baseURI);
+    } catch (e) {
+      return null;
+    }
+  }
+
   function typeOf(node, src) {
     var explicit = node && node.getAttribute && node.getAttribute('data-gr-type');
 
     if (explicit) return explicit;
     if (VIDEO.test(src)) return 'video';
-    if (EMBED.test(src)) return 'iframe';
 
-    return 'image';
+    var url = parse(src);
+
+    return url && EMBED.test(url.hostname + url.pathname) ? 'iframe' : 'image';
   }
 
   // Элемент разметки → описание кадра. data-gr-src старше href: у видео
@@ -97,14 +116,34 @@
   // --- Открытие ----------------------------------------------------------------
 
   function open(items, index, opts) {
+    var list = [];
+
+    index = index || 0;
+
+    // Кадр с отвергнутым адресом выпадает из группы; отвергнут
+    // открываемый — окна нет.
+    for (var k = 0; k < items.length; k++) {
+      var url = parse(items[k].src);
+
+      if (url && SCHEMES.test(url.protocol)) {
+        list.push(items[k]);
+        continue;
+      }
+
+      G.warn('lightbox: frame address refused: ' + items[k].src);
+
+      if (k === index) return null;
+      if (k < index) index--;
+    }
+
+    if (!list.length) return null;
+
     close();
 
     opts = opts || {};
-    index = index || 0;
+    items = list;
 
     var n = items.length;
-
-    if (n === 0) return null;
 
     dialog = element('dialog', 'gr-modal gr-lightbox', { 'aria-label': opts.label || 'Просмотр' });
 
@@ -183,8 +222,6 @@
   }
 
   function openFrom(node) {
-    trigger = node;
-
     var group = groupOf(node);
     var items = [];
     var index = 0;
@@ -194,7 +231,11 @@
       items.push(itemOf(group[i]));
     }
 
-    return open(items, index);
+    var opened = open(items, index);
+
+    if (opened) trigger = node;
+
+    return opened;
   }
 
   // --- Закрытие ----------------------------------------------------------------
@@ -241,10 +282,10 @@
 
   function onClick(event, node) {
     // Ctrl/Cmd/средняя кнопка — читатель хочет новую вкладку, а не окно.
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button) return false;
+    // Кадр не открылся — ссылка работает как без скрипта.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button || !openFrom(node)) return false;
 
     if (event.preventDefault) event.preventDefault();
-    openFrom(node);
 
     return true;
   }

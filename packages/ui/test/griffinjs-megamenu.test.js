@@ -6,7 +6,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup, el, mount, event, wide } = require('./helpers/griffinjs-dom');
+const { setup, el, mount, event, wide, response, ORIGIN } = require('./helpers/griffinjs-dom');
 
 const PARTS = ['core/options.js', 'core/registry.js', 'core/media.js', 'widgets/megamenu.js'];
 
@@ -178,9 +178,10 @@ test('ajax-панель: data-gr-src грузится при первом отк
   const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.html' } });
   const calls = [];
 
+  global.location = { origin: ORIGIN };
   global.fetch = (url) => {
     calls.push(url);
-    return Promise.resolve({ ok: true, text: () => Promise.resolve('<p>Бренды</p>') });
+    return Promise.resolve(response('<p>Бренды</p>'));
   };
 
   G.start();
@@ -197,7 +198,7 @@ test('ajax-панель: data-gr-src грузится при первом отк
   await tick();
   assert.equal(calls.length, 1, 'панель грузится один раз');
 
-  global.fetch = () => Promise.resolve({ ok: false, status: 500, text: () => Promise.resolve('') });
+  global.fetch = () => Promise.resolve(response('', 'text/html', 500));
   const b2 = bar(doc, { itemB: { 'data-gr-src': '/menu/fail.html' } });
   G.init(b2.root);
   b2.itemB.open = true;
@@ -206,5 +207,104 @@ test('ajax-панель: data-gr-src грузится при первом отк
   assert.equal(b2.itemB.getAttribute('data-gr-state'), 'error');
 
   delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+// Предупреждения слоя за время fn(), в том числе асинхронные — до конца промиса.
+async function warnings(fn) {
+  const said = [];
+  const before = console.warn;
+
+  console.warn = (message) => said.push(String(message));
+
+  try { await fn(); } finally { console.warn = before; }
+
+  return said;
+}
+
+test('ajax-панель: чужой origin, data: и прочие схемы не грузятся — error и предупреждение, запроса нет', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+
+  global.location = { origin: ORIGIN };
+  global.fetch = (url) => { calls.push(url); return Promise.resolve(response('<img src=x onerror=alert(1)>')); };
+
+  G.start();
+
+  for (const src of [
+    'https://evil.example/panel.html',
+    '//evil.example/panel.html',
+    'http://example.com/panel.html',
+    'data:text/html,<img src=x onerror=alert(1)>',
+    'javascript:alert(1)',
+  ]) {
+    const b = bar(doc, { itemB: { 'data-gr-src': src } });
+
+    G.init(b.root);
+
+    const said = await warnings(async () => { b.itemB.open = true; await tick(); await tick(); });
+
+    assert.equal(b.itemB.getAttribute('data-gr-state'), 'error', src);
+    assert.equal(b.panelB.innerHTML, '', `вставлено из ${src}`);
+    assert.ok(said.some((m) => m.includes(src)), `нет предупреждения с адресом: ${src}`);
+  }
+
+  assert.deepEqual(calls, [], 'запрос ушёл');
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+test('ajax-панель: страница с непрозрачным origin (файл с диска) — data: и file: не грузятся, хотя origin обоих тоже «null»', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+
+  doc.baseURI = 'file:///Users/me/site/page.html';
+  global.location = { origin: 'null' };
+  global.fetch = (url) => { calls.push(url); return Promise.resolve(response('<img src=x onerror=alert(1)>')); };
+
+  G.start();
+
+  for (const src of ['data:text/html,<img src=x onerror=alert(1)>', 'panel.html']) {
+    const b = bar(doc, { itemB: { 'data-gr-src': src } });
+
+    G.init(b.root);
+    await warnings(async () => { b.itemB.open = true; await tick(); await tick(); });
+
+    assert.equal(b.itemB.getAttribute('data-gr-state'), 'error', src);
+    assert.equal(b.panelB.innerHTML, '', `вставлено из ${src}`);
+  }
+
+  assert.deepEqual(calls, [], 'запрос ушёл');
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
+test('ajax-панель: свой адрес — запрос в режиме same-origin; ответ не text/html — error, панель не тронута', async () => {
+  const { G, doc } = setup(PARTS);
+  const calls = [];
+  const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.txt' } });
+
+  global.location = { origin: ORIGIN };
+  global.fetch = (url, init) => {
+    calls.push([url, init && init.mode]);
+    return Promise.resolve(response('<img src=x onerror=alert(1)>', 'text/plain'));
+  };
+
+  G.start();
+
+  const said = await warnings(async () => { b.itemB.open = true; await tick(); await tick(); });
+
+  assert.deepEqual(calls, [[ORIGIN + '/menu/b.txt', 'same-origin']]);
+  assert.equal(b.itemB.getAttribute('data-gr-state'), 'error');
+  assert.equal(b.panelB.innerHTML, '');
+  assert.ok(said.some((m) => m.includes('/menu/b.txt')));
+
+  delete global.fetch;
+  delete global.location;
   G.destroy();
 });

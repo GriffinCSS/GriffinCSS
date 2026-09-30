@@ -20,9 +20,30 @@ $gr-opacities: (0: 0, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1) !default;
   .gr-object-pos-#{$gr-pos} { object-position: $gr-pos; }
 }
 
-// Пропорции блока
-.gr-aspect-square   { aspect-ratio: 1 / 1; }
-.gr-aspect-video    { aspect-ratio: 16 / 9; }
-.gr-aspect-wide     { aspect-ratio: 21 / 9; }
-.gr-aspect-portrait { aspect-ratio: 3 / 4; }
-.gr-aspect-auto     { aspect-ratio: auto; }
+// Пропорции блока. aspect-ratio действует, только когда одна из сторон
+// auto, а атрибут height у <img>, <video> и фрейма из кода вставки задаёт
+// высоту — CMS выводит его всегда, чтобы браузер заранее держал место.
+// Поэтому класс пропорции сам ставит block-size: auto. Утилиты высоты
+// (_sizing) стоят в слое позже и побеждают порядком: .gr-h-full
+// .gr-aspect-square — высота родителя, ширина из пропорции.
+.gr-aspect-square {
+  aspect-ratio: 1 / 1;
+  block-size: auto;
+}
+
+.gr-aspect-video {
+  aspect-ratio: 16 / 9;
+  block-size: auto;
+}
+
+.gr-aspect-wide {
+  aspect-ratio: 21 / 9;
+  block-size: auto;
+}
+
+.gr-aspect-portrait {
+  aspect-ratio: 3 / 4;
+  block-size: auto;
+}
+
+.gr-aspect-auto { aspect-ratio: auto; }

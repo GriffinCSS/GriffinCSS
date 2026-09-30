@@ -37,7 +37,7 @@
       try {
         return JSON.parse(text);
       } catch (e) {
-        G.warn('параметры не разобраны как JSON: ' + text);
+        G.warn('options are not valid JSON: ' + text);
         return out;
       }
     }

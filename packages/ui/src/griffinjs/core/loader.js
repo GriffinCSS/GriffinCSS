@@ -62,7 +62,7 @@
       if (config.fields && config.fields.src) return request();
 
       warned[name] = true;
-      G.warn('поле «' + name + '» не собрано: подключите griffinjs-fields.js или задайте GriffinJS.config.fields');
+      G.warn('field "' + name + '" is not loaded: include griffinjs-fields.js or set GriffinJS.config.fields');
     }
   }
 
@@ -85,7 +85,7 @@
     function settle(event) {
       if (event.type === 'error') {
         ok = false;
-        G.warn('бандл полей не загружен: ' + event.target.src + ' — поля остались базой без скрипта');
+        G.warn('fields bundle failed to load: ' + event.target.src + '; fields stay without the script');
       }
 
       if (--left) return;

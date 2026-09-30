@@ -304,7 +304,7 @@ test('формат с двоеточием и параметры парами; �
   assert.equal(pairs.getAttribute('placeholder'), null, 'hint: false — подсказки нет');
   assert.equal(G.instance(none, 'mask'), null);
   assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /формат/);
+  assert.match(warnings[0], /format/);
 
   G.destroy();
 });

@@ -89,7 +89,7 @@
       return el.querySelector('tbody');
     }
 
-    if (!bodyOf() || !heads.length) throw new Error('нужны tbody и заголовки с aria-sort');
+    if (!bodyOf() || !heads.length) throw new Error('needs tbody and headers with aria-sort');
 
     var attrs = G.recorder();
     var events = G.listeners();

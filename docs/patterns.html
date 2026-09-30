@@ -101,8 +101,10 @@
 
 <p>
   Заголовок, одна фраза о продукте, два действия и строка доверия.
-  Ширина текста ограничена <code>gr-max-w-page</code>, а не пикселями,
-  поэтому на широком мониторе строка не растягивается до нечитаемой.
+  Лиду — мера строки <code>gr-max-w-prose</code> (<code>65ch</code>), а не
+  пиксели: строка не растягивается до нечитаемой ни на широком мониторе,
+  ни при крупном кегле. <code>gr-max-w-page</code> — ширина контейнера,
+  1440 px: на широком мониторе в строку лида влезало до 150 знаков.
 </p>
 
 <div class="demo-block">
@@ -110,7 +112,7 @@
   <section class="gr-py-16 gr-px-4 gr-text-center gr-bg-sunken gr-radius">
     <span class="gr-badge gr-badge-accent gr-badge-pill gr-mb-4">Версия 2.0 уже здесь</span>
     <h2 class="gr-text-4xl gr-font-bold gr-text-balance gr-mt-0 gr-mb-4">Сетка, которая описывается одной строкой</h2>
-    <p class="gr-text-lg gr-text-ink-secondary gr-text-pretty gr-max-w-page gr-mx-auto gr-mb-8">
+    <p class="gr-text-lg gr-text-ink-secondary gr-text-pretty gr-max-w-prose gr-mx-auto gr-mb-8">
       Опишите раскладку строкой <code>a3b4-c2d5</code> вместо десяти правил
       <code>grid-template-areas</code>. Адаптивность — атрибутом, без единого медиа-запроса вручную.
     </p>
@@ -391,7 +393,7 @@
 <div class="demo-block">
   <div class="demo-block-title">Карточка входа</div>
   <div class="gr-flex gr-flex-center">
-    <div class="gr-card gr-card-raised gr-w-full gr-max-w-page">
+    <div class="gr-card gr-card-raised gr-w-full gr-max-w-prose">
       <div class="gr-card-body">
         <h3 class="gr-text-xl gr-font-semibold gr-mt-0 gr-mb-1">Вход</h3>
         <p class="gr-text-sm gr-text-ink-secondary gr-mt-0 gr-mb-6">Ещё нет учётной записи? <a class="gr-link" href="#">Зарегистрируйтесь</a>.</p>

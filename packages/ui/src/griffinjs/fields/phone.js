@@ -93,7 +93,7 @@
     var input = el.querySelector('input');
     var locale = lang();
 
-    if (!input) throw new Error('у поля телефона нет <input>');
+    if (!input) throw new Error('the phone field has no <input>');
 
     var created = [];   // позиции, добавленные из таблицы
     var texts = [];     // [позиция, подпись автора] — для destroy
@@ -142,11 +142,11 @@
       // Без country первой стоит первая по алфавиту языка страницы —
       // на русской это Австралия, +61. Угадывать страну за автора виджет
       // не берётся: ошибся бы тише, чем сейчас. Но и молчать не должен.
-      if (!o.country) G.warn('телефон: страна не задана — выбрана первая по алфавиту; укажите country');
+      if (!o.country) G.warn('phone: no country set, the first one alphabetically is used; set country');
     }
 
     if (!options().length) {
-      G.warn('телефон: список кодов пуст — перечислите <option> сами или подключите griffinjs-countries.js');
+      G.warn('phone: the code list is empty; list the <option>s yourself or include griffinjs-countries.js');
     }
 
     // Подписи: флаг + имя в языке страницы + код. Только там, где есть ISO

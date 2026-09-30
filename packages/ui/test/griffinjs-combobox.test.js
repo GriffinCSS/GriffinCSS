@@ -158,3 +158,52 @@ test('источник функцией, группы, пустой ответ �
   assert.equal(root.querySelector('[role="listbox"]'), null, 'созданный список не убран');
   assert.equal(root.hasAttribute('data-gr-state'), false);
 });
+
+test('navigate: переход по http(s) и относительному адресу; javascript: не переходит — предупреждение, выбор остаётся', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = box(doc, { 'data-gr-combobox': 'src: /s?q={q}; min: 1; delay: 0; navigate' });
+  const picked = [];
+  const said = [];
+  const before = console.warn;
+  global.location = { href: 'https://example.com/catalog/' };
+  global.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve([
+    { value: 'Иванов', href: 'javascript:void(document.body.dataset.xss=1)' },
+    { value: 'Петров', href: '/people/petrov' },
+    { value: 'Сидоров', href: 'https://other.example/sidorov' },
+    { value: 'Смирнов', href: ' JaVaScRiPt:alert(1)' },
+  ]) });
+  doc.addEventListener('griffin:select', (e) => picked.push(e.detail.item.value));
+
+  G.start();
+
+  const w = G.instance(b.root, 'combobox');
+
+  type(b.input, 'ов');
+  await tick(); await tick();
+
+  console.warn = (message) => said.push(String(message));
+
+  try {
+    w.select(0);
+    assert.equal(global.location.href, 'https://example.com/catalog/', 'переход по javascript:');
+    assert.equal(b.input.value, 'Иванов', 'выбор не остался');
+    assert.ok(said.some((m) => m.includes('javascript:void(document.body.dataset.xss=1)')), 'нет предупреждения с адресом');
+
+    w.select(3);
+    assert.equal(global.location.href, 'https://example.com/catalog/', 'переход по JaVaScRiPt: с пробелом');
+
+    w.select(1);
+    assert.equal(global.location.href, '/people/petrov');
+
+    w.select(2);
+    assert.equal(global.location.href, 'https://other.example/sidorov');
+  } finally {
+    console.warn = before;
+  }
+
+  assert.deepEqual(picked, ['Иванов', 'Смирнов', 'Петров', 'Сидоров']);
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});

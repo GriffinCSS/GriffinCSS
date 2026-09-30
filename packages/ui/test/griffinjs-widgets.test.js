@@ -271,6 +271,129 @@ test('лайтбокс: щелчок с модификатором отдаёт�
   assert.equal(G.lightbox._dialog(), null);
 });
 
+// Предупреждения слоя за время fn().
+function warnings(fn) {
+  const said = [];
+  const before = console.warn;
+
+  console.warn = (message) => said.push(String(message));
+
+  try { fn(); } finally { console.warn = before; }
+
+  return said;
+}
+
+test('лайтбокс: кадр — по http(s), относительному, data: и blob:; javascript: кадр не открывает, щелчок остаётся браузеру', () => {
+  const { G, doc } = setup(PARTS);
+  const allowed = [
+    'https://cdn.example.com/p.jpg',
+    'photo.jpg',
+    'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E',
+    'blob:https://example.com/0a1b2c',
+  ].map((src) => [src, el('a', { href: '#', 'data-gr-src': src, 'data-gr-lightbox': '' })]);
+  const refused = [
+    // Случаи из разбора: тип задан явно — и угадан по имени хостинга в хвосте.
+    ["javascript:parent.document.title='XSS'", { 'data-gr-type': 'iframe' }],
+    ['javascript:parent.document.body.dataset.xss=1//rutube.ru', {}],
+    // Разбор адреса по правилам браузера: регистр, пробел впереди, таб внутри схемы.
+    [' JaVaScRiPt:alert(1)', { 'data-gr-type': 'iframe' }],
+    ['java\tscript:alert(1)', { 'data-gr-type': 'iframe' }],
+  ].map(([src, attrs]) => [src, el('a', Object.assign({ href: 'https://rutube.ru/video/abc/', 'data-gr-src': src, 'data-gr-lightbox': '' }, attrs))]);
+  // Без data-gr-src адрес кадра — href, и правило то же.
+  const byHref = el('a', { href: 'javascript:alert(1)', 'data-gr-type': 'iframe', 'data-gr-lightbox': '' });
+  refused.push(['javascript:alert(1)', byHref]);
+  mount(doc, el('div', {}, allowed.concat(refused).map(([, node]) => node)));
+
+  G.start();
+
+  for (const [src, node] of allowed) assert.equal(frameOf(G, doc, node).src, src);
+
+  for (const [src, node] of refused) {
+    const click = event('click', node);
+    const said = warnings(() => doc.fire('click', click));
+
+    assert.equal(G.lightbox._dialog(), null, `окно открылось: ${JSON.stringify(src)}`);
+    assert.equal(click.defaultPrevented, false, `щелчок отменён: ${JSON.stringify(src)}`);
+    assert.ok(said.some((m) => m.includes(src)), `нет предупреждения с адресом: ${JSON.stringify(src)}`);
+  }
+
+  G.destroy();
+});
+
+test('лайтбокс: кадр группы с отвергнутым адресом выпадает, счётчик считает оставшиеся', () => {
+  const { G, doc } = setup(PARTS);
+  const links = [
+    el('a', { href: 'a.jpg', 'data-gr-lightbox': 'g' }),
+    el('a', { href: '#', 'data-gr-src': 'javascript:alert(1)', 'data-gr-type': 'iframe', 'data-gr-lightbox': 'g' }),
+    el('a', { href: 'c.jpg', 'data-gr-lightbox': 'g' }),
+  ];
+  mount(doc, el('div', {}, links));
+
+  G.start();
+
+  const said = warnings(() => doc.fire('click', event('click', links[2])));
+  const dialog = G.lightbox._dialog();
+  const real = (sel) => dialog.querySelectorAll(sel).filter((n) => !n.closest('[data-gr-clone]'));
+
+  assert.ok(dialog, 'окно не построено');
+  assert.equal(real('.gr-lightbox-item').length, 2);
+  assert.equal(real('iframe').length, 0);
+  assert.deepEqual(real('img').map((n) => n.getAttribute('src')), ['a.jpg', 'c.jpg']);
+  assert.equal(dialog.querySelector('.gr-lightbox-counter').textContent, '2 / 2');
+  assert.equal(G.lightbox._track().index, 1, 'открыт не тот кадр');
+  assert.ok(said.some((m) => m.includes('javascript:alert(1)')));
+
+  G.destroy();
+});
+
+test('лайтбокс: open() из кода — то же правило адреса', () => {
+  const { G, doc } = setup(PARTS);
+
+  G.start();
+
+  assert.equal(G.lightbox.open([]), null, 'пустой набор кадров построил окно');
+  assert.equal(G.lightbox._dialog(), null);
+
+  let result;
+  warnings(() => { result = G.lightbox.open([{ src: 'javascript:alert(1)', type: 'iframe' }]); });
+  assert.equal(result, null);
+  assert.equal(G.lightbox._dialog(), null);
+
+  warnings(() => G.lightbox.open([{ src: 'javascript:alert(1)', type: 'iframe' }, { src: 'b.jpg', type: 'image' }], 1));
+  const dialog = G.lightbox._dialog();
+
+  assert.ok(dialog, 'окно не построено');
+  assert.equal(dialog.querySelectorAll('.gr-lightbox-item').length, 1);
+  assert.equal(dialog.querySelector('iframe'), null);
+  assert.equal(dialog.querySelector('img').getAttribute('src'), 'b.jpg');
+
+  G.destroy();
+  assert.equal(doc.body.querySelector('dialog'), null);
+});
+
+test('лайтбокс: плеер угадывается по хосту адреса, а не по подстроке', () => {
+  const { G, doc } = setup(PARTS);
+  const cases = {
+    'https://example.com/uploads/rutube.ru-logo.png': 'img',
+    'https://rutube.ru.example.com/play/embed/1': 'img',
+    'https://evilyoutube.com/embed/x': 'img',
+    'https://player.vimeo.com/video/1': 'iframe',
+    'https://m.vk.com/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+  };
+  const links = Object.keys(cases).map((src) => el('button', { type: 'button', 'data-gr-src': src, 'data-gr-lightbox': '' }));
+  mount(doc, el('div', {}, links));
+
+  G.start();
+
+  for (const link of links) {
+    const src = link.getAttribute('data-gr-src');
+
+    assert.equal(frameOf(G, doc, link).tag, cases[src], src);
+  }
+
+  G.destroy();
+});
+
 // Слайдер с несколькими слайдами в ряд: дорожка из n слайдов шириной 100, видно perView.
 function wide(doc, n, perView, attrs = {}) {
   const { node: trackEl } = build(doc, n, 100, { class: 'gr-track' }, perView);

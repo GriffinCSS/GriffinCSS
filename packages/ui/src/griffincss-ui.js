@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.27.0
+ * Griffincss UI — Runtime v0.27.1
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -50,7 +50,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.0';
+  var VERSION = '0.27.1';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -234,7 +234,7 @@
       : closest(trigger, DISMISSIBLE);
 
     if (!target) {
-      warn('крестику нечего закрывать: ни цели в data-gr-dismiss, ни сообщения вокруг');
+      warn('close button has nothing to close: no data-gr-dismiss target and no enclosing message');
       return true;
     }
 
@@ -343,8 +343,8 @@
     var urgent = options.assertive === undefined ? status === 'danger' : !!options.assertive;
 
     if (status && !options.title) {
-      warn('тост со статусом "' + status + '" без title: статус остался одним цветом, '
-        + 'а он не переживает чёрно-белую печать и дальтонизм');
+      warn('toast with status "' + status + '" has no title: the status is shown by colour alone, '
+        + 'which is lost in greyscale print and to colour-blind readers');
     }
 
     var node = buildToast(text, options, status);

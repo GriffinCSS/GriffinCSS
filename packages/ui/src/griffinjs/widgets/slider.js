@@ -43,7 +43,7 @@
 
     var trackEl = el.querySelector('.gr-track') || el.firstElementChild;
 
-    if (!trackEl) throw new Error('у слайдера нет дорожки');
+    if (!trackEl) throw new Error('the slider has no track');
 
     var track = G.track(trackEl, { loop: o.loop, rewind: o.rewind, step: o.step, engine: o.engine, index: o.index || 0 });
     var attrs = G.recorder();
