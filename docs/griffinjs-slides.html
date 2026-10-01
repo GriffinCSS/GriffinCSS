@@ -214,8 +214,9 @@
     <code>data-gr-clone</code>, <code>aria-hidden</code> и <code>inert</code>;
     дорожка доезжает до клона плавно и на остановке мгновенно перескакивает
     на настоящий слайд. Медиа в клоне не грузится: у <code>&lt;iframe&gt;</code>,
-    <code>&lt;video&gt;</code> и <code>&lt;audio&gt;</code> клона нет
-    <code>src</code> — плеер не загружается второй раз и не играет невидимо,
+    <code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code>, <code>&lt;embed&gt;</code>
+    и <code>&lt;object&gt;</code> клона нет <code>src</code> и <code>data</code> —
+    плеер не загружается второй раз и не играет невидимо,
     а на доезде до края видна пустая рамка того же размера. Картинки
     в клоне остаются. У <code>fade</code> цикл бесплатен. Если движок цикла
     не умеет, <code>loop</code> ведёт себя как <code>rewind</code>.
@@ -444,7 +445,7 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
   <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта. Адрес кадра — <code>http(s)</code>, относительный, <code>data:</code> или <code>blob:</code> (страница с диска открывает и свои файлы); с другой схемой (<code>javascript:</code> во фрейме исполнился бы от имени страницы) кадр не открывается: причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает. Фреймом — только адрес из списка кадров (ниже)</td></tr>
   <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
   <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
-  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, адрес хоста из списка кадров — iframe (по хосту адреса, а не по имени хостинга где-нибудь в пути; свой сайт не угадывается), остальное — картинка. <code>iframe</code> открывает только адрес из списка кадров</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, адрес из списка кадров — iframe (сверяются хост и начало пути адреса, а не имя хостинга где-нибудь в нём; свой сайт не угадывается), остальное — картинка. <code>iframe</code> открывает только адрес из списка кадров</td></tr>
 </table>
 
 <pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;
@@ -469,19 +470,57 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
   Кадр-фрейм показывает страницу внутри окна сайта, с адресом сайта в строке
   браузера. Поэтому фреймом лайтбокс открывает не любой адрес, а только
   совпавший со списком <code>GriffinJS.config.frames</code>. По умолчанию
-  в нём свой сайт и плееры четырёх хостингов:
+  в нём свой сайт и плееры четырёх хостингов — адреса, по которым хостинг
+  отдаёт плеер для встраивания:
 </p>
 
-<pre><code>['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video']</code></pre>
+<pre><code>['self', 'youtube.com/embed/', 'youtube-nocookie.com/embed/',
+ 'player.vimeo.com/video/', 'vimeo.com/showcase/', 'vimeo.com/event/',
+ 'rutube.ru/play/embed/',
+ 'vk.com/video_ext.php', 'vk.ru/video_ext.php', 'vkvideo.ru/video_ext.php']</code></pre>
 
 <p>
-  Запись — хост, и поддомены в него входят (<code>youtube.com</code> пускает
-  <code>www.youtube.com</code>), или хост с началом пути
-  (<code>vk.com/video</code> пускает <code>vk.com/video_ext.php</code>,
-  но не <code>vk.com/wall…</code>); <code>'self'</code> — адреса своего сайта,
-  а у страницы, открытой с диска, — файлы рядом с ней.
-  Список ваш: его можно оставить, расширить или заменить.
+  Страницы роликов (<code>youtube.com/watch</code>, <code>vimeo.com/ID</code>,
+  <code>rutube.ru/video/…</code>) и короткой ссылки <code>youtu.be</code>
+  в списке нет: хостинги отдают их с запретом встраивания
+  (<code>X-Frame-Options</code>), и фреймом они показали бы пустой кадр.
+  С <code>data-gr-type="iframe"</code> такой адрес остаётся ссылкой.
+  Исключение — подборки и трансляции Vimeo: плеер у них с хвостом
+  (<code>vimeo.com/showcase/ID/embed</code>, <code>vimeo.com/event/ID/embed</code>),
+  а запись — начало пути, и хвост она выразить не может. Поэтому
+  <code>vimeo.com/showcase/</code> и <code>vimeo.com/event/</code> пускают
+  и страницы подборки и трансляции — во фрейме они покажут пустой кадр.
+  Плеер <code>…/embed</code> ставьте в <code>data-gr-src</code>, страницу —
+  только в <code>href</code>.
+  <code>'self'</code> — адреса своего сайта, а у страницы, открытой
+  с диска, — файлы рядом с ней. Список ваш: его можно оставить, расширить
+  или заменить.
 </p>
+
+<p>
+  Запись без <code>/</code> — хост, и поддомены в него входят:
+  <code>player.example.ru</code> пускает <code>cdn.player.example.ru</code>.
+  Запись с <code>/</code> — хост и начало пути: <code>youtube.com/embed/</code>
+  пускает <code>www.youtube.com/embed/ID</code>, но не
+  <code>youtube.com/watch?v=ID</code>. Сверка простая, и, дописывая свои
+  записи, её стоит знать:
+</p>
+
+<ul>
+  <li>схема — <code>http</code> или <code>https</code>, порт — любой:
+    запись хоста пускает и <code>player.example.ru:8080</code>;</li>
+  <li>поддомены входят и у записи с путём: <code>vk.com/video_ext.php</code>
+    пускает <code>m.vk.com/video_ext.php</code>;</li>
+  <li>путь сверяется началом строки, без границы сегмента и без
+    декодирования: запись <code>example.ru/video</code> пустила бы
+    и <code>example.ru/videos-all</code>. Границу даёт только <code>/</code>
+    в конце записи; полное имя файла её не даёт —
+    <code>vk.com/video_ext.php</code> пускает и <code>vk.com/video_ext.php5</code>
+    (хост тот же, так что вреда в этом нет);</li>
+  <li>домен кириллицей записывается в punycode (<code>xn--…</code>):
+    адрес браузер приводит к нему сам, а запись кириллицей не совпадёт
+    ни с чем.</li>
+</ul>
 
 <pre><code>// Как есть — ничего не писать: YouTube, Vimeo, Rutube, VK Видео и свой сайт.
 
@@ -493,10 +532,13 @@ GriffinJS.config.frames.push('player.example.ru');
 GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
 
 <p>
+  Меняйте ключ <code>GriffinJS.config.frames</code>, а не объект
+  <code>GriffinJS.config</code> целиком: модули держат его с загрузки,
+  и <code>GriffinJS.config = { frames: […] }</code> они не увидят.
   Список читается при каждом открытии окна: скрипт, который его меняет,
   выполняется после <code>griffinjs.js</code> — отложенным тегом после него
   или по <code>DOMContentLoaded</code>, — лишь бы до щелчка. Без
-  <code>data-gr-type</code> фреймом угадываются хосты из списка, кроме
+  <code>data-gr-type</code> фреймом угадываются адреса из списка, кроме
   своего сайта: свои адреса — картинки и видео. Адрес не из списка —
   даже с <code>data-gr-type="iframe"</code> — фреймом не открывается:
   причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает.
@@ -507,14 +549,31 @@ GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
 <p>
   Список — в JS, а не в атрибуте: кто пишет адрес в разметку (редактор
   CMS, данные API), написал бы туда и разрешение. Каждый кадр ещё и в
-  песочнице — <code>sandbox="allow-scripts allow-popups
-  allow-popups-to-escape-sandbox"</code>: плеер играет, разворачивается
-  на весь экран и открывает свои ссылки в новой вкладке, но увести вкладку
-  сайта не может. Хостам списка добавляется <code>allow-same-origin</code> —
-  без него плееры не запускаются. Своему сайту — никогда: SVG сайта
-  со <code>&lt;script&gt;</code> в кадре с origin страницы получил бы доступ
-  к ней, а в песочнице без <code>allow-same-origin</code> — нет. Плеер
-  в списке доверен целиком — вместе с тем, куда его страница перейдёт.
+  песочнице — <code>sandbox="allow-scripts allow-popups"</code>: плеер
+  играет и разворачивается на весь экран, но сам кадр увести вкладку
+  сайта не может. Хостам списка добавляются <code>allow-same-origin</code> —
+  без него плееры не запускаются — и <code>allow-popups-to-escape-sandbox</code>:
+  ссылка плеера «смотреть на сайте» открывается обычной вкладкой. Такое
+  окно — уже вне песочницы: оно живёт в origin своего адреса, его
+  <code>opener</code> — кадр, а вкладка сайта — <code>opener.top</code>.
+  Окно чужого origin может увести вкладку только в Firefox. Окно
+  на адресе самого сайта — своя страница или свой SVG со скриптом —
+  получает страницу целиком в любом движке и уводит её; это закрывает
+  заголовок <code>Content-Security-Policy: sandbox</code> у своих
+  ресурсов. Заголовок <code>Cross-Origin-Opener-Policy: same-origin</code>
+  у страницы обрывает <code>opener</code> таких окон вовсе. Плеер в списке
+  доверен целиком — вместе с тем, куда его страница перейдёт и что откроет.
+</p>
+
+<p>
+  Своему сайту — ни того, ни другого. SVG сайта со <code>&lt;script&gt;</code>
+  в кадре с origin страницы получил бы к ней доступ, а в песочнице
+  без <code>allow-same-origin</code> — нет. Окно, которое открывает свой
+  кадр, остаётся в его песочнице: с непрозрачным origin оно не дотянется
+  до страницы через <code>opener</code> и не уведёт вкладку. Цена —
+  ссылки своего плеера открывают вкладку в той же песочнице: в ней
+  не отправляются формы, а cookie и хранилище недоступны из скрипта.
+  Ссылку на страницу сайта ставьте вне кадра.
 </p>
 
 <h2>Прогресс движения</h2>
@@ -684,7 +743,10 @@ GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
   ссылка без скрипта, её открывает щелчок с Ctrl в новой вкладке.
   <code>data-gr-src</code> — адрес плеера: страницу ролика хостинги
   во фрейме не показывают, во фрейм встаёт только плеер. Тип
-  <code>iframe</code> лайтбокс узнаёт по адресу плеера сам.
+  <code>iframe</code> лайтбокс узнаёт по адресу плеера и сам, но в рецепте
+  он стоит явно: если плеера нет (пустой <code>data-gr-src</code>, адрес
+  не из списка), ссылка с ним ведёт на страницу ролика, а без него
+  открывает окно с битой картинкой.
 </p>
 
 <table>
@@ -694,6 +756,15 @@ GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
   <tr><td>VK Видео</td><td><code>https://vkvideo.ru/video-OID_ID</code></td><td>из кода вставки: <code>https://vkvideo.ru/video_ext.php?oid=…&amp;id=…&amp;hash=…</code></td></tr>
   <tr><td>Vimeo</td><td><code>https://vimeo.com/ID</code></td><td><code>https://player.vimeo.com/video/ID</code></td></tr>
 </table>
+
+<p>
+  Плеер YouTube в режиме повышенной конфиденциальности —
+  <code>https://www.youtube-nocookie.com/embed/ID</code> — тоже в списке.
+  Короткая ссылка <code>youtu.be</code> и страница ролика годятся только
+  для <code>href</code>: во фрейм хостинг их не пускает — без
+  <code>data-gr-src</code> ссылка с <code>data-gr-type="iframe"</code>
+  просто уведёт на ролик.
+</p>
 
 <p>
   У VK Видео адрес плеера из адреса страницы не собрать: в коде вставки
@@ -711,7 +782,7 @@ GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
 
 <pre><code>&lt;div class="gr-grid-1 gr-grid-3-sm gr-gap"&gt;
   &lt;a class="gr-relative gr-block" href="https://rutube.ru/video/ID/"
-     data-gr-src="https://rutube.ru/play/embed/ID"
+     data-gr-src="https://rutube.ru/play/embed/ID" data-gr-type="iframe"
      data-gr-lightbox="video" data-gr-caption="Обзор новинки"&gt;
     &lt;img class="gr-w-full gr-aspect-video gr-object-cover gr-radius" src="preview.jpg" alt="Обзор новинки"&gt;
     &lt;span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"&gt;

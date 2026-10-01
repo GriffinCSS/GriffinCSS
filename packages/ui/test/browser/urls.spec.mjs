@@ -73,6 +73,14 @@ test.beforeAll(async () => {
     if (pathname === '/evil.svg') {
       return reply(res, 'image/svg+xml', '<svg xmlns="http://www.w3.org/2000/svg"><script>try{parent.document.body.dataset.xss="svg"}catch(e){document.documentElement.setAttribute("data-blocked",e.name)}</script></svg>');
     }
+    // Своя страница в кадре открывает окно со своей же страницей со скриптом:
+    // выйди окно из песочницы кадра — оно в origin сайта и правит страницу
+    // через opener, а затем уводит вкладку.
+    if (pathname === '/popup-frame.html') return reply(res, 'text/html', '<button id="go" style="position:fixed;inset:0" onclick="window.open(\'/popup.html\')">Окно</button>');
+    if (pathname === '/popup.html') {
+      return reply(res, 'text/html', '<script>try{opener.top.document.body.dataset.xss="popup";document.title="access"}catch(e){document.title="blocked:"+e.name}try{opener.top.location="/landed-own"}catch(e){}</script>');
+    }
+    if (pathname === '/landed-own') return reply(res, 'text/html', '<p>вкладка ушла</p>');
     // Редирект своего адреса на чужой origin.
     if (pathname === '/redirect-out') {
       res.writeHead(302, { location: FOREIGN + '/panel.html' });
@@ -176,6 +184,34 @@ test('лайтбокс: свой SVG со <script> в кадре self — дос
 
   await expect.poll(() => frame.evaluate(() => document.documentElement.getAttribute('data-blocked')), 'скрипт SVG добрался до страницы или не отработал').toBeTruthy();
   expect(await xss(page)).toBe('');
+});
+
+// Окно, открытое своим кадром, наследует его песочницу: origin непрозрачный,
+// до страницы через opener не дотянуться, увести вкладку нельзя. С выходом
+// из песочницы окно жило бы в origin сайта.
+test('лайтбокс: окно, открытое кадром self, остаётся в песочнице — к странице доступа нет, вкладка на месте', async ({ page, context }) => {
+  await open(page, 'lightbox-popup', `
+<a id="l" href="#no-frame" data-gr-lightbox data-gr-type="iframe" data-gr-src="/popup-frame.html">Свой плеер</a>`);
+
+  await page.click('#l');
+
+  const frame = page.locator('dialog iframe');
+
+  await expect(frame).toHaveCount(1);
+  expect.soft(((await frame.getAttribute('sandbox')) || '').split(/\s+/).sort(), 'песочница своего кадра').toEqual(['allow-popups', 'allow-scripts']);
+
+  const popup = context.waitForEvent('page');
+
+  await page.frameLocator('dialog iframe').locator('#go').click();
+
+  const opened = await popup;
+
+  await expect.soft.poll(() => opened.title(), 'окно добралось до страницы через opener').toMatch(/^blocked/);
+  // Окно на уход вкладки, будь он: проверяется, что его не было.
+  await page.waitForTimeout(500);
+  expect.soft(await page.evaluate(() => location.pathname), 'окно увело вкладку').toBe('/lightbox-popup.html');
+  expect.soft(hits.get('own:/landed-own') || 0, 'вкладка запросила адрес окна').toBe(0);
+  expect.soft(await xss(page), 'окно правило страницу').toBe('');
 });
 
 test('мегаменю: чужой origin, редирект на чужой и свой JSON не вставляются; свой text/html — вставляется', async ({ page }) => {

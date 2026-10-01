@@ -56,10 +56,11 @@
 
     // Клон — декорация на время доезда до края: медиа в нём не грузится.
     // Плеер во фрейме-клоне грузился бы вторым (с autoplay — играл бы
-    // невидимо), <video> качал бы файл ещё раз; src снимается до вставки.
+    // невидимо), <video> качал бы файл ещё раз; src, srcdoc и data
+    // (<object>) снимаются до вставки.
     function makeClone(slide) {
       var node = slide.cloneNode(true);
-      var media = node.querySelectorAll('iframe,video,audio,source');
+      var media = node.querySelectorAll('iframe,video,audio,source,object,embed');
 
       // Шаг −1 — сам слайд: видео-слайдер ставит слайдом <video>;
       // картинка-слайд остаётся с src — она и видна на доезде.
@@ -69,6 +70,7 @@
         if (m.tagName === 'IMG') continue;
         m.removeAttribute('src');
         m.removeAttribute('srcdoc');
+        m.removeAttribute('data');
       }
 
       node.setAttribute(CLONE, '');
@@ -250,6 +252,16 @@
       return best;
     }
 
+    // Мгновенно — всегда на настоящий слайд: доезда нет, и копия не нужна.
+    // С клона на настоящий движок уходит только в settle(), после события
+    // прокрутки, а встать на клон можно и без прокрутки вовсе — окно
+    // лайтбокса с последнего кадра стоит на x = 0, где ближайшая копия —
+    // клон перед первым; WebKit события здесь не шлёт, и видимый слайд
+    // оставался inert.
+    function childFor(physical, instant) {
+      return instant ? childOf(physical) : nearestChild(physical);
+    }
+
     // true — команда принята (сразу или отложена до конца жеста), false —
     // отклонена: дорожка ещё едет по прошлой команде. Иначе быстрые нажатия
     // уводили индекс и точки вперёд, а дорожку — назад через полтрека
@@ -263,7 +275,7 @@
 
       if (moving && !instant) return false;
 
-      scrollTo(nearestChild(physical), instant);
+      scrollTo(childFor(physical, instant), instant);
 
       return true;
     }
@@ -300,7 +312,7 @@
         var command = queued;
 
         queued = null;
-        scrollTo(nearestChild(command.physical), command.instant);
+        scrollTo(childFor(command.physical, command.instant), command.instant);
         return;
       }
 

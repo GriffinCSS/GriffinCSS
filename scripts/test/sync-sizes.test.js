@@ -99,3 +99,38 @@ test('допуск действует и для варианта :n', () => {
   assert.deepEqual(ok.problems, [], 'замер 10 300 даёт «10,1», но 10 250 в допуске дал бы «10,0»');
   assert.equal(sync.sync('<!--gr:size:ui:n-->10,2<!--/gr:size:ui:n-->', ['ui:n'], near).problems.length, 1);
 });
+
+// --fix допуска не знает: цифра, которую допуск принимает, но которая
+// не равна точному замеру, переписывается тоже. Иначе на границе
+// округления дерево оставалось бы с цифрой, которую строгая проверка
+// выше («--fix возвращает файл») не принимает, — так падал публичный
+// `npm test` после release-public, собирающего дерево этим же --fix.
+// CLI считает корень от своего пути, поэтому гоняется на копии дерева.
+test('CLI --fix переписывает и цифру в пределах допуска', () => {
+  const { execFileSync } = require('node:child_process');
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-sizes-'));
+  const skip = (src) => !src.includes(`${path.sep}node_modules`);
+
+  try {
+    for (const part of ['scripts', 'packages', 'docs']) fs.cpSync(path.join(root, part), path.join(dir, part), { recursive: true, filter: skip });
+    fs.copyFileSync(path.join(root, 'README.md'), path.join(dir, 'README.md'));
+    // Замер тянет сборщик слоя (terser) — зависимости одалживаются симлинком.
+    fs.symlinkSync(path.join(root, 'node_modules'), path.join(dir, 'node_modules'), 'dir');
+
+    const readme = path.join(dir, 'README.md');
+    const original = fs.readFileSync(readme, 'utf8');
+    const exact = original.match(/<!--gr:size:ui-->([^<]*)<!--\/gr:size:ui-->/)[1];
+    // «12,9 КБ» → «12,90 КБ»: то же число, допуск его принимает, текст — нет.
+    const drifted = original.replace(`<!--gr:size:ui-->${exact}<`, `<!--gr:size:ui-->${exact.replace(/(\d,\d)/, '$10')}<`);
+
+    assert.notEqual(drifted, original, 'подмена не удалась');
+    fs.writeFileSync(readme, drifted);
+
+    execFileSync(process.execPath, [path.join(dir, 'scripts', 'sync-sizes.mjs'), '--fix'], { cwd: dir, stdio: 'pipe' });
+
+    assert.equal(fs.readFileSync(readme, 'utf8'), original, '--fix оставил цифру в пределах допуска');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

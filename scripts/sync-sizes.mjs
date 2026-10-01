@@ -145,12 +145,16 @@ if (process.argv[1] && process.argv[1].endsWith('sync-sizes.mjs')) {
     const before = readFileSync(path, 'utf8');
     const { text, problems } = sync(before, site.ids);
 
-    if (problems.length === 0) continue;
-
-    if (fix) {
-      if (text !== before) writeFileSync(path, text);
+    // --fix пишет точный замер и тогда, когда допуск цифру принимает:
+    // иначе на границе округления дерево оставалось бы с цифрой, которую
+    // строгая проверка теста не принимает (release-public собирает
+    // публичное дерево этим же --fix).
+    if (fix && text !== before) {
+      writeFileSync(path, text);
       console.log(`sync-sizes: обновлён ${site.file}`);
     }
+
+    if (problems.length === 0) continue;
 
     for (const problem of problems) {
       // Пропавший маркер не чинится подстановкой: место, куда писать,

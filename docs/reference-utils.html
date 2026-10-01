@@ -207,7 +207,7 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 &lt;div class="gr-mt-[13px]"&gt;отступ сверху 13px&lt;/div&gt;
 &lt;div class="gr-w-[42%]"&gt;ширина 42%&lt;/div&gt;
-&lt;div class="gr-p-[calc(1rem+3px)]"&gt;паддинг из calc()&lt;/div&gt;</code></pre>
+&lt;div class="gr-p-[calc(1rem*1.5)]"&gt;паддинг из calc()&lt;/div&gt;</code></pre>
 
 <p><strong>Без JS не работает и работать не может.</strong> Класса <code>.gr-mt-[13px]</code> в собранном CSS нет — правило создаётся рантаймом в момент, когда он видит элемент, и уезжает в тот же слой <code>griffincss.utils</code>. Не выполнился скрипт — отступа нет. Поэтому произвольным значением задаётся оформление, а не то, от чего зависит читаемость страницы; шкала <code>.gr-mt-4</code> работает всегда и остаётся основным способом.</p>
 
@@ -215,7 +215,7 @@ document.addEventListener('griffincss:themechange', function (e) {
 
 <p>У <code>gr-text-</code> произвольного варианта нет намеренно: <code>.gr-text-2xl</code> — кегль, <code>.gr-text-white</code> — цвет, и <code>.gr-text-[13px]</code> пришлось бы угадывать.</p>
 
-<p>Содержимое скобок — ввод из разметки, и проверяется он так же, как строка раскладки в ядре: не длиннее 48 символов, без <code>{</code>, <code>}</code>, <code>;</code>, <code>/*</code>, кавычек и обратной косой. Невалидное содержимое и неизвестное свойство дают <code>console.warn</code> и пропуск класса, а не сломанное правило. Пробела в значении не бывает по устройству разметки — составное пишется слитно: <code>gr-mt-[calc(1px+2px)]</code>.</p>
+<p>Содержимое скобок — ввод из разметки, и проверяется он так же, как строка раскладки в ядре: не длиннее 48 символов, без <code>{</code>, <code>}</code>, <code>;</code>, <code>/*</code>, кавычек, обратной косой и квадратных скобок, круглые скобки — только парные. Невалидное содержимое и неизвестное свойство дают <code>console.warn</code> и пропуск класса, а не сломанное правило. Пробела в значении не бывает по устройству разметки, поэтому в <code>calc()</code> годятся только <code>*</code> и <code>/</code> — <code>gr-mt-[calc(1rem*1.5)]</code>: <code>+</code> и <code>-</code> CSS требует окружать пробелами, и <code>calc(1px+2px)</code> браузер отбрасывает. Сумму и разность — в CSS темы.</p>
 
 <p>Подробности и живые примеры — <a href="arbitrary-values.html"><code>docs/arbitrary-values.html</code></a>.</p>
 

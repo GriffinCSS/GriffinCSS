@@ -40,11 +40,22 @@
   var VIDEO = /\.(mp4|webm|ogv|mov)(\?|#|$)/i;
   var SCHEMES = /^(https?|data|blob):$/;
   // Набор — по замеру настоящих плееров: allow-presentation им не нужен,
-  // а WebKit на него пишет ошибку в консоль.
-  var SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
+  // а WebKit на него пишет ошибку в консоль. Выход окон из песочницы —
+  // только хостам списка, вместе с allow-same-origin: ссылка плеера
+  // «смотреть на сайте» открывается обычной вкладкой. Окно своего кадра
+  // остаётся в его песочнице — с выходом оно жило бы в origin сайта,
+  // правило бы страницу через opener и уводило бы вкладку.
+  var SANDBOX = 'allow-scripts allow-popups';
+  var HOST = ' allow-popups-to-escape-sandbox allow-same-origin';
   var config = G.config;
 
-  if (!config.frames) config.frames = ['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video'];
+  // Записи — пути встраивания плееров, а не хосты: страница ролика
+  // и короткая ссылка youtu.be отвечают X-Frame-Options и фреймом
+  // не встают никогда — вне списка они остаются ссылкой.
+  if (!config.frames) {
+    config.frames = ['self', 'youtube.com/embed/', 'youtube-nocookie.com/embed/', 'player.vimeo.com/video/', 'vimeo.com/showcase/', 'vimeo.com/event/',
+      'rutube.ru/play/embed/', 'vk.com/video_ext.php', 'vk.ru/video_ext.php', 'vkvideo.ru/video_ext.php'];
+  }
 
   var dialog = null;
   var track = null;
@@ -145,7 +156,7 @@
     }
 
     if (item.type === 'iframe') {
-      return element('iframe', null, { sandbox: SANDBOX + (item.same ? ' allow-same-origin' : ''), src: item.src, allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: '', title: item.caption || item.alt || 'Видео' });
+      return element('iframe', null, { sandbox: SANDBOX + (item.same ? HOST : ''), src: item.src, allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: '', title: item.caption || item.alt || 'Видео' });
     }
 
     return element('img', null, { src: item.src, alt: item.alt });
@@ -161,17 +172,18 @@
 
     // Кадр с отвергнутым адресом выпадает из группы; отвергнут
     // открываемый — окна нет. Новый номер — число принятых до него.
-    // Адрес приводится к строке один раз: она проверяется, она же
-    // встаёт в кадр — в копию описания, объект вызывающего не меняется.
+    // Адрес и тип приводятся к строке один раз: они проверяются, они же
+    // встают в кадр — в копию описания, объект вызывающего не меняется.
     // Фрейм — только по списку кадров.
     index = 0;
 
     for (var k = 0; k < items.length; k++) {
       var src = String(items[k].src);
+      var type = String(items[k].type || '');
       var url = parse(src);
       // Схема — http(s), data:, blob: или та же, что у страницы: с диска
       // свои файлы — file:, относительный адрес иначе не открылся бы.
-      var kind = url && (SCHEMES.test(url.protocol) || url.protocol === location.protocol) && (items[k].type === 'iframe' ? listed(url) : 'any');
+      var kind = url && (SCHEMES.test(url.protocol) || url.protocol === location.protocol) && (type === 'iframe' ? listed(url) : 'any');
 
       if (!kind) {
         G.warn('lightbox: frame address refused: ' + src + ' (iframe: GriffinJS.config.frames)');
@@ -181,7 +193,7 @@
       }
 
       if (k < at) index++;
-      list.push(Object.assign({}, items[k], { src: src, same: kind === 'host' }));
+      list.push(Object.assign({}, items[k], { src: src, type: type, same: kind === 'host' }));
     }
 
     if (!list.length) return null;

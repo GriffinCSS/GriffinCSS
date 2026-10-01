@@ -157,3 +157,21 @@ test('ключи: --report с путём и без, --workers доезжает �
 
   assert.throws(() => parseArgs(['--reprot']), /неизвестный ключ/);
 });
+
+// Дата сводки — местная, как у журнала, плана и git log: по UTC с полуночи
+// до трёх по Москве сводка датировалась вчерашним днём, и гейт выпуска
+// останавливался на расхождении с датой раздела журнала.
+test('дата сводки — местная, а не UTC', async () => {
+  const { localDate } = await import('../test-browsers.mjs');
+  const saved = process.env.TZ;
+
+  process.env.TZ = 'Europe/Moscow';
+
+  try {
+    assert.equal(localDate(new Date('2026-10-01T21:30:00Z')), '2026-10-02');
+    assert.equal(localDate(new Date('2026-01-05T08:00:00Z')), '2026-01-05');
+  } finally {
+    if (saved === undefined) delete process.env.TZ;
+    else process.env.TZ = saved;
+  }
+});

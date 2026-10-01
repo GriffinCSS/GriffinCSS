@@ -226,6 +226,15 @@ function line({ browser, code, summary, seconds }) {
 
 // Ключ --report [путь]: без него поведение прежнее — печать в терминал.
 // Ключ --workers N доезжает до playwright как есть.
+// Дата сводки — местная, как у журнала, плана и git log: по UTC с полуночи
+// до трёх по Москве сводка датировалась вчерашним днём, и гейт выпуска
+// останавливался на расхождении с датой раздела журнала.
+export function localDate(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 export function parseArgs(argv) {
   const options = { report: null, workers: null };
 
@@ -268,7 +277,7 @@ async function main(argv) {
 
   const meta = {
     version: JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version,
-    date: new Date().toISOString().slice(0, 10),
+    date: localDate(),
     platform: `${os.type()} ${os.release()} (${os.arch()})`,
     node: process.version,
     playwright: require('@playwright/test/package.json').version,

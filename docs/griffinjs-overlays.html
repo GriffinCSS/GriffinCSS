@@ -161,7 +161,7 @@
 
 <table>
   <tr><th>Параметр <code>data-gr-combobox</code></th><th>По умолчанию</th><th>Что делает</th></tr>
-  <tr><td><code>src</code></td><td>—</td><td>Адрес с <code>{q}</code> — своего сайта: <code>http(s)</code> того же origin, что у страницы (другой сайт — см. «Источник с другого сайта» ниже); ответ — JSON: массив строк или объектов <code>{value, label, href, group}</code>, либо <code>{items: […]}</code></td></tr>
+  <tr><td><code>src</code></td><td>—</td><td>Адрес с <code>{q}</code> — своего сайта: <code>http(s)</code> того же origin, что у страницы (другой сайт — см. «Источник с другого сайта» ниже); ответ — JSON: массив строк или объектов <code>{value, label, href, group}</code>, либо <code>{items: […]}</code>. <code>{q}</code> ставится в строку запроса (<code>?q={q}</code>), а не в сегмент пути: набранные <code>.</code> и <code>..</code> браузер в пути схлопывает, и запрос ушёл бы на другой адрес своего сайта; кодировать бесполезно — <code>%2E</code> в самом адресе парсер схлопывает так же</td></tr>
   <tr><td><code>min</code></td><td><code>1</code></td><td>Минимальная длина запроса; короче — список закрыт, запрос не уходит</td></tr>
   <tr><td><code>delay</code></td><td><code>200</code></td><td>мс дебаунса: запрос уходит, когда перестали печатать</td></tr>
   <tr><td><code>empty</code></td><td><code>''</code></td><td>Подпись пустого ответа (<code>role="status"</code>); пустая — список просто закрывается</td></tr>
@@ -228,7 +228,10 @@ GriffinJS.mount(document.querySelector('#city'), 'combobox', {
 <p>
   Список читается при каждом запросе, поэтому присваивание
   (<code>GriffinJS.config.sources = ['https://api.example.ru']</code>)
-  работает так же, как <code>push</code>. Скрипт, который его меняет,
+  работает так же, как <code>push</code>. Меняйте ключи
+  <code>GriffinJS.config</code>, а не объект целиком: модули держат его
+  с загрузки, и <code>GriffinJS.config = { sources: […] }</code> они
+  не увидят. Скрипт, который его меняет,
   выполняется после <code>griffinjs.js</code> — отложенным тегом после
   него или по <code>DOMContentLoaded</code>, — лишь бы до первого ввода.
   Под политикой CSP этот origin нужен и в <code>connect-src</code>.

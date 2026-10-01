@@ -82,6 +82,29 @@ test('узел с id griffincss-dynamic, не <style>, — не лист ран�
   assert.ok(sheets[0].textContent.includes('@layer griffincss.core'), 'правила не в своём листе');
 });
 
+// И чужой <style> с этим id — не наш лист: рантайм переписал бы его текст,
+// а под CSP с nonce писал бы правила в лист без nonce — заблокированный.
+// Узел по id рантайм не ищет вовсе: свой лист заводится всегда.
+test('<style id="griffincss-dynamic"> из разметки — не лист рантайма: не тронут, правила и nonce — в своём', () => {
+  const script = new MockElement('script', { nonce: 'r4nd0m' });
+  const foreign = new MockElement('style', { id: 'griffincss-dynamic' });
+
+  foreign.textContent = '.orig{color:red}';
+
+  const body = el('body', {}, [foreign, el('div', { 'data-gr-layout': 'a1b1' }, [el('div'), el('div')])]);
+  const { doc, griffin } = setupDom(body, {}, { script });
+
+  griffin._autoStart();
+  griffin.init();
+
+  const sheets = doc.head.children.filter((n) => n.tagName === 'STYLE' && n.getAttribute('id') === 'griffincss-dynamic');
+
+  assert.equal(foreign.textContent, '.orig{color:red}', 'текст чужого <style> переписан');
+  assert.equal(sheets.length, 1, 'свой лист не создан');
+  assert.equal(sheets[0].nonce, 'r4nd0m', 'свой лист без nonce');
+  assert.ok(sheets[0].textContent.includes('@layer griffincss.core'), 'правила не в своём листе');
+});
+
 // Риск № 2 этапа: порядок каскада обязан остаться прежним. Сторож —
 // на случай, если приёмник CSS когда-нибудь всё же переедет.
 test('порядок каскада не изменился: <style> последний в <head>', () => {

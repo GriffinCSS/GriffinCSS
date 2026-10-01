@@ -114,6 +114,28 @@ test('кавычка и обратная косая в значении — пр
   }
 });
 
+// Незакрытая «(» или функция и «[» открывают блок, который поглощает «}»
+// и все следующие правила общего листа; «url(» без «)» — до первой «)».
+// Правило одно: значение не может изменить вложенность блоков.
+test('непарные скобки и квадратные скобки — предупреждение и пропуск, следующие правила целы', () => {
+  for (const bad of ['gr-w-[calc(1px]', 'gr-w-[a[b]', 'gr-w-[url(x]', 'gr-w-[a]b]', 'gr-w-[1px)]', 'gr-w-[min(1px,(2px]', 'gr-w-[a)(b]']) {
+    const { css, warnings } = setupQuiet(el('body', {}, [el('div', { class: bad }), el('div', { class: 'gr-mt-[13px]' })]));
+
+    assert.ok(!css.includes('width:'), `значение ${bad} прошло: ` + css);
+    assert.ok(css.includes('margin-top:13px'), `следующее правило пропало после ${bad}: ` + css);
+    assert.equal(warnings.length, 1, bad + ': ' + warnings.join(' | '));
+  }
+});
+
+test('сбалансированные функции принимаются', () => {
+  for (const good of ['min(10px,5vw)', 'calc(1rem*2)', 'var(--x)', 'max(1px,min(2px,3vw))']) {
+    const { css, warnings } = setupQuiet(el('body', {}, [el('div', { class: 'gr-w-[' + good + ']' })]));
+
+    assert.ok(css.includes('width:' + good), `значение ${good} отвергнуто: ` + css);
+    assert.equal(warnings.length, 0, good + ': ' + warnings.join(' | '));
+  }
+});
+
 test('пустые скобки — предупреждение и пропуск', () => {
   const { css, warnings } = setupQuiet(el('body', {}, [el('div', { class: 'gr-mt-[]' })]));
 

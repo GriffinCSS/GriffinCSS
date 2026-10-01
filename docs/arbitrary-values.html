@@ -49,7 +49,7 @@
 
 &lt;div class="gr-mt-[13px]"&gt;отступ сверху 13px&lt;/div&gt;
 &lt;div class="gr-w-[42%]"&gt;ширина 42%&lt;/div&gt;
-&lt;div class="gr-p-[calc(1rem+3px)]"&gt;паддинг из calc()&lt;/div&gt;</code></pre>
+&lt;div class="gr-p-[calc(1rem*1.5)]"&gt;паддинг из calc()&lt;/div&gt;</code></pre>
 
 <p>
   Рантайм разбирает имя класса, находит свойство по части до скобки
@@ -126,18 +126,23 @@
 <table>
   <tr><th>Отклоняется</th><th>Пример</th></tr>
   <tr><td>пустые скобки</td><td><code>gr-mt-[]</code></td></tr>
-  <tr><td>значение длиннее 48 символов</td><td><code>gr-mt-[calc(1px+1px+…)]</code></td></tr>
+  <tr><td>значение длиннее 48 символов</td><td><code>gr-mt-[min(1px,2px,3px,…)]</code></td></tr>
   <tr><td><code>{</code>, <code>}</code> или <code>;</code> в значении</td><td><code>gr-mt-[1px;color:red]</code></td></tr>
   <tr><td>комментарий <code>/*</code> в значении</td><td><code>gr-mt-[1px/*x*/]</code></td></tr>
   <tr><td>кавычка <code>"</code>, <code>'</code> или обратная косая <code>\</code> — открыли бы строку или экранирование, которые поглотили бы все следующие правила</td><td><code>gr-p-["x]</code></td></tr>
+  <tr><td>квадратная скобка <code>[</code> или <code>]</code> в значении и непарная круглая — незакрытые <code>(</code>, функция или <code>url(</code> открыли бы блок, который поглотил бы все следующие правила; парные скобки законны</td><td><code>gr-w-[calc(1px]</code>, <code>gr-w-[a[b]</code></td></tr>
   <tr><td>свойство неизвестно таблице</td><td><code>gr-zzz-[13px]</code></td></tr>
 </table>
 
 <p>
   Пробела в значении не бывает по устройству разметки: атрибут
   <code>class</code> разделяется пробелами, и <code>gr-mt-[1px + 2px]</code>
-  распался бы на три класса. Составное значение пишется без пробелов:
-  <code>gr-mt-[calc(1px+2px)]</code>.
+  распался бы на три класса. Поэтому в <code>calc()</code> годятся только
+  <code>*</code> и <code>/</code>: <code>gr-mt-[calc(1rem*1.5)]</code>.
+  <code>+</code> и <code>-</code> CSS требует окружать пробелами, и без них
+  <code>calc(1px+2px)</code> браузер отбрасывает — отступа не будет. Сумму
+  и разность пишите в CSS темы или обходитесь без арифметики, как в рецепте
+  «экран минус шапка» ниже.
 </p>
 
 <h2>Вместе с каскадом скруглений</h2>
@@ -220,22 +225,28 @@
 
 <p>
   Чат, редактор, карта: под фиксированной шапкой область должна занять
-  ровно остаток экрана и прокручиваться внутри себя.
-  <code>.gr-h-[calc(100svh-56px)]</code> считает это прямо в классе —
-  <code>calc()</code> пишется без пробелов, иначе атрибут <code>class</code>
-  разрежет его на части. В связке — <code>.gr-overflow-y-auto</code>
-  для внутренней прокрутки.
+  ровно остаток экрана и прокручиваться внутри себя. Вычитать в классе
+  нельзя — <code>calc(100svh-56px)</code> без пробелов вокруг <code>-</code>
+  браузер отбрасывает. Остаток отдаёт флекс-колонка: обёртка высотой
+  в экран — <code>.gr-flex .gr-flex-col .gr-h-[100svh]</code>, шапка —
+  своей высоты, а область берёт остальное парой <code>.gr-flex-1
+  .gr-min-h-0</code> и прокручивается внутри — <code>.gr-overflow-y-auto</code>.
+  <code>.gr-min-h-0</code> обязателен: без него флекс-элемент не ужмётся
+  меньше своего содержимого, и прокрутится вся страница. Высота шапки
+  нигде не повторяется — поменяется шапка, область подстроится сама.
 </p>
 
-<pre><code>&lt;header style="height:56px"&gt;…&lt;/header&gt;
-&lt;main class="gr-h-[calc(100svh-56px)] gr-overflow-y-auto"&gt;
-  …лента чата со своим скроллом…
-&lt;/main&gt;</code></pre>
+<pre><code>&lt;div class="gr-flex gr-flex-col gr-h-[100svh]"&gt;
+  &lt;header&gt;…&lt;/header&gt;
+  &lt;main class="gr-flex-1 gr-min-h-0 gr-overflow-y-auto"&gt;
+    …лента чата со своим скроллом…
+  &lt;/main&gt;
+&lt;/div&gt;</code></pre>
 <div class="demo-block">
-  <div class="demo-block-title">В демо тот же приём в миниатюре: <code>calc(12rem-40px)</code> при обёртке 12rem</div>
-  <div class="gr-h-[12rem] gr-border gr-radius-2 gr-overflow-hidden">
+  <div class="demo-block-title">В демо тот же приём в миниатюре: обёртка 12rem, шапка 40px</div>
+  <div id="rest-of-screen" class="gr-h-[12rem] gr-flex gr-flex-col gr-border gr-radius-2 gr-overflow-hidden">
     <div class="gr-h-[40px] gr-flex gr-flex-items-center gr-px-4 gr-bg-surface gr-border-b gr-font-semibold gr-text-sm">Шапка — 40px</div>
-    <div class="gr-h-[calc(12rem-40px)] gr-overflow-y-auto gr-px-4 gr-py-2 gr-text-sm gr-text-ink-secondary">
+    <div class="gr-flex-1 gr-min-h-0 gr-overflow-y-auto gr-px-4 gr-py-2 gr-text-sm gr-text-ink-secondary">
       <p class="gr-m-0 gr-mb-2">Область получила ровно остаток высоты и прокручивается сама.</p>
       <p class="gr-m-0 gr-mb-2">Сообщение 2</p>
       <p class="gr-m-0 gr-mb-2">Сообщение 3</p>

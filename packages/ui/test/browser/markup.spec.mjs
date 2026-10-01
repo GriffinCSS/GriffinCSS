@@ -37,6 +37,7 @@ const FRAGMENT = `<p id="frag">Фрагмент</p>
 let server;
 let OWN = '';
 const pages = new Map();
+const headers = new Map();   // заголовки ответа страницы — для CSP
 const hits = new Map();
 
 test.beforeAll(async () => {
@@ -58,7 +59,7 @@ test.beforeAll(async () => {
       return res.end(FRAGMENT);
     }
     if (pages.has(pathname)) {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.writeHead(200, Object.assign({ 'content-type': 'text/html; charset=utf-8' }, headers.get(pathname) || {}));
       return res.end(pages.get(pathname));
     }
 
@@ -165,6 +166,26 @@ test('чужой узел с id="griffincss-dynamic": раскладка раб�
   expect(errors).toEqual([]);
 });
 
+// Чужой <style> с тем же id рантайм принимал за свой лист: под CSP с nonce
+// писал правила в лист без nonce — браузер его блокировал, и раскладка
+// не складывалась. Рантайм больше не ищет узел по id — лист всегда свой.
+test('чужой <style id="griffincss-dynamic"> под CSP с nonce: раскладка складывается, его текст цел', async ({ page }) => {
+  pages.set('/dynamic-style.html', `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Чужой лист</title>
+<script defer src="/griffincss.js" nonce="r4nd0m"></script></head><body>
+<style id="griffincss-dynamic">.orig{color:rgb(1,2,3)}</style>
+<p id="o" class="orig">чужое правило</p>
+<div id="grid" data-gr-layout="a1b1"><div>a</div><div>b</div></div>
+</body></html>`);
+  headers.set('/dynamic-style.html', { 'content-security-policy': "default-src 'self'; script-src 'nonce-r4nd0m'; style-src 'self' 'nonce-r4nd0m'" });
+
+  await page.goto(`${OWN}/dynamic-style.html`);
+  await expect(page.locator('#grid')).toHaveClass(/gr-ready/);
+
+  expect(await page.evaluate(() => getComputedStyle(document.getElementById('grid')).display), 'раскладка не сложилась').toBe('grid');
+  expect(await page.locator('body > style#griffincss-dynamic').textContent(), 'текст чужого <style> переписан').toBe('.orig{color:rgb(1,2,3)}');
+});
+
 test('кавычка в произвольном значении не ломает следующие правила', async ({ page }) => {
   const errors = await open(page, 'arbitrary', `
 <div id="bad" class='gr-p-["x]'>плохое значение</div>
@@ -172,6 +193,121 @@ test('кавычка в произвольном значении не лома�
 
   await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('good')).marginTop), 'правило после кавычки пропало').toBe('13px');
   expect(errors).toEqual([]);
+});
+
+// Фаззер общего листа: значения, которые рантайм утилит переносит в текст
+// правил, — из имени класса и из --gr-r/--gr-p атрибута style. После каждого
+// значения стоит маяк — своё правило с отступом N px; маяк обязан выжить,
+// чужой узел — остаться неперекрашенным, адрес из url() — незапрошенным.
+// Значения идут одной страницей подряд: строка или блок, открытые одним,
+// закрылись бы другим — так и выглядела находка со style.
+const PIECES = ['(', ')', '[', ']', 'url(', 'calc(', 'min(1px,', '"', "'", '\\', '/*', '*/', '{', '}', ';', 'a', '1px', ',', '#victim{background-color:rgb(255,0,0)}', 'p{background-image:url(/leak)}'];
+// Находки идут первыми: пара Chromium (строка), пара Firefox (комментарий),
+// затем незакрытые скобки — после них потерялось бы всё, и пары не сработали бы.
+const KNOWN = ["8px '", "a' } #victim{background-color:rgb(255,0,0)} p{background-image:url(/leak-q)} '", '8px /*', '"*/} #victim{background-color:rgb(255,0,0)} p{background-image:url(/leak-c)} /*"', 'calc(1px', 'a[b', 'url(x'];
+
+function fuzzValues(seed, count, spaces) {
+  const out = KNOWN.filter((v) => spaces || !/\s/.test(v));
+  let x = seed;
+  const next = () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648;
+
+  while (out.length < count) {
+    let v = '';
+    const n = 1 + Math.floor(next() * 4);
+
+    for (let i = 0; i < n; i++) v += PIECES[Math.floor(next() * PIECES.length)] + (spaces && next() < 0.3 ? ' ' : '');
+    if (!spaces) v = v.replace(/\s/g, '');
+    if (v) out.push(v);
+  }
+
+  return out;
+}
+
+const attr = (v) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// Маяк — правило той же секции листа, что и значения: правила произвольных
+// значений выдаются раньше правил каскада скруглений, и маяк-класс
+// пережил бы любое значение из style. Поэтому у каждого входа свой маяк.
+const BEACONS = {
+  // Правило .gr-mt-[N px] — отступ маяка.
+  class: (i) => `<div id="b${i}" class="gr-mt-[${i + 1}px]">маяк</div>`,
+  // Правило выведенного радиуса: у среднего уровня --gr-r — выражение
+  // max(0px,calc(N px - 1px)), а без правила — унаследованные N px.
+  style: (i) => `<div class="gr-radius" style="--gr-r: ${i + 1}px; --gr-p: 1px"><div id="b${i}" class="gr-radius"><div class="gr-radius">маяк</div></div></div>`,
+};
+
+async function fuzzPage(page, name, values, item, kind) {
+  hits.clear();
+
+  const body = values.map((v, i) => item(v, i) + BEACONS[kind](i)).join('\n');
+  // Стартовый маяк стоит до всех значений: его правило выдаётся первым,
+  // и по нему видно, что проход рантайма уже записан в лист.
+  const errors = await open(page, name, `<div id="start" class="gr-mb-[3px]">старт</div>\n${body}\n<div id="victim">чужой узел</div><p>абзац</p>`, ['/griffincss.js', '/griffincss-utils.js']);
+
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById('start')).marginBottom)).toBe('3px');
+
+  const lost = await page.evaluate(({ n, kind }) => {
+    const out = [];
+
+    for (let i = 0; i < n; i++) {
+      const style = getComputedStyle(document.getElementById('b' + i));
+      const alive = kind === 'class'
+        ? style.marginTop === (i + 1) + 'px'
+        : style.getPropertyValue('--gr-r').replace(/\s/g, '').includes('calc(' + (i + 1) + 'px-1px)');
+
+      if (!alive) out.push(i);
+    }
+
+    return out;
+  }, { n: values.length, kind });
+
+  expect.soft(lost.map((i) => `#b${i} после ${JSON.stringify(values[i])}`), 'маяки потеряли правила').toEqual([]);
+  expect.soft(await page.evaluate(() => getComputedStyle(document.getElementById('victim')).backgroundColor), 'чужой узел перекрашен').not.toBe('rgb(255, 0, 0)');
+  expect.soft([...hits.keys()].filter((p) => p.startsWith('/leak')), 'запрос url() из значения').toEqual([]);
+  expect(errors).toEqual([]);
+}
+
+test('фаззер: произвольное значение класса не трогает следующие правила листа', async ({ page }) => {
+  await fuzzPage(page, 'fuzz-class', fuzzValues(7, 80, false), (v) => `<div class="gr-w-[${attr(v)}]">значение</div>`, 'class');
+});
+
+// Три уровня: у верхнего значение объявлено, средний получает правило
+// с ним. Известные пары идут подряд через --gr-r, как в находке;
+// дальше значения чередуются между радиусом и зазором.
+test('фаззер: --gr-r и --gr-p из style не становятся правилами для чужих узлов', async ({ page }) => {
+  await fuzzPage(page, 'fuzz-style', fuzzValues(11, 80, true), (v, i) => {
+    const style = i < KNOWN.length || i % 2 ? `--gr-r: ${attr(v)}` : `--gr-r: 8px; --gr-p: ${attr(v)}`;
+
+    return `<div class="gr-radius" style="${style}"><div class="gr-radius"><div class="gr-radius">значение</div></div></div>`;
+  }, 'style');
+});
+
+// Проверка значения из style не должна занимать поток: длинное значение
+// отклоняется до разбора скобок, разбор линеен. Под одним значением
+// в 8 КБ — сто контейнеров, и каждый проверяет его у всех предков.
+// Автостарт выключен: замеряется один явный проход каскада.
+test('значение из style в 8 КБ над сотней контейнеров: проход каскада — меньше 100 мс', async ({ page }) => {
+  const nested = '('.repeat(4000) + ')'.repeat(4000);
+
+  pages.set('/style-long.html', `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Длинное значение</title></head><body>
+<div class="gr-radius" style="--gr-r: ${nested}">${'<div class="gr-radius">x</div>'.repeat(100)}</div>
+<script src="/griffincss.js" data-auto="false"></script>
+<script src="/griffincss-utils.js" data-auto="false"></script>
+</body></html>`);
+
+  await page.goto(`${OWN}/style-long.html`);
+  await page.waitForFunction(() => window.Griffincss && window.Griffincss.utils);
+
+  const ms = await page.evaluate(() => {
+    const t = performance.now();
+
+    window.Griffincss.utils.radiusCascade(document);
+
+    return performance.now() - t;
+  });
+
+  expect(ms, `проход каскада занял ${Math.round(ms)} мс`).toBeLessThan(100);
 });
 
 test('фрагмент окна с meta refresh, base, link и script: страница на месте, база адресов прежняя, скрипт не исполнен', async ({ page }) => {

@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.28.0
+- **Version:** 0.28.1
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -224,10 +224,10 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.28.0)
+### JS Runtime Key Features (v0.28.1)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
-3. **CSS generation:** injects `<style id="griffincss-dynamic">` — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
+3. **CSS generation:** creates its own `<style id="griffincss-dynamic">` (never looks one up by id — a node from markup with that id is not the runtime's sheet) — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
 4. **Non-overlapping breakpoints:** range syntax (`(width < 768px)`, `(768px <= width < 1024px)`, `(width >= 1280px)`) — no `-1px` arithmetic, units of the breakpoint value do not matter. `rangeQuery()` writes the range, `wrapInQuery(rule, …)` picks `@media` or `@container`. Window and container are two independent chains; the base layout is wrapped in both at once, or it would cover the other axis' range and the winner would depend on rule order
 5. **Auto-hide via :not():** hides children whose grid-area is not in current template (preserves native display). A child whose explicit `gr-area-*` is in **none** of the container's layouts is a markup error (a typo, or `abcd` read as one area instead of `a1b1c1d1`) and gets `console.warn('Griffincss: area "…" is not in any layout of its container (…)')` once per container and name — the record keeps `known` (the union of names over all sets) and `warned`, so the default observer's repeated passes do not repeat it. A name missing from only some sets is hiding by design and warns about nothing
 6. **Auto-assign gr-area-*:** names already present on children are collected first and excluded; the remaining free names go to classless children in first-appearance order — duplicates are impossible

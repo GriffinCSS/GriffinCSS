@@ -505,10 +505,18 @@ test('лайтбокс: имя группы с кавычкой — группа
 
 // --- кадры лайтбокса: список GriffinJS.config.frames и песочница ------------
 
-const DEFAULT_FRAMES = ['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video'];
+// Записи — пути встраивания плееров: страница ролика (watch, vimeo.com/ID,
+// rutube.ru/video/…) и короткая ссылка youtu.be отвечают X-Frame-Options
+// и фреймом не встают никогда — с data-gr-type="iframe" они остаются ссылкой.
+const DEFAULT_FRAMES = ['self', 'youtube.com/embed/', 'youtube-nocookie.com/embed/', 'player.vimeo.com/video/', 'vimeo.com/showcase/', 'vimeo.com/event/',
+  'rutube.ru/play/embed/', 'vk.com/video_ext.php', 'vk.ru/video_ext.php', 'vkvideo.ru/video_ext.php'];
 // allow-presentation не входит: WebKit считает его неизвестным и пишет ошибку
-// в консоль на каждый кадр, а плеерам он по замеру не нужен.
-const SANDBOX = ['allow-scripts', 'allow-popups', 'allow-popups-to-escape-sandbox'];
+// в консоль на каждый кадр, а плеерам он по замеру не нужен. Окно, которое
+// открывает свой кадр, остаётся в его песочнице: с allow-popups-to-escape-sandbox
+// оно жило бы в origin сайта и через opener правило и уводило бы страницу.
+// Хосту списка выход нужен — ссылка плеера «смотреть на сайте» — обычной вкладкой.
+const SANDBOX = ['allow-scripts', 'allow-popups'];
+const SANDBOX_HOST = [...SANDBOX, 'allow-popups-to-escape-sandbox', 'allow-same-origin'];
 
 // Щелчок по ссылке: что открылось (кадр и его песочница) или что щелчок остался ссылке.
 function openLink(G, doc, link) {
@@ -548,9 +556,9 @@ test('кадры: хост списка — фрейм в песочнице с 
   const b = openLink(G, doc, own);
 
   assert.equal(a.tag, 'iframe');
-  assert.deepEqual(a.sandbox, [...SANDBOX, 'allow-same-origin'].sort(), 'песочница хоста списка');
+  assert.deepEqual(a.sandbox, [...SANDBOX_HOST].sort(), 'песочница хоста списка');
   assert.equal(b.tag, 'iframe');
-  assert.deepEqual(b.sandbox, [...SANDBOX].sort(), 'свой адрес получил allow-same-origin');
+  assert.deepEqual(b.sandbox, [...SANDBOX].sort(), 'свой адрес получил allow-same-origin или выход окон из песочницы');
 
   for (const r of [a, b]) assert.ok(!r.sandbox.some((t) => t.startsWith('allow-top-navigation')), 'кадр может увести вкладку');
 
@@ -617,6 +625,40 @@ test('кадры: push расширяет список, присваивание
 
   G.config.frames = [];
   for (const link of [custom, youtube, own]) assert.equal(openLink(G, doc, link).tag, null, 'пустой список открыл фрейм');
+
+  G.destroy();
+});
+
+test('кадры: по умолчанию фреймом — плееры встраивания; страница ролика и youtu.be остаются ссылкой', () => {
+  const { G, doc } = setup(PARTS);
+  const cases = {
+    'https://www.youtube.com/embed/x': 'iframe',
+    'https://www.youtube.com/embed/videoseries?list=PL1': 'iframe',
+    'https://www.youtube-nocookie.com/embed/x': 'iframe',
+    'https://player.vimeo.com/video/1?h=f00d': 'iframe',
+    'https://vimeo.com/showcase/1/embed': 'iframe',
+    'https://vimeo.com/event/1/embed': 'iframe',
+    'https://rutube.ru/play/embed/0a1b2c': 'iframe',
+    'https://vk.com/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+    'https://vk.ru/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+    'https://vkvideo.ru/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+    'https://youtu.be/x': null,
+    'https://www.youtube.com/watch?v=x': null,
+    'https://vimeo.com/76979871': null,
+    'https://rutube.ru/video/0a1b2c/': null,
+    'https://vkvideo.ru/video-1_2': null,
+  };
+  const links = Object.keys(cases).map((src) => [src, frameLink(src)]);
+  mount(doc, el('div', {}, links.map(([, n]) => n)));
+
+  G.start();
+
+  for (const [src, link] of links) {
+    const r = openLink(G, doc, link);
+
+    assert.equal(r.tag, cases[src], src);
+    if (!cases[src]) assert.equal(r.prevented, false, src + ': щелчок не остался ссылке');
+  }
 
   G.destroy();
 });
@@ -720,6 +762,28 @@ test('кадры: open() из кода — то же правило списка
 
   G.lightbox.open([{ src: 'https://player.vimeo.com/video/1', type: 'iframe' }]);
   assert.ok(G.lightbox._dialog().querySelector('iframe').getAttribute('sandbox').includes('allow-same-origin'));
+
+  G.destroy();
+});
+
+// Тип кадра снимается один раз, как адрес: проверка видела «image»
+// и пропускала адрес без списка, а кадр строился по второму чтению —
+// «iframe». Теперь в кадр идёт тот тип, что проверен.
+test('кадры: open() из кода — в кадр идёт тот же тип, что проверен', () => {
+  const { G } = setup(PARTS);
+
+  G.start();
+
+  let reads = 0;
+  const item = { src: 'data:text/html,<p>форма входа</p>', get type() { return reads++ ? 'iframe' : 'image'; } };
+
+  warnings(() => G.lightbox.open([item]));
+
+  const dialog = G.lightbox._dialog();
+
+  assert.ok(dialog, 'окно картинки не открылось');
+  assert.equal(dialog.querySelector('iframe'), null, 'data: встал фреймом');
+  assert.ok(dialog.querySelector('img'), 'кадр не тот, что проверен');
 
   G.destroy();
 });

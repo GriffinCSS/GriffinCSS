@@ -106,6 +106,97 @@ test('противоречие зазора и отступа даёт пред�
   assert.match(warnings[0], /^Griffincss: /);
 });
 
+// Значение из style уходило в правило общего листа без проверки: строка
+// или комментарий одного контейнера закрывались кавычкой или «*/» другого,
+// и остаток становился правилами с любыми селекторами для всей страницы.
+// Проверка та же, что у произвольного значения класса; пробел в style законен.
+test('значение из style, способное изменить вложенность блоков, — предупреждение, каскад от него не выводится', () => {
+  for (const bad of ["8px '", '8px /*', "a' } #victim{color:red} '", 'calc(1px', 'a[b', 'a\\7d b', 'a) b']) {
+    const warnings = [];
+    const original = console.warn;
+    let css;
+
+    console.warn = (m) => warnings.push(m);
+
+    try {
+      const inner = el('div', { class: 'gr-radius' }, [el('div', { class: 'gr-radius' })]);
+
+      ({ css } = setup(el('body', {}, [el('div', { class: 'gr-radius', style: '--gr-r: ' + bad }, [inner])])));
+    } finally {
+      console.warn = original;
+    }
+
+    assert.ok(!/\.gr-r-[0-9a-z]+\{/.test(css), `значение ${bad} ушло в лист: ` + css.slice(-300));
+    assert.equal(warnings.length, 1, bad + ': ' + warnings.join(' | '));
+    assert.match(warnings[0], /^Griffincss: /);
+  }
+});
+
+// Радиусу и зазору килобайты не нужны: длинное значение отклоняется
+// до разбора скобок, а в предупреждение идёт только его начало.
+test('значение из style длиннее 128 знаков — отказ, 128 — принимается; в предупреждении только начало', () => {
+  const run = (value) => {
+    const warnings = [];
+    const original = console.warn;
+    let css;
+
+    console.warn = (m) => warnings.push(m);
+
+    try {
+      ({ css } = setup(el('body', {}, [el('div', { class: 'gr-radius', style: '--gr-r: ' + value }, [el('div', { class: 'gr-radius' }, [el('div', { class: 'gr-radius' })])])])));
+    } finally {
+      console.warn = original;
+    }
+
+    return { css, warnings };
+  };
+
+  const ok = run('a'.repeat(128));
+
+  assert.ok(ok.css.includes('--gr-r:' + 'a'.repeat(128)), '128 знаков отвергнуты');
+  assert.equal(ok.warnings.length, 0, ok.warnings.join(' | '));
+
+  const long = run('a'.repeat(129));
+
+  assert.ok(!/\.gr-r-[0-9a-z]+\{/.test(long.css), '129 знаков ушли в лист');
+  assert.equal(long.warnings.length, 1);
+
+  const huge = run('('.repeat(5000) + ')'.repeat(5000));
+
+  assert.equal(huge.warnings.length, 1);
+  assert.ok(huge.warnings[0].length < 120, 'предупреждение несёт значение целиком: ' + huge.warnings[0].length);
+});
+
+// Отвергнутое значение — отсутствующее: контейнер выводит радиус из предка,
+// как без своего --gr-r, и его дети — тоже.
+test('отвергнутое значение из style: радиус выводится из предка', () => {
+  const warnings = [];
+  const original = console.warn;
+  const c = el('div', { class: 'gr-radius' });
+  const a = el('div', { class: 'gr-radius', style: "--gr-r: 8px '" }, [c]);
+
+  console.warn = (m) => warnings.push(m);
+
+  try {
+    setup(el('body', {}, [el('div', { class: 'gr-radius', style: '--gr-r: 16px; --gr-p: 4px' }, [a])]));
+  } finally {
+    console.warn = original;
+  }
+
+  const derived = (node) => node.classList.items.filter((x) => /^gr-r-/.test(x));
+
+  assert.equal(derived(a).length, 1, 'контейнер с отвергнутым значением остался без радиуса предка');
+  assert.deepEqual(derived(c), derived(a), 'ребёнок получил другое выражение');
+  assert.equal(warnings.length, 1);
+});
+
+test('значение из style с пробелами и функциями каскад выводит', () => {
+  const inner = el('div', { class: 'gr-radius' });
+  const { css } = setup(el('body', {}, [el('div', { class: 'gr-radius', style: '--gr-r: calc(1rem + 2px); --gr-p: min(4px, 1vw)' }, [el('div', { class: 'gr-radius' }, [inner])])]));
+
+  assert.ok(css.includes('--gr-r:max(0px,calc(calc(1rem + 2px) - min(4px, 1vw)))'), 'законное значение отвергнуто: ' + css.slice(-300));
+});
+
 test('контейнер без вложенности рантайм не трогает вовсе', () => {
   const outer = el('div', { class: 'gr-radius gr-radius-8', style: '--gr-p: 8px' }, [el('span')]);
   const { css } = setup(el('body', {}, [outer]));

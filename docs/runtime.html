@@ -23,7 +23,7 @@
 
 <div class="hero">
   <h1>JS-рантайм</h1>
-  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,7 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->10,4 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->8,9 КБ<!--/gr:size:bundle--> одним файлом.</p>
+  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,6 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->10,4 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->8,9 КБ<!--/gr:size:bundle--> одним файлом.</p>
   <div class="hero-badges">
     <span class="badge badge-accent"><!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip</span>
     <span class="badge">IIFE</span>
@@ -41,7 +41,7 @@
   </div>
   <div class="feature-card">
     <h4>Генерация CSS</h4>
-    <p>Внедряет <code>&lt;style id="griffincss-dynamic"&gt;</code> с тремя секциями: FOUC guard, Grid Layouts и Grid Areas. Это единственный лист, который библиотека создаёт из JS, — см. <a href="#csp">Строгий CSP</a>.</p>
+    <p>Создаёт свой <code>&lt;style id="griffincss-dynamic"&gt;</code> с тремя секциями: FOUC guard, Grid Layouts и Grid Areas. Узел с этим <code>id</code> из разметки рантайм не подхватывает — лист всегда свой. О листах из JS и политике CSP — <a href="#csp">Строгий CSP</a>.</p>
   </div>
   <div class="feature-card">
     <h4>Класс на набор</h4>
@@ -63,7 +63,7 @@
   <li>Сканирует DOM: находит все элементы с layout-атрибутами.</li>
   <li>Группирует раскладки по элементам, хеширует набор в класс <code>.gr-l-&lt;хеш&gt;</code> и вешает его на контейнер.</li>
   <li>Генерирует CSS: <code>grid-template-areas</code>, <code>grid-area</code> классы, правила авто-скрытия.</li>
-  <li>Внедряет CSS в <code>&lt;style id="griffincss-dynamic"&gt;</code> в <code>&lt;head&gt;</code>.</li>
+  <li>Пишет CSS в свой <code>&lt;style id="griffincss-dynamic"&gt;</code> в конце <code>&lt;head&gt;</code> — узел с этим <code>id</code> из разметки не подхватывается.</li>
   <li>Выполняет авто-присвоение <code>gr-area-*</code> детям без явного класса.</li>
   <li>Добавляет <code>.gr-ready</code> на grid-контейнеры (снятие FOUC-защиты).</li>
   <li>Поднимает наблюдателя за <code>body</code>: контейнер, вставленный позже, раскладывается сам (с 0.26.0; выключатель — <code>data-observe="false"</code>).</li>
@@ -136,7 +136,7 @@ Griffincss.parseLayout('hdr4-main4-side2_2-ftr4');
 <h3>Griffincss.version</h3>
 
 <pre><code>// Версия рантайма — строка, совпадающая с версией пакета griffincss-core.
-Griffincss.version;   // '0.28.0'</code></pre>
+Griffincss.version;   // '0.28.1'</code></pre>
 
 <h2>Валидация раскладок</h2>
 
@@ -226,7 +226,7 @@ Griffincss.version;   // '0.28.0'</code></pre>
   <tr><td><code>griffincss-ui.js</code></td><td><code>defer</code></td><td>синхронно в <code>&lt;head&gt;</code> он всё равно ждёт <code>DOMContentLoaded</code> — выигрыша нет, а блокирующий путь длиннее. Панели вкладок до старта видны все (база без скрипта); если это заметно, ставьте <code>hidden</code> неактивным в разметке</td></tr>
   <tr><td><code>griffincss-utils.js</code></td><td><code>defer</code></td><td>синхронно он достраивает углы вложенных <code>.gr-radius</code> по мере разбора, с <code>defer</code> — одним проходом после; первый уровень и его прямые дети скруглены статикой в обоих случаях</td></tr>
   <tr><td><code>griffinjs.js</code></td><td><code>defer</code></td><td>до старта разметка живёт базой без скрипта — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, дорожка со scroll-snap; это рабочее состояние, а не поломка. Старт — на <code>DOMContentLoaded</code>, после всех отложенных тегов; тег, вставленный скриптом в готовый документ, стартует сразу после своего файла</td></tr>
-  <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->8,9 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,3 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
+  <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->8,9 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,2 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
 </table>
 
 <p>
@@ -329,9 +329,9 @@ Griffincss.version;   // '0.28.0'</code></pre>
   без строки в консоли по одному виду страницы догадаться трудно.
 </p>
 
-<p>Быстрая проверка в консоли — лист заведён и в нём есть правила:</p>
+<p>Быстрая проверка в консоли — лист заведён и в нём есть правила. Лист рантайма — последний <code>&lt;style id="griffincss-dynamic"&gt;</code> в <code>&lt;head&gt;</code>: узел с тем же <code>id</code> из разметки рантайм не подхватывает, и <code>getElementById</code> вернул бы первый по документу.</p>
 
-<pre><code>var el = document.getElementById('griffincss-dynamic');
+<pre><code>var el = [].slice.call(document.head.querySelectorAll('style#griffincss-dynamic')).pop();
 el.sheet ? el.sheet.cssRules.length : 'лист заблокирован политикой';</code></pre>
 
 <div class="callout callout-warning">

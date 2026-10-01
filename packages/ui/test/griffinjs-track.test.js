@@ -50,6 +50,31 @@ test('цикл: клоны краёв не грузят медиа — у iframe
   t.destroy();
 });
 
+test('цикл: клоны краёв не грузят <object data> и <embed src>', () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 3);
+
+  slides.forEach((s, i) => {
+    s.appendChild(el('object', { data: `/player.html?s=${i}`, type: 'text/html' }));
+    s.appendChild(el('embed', { src: `/clip.svg?s=${i}`, type: 'image/svg+xml' }));
+  });
+
+  const t = G.track(node, { loop: true });
+  const clones = t._engine()._clones();
+
+  assert.equal(clones.length, 2);
+
+  for (const clone of clones) {
+    assert.equal(clone.querySelector('object').hasAttribute('data'), false, 'у <object> в клоне остался data');
+    assert.equal(clone.querySelector('embed').hasAttribute('src'), false, 'у <embed> в клоне остался src');
+  }
+
+  assert.equal(slides[0].querySelector('object').getAttribute('data'), '/player.html?s=0', 'настоящий слайд тронут');
+  assert.equal(slides[0].querySelector('embed').getAttribute('src'), '/clip.svg?s=0');
+
+  t.destroy();
+});
+
 test('цикл: слайд — сам <video>: клон без src', () => {
   const { G, doc } = setup(PARTS);
   const { node, slides } = build(doc, 3, 100, {}, 1, 'video');
@@ -139,6 +164,23 @@ test('цикл: индекс виртуальный, physical — по моду�
   assert.equal(t.index, 3);
   assert.equal(t.physical(3), 0);
   assert.deepEqual(log.map((r) => r[2]), [2, 0, 1, 2, 0]);
+});
+
+// Окно лайтбокса с последней миниатюры: дорожка стоит на x = 0, клон
+// последнего вставлен перед первым, и ближайшая копия цели — этот клон.
+// Мгновенно ставить на клон незачем — доезда нет; а с клона на настоящий
+// слайд движок уходит только после события прокрутки, которого WebKit
+// здесь не присылает: видимый слайд оставался inert.
+test('цикл: мгновенный старт с последнего слайда — на настоящем слайде, а не на клоне перед первым', () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 3);
+  const t = G.track(node, { loop: true, index: 2 });
+
+  assert.equal(node.scrollCalls[node.scrollCalls.length - 1].left, 300, 'дети: клон2, 0, 1, 2, клон0 — настоящий 2 стоит на 300');
+  assert.equal(slides[2].hasAttribute('inert'), false, 'видимый слайд inert');
+  assert.equal(slides[2].hasAttribute('aria-current'), true);
+
+  t.destroy();
 });
 
 test('прокрутка пользователем: движок отчитывается позицией, индекс следует за ней, остановка подтверждает', async () => {

@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.28.0
+ * Griffincss — Runtime Grid Parser v0.28.1
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.28.0';
+  var VERSION = '0.28.1';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -245,19 +245,18 @@
     return (hash >>> 0).toString(36);
   }
 
+  // Лист всегда свой: узел по id не ищется. Чужой узел с этим id —
+  // разметка из данных — не наш лист: <div> получил бы CSS текстом,
+  // а <style> из разметки под CSP с nonce был бы заблокирован вместе
+  // с правилами рантайма.
   function getStyleElement() {
     if (!styleEl) {
-      styleEl = document.getElementById(STYLE_ID);
-      // Чужой узел с этим id (разметка из данных) — не наш лист:
-      // CSS текстом в него не пишется, заводится свой.
-      if (!styleEl || styleEl.tagName !== 'STYLE') {
-        styleEl = document.createElement('style');
-        styleEl.id = STYLE_ID;
-        // Без nonce строгая политика style-src молча выбрасывает
-        // содержимое листа: раскладки теряются, ошибки в консоли нет.
-        if (nonce) styleEl.nonce = nonce;
-        document.head.appendChild(styleEl);
-      }
+      styleEl = document.createElement('style');
+      styleEl.id = STYLE_ID;
+      // Без nonce строгая политика style-src молча выбрасывает
+      // содержимое листа: раскладки теряются, ошибки в консоли нет.
+      if (nonce) styleEl.nonce = nonce;
+      document.head.appendChild(styleEl);
     }
     return styleEl;
   }

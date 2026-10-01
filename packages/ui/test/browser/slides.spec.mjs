@@ -91,6 +91,58 @@ test('лайтбокс: группа из трёх видео грузит тр�
   expect(players.length, 'лишние загрузки плеера').toBe(3);
 });
 
+// <object> и <embed> — тоже медиа: клон с data или src поднял бы плеер
+// второй раз, как фрейм. Каждый адрес загружается ровно один раз.
+test('слайдер с циклом: клоны краёв не грузят <object> и <embed>', async ({ page }) => {
+  const loads = [];
+
+  page.on('request', (r) => { if (/[?&][oe]=\d/.test(r.url())) loads.push(new URL(r.url()).search); });
+  await open(page);
+  await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+  await page.evaluate(() => {
+    const slides = [1, 2, 3].map((n) => `<div><object data="fragments/player-1.html?o=${n}" type="text/html" width="100" height="50"></object>`
+      + `<embed src="fragments/player-1.html?e=${n}" type="text/html" width="100" height="50"></div>`).join('');
+
+    document.body.insertAdjacentHTML('beforeend', `<div id="objects" class="gr-slider" data-gr-slider="loop" style="width:600px"><div class="gr-track">${slides}</div></div>`);
+  });
+
+  await expect(page.locator('#objects [data-gr-clone]').first(), 'клоны не построены').toBeAttached();
+  await expect.poll(() => loads.length).toBe(6);
+  await page.waitForTimeout(500);
+  expect(loads.sort(), 'клоны краёв загрузили своё').toEqual(['?e=1', '?e=2', '?e=3', '?o=1', '?o=2', '?o=3']);
+});
+
+// Окно с последней миниатюры: дорожка в x = 0, клон последнего — перед
+// первым. Движок ставил окно на этот клон и уходил с него только после
+// события прокрутки — WebKit его не присылал, и видимый кадр был inert,
+// а «←» ехал через всю ленту.
+test('лайтбокс: окно с последней миниатюры — на настоящем кадре, «←» — один шаг', async ({ page }) => {
+  await page.goto('/docs/griffinjs-slides.html');
+  await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+  await page.locator('a[data-gr-lightbox="promo"]').nth(2).click();
+
+  const dialog = page.locator('dialog.gr-lightbox');
+  const current = dialog.locator('.gr-lightbox-item[aria-current]');
+  // Сдвиг текущего кадра от левого края окна дорожки: 0 — он и виден.
+  const offset = () => current.evaluate((el) => Math.round(el.getBoundingClientRect().left - el.parentElement.getBoundingClientRect().left));
+
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('3 / 3');
+  await page.waitForTimeout(400);
+  expect(await offset(), 'видно не текущий кадр: окно стоит на клоне').toBe(0);
+  expect(await current.evaluate((el) => el.hasAttribute('inert') || el.hasAttribute('data-gr-clone'))).toBe(false);
+
+  const before = await dialog.locator('.gr-track').evaluate((el) => el.scrollLeft);
+
+  await page.keyboard.press('ArrowLeft');
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('2 / 3');
+  await expect.poll(offset).toBe(0);
+
+  const width = await current.evaluate((el) => el.getBoundingClientRect().width);
+  const after = await dialog.locator('.gr-track').evaluate((el) => el.scrollLeft);
+
+  expect(Math.round(before - after), '«←» проехал не один кадр').toBe(Math.round(width));
+});
+
 // Дорожка окна строится после showModal(): у закрытого <dialog> раскладки
 // нет, и первый замер давал нулевые смещения. В Firefox второе окно
 // после закрытия первого читало по ним прокрутку и уезжало на соседний кадр.
