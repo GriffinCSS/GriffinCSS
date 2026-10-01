@@ -54,8 +54,22 @@
 
     // --- Клоны -----------------------------------------------------------------
 
+    // Клон — декорация на время доезда до края: медиа в нём не грузится.
+    // Плеер во фрейме-клоне грузился бы вторым (с autoplay — играл бы
+    // невидимо), <video> качал бы файл ещё раз; src снимается до вставки.
     function makeClone(slide) {
       var node = slide.cloneNode(true);
+      var media = node.querySelectorAll('iframe,video,audio,source');
+
+      // Шаг −1 — сам слайд: видео-слайдер ставит слайдом <video>;
+      // картинка-слайд остаётся с src — она и видна на доезде.
+      for (var i = -1; i < media.length; i++) {
+        var m = i < 0 ? node : media[i];
+
+        if (m.tagName === 'IMG') continue;
+        m.removeAttribute('src');
+        m.removeAttribute('srcdoc');
+      }
 
       node.setAttribute(CLONE, '');
       node.setAttribute('aria-hidden', 'true');

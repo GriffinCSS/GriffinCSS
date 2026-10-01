@@ -499,7 +499,7 @@
 <table>
   <tr><th>Что</th><th>Как</th></tr>
   <tr><td>Закрытие окна щелчком по подложке</td><td><code>data-gr-overlay-close</code> на <code>&lt;dialog&gt;</code>; <code>returnValue</code> — <code>"overlay"</code></td></tr>
-  <tr><td>Крестик</td><td><code>[data-gr-dismiss]</code> внутри <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>; значение атрибута — селектор цели, если она снаружи</td></tr>
+  <tr><td>Крестик</td><td><code>[data-gr-dismiss]</code> внутри <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>; значение атрибута — селектор цели, если она снаружи. Цель — только <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>: другой узел крестик не закрывает, причина — в консоли</td></tr>
   <tr><td>Тосты</td><td><code>Griffincss.ui.toast(text, options)</code></td></tr>
   <tr><td>Клавиатура вкладок</td><td><code>data-gr-tabs</code> на обёртке: роли, <code>aria-selected</code>, стрелки, Home/End, roving tabindex, <code>hidden</code> у неактивных панелей</td></tr>
 </table>

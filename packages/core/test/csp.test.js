@@ -43,6 +43,20 @@ test('nonce читается и при отключённом автостарт
   assert.equal(doc.getElementById('griffincss-dynamic').nonce, 'r4nd0m');
 });
 
+// <img name="currentScript"> в разметке перекрывает свойство документа:
+// атрибуты картинки — чужая разметка, а не флаги и nonce нашего тега.
+test('currentScript, подменённый <img name>: ни флагов, ни nonce', () => {
+  const img = new MockElement('img', { nonce: 'r4nd0m', 'data-auto': 'false' });
+  const { doc, griffin } = setupDom(layout(), {}, { script: img });
+
+  griffin._autoStart();
+
+  const style = doc.getElementById('griffincss-dynamic');
+
+  assert.ok(style, 'data-auto картинки остановил автостарт');
+  assert.equal(style.hasAttribute('nonce'), false, 'nonce взят у картинки');
+});
+
 test('nonce не утекает в текст сгенерированного CSS', () => {
   const script = new MockElement('script', { nonce: 'r4nd0m' });
   const { doc, griffin } = setupDom(layout(), {}, { script });
@@ -50,6 +64,22 @@ test('nonce не утекает в текст сгенерированного C
   griffin._autoStart();
 
   assert.ok(!generatedCSS(doc).includes('r4nd0m'), generatedCSS(doc));
+});
+
+// Разметка из данных: чужой узел с id="griffincss-dynamic" — не наш лист.
+// Рантайм, подключённый не синхронно в <head>, писал бы CSS текстом в него.
+test('узел с id griffincss-dynamic, не <style>, — не лист рантайма: создаётся свой', () => {
+  const foreign = new MockElement('div', { id: 'griffincss-dynamic' });
+  const body = el('body', {}, [foreign, el('div', { 'data-gr-layout': 'a1b1' }, [el('div'), el('div')])]);
+  const { doc, griffin } = setupDom(body);
+
+  griffin.init();
+
+  const sheets = doc.head.children.filter((n) => n.tagName === 'STYLE' && n.getAttribute('id') === 'griffincss-dynamic');
+
+  assert.equal(foreign.textContent, '', 'CSS записан в чужой узел');
+  assert.equal(sheets.length, 1, 'свой лист не создан');
+  assert.ok(sheets[0].textContent.includes('@layer griffincss.core'), 'правила не в своём листе');
 });
 
 // Риск № 2 этапа: порядок каскада обязан остаться прежним. Сторож —

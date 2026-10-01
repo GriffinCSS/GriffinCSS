@@ -168,11 +168,14 @@
 
     if (opts && opts.fields) {
       var selectors = String(opts.fields).split(',');
+      // Поля — <input> своей формы (без формы — документа): селекторы
+      // приходят и из данных.
+      var scope = G.closest(el, 'form') || document;
 
       for (var f = 0; f < inputs.length; f++) {
-        var field = document.querySelector(selectors[f] || '#');
+        var field = scope.querySelector(selectors[f] || '#');
 
-        if (!field) throw new Error('field "' + selectors[f] + '" not found');
+        if (!field || field.tagName !== 'INPUT') throw new Error('field "' + selectors[f] + '" not found');
 
         fields.push(field);
         pull(f);

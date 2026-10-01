@@ -84,6 +84,9 @@ function partsFor(name, skip) {
   return parts;
 }
 
+// Лайтбокс сверяет адрес кадра со списком кадров, запись 'self' — с origin страницы.
+global.location = { origin: 'https://example.com' };
+
 // Файловое поле переписывает input.files через DataTransfer — в Node его нет.
 global.DataTransfer = class { constructor() { this.files = []; this.items = { add: (f) => this.files.push(f) }; } };
 

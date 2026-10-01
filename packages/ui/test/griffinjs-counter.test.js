@@ -121,3 +121,34 @@ test('поле без maxlength виджет не поднимает и гово
 
   G.destroy();
 });
+
+// Разметка из данных: цель out ищется в своей форме, а не по всему
+// документу — out: main не превращает <main> в подпись счётчика.
+test('out ищется в своей форме: <main> вне формы не тронут, подпись создаётся своя', () => {
+  const { G, doc } = setup(PARTS);
+  const main = mount(doc, el('main'));
+  const control = el('textarea', { class: 'gr-textarea', maxlength: '20', 'data-gr-counter': 'out: main' });
+  const wrap = el('div', { class: 'gr-field' }, [control]);
+  mount(doc, el('form', {}, [wrap]));
+
+  G.start();
+
+  assert.equal(main.getAttribute('aria-live'), null, '<main> стал подписью');
+  assert.equal(main.textContent, '');
+  assert.equal(wrap.children[1] && wrap.children[1].tagName, 'OUTPUT', 'своя подпись не создана');
+
+  G.destroy();
+});
+
+test('out внутри своей формы находится', () => {
+  const { G, doc } = setup(PARTS);
+  const left = el('span', { id: 'left' });
+  const control = el('textarea', { class: 'gr-textarea', maxlength: '20', 'data-gr-counter': 'out: #left' });
+  mount(doc, el('form', {}, [el('div', { class: 'gr-field' }, [control, left])]));
+
+  G.start();
+
+  assert.equal(left.textContent, '20');
+
+  G.destroy();
+});

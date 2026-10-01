@@ -496,3 +496,30 @@ test('пара в панели: пустое «по» открывается н�
 
   G.destroy();
 });
+
+// Разметка из данных: сосед to — только поле с data-gr-datetime в своей
+// форме; иначе предупреждение, чужое поле не поднимается.
+test('пара: to — только поле с data-gr-datetime своей формы', () => {
+  for (const [name, build] of [
+    ['поле без data-gr-datetime', (doc) => el('input', { class: 'gr-input', type: 'date', id: 'until' })],
+    ['поле в другой форме', (doc) => { const f = el('input', { class: 'gr-input', type: 'date', id: 'until', 'data-gr-datetime': '' }); mount(doc, el('form', {}, [f])); return null; }],
+  ]) {
+    const { G, doc } = setup(PARTS);
+    const from = el('input', { class: 'gr-input', type: 'date', id: 'from', 'data-gr-datetime': 'to: #until' });
+    const inForm = build(doc);
+    mount(doc, el('form', {}, inForm ? [el('div', { class: 'gr-field' }, [from]), inForm] : [el('div', { class: 'gr-field' }, [from])]));
+    doc.documentElement.setAttribute('lang', 'ru');
+    const target = doc.body.querySelector('#until');
+    const said = [];
+    const before = console.warn;
+
+    console.warn = (m) => said.push(String(m));
+
+    try { G.start(); } finally { console.warn = before; }
+
+    if (inForm) assert.equal(G.instance(target, 'datetime'), null, `${name}: чужое поле поднято`);
+    assert.ok(said.some((m) => m.includes('#until')), `${name}: нет предупреждения\n${said.join('\n')}`);
+
+    G.destroy();
+  }
+});

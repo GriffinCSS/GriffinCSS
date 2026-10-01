@@ -213,7 +213,11 @@
     это клоны краёв: по одному видимому слайду с каждой стороны, помеченные
     <code>data-gr-clone</code>, <code>aria-hidden</code> и <code>inert</code>;
     дорожка доезжает до клона плавно и на остановке мгновенно перескакивает
-    на настоящий слайд. У <code>fade</code> цикл бесплатен. Если движок цикла
+    на настоящий слайд. Медиа в клоне не грузится: у <code>&lt;iframe&gt;</code>,
+    <code>&lt;video&gt;</code> и <code>&lt;audio&gt;</code> клона нет
+    <code>src</code> — плеер не загружается второй раз и не играет невидимо,
+    а на доезде до края видна пустая рамка того же размера. Картинки
+    в клоне остаются. У <code>fade</code> цикл бесплатен. Если движок цикла
     не умеет, <code>loop</code> ведёт себя как <code>rewind</code>.
   </p>
 </div>
@@ -437,10 +441,10 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
 <table>
   <tr><th>Атрибут</th><th>Смысл</th></tr>
   <tr><td><code>data-gr-lightbox="группа"</code></td><td>Что открывать; адрес кадра — <code>data-gr-src</code>, без него — <code>href</code></td></tr>
-  <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта. Адрес кадра — <code>http(s)</code>, относительный, <code>data:</code> или <code>blob:</code>; с другой схемой (<code>javascript:</code> во фрейме исполнился бы от имени страницы) кадр не открывается: причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает</td></tr>
+  <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта. Адрес кадра — <code>http(s)</code>, относительный, <code>data:</code> или <code>blob:</code> (страница с диска открывает и свои файлы); с другой схемой (<code>javascript:</code> во фрейме исполнился бы от имени страницы) кадр не открывается: причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает. Фреймом — только адрес из списка кадров (ниже)</td></tr>
   <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
   <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
-  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, плееры YouTube, Vimeo, Rutube и VK Видео — iframe (по хосту адреса, а не по имени хостинга где-нибудь в пути), остальное — картинка</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, адрес хоста из списка кадров — iframe (по хосту адреса, а не по имени хостинга где-нибудь в пути; свой сайт не угадывается), остальное — картинка. <code>iframe</code> открывает только адрес из списка кадров</td></tr>
 </table>
 
 <pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;
@@ -458,6 +462,60 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
     <a href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Crect width='4' height='3' fill='%23e07a2e'/%3E%3C/svg%3E" data-gr-lightbox="promo" data-gr-caption="Оранжевый кадр"><div class="frame frame-3 frame-square">3</div></a>
   </div>
 </div>
+
+<h3>Какие адреса открываются фреймом</h3>
+
+<p>
+  Кадр-фрейм показывает страницу внутри окна сайта, с адресом сайта в строке
+  браузера. Поэтому фреймом лайтбокс открывает не любой адрес, а только
+  совпавший со списком <code>GriffinJS.config.frames</code>. По умолчанию
+  в нём свой сайт и плееры четырёх хостингов:
+</p>
+
+<pre><code>['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video']</code></pre>
+
+<p>
+  Запись — хост, и поддомены в него входят (<code>youtube.com</code> пускает
+  <code>www.youtube.com</code>), или хост с началом пути
+  (<code>vk.com/video</code> пускает <code>vk.com/video_ext.php</code>,
+  но не <code>vk.com/wall…</code>); <code>'self'</code> — адреса своего сайта,
+  а у страницы, открытой с диска, — файлы рядом с ней.
+  Список ваш: его можно оставить, расширить или заменить.
+</p>
+
+<pre><code>// Как есть — ничего не писать: YouTube, Vimeo, Rutube, VK Видео и свой сайт.
+
+// Расширить — свой плеер или другой хостинг к списку по умолчанию:
+GriffinJS.config.frames.push('player.example.ru');
+
+// Заменить — только то, что перечислено; без 'self' свой сайт фреймом
+// не открывается, пустой массив — фреймов нет вовсе:
+GriffinJS.config.frames = ['self', 'player.example.ru'];</code></pre>
+
+<p>
+  Список читается при каждом открытии окна: скрипт, который его меняет,
+  выполняется после <code>griffinjs.js</code> — отложенным тегом после него
+  или по <code>DOMContentLoaded</code>, — лишь бы до щелчка. Без
+  <code>data-gr-type</code> фреймом угадываются хосты из списка, кроме
+  своего сайта: свои адреса — картинки и видео. Адрес не из списка —
+  даже с <code>data-gr-type="iframe"</code> — фреймом не открывается:
+  причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает.
+  <code>data:</code> и <code>blob:</code> фреймом не открываются никогда
+  и в список не записываются.
+</p>
+
+<p>
+  Список — в JS, а не в атрибуте: кто пишет адрес в разметку (редактор
+  CMS, данные API), написал бы туда и разрешение. Каждый кадр ещё и в
+  песочнице — <code>sandbox="allow-scripts allow-popups
+  allow-popups-to-escape-sandbox"</code>: плеер играет, разворачивается
+  на весь экран и открывает свои ссылки в новой вкладке, но увести вкладку
+  сайта не может. Хостам списка добавляется <code>allow-same-origin</code> —
+  без него плееры не запускаются. Своему сайту — никогда: SVG сайта
+  со <code>&lt;script&gt;</code> в кадре с origin страницы получил бы доступ
+  к ней, а в песочнице без <code>allow-same-origin</code> — нет. Плеер
+  в списке доверен целиком — вместе с тем, куда его страница перейдёт.
+</p>
 
 <h2>Прогресс движения</h2>
 
@@ -641,10 +699,14 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
   У VK Видео адрес плеера из адреса страницы не собрать: в коде вставки
   есть параметр <code>hash</code>, которого на странице нет, — адрес берут
   целиком из атрибута <code>src</code> фрейма, который даёт «Поделиться».
-  Другим хостингам и своему плееру нужен явный <code>data-gr-type="iframe"</code>:
-  список узнаваемых адресов стареет вместе с адресами хостингов, явный тип — нет.
-  В демо ниже плееры заменены заглушками: страница документации к хостингам
-  не обращается.
+  Другой хостинг и свой плеер — в список кадров
+  (<code>GriffinJS.config.frames.push('player.example.ru')</code>, см. «Какие
+  адреса открываются фреймом»): без него адрес фреймом не откроется, даже
+  с <code>data-gr-type="iframe"</code>. Плеер на своём сайте открывается
+  по записи <code>'self'</code> с явным <code>data-gr-type="iframe"</code> —
+  угадывать фрейм по своему адресу лайтбокс не станет. В демо ниже плееры
+  заменены заглушками со своего сайта (<code>fragments/player-1.html</code>
+  и т. д.): страница документации к хостингам не обращается.
 </p>
 
 <pre><code>&lt;div class="gr-grid-1 gr-grid-3-sm gr-gap"&gt;
@@ -663,17 +725,17 @@ GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp
 <div class="demo-block">
   <div class="demo-block-title">Три превью одной группой: окно листает ролики <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
   <div class="gr-grid-1 gr-grid-3-sm gr-gap">
-    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20Rutube%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Обзор новинки — Rutube">
+    <a class="gr-relative gr-block" href="#" data-gr-src="fragments/player-1.html" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Обзор новинки — Rutube">
       <div class="gr-aspect-video gr-radius frame-1"></div>
       <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
       <span class="gr-sr-only">Обзор новинки, Rutube</span>
     </a>
-    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20VK%20%D0%92%D0%B8%D0%B4%D0%B5%D0%BE%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Распаковка — VK Видео">
+    <a class="gr-relative gr-block" href="#" data-gr-src="fragments/player-2.html" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Распаковка — VK Видео">
       <div class="gr-aspect-video gr-radius frame-2"></div>
       <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
       <span class="gr-sr-only">Распаковка, VK Видео</span>
     </a>
-    <a class="gr-relative gr-block" href="#" data-gr-src="data:text/html;charset=utf-8,%3Cbody%20style%3D%22margin%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bheight%3A100vh%3Bbackground%3A%23111%3Bcolor%3A%23eee%3Bfont%3A600%201.25rem%2F1.5%20system-ui%2Csans-serif%3Btext-align%3Acenter%22%3E%D0%9F%D0%BB%D0%B5%D0%B5%D1%80%20YouTube%3Cbr%3E%3Csmall%20style%3D%22font-weight%3A400%3Bopacity%3A.7%22%3E%D0%B7%D0%B0%D0%B3%D0%BB%D1%83%D1%88%D0%BA%D0%B0%20%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D0%B8%3C%2Fsmall%3E%3C%2Fbody%3E" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Сборка за минуту — YouTube">
+    <a class="gr-relative gr-block" href="#" data-gr-src="fragments/player-3.html" data-gr-type="iframe" data-gr-lightbox="video" data-gr-caption="Сборка за минуту — YouTube">
       <div class="gr-aspect-video gr-radius frame-4"></div>
       <span class="gr-absolute gr-inset-0 gr-flex gr-flex-center gr-flex-items-center" aria-hidden="true"><span class="gr-avatar gr-avatar-lg gr-bg-primary gr-text-white"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span></span>
       <span class="gr-sr-only">Сборка за минуту, YouTube</span>

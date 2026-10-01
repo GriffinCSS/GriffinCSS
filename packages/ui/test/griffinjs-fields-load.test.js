@@ -191,3 +191,39 @@ test('data-fields, data-countries и nonce читаются с тега в мо�
   assert.deepEqual(G.config.fields, { src: '/js/griffinjs-fields.js', countries: '/js/griffinjs-countries.js' });
   assert.equal(G.loader._nonce(), 'abc');
 });
+
+// Именованный элемент перекрывает свойство документа: <img name="currentScript">
+// в разметке делает document.currentScript картинкой, и адрес бандла полей
+// приходил бы из чужой разметки — скрипт с чужого сайта в origin страницы.
+test('currentScript, подменённый <img name>, не даёт ни адреса полей, ни nonce', () => {
+  const { G, doc, scripts } = ready(BASE);
+
+  doc.currentScript = el('img', { 'data-fields': 'http://127.0.0.1:8766/evil.js', 'data-countries': 'http://127.0.0.1:8766/c.js' });
+  doc.currentScript.nonce = 'abc';
+
+  require(path.join(SRC, 'core', 'loader.js'));
+
+  assert.equal(G.config.fields, undefined, 'адрес бандла взят у картинки');
+  assert.equal(G.loader._nonce(), '', 'nonce взят у картинки');
+
+  mount(doc, el('input', { 'data-gr-mask': '000' }));
+
+  const warnings = capture(() => G.start());
+
+  assert.equal(scripts().length, 0, 'вставлен тег по адресу из разметки');
+  assert.equal(warnings.length, 1, warnings.join('\n'));
+  assert.match(warnings[0], /field "mask" is not loaded/);
+});
+
+// Окно фрейма (<iframe name="currentScript">): у чужого origin чтение
+// tagName бросает — загрузчик обязан это пережить.
+test('currentScript — окно фрейма: модуль загрузчика поднимается без config', () => {
+  const { G, doc } = ready(BASE);
+
+  doc.currentScript = { get tagName() { throw new Error('SecurityError'); } };
+
+  require(path.join(SRC, 'core', 'loader.js'));
+
+  assert.equal(G.config.fields, undefined);
+  assert.equal(typeof G.loader._fields, 'function');
+});

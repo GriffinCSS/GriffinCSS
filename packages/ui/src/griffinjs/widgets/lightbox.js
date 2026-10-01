@@ -9,13 +9,23 @@
  * в один кадр без кнопок. Адрес кадра — data-gr-src, без него — href:
  * у видео это разные адреса — во фрейм встаёт только плеер, страницу ролика
  * хостинги во фрейме не показывают, а ссылка без скрипта ведёт именно на неё.
- * Тип — по адресу кадра (картинка, видео, iframe для плееров YouTube, Vimeo,
- * Rutube и VK Видео — по хосту адреса) или явно: data-gr-type="iframe".
+ * Тип — по адресу кадра (картинка, видео, iframe для хостов списка кадров)
+ * или явно: data-gr-type="iframe".
  *
  * Адрес кадра — http(s), относительный, data: или blob:. Любой другой кадр
  * не открывает: javascript: во фрейме исполнился бы в origin страницы,
  * а data-* редакторы и фильтры CMS не проверяют как ссылку. Отвергнутый
  * кадр из группы выпадает; щелчок по нему остаётся браузеру.
+ *
+ * Фреймом — только адрес из списка GriffinJS.config.frames: иначе в окне
+ * сайта с его адресом в строке встала бы любая страница (форма входа,
+ * data: без сервера). Запись — хост (поддомены входят), хост с началом
+ * пути или 'self' — свой origin. Список по умолчанию ставит модуль, если
+ * сайт не задал свой; push расширяет, присваивание заменяет, читается он
+ * при каждом открытии. Каждый кадр — в песочнице: вкладку не уводит,
+ * allow-same-origin — только хостам списка (без него плееры не
+ * поднимаются), своему origin — никогда: его SVG со <script> получил бы
+ * доступ к странице.
  *
  * База без JS — ссылка на большое изображение или на страницу ролика.
  * Окно строится при открытии и уничтожается при закрытии: так видео
@@ -28,10 +38,13 @@
 
   var ATTR = 'data-gr-lightbox';
   var VIDEO = /\.(mp4|webm|ogv|mov)(\?|#|$)/i;
-  // Хост и путь разобранного адреса: хостинг — сам хост или его поддомен,
-  // а не подстрока где угодно (картинка …/rutube.ru-logo.png — не плеер).
-  var EMBED = /^([\w-]+\.)*((youtube\.com|youtu\.be|vimeo\.com|rutube\.ru|vkvideo\.ru)\/|vk\.com\/video)/i;
   var SCHEMES = /^(https?|data|blob):$/;
+  // Набор — по замеру настоящих плееров: allow-presentation им не нужен,
+  // а WebKit на него пишет ошибку в консоль.
+  var SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
+  var config = G.config;
+
+  if (!config.frames) config.frames = ['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video'];
 
   var dialog = null;
   var track = null;
@@ -49,15 +62,38 @@
     }
   }
 
+  // Адрес в списке кадров: 'self' — свой origin, 'host' — хост списка,
+  // '' — нет. Хост и путь сверяются с началом записи: хостинг — сам хост
+  // или его поддомен, а не подстрока где угодно (…/rutube.ru-logo.png —
+  // не плеер). Свой origin — всегда 'self', даже под записью-хостом.
+  // Страница с диска: origin у неё и у её файлов непрозрачный ('null'),
+  // своё узнаётся по протоколу file:; data: и blob: кадром не бывают.
+  function listed(url) {
+    if (!url || !/^(https?|file):$/.test(url.protocol)) return '';
+
+    var own = url.protocol === 'file:' ? location.protocol === 'file:' : url.origin === location.origin;
+    var where = (url.hostname + url.pathname).toLowerCase();
+    var list = [].concat(config.frames);
+
+    for (var i = 0; i < list.length; i++) {
+      var entry = String(list[i]).toLowerCase();
+      var at = where.indexOf(entry.indexOf('/') < 0 ? entry + '/' : entry);
+
+      if (entry === 'self' ? own : !at || (at > 0 && at < url.hostname.length && where.charAt(at - 1) === '.')) return own ? 'self' : 'host';
+    }
+
+    return '';
+  }
+
+  // Без data-gr-type фреймом угадываются хосты списка, но не свой сайт:
+  // свои адреса — картинки и видео.
   function typeOf(node, src) {
     var explicit = node && node.getAttribute && node.getAttribute('data-gr-type');
 
     if (explicit) return explicit;
     if (VIDEO.test(src)) return 'video';
 
-    var url = parse(src);
-
-    return url && EMBED.test(url.hostname + url.pathname) ? 'iframe' : 'image';
+    return listed(parse(src)) === 'host' ? 'iframe' : 'image';
   }
 
   // Элемент разметки → описание кадра. data-gr-src старше href: у видео
@@ -74,15 +110,19 @@
     };
   }
 
+  // Имя группы сравнивается, а не склеивается в селектор: кавычка в нём
+  // роняла бы querySelectorAll, подобранное — собирала бы чужие ссылки.
   function groupOf(node) {
     var name = node.getAttribute(ATTR);
 
     if (!name) return [node];
 
-    var all = document.querySelectorAll('[' + ATTR + '="' + name + '"]');
+    var all = document.querySelectorAll('[' + ATTR + ']');
     var out = [];
 
-    for (var i = 0; i < all.length; i++) out.push(all[i]);
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getAttribute(ATTR) === name) out.push(all[i]);
+    }
 
     return out;
   }
@@ -105,7 +145,7 @@
     }
 
     if (item.type === 'iframe') {
-      return element('iframe', null, { src: item.src, allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: '', title: item.caption || item.alt || 'Видео' });
+      return element('iframe', null, { sandbox: SANDBOX + (item.same ? ' allow-same-origin' : ''), src: item.src, allow: 'autoplay; fullscreen; picture-in-picture', allowfullscreen: '', title: item.caption || item.alt || 'Видео' });
     }
 
     return element('img', null, { src: item.src, alt: item.alt });
@@ -117,23 +157,31 @@
 
   function open(items, index, opts) {
     var list = [];
-
-    index = index || 0;
+    var at = index || 0;   // номер открываемого в исходной группе
 
     // Кадр с отвергнутым адресом выпадает из группы; отвергнут
-    // открываемый — окна нет.
-    for (var k = 0; k < items.length; k++) {
-      var url = parse(items[k].src);
+    // открываемый — окна нет. Новый номер — число принятых до него.
+    // Адрес приводится к строке один раз: она проверяется, она же
+    // встаёт в кадр — в копию описания, объект вызывающего не меняется.
+    // Фрейм — только по списку кадров.
+    index = 0;
 
-      if (url && SCHEMES.test(url.protocol)) {
-        list.push(items[k]);
+    for (var k = 0; k < items.length; k++) {
+      var src = String(items[k].src);
+      var url = parse(src);
+      // Схема — http(s), data:, blob: или та же, что у страницы: с диска
+      // свои файлы — file:, относительный адрес иначе не открылся бы.
+      var kind = url && (SCHEMES.test(url.protocol) || url.protocol === location.protocol) && (items[k].type === 'iframe' ? listed(url) : 'any');
+
+      if (!kind) {
+        G.warn('lightbox: frame address refused: ' + src + ' (iframe: GriffinJS.config.frames)');
+
+        if (k === at) return null;
         continue;
       }
 
-      G.warn('lightbox: frame address refused: ' + items[k].src);
-
-      if (k === index) return null;
-      if (k < index) index--;
+      if (k < at) index++;
+      list.push(Object.assign({}, items[k], { src: src, same: kind === 'host' }));
     }
 
     if (!list.length) return null;
@@ -208,15 +256,15 @@
 
     document.body.appendChild(dialog);
 
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+
     if (n > 1) {
       track = G.track(trackEl, { loop: true, index: index });
       listen(trackEl, G.track.CHANGE, function (event) {
         if (counter) counter.textContent = counterText(event.detail.physical, n);
       });
     }
-
-    if (typeof dialog.showModal === 'function') dialog.showModal();
-    else dialog.setAttribute('open', '');
 
     return api;
   }

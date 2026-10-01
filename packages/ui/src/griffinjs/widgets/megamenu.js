@@ -104,7 +104,9 @@
   // из innerHTML браузер оживляет, и <img onerror> чужого ответа исполнился
   // бы в origin страницы. Адрес — http(s) своего origin (у data: origin —
   // строка 'null'); редирект на чужой отклоняет mode: 'same-origin'; тип
-  // ответа отсекает свой JSON или текст, отражающий запрос.
+  // ответа отсекает свой JSON или текст, отражающий запрос. Тип — целиком:
+  // text/htmlx — не HTML, а склейку двух заголовков («text/html,
+  // application/json») браузер читает по последнему типу.
   function fragment(src) {
     var url = null;
 
@@ -116,9 +118,23 @@
 
     return fetch(url.href, { mode: 'same-origin' }).then(function (response) {
       if (!response.ok) throw new Error('HTTP ' + response.status);
-      if (!/^text\/html/i.test(response.headers.get('content-type'))) throw new Error('not text/html');
+      if (!/^text\/html\s*(;[^,]*)?$/i.test(response.headers.get('content-type'))) throw new Error('not text/html');
 
       return response.text();
+    }).then(function (html) {
+      // Кусок разметки — без meta, base и link: refresh увёл бы страницу
+      // без щелчка, base сменил бы базу адресов всей страницы, а в куске
+      // разметки они — ошибка или подлог. В <template> они не срабатывают
+      // и снимаются до вставки; <script> куска не исполняется и так.
+      var tpl = document.createElement('template');
+
+      tpl.innerHTML = html;
+
+      var bad = tpl.content.querySelectorAll('meta, base, link');
+
+      for (var i = 0; i < bad.length; i++) bad[i].remove();
+
+      return tpl.content;
     });
   }
 
@@ -314,7 +330,7 @@
       setAttr(item.el, 'data-gr-state', 'loading');
 
       fragment(src).then(function (html) {
-        item.panel.innerHTML = html;
+        item.panel.replaceChildren(html);
         setAttr(item.el, 'data-gr-state', 'ready');
       }, function (error) {
         G.warn('megamenu: panel ' + src + ' not loaded: ' + (error && error.message));

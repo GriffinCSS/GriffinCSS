@@ -77,12 +77,16 @@
   G.defineWidget('file', function (el, opts) {
     var o = G.merge(DEFAULTS, opts);
 
+    // Только на самом поле: на обёртке change любого потомка чистил бы цель.
+    if (String(el.tagName).toLowerCase() !== 'input' || String(el.getAttribute('type')).toLowerCase() !== 'file') throw new Error('needs <input type="file">');
+
     if (typeof DataTransfer !== 'function') throw new Error('without DataTransfer a single file cannot be removed from the selection');
 
     var attrs = G.recorder();
     var events = G.listeners();
     var locale = lang();
-    var list = o.list ? document.querySelector(o.list) : null;
+    // Цель — в своей форме (без формы — в документе).
+    var list = o.list ? (G.closest(el, 'form') || document).querySelector(o.list) : null;
     var created = false;
     var known = [];
 

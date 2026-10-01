@@ -1,5 +1,5 @@
 /*!
- * GriffinJS — Core v0.27.1
+ * GriffinJS — Core v0.28.0
  * Опциональный слой виджетов с состоянием поверх Griffincss: слайдер,
  * галерея, лайтбокс, параллакс, мегаменю. Подключается одной строкой
  * и одним файлом; страница без него — законное и рабочее состояние.
@@ -45,7 +45,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.1';
+  var VERSION = '0.28.0';
 
   // Реестры. Модуль зовёт defineEngine/defineWidget; ядро — единственное
   // место, которое знает, как их применить.
@@ -369,7 +369,14 @@
   function autoStart() {
     var script = null;
 
-    try { script = document.currentScript; } catch (e) { /* currentScript недоступен */ }
+    // Флаги — только у настоящего тега: именованный элемент перекрывает
+    // свойство документа — <img name="currentScript"> даёт картинку,
+    // <iframe name> — окно фрейма (у чужого origin чтение бросает).
+    try {
+      var tag = document.currentScript;
+
+      if (tag && tag.tagName === 'SCRIPT') script = tag;
+    } catch (e) { /* currentScript недоступен */ }
 
     if (script && script.getAttribute('data-auto') === 'false') return;
 

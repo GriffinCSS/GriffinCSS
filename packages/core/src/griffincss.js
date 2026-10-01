@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.27.1
+ * Griffincss — Runtime Grid Parser v0.28.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.1';
+  var VERSION = '0.28.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -248,7 +248,9 @@
   function getStyleElement() {
     if (!styleEl) {
       styleEl = document.getElementById(STYLE_ID);
-      if (!styleEl) {
+      // Чужой узел с этим id (разметка из данных) — не наш лист:
+      // CSS текстом в него не пишется, заводится свой.
+      if (!styleEl || styleEl.tagName !== 'STYLE') {
         styleEl = document.createElement('style');
         styleEl.id = STYLE_ID;
         // Без nonce строгая политика style-src молча выбрасывает
@@ -994,6 +996,9 @@
 
     try {
       var script = document.currentScript;
+      // Только настоящий тег: <img name="currentScript"> перекрывает
+      // свойство документа, его атрибуты — чужая разметка.
+      if (script && script.tagName !== 'SCRIPT') script = null;
       if (script && script.getAttribute('data-auto') === 'false') autoInit = false;
       if (script && script.getAttribute('data-stream') === 'false') streaming = false;
       if (script && script.getAttribute('data-observe') === 'false') watching = false;

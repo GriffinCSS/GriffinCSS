@@ -61,7 +61,7 @@
   <tr><td>Стек</td><td>Окно поверх окна: <code>GriffinJS.dialog.top()</code>, <code>stack()</code>, <code>closeAll()</code>; <kbd>Esc</kbd> закрывает верхнее — так делает сам <code>&lt;dialog&gt;</code></td></tr>
   <tr><td>Прокрутка под окном</td><td>Пока стек не пуст, на <code>&lt;html&gt;</code> стоит <code>data-gr-state="locked"</code>: CSS слоя прячет переполнение и держит место полосы (<code>scrollbar-gutter</code>); на сенсорном экране жест вне прокручиваемого тела окна отменяется — iOS Safari двигает страницу и под модальным окном</td></tr>
   <tr><td>Медиа</td><td>При закрытии <code>&lt;video&gt;</code>/<code>&lt;audio&gt;</code> — на паузу, <code>&lt;iframe&gt;</code> разгружается и возвращается при следующем открытии; <code>media: false</code> отключает</td></tr>
-  <tr><td>Ajax</td><td><code>data-gr-src</code> на окне: фрагмент грузится при первом открытии в <code>[data-gr-content]</code> (или в само окно); состояния <code>loading</code> → <code>open</code> | <code>error</code>. Только ответ своего сайта с типом <code>text/html</code>: адрес другого сайта, <code>data:</code>, редирект на другой сайт и ответ другого типа — <code>error</code> и причина в консоли. Вставленная разметка оживает, и обработчик <code>&lt;img onerror&gt;</code> чужого ответа исполнился бы от имени страницы; содержимое с другого сайта грузит свой код по событию <code>griffin:open</code></td></tr>
+  <tr><td>Ajax</td><td><code>data-gr-src</code> на окне: фрагмент грузится при первом открытии в <code>[data-gr-content]</code> (или в само окно); состояния <code>loading</code> → <code>open</code> | <code>error</code>. Только ответ своего сайта с типом <code>text/html</code>: адрес другого сайта, <code>data:</code>, редирект на другой сайт и ответ другого типа — <code>error</code> и причина в консоли. Вставленная разметка оживает, и обработчик <code>&lt;img onerror&gt;</code> чужого ответа исполнился бы от имени страницы; содержимое с другого сайта грузит свой код по событию <code>griffin:open</code>. <code>&lt;meta&gt;</code>, <code>&lt;base&gt;</code> и <code>&lt;link&gt;</code> из фрагмента убираются до вставки: <code>meta refresh</code> увёл бы страницу без щелчка, <code>base</code> сменил бы базу адресов всей страницы</td></tr>
   <tr><td>Hash</td><td><code>data-gr-dialog="hash"</code>: открытие пишет <code>#id</code> в историю, «Назад» закрывает окно, страница с <code>#id</code> в адресе показывает его сразу. Закрытие окна, открытого по такой ссылке, снимает <code>#id</code> из адреса и страницу не покидает</td></tr>
   <tr><td>Рост</td><td><code>data-gr-dialog="grow"</code>: смена высоты окна больше 24 px — плавно, от прежней высоты к новой (<code>element.animate</code> по <code>block-size</code>, темп — <code>--gr-modal-transition</code> или <code>--gr-transition</code>). Открытие и закрытие не трогаются, при <code>prefers-reduced-motion</code> — сразу. Только по атрибуту: <code>ResizeObserver</code> на каждом окне — цена, которую не все просили</td></tr>
   <tr><td>События</td><td><code>griffin:open</code> и <code>griffin:close</code> на окне, со всплытием</td></tr>
@@ -161,7 +161,7 @@
 
 <table>
   <tr><th>Параметр <code>data-gr-combobox</code></th><th>По умолчанию</th><th>Что делает</th></tr>
-  <tr><td><code>src</code></td><td>—</td><td>Адрес с <code>{q}</code>; ответ — JSON: массив строк или объектов <code>{value, label, href, group}</code>, либо <code>{items: […]}</code></td></tr>
+  <tr><td><code>src</code></td><td>—</td><td>Адрес с <code>{q}</code> — своего сайта: <code>http(s)</code> того же origin, что у страницы (другой сайт — см. «Источник с другого сайта» ниже); ответ — JSON: массив строк или объектов <code>{value, label, href, group}</code>, либо <code>{items: […]}</code></td></tr>
   <tr><td><code>min</code></td><td><code>1</code></td><td>Минимальная длина запроса; короче — список закрыт, запрос не уходит</td></tr>
   <tr><td><code>delay</code></td><td><code>200</code></td><td>мс дебаунса: запрос уходит, когда перестали печатать</td></tr>
   <tr><td><code>empty</code></td><td><code>''</code></td><td>Подпись пустого ответа (<code>role="status"</code>); пустая — список просто закрывается</td></tr>
@@ -174,11 +174,64 @@
 </table>
 
 <p>
-  Параметры из данных шаблон пишет JSON-формой —
-  <code>data-gr-combobox='{"src": "/suggest?q={q}", "min": 2}'</code>
-  с экранированием значений. В строке <code>ключ: значение</code> точка
-  с запятой внутри подставленного значения начала бы свой ключ:
-  <code>min: {{ min }}</code> с данными <code>1; src: …</code> сменил бы источник.
+  Параметры из данных шаблон пишет только JSON-формой, и строит её
+  JSON-кодированием — <code>json_encode</code> в PHP,
+  <code>JSON.stringify</code> в JS, фильтр <code>|json_encode</code>
+  в Twig; экранирование HTML для атрибута — поверх него. Одного
+  экранирования HTML мало: браузер снимает его, разбирая атрибут,
+  кавычка из данных закрывает строку JSON, а из повторных ключей
+  <code>JSON.parse</code> берёт последний. Строка <code>ключ: значение</code>
+  для данных не годится вовсе: точка с запятой внутри подставленного
+  значения начинает свой ключ.
+</p>
+
+<pre><code>&lt;!-- Данные min = «1; src: /other?q={q}». Строка «ключ: значение»:
+     второй src старше первого --&gt;
+data-gr-combobox="src: /suggest?q={q}; min: {{ min }}"
+
+&lt;!-- Данные min = «1", "src": "/other?q={q}", "z": "». Только экранирование
+     HTML: браузер вернёт кавычки, и в JSON окажется второй src --&gt;
+data-gr-combobox='{"src": "/suggest?q={q}", "min": "{{ min|e }}"}'
+
+&lt;!-- Так: всё значение — JSON-кодированием, поверх — экранирование HTML --&gt;
+data-gr-combobox="{{ {src: '/suggest?q={q}', min: min}|json_encode|e('html_attr') }}"
+data-gr-combobox="&lt;?= htmlspecialchars(json_encode(['src' =&gt; '/suggest?q={q}', 'min' =&gt; $min]), ENT_QUOTES) ?&gt;"</code></pre>
+
+<h3>Источник с другого сайта</h3>
+
+<p>
+  То, что посетитель набирает в поле, уходит источнику с каждым запросом —
+  при <code>delay: 0</code> на каждую букву. CORS этого не держит: он
+  закрывает только чтение ответа, а запрос чужой сервер к тому времени уже
+  получил. Поэтому <code>src</code> из разметки — только адрес своего сайта.
+  Адрес другого сайта, <code>//…</code> и <code>data:</code> не
+  запрашиваются: список не открывается, причина — в консоли. Редирект
+  не выполняется: ответ 302 даёт ошибку запроса, и набранное дальше
+  не уходит.
+</p>
+
+<p>
+  Другой сайт разрешает JS темы, а не разметка: кто пишет адрес в атрибут,
+  написал бы туда и разрешение. Способов два.
+</p>
+
+<pre><code>// 1. Origin в список — src из разметки может указывать на этот сайт.
+//    По умолчанию список пуст; запись — origin, путь в ней не учитывается.
+GriffinJS.config.sources.push('https://api.example.ru');
+
+// 2. Функция source — код сайта, слой её адреса не проверяет.
+GriffinJS.mount(document.querySelector('#city'), 'combobox', {
+  source: (q, signal) =&gt; fetch('https://api.example.ru/cities?q=' + encodeURIComponent(q), { signal })
+    .then((r) =&gt; r.json())
+});</code></pre>
+
+<p>
+  Список читается при каждом запросе, поэтому присваивание
+  (<code>GriffinJS.config.sources = ['https://api.example.ru']</code>)
+  работает так же, как <code>push</code>. Скрипт, который его меняет,
+  выполняется после <code>griffinjs.js</code> — отложенным тегом после
+  него или по <code>DOMContentLoaded</code>, — лишь бы до первого ввода.
+  Под политикой CSP этот origin нужен и в <code>connect-src</code>.
 </p>
 
 <h3>Мультивыбор</h3>

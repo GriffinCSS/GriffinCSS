@@ -46,7 +46,7 @@
     <code>griffinjs-core.js</code>, как любой модуль слоя. Цена входа —
     набор «ядро + позиция у якоря + поля»:
     <b><!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>,
-    сами поля — <!--gr:size:griffinjs-fields-->11,0 КБ<!--/gr:size:griffinjs-fields-->,
+    сами поля — <!--gr:size:griffinjs-fields-->11,1 КБ<!--/gr:size:griffinjs-fields-->,
     стили — <!--gr:size:griffinjs-fields-css-->1,7 КБ<!--/gr:size:griffinjs-fields-css-->.
     Для сравнения: <code>flatpickr</code> ≈ 15 КБ, <code>imask</code> ≈ 12 КБ,
     <code>intl-tel-input</code> ≈ 40 КБ с данными — три библиотеки на три
@@ -430,7 +430,7 @@ var TABLE = [
   <tr><td><code>invalid</code></td><td><code>Такой даты нет</code></td><td>Сообщение о невозможном значении — «31.02.2026», «15.09.2026, 25:70». Набранное целиком помечается сразу: <code>aria-invalid</code> на поле, неполный ввод не краснеет</td></tr>
   <tr><td><code>range</code></td><td><code>Дата вне допустимых границ</code></td><td>Сообщение о границах там, где у платформы своего нет</td></tr>
   <tr><td><code>label</code>, <code>prev</code>, <code>next</code>, <code>year</code>, <code>time</code></td><td><code>Календарь</code>, <code>Предыдущий месяц</code>, <code>Следующий месяц</code>, <code>Год</code>, <code>Время</code></td><td>Подписи панели, её стрелок, списка лет и поля времени</td></tr>
-  <tr><td><code>to</code></td><td>—</td><td>Селектор поля «по»: пара «с — по», см. <a href="#diapazon">ниже</a></td></tr>
+  <tr><td><code>to</code></td><td>—</td><td>Селектор поля «по» — поля с <code>data-gr-datetime</code> в той же форме (без формы — на странице): пара «с — по», см. <a href="#diapazon">ниже</a></td></tr>
 </table>
 
 <h3>Панель</h3>
@@ -641,11 +641,16 @@ var TABLE = [
   &lt;/div&gt;
 &lt;/div&gt;</code></pre>
 
+<p>
+  Виджет поднимается только на самом <code>&lt;input type="file"&gt;</code>:
+  на обёртке или другом поле атрибут пропускается с причиной в консоли.
+</p>
+
 <table>
   <tr><th>Параметр <code>data-gr-file</code></th><th>По умолчанию</th><th>Что делает</th></tr>
   <tr><td><code>append</code></td><td><code>false</code></td><td>Повторный выбор добавляет к прежнему без повторов, а не заменяет его</td></tr>
   <tr><td><code>drop</code></td><td><code>false</code></td><td>Родитель поля — зона перетаскивания: брошенные на него файлы ложатся в поле, над ним — состояние <code>over</code></td></tr>
-  <tr><td><code>list</code></td><td>—</td><td>Свой контейнер списка (<code>#id</code>); без него список создаётся сразу после поля</td></tr>
+  <tr><td><code>list</code></td><td>—</td><td>Свой контейнер списка (<code>#id</code>) — в той же форме, что поле (без формы — на странице); без него список создаётся сразу после поля</td></tr>
   <tr><td><code>remove</code></td><td><code>Убрать {name}</code></td><td>Подпись кнопки «убрать», для скринридера</td></tr>
 </table>
 
@@ -805,7 +810,7 @@ var TABLE = [
   <tr><th>Параметр <code>data-gr-counter</code></th><th>По умолчанию</th><th>Что делает</th></tr>
   <tr><td><code>format</code></td><td><code>{left}</code></td><td>Шаблон подписи: <code>{left}</code> — остаток, <code>{length}</code> — введено, <code>{max}</code> — предел</td></tr>
   <tr><td><code>near</code></td><td><code>0.1</code></td><td>Доля предела, ниже которой остаток «на исходе»</td></tr>
-  <tr><td><code>out</code></td><td>—</td><td>Свой узел подписи (<code>#id</code>)</td></tr>
+  <tr><td><code>out</code></td><td>—</td><td>Свой узел подписи (<code>#id</code>) — в той же форме, что поле (без формы — на странице)</td></tr>
 </table>
 
 <div class="demo-block">
@@ -843,7 +848,7 @@ var TABLE = [
 
 <table>
   <tr><th>Параметр <code>data-gr-validate</code></th><th>По умолчанию</th><th>Что делает</th></tr>
-  <tr><td><code>summary</code></td><td>—</td><td>Свой контейнер сводки (<code>#id</code>); без него блок <code>.gr-validate</code> создаётся первым узлом формы</td></tr>
+  <tr><td><code>summary</code></td><td>—</td><td>Свой контейнер сводки (<code>#id</code>) внутри формы; без него блок <code>.gr-validate</code> создаётся первым узлом формы</td></tr>
   <tr><td><code>title</code></td><td><code>Форма не отправлена — проверьте поля:</code></td><td>Заголовок над списком</td></tr>
 </table>
 
@@ -883,7 +888,7 @@ var TABLE = [
 
 <!-- gr:griffinjs-fields-deps -->
 <p>
-  Все поля одним файлом — <b>11,0 КБ gzip</b> без ядра;
+  Все поля одним файлом — <b>11,1 КБ gzip</b> без ядра;
   набор «ядро + anchor + поля» — <b>13,7 КБ</b>.
   По одному поля берутся так же, как виджеты: ядро первым, затем объявленное
   и само поле. Таблица собрана из объявлений при сборке.
@@ -893,13 +898,13 @@ var TABLE = [
   <tr><th>Поле</th><th>Подключить после <code>griffinjs-core.js</code></th><th>Набор целиком</th></tr>
   <tr><td><code>data-gr-mask</code></td><td><code>griffinjs-mask.js</code></td><td>3,9 КБ</td></tr>
   <tr><td><code>data-gr-phone</code></td><td><code>griffinjs-mask.js</code> + <code>griffinjs-phone.js</code></td><td>5,2 КБ</td></tr>
-  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,5 КБ</td></tr>
-  <tr><td><code>data-gr-number</code></td><td><code>griffinjs-number.js</code></td><td>4,2 КБ</td></tr>
-  <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,7 КБ</td></tr>
+  <tr><td><code>data-gr-datetime</code></td><td><code>griffinjs-anchor.js</code> + <code>griffinjs-mask.js</code> + <code>griffinjs-datetime.js</code></td><td>8,6 КБ</td></tr>
+  <tr><td><code>data-gr-number</code></td><td><code>griffinjs-number.js</code></td><td>4,3 КБ</td></tr>
+  <tr><td><code>data-gr-file</code></td><td><code>griffinjs-file.js</code></td><td>3,8 КБ</td></tr>
   <tr><td><code>data-gr-rating</code></td><td><code>griffinjs-rating.js</code></td><td>3,1 КБ</td></tr>
   <tr><td><code>data-gr-otp</code></td><td><code>griffinjs-otp.js</code></td><td>3,4 КБ</td></tr>
   <tr><td><code>data-gr-counter</code></td><td><code>griffinjs-counter.js</code></td><td>3,1 КБ</td></tr>
-  <tr><td><code>data-gr-validate</code></td><td><code>griffinjs-validate.js</code></td><td>3,7 КБ</td></tr>
+  <tr><td><code>data-gr-validate</code></td><td><code>griffinjs-validate.js</code></td><td>3,6 КБ</td></tr>
 </table>
 <!-- /gr:griffinjs-fields-deps -->
 

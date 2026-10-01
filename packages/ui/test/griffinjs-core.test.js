@@ -259,6 +259,32 @@ test('data-auto="false" отключает автостарт на любом и
   assert.equal(G._started(), false);
 });
 
+// Именованный элемент перекрывает document.currentScript. <iframe name>
+// даёт окно фрейма: у чужого origin чтение свойств бросает, у своего
+// getAttribute нет — вызов вне try оставлял слой неподнятым. <img name>
+// даёт картинку: её атрибуты — чужая разметка, а не флаги тега.
+test('currentScript — окно фрейма: слой всё равно стартует', async () => {
+  const foreign = { get tagName() { throw new Error('SecurityError'); }, get getAttribute() { throw new Error('SecurityError'); } };
+
+  for (const script of [foreign, {}]) {
+    const { G, doc } = setup(CORE);
+
+    assert.doesNotThrow(() => autoStart(doc, G, { readyState: 'complete', script }));
+    await Promise.resolve();
+
+    assert.equal(G._started(), true, 'подменённый currentScript уронил автостарт');
+  }
+});
+
+test('currentScript — <img name> с data-auto="false" и defer: флаги картинки не читаются', async () => {
+  const { G, doc } = setup(CORE);
+
+  autoStart(doc, G, { readyState: 'complete', script: el('img', { 'data-auto': 'false', defer: '' }) });
+  await Promise.resolve();
+
+  assert.equal(G._started(), true, 'data-auto картинки остановил слой');
+});
+
 // --- scanner ----------------------------------------------------------------
 
 test('сканер поднимает виджеты на появившихся узлах и снимает с удалённых', () => {

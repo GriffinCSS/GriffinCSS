@@ -187,3 +187,40 @@ test('без DataTransfer виджет не поднимается и говор
     global.DataTransfer = saved;
   }
 });
+
+// Разметка из данных: цель list — в своей форме; сам виджет — только
+// на <input type="file">, иначе change любого потомка чистил бы цель.
+test('list ищется в своей форме: <main> вне формы не тронут, список создаётся свой', () => {
+  const { G, doc } = setup(PARTS);
+  const main = mount(doc, el('main'));
+  const input = el('input', { class: 'gr-file', type: 'file', 'data-gr-file': 'list: main' });
+  const wrap = el('div', { class: 'gr-field' }, [input]);
+  input.files = [];
+  mount(doc, el('form', {}, [wrap]));
+
+  G.start();
+  choose(input, [file('a.pdf', 10)]);
+
+  assert.equal(main.children.length, 0, 'список лёг в <main>');
+  assert.equal(wrap.children[1] && wrap.children[1].tagName, 'UL', 'свой список не создан');
+
+  G.destroy();
+});
+
+test('data-gr-file поднимается только на <input type="file">', () => {
+  const { G, doc } = setup(PARTS);
+  const box = mount(doc, el('div', { 'data-gr-file': '' }, [el('input', { type: 'text' })]));
+  const text = mount(doc, el('input', { type: 'text', 'data-gr-file': '' }));
+  const before = console.warn;
+  const said = [];
+
+  console.warn = (m) => said.push(String(m));
+
+  try { G.start(); } finally { console.warn = before; }
+
+  assert.equal(G.instance(box, 'file'), null, 'виджет поднялся на <div>');
+  assert.equal(G.instance(text, 'file'), null, 'виджет поднялся на текстовом поле');
+  assert.ok(said.length >= 2, said.join('\n'));
+
+  G.destroy();
+});

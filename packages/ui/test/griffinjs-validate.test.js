@@ -208,3 +208,38 @@ test('состояние ошибки встаёт на обёртку .gr-field
   assert.equal(field.getAttribute('data-gr-state'), null, 'destroy не снял состояние с обёртки');
   assert.equal(name.getAttribute('aria-invalid'), null);
 });
+
+// Разметка из данных: сводка summary ищется в своей форме — summary: main
+// не прячет <main>; подпись поля — только control.labels: запасной
+// селектор label[for="…"] с кавычкой в id бросал до preventDefault,
+// и форма уходила без проверки.
+test('summary ищется в своей форме: <main> не спрятан, сводка создаётся своя', () => {
+  const { G, doc } = setup(PARTS);
+  const main = mount(doc, el('main'));
+  const { node } = form(doc, { 'data-gr-validate': 'summary: main' });
+
+  G.start();
+
+  assert.equal(main.hasAttribute('hidden'), false, '<main> спрятан');
+  assert.equal(main.getAttribute('role'), null);
+  assert.ok(node.querySelector('.gr-validate'), 'своя сводка не создана');
+
+  G.destroy();
+});
+
+test('поле без <label> с кавычкой в id — проверка формы срабатывает', () => {
+  const { G, doc } = setup(PARTS);
+  const bad = control({ id: 'a"b', name: 'x', required: '' }, false, 'Заполните это поле.');
+  const node = mount(doc, el('form', { 'data-gr-validate': '' }, [bad, el('button', { type: 'submit' })]));
+
+  G.start();
+
+  const submit = event('submit', node);
+
+  node.dispatchEvent(submit);
+
+  assert.equal(submit.defaultPrevented, true, 'форма ушла без проверки');
+  assert.equal(bad.getAttribute('aria-invalid'), 'true', 'поле не отмечено');
+
+  G.destroy();
+});

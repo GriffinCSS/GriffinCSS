@@ -37,10 +37,13 @@
   var loading = null;   // null — не запрашивали; pending | done | failed
   var warned = {};      // поле → без config уже сказано
 
+  // Только настоящий тег: именованный элемент перекрывает свойство
+  // документа, и <img name="currentScript" data-fields> дал бы адрес
+  // бандла из чужой разметки.
   try {
     var script = document.currentScript;
 
-    if (script) {
+    if (script && script.tagName === 'SCRIPT') {
       nonce = script.nonce || '';
 
       var src = script.getAttribute('data-fields');

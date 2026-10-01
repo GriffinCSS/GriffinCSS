@@ -284,6 +284,38 @@ test('ajax-панель: страница с непрозрачным origin (ф
   G.destroy();
 });
 
+// Тип — целиком, а не префиксом: text/htmlx — не HTML, а склеенный из двух
+// заголовков «text/html, application/json» браузер при прямом открытии
+// читает по последнему типу.
+test('ajax-панель: тип ответа — только text/html с параметрами; префикс и склейка типов — error', async () => {
+  const types = {
+    'text/htmlx': false,
+    'text/html-x': false,
+    'text/html, application/json': false,
+    'text/html; charset=utf-8, application/json': false,
+    'text/html': true,
+    'TEXT/HTML; charset=UTF-8': true,
+  };
+
+  for (const [type, ok] of Object.entries(types)) {
+    const { G, doc } = setup(PARTS);
+    const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.html' } });
+
+    global.location = { origin: ORIGIN };
+    global.fetch = () => Promise.resolve(response('<p>Панель</p>', type));
+
+    G.start();
+    await warnings(async () => { b.itemB.open = true; await tick(); await tick(); });
+
+    assert.equal(b.itemB.getAttribute('data-gr-state'), ok ? 'ready' : 'error', type);
+    assert.equal(b.panelB.innerHTML, ok ? '<p>Панель</p>' : '', type);
+
+    delete global.fetch;
+    delete global.location;
+    G.destroy();
+  }
+});
+
 test('ajax-панель: свой адрес — запрос в режиме same-origin; ответ не text/html — error, панель не тронута', async () => {
   const { G, doc } = setup(PARTS);
   const calls = [];

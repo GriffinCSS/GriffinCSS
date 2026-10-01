@@ -11,6 +11,13 @@
  * С флагом navigate выбор позиции переходит по её href — только http(s).
  * Рендер позиции подменяется render(item) → узел.
  *
+ * Набранное уходит источнику с каждым запросом, и CORS этого не держит —
+ * он закрывает только чтение ответа. Поэтому адрес из разметки — только
+ * http(s) своего origin; другой сайт разрешает JS темы:
+ * GriffinJS.config.sources.push('https://api.example.ru') (origin, по
+ * умолчанию список пуст) — или функция source. Редирект не выполняется:
+ * по 302 запрос с набранным ушёл бы дальше.
+ *
  * База без JS — само поле: форма поиска отправляется Enter, как всегда.
  * Скрипт добавляет список под полем и то, что описано в WAI-ARIA combobox:
  * role=combobox с aria-autocomplete=list, listbox с option,
@@ -67,6 +74,26 @@
   };
 
   var seq = 0;
+  var config = G.config;
+
+  if (!config.sources) config.sources = [];
+
+  // Адрес запроса — только http(s) своего origin или origin из списка
+  // (записи сводятся к origin: путь и слеш в конце не мешают). Список
+  // читается при каждом запросе — присваивание работает, как push.
+  function allowed(src) {
+    var url = null;
+
+    try { url = new URL(src, document.baseURI); } catch (e) { /* не адрес */ }
+
+    if (url && /^https?:$/.test(url.protocol) && (url.origin === location.origin || [].concat(config.sources).some(function (entry) {
+      try { return new URL(entry).origin === url.origin; } catch (e) { return false; }
+    }))) return url;
+
+    G.warn('combobox: source refused: ' + src + ' (other origins: GriffinJS.config.sources)');
+
+    return null;
+  }
 
   function normalize(raw) {
     var items = raw && raw.items ? raw.items : raw;
@@ -272,7 +299,11 @@
       if (typeof o.source === 'function') {
         promise = Promise.resolve(o.source(query, signal));
       } else if (o.src && typeof fetch === 'function') {
-        promise = fetch(o.src.replace('{q}', encodeURIComponent(query)), { signal: signal }).then(function (response) {
+        var url = allowed(o.src.replace('{q}', encodeURIComponent(query)));
+
+        if (!url) return;
+
+        promise = fetch(url.href, { signal: signal, redirect: 'error' }).then(function (response) {
           if (!response.ok) throw new Error('HTTP ' + response.status);
           return response.json();
         });
@@ -441,14 +472,15 @@
       close();
       G.emit('griffin:select', input, { item: item, index: index, input: input });
 
-      if (o.navigate && item.href && typeof location !== 'undefined') navigate(item.href);
+      if (o.navigate && item.href && typeof location !== 'undefined') navigate(String(item.href));
 
       return api;
     }
 
     // Переход — только по http(s): href приходит из ответа источника,
     // и javascript: исполнился бы в origin страницы. Выбор при отказе
-    // остаётся — значение в поле, событие ушло.
+    // остаётся — значение в поле, событие ушло. Адрес — строка, приведённая
+    // один раз: она проверяется, она же уходит в location.
     function navigate(href) {
       var url = null;
 

@@ -50,7 +50,8 @@
     var o = G.merge(DEFAULTS, opts);
     var attrs = G.recorder();
     var events = G.listeners();
-    var box = o.summary ? document.querySelector(o.summary) : null;
+    // Сводка — внутри своей формы: summary: main спрятал бы <main>.
+    var box = o.summary ? el.querySelector(o.summary) : null;
     var created = false;
     var marked = [];   // поля, которым поставлен aria-invalid
 
@@ -72,9 +73,11 @@
       return control.validity ? control.validity.valid === false : false;
     }
 
-    // Подпись поля: <label>, иначе aria-label, иначе name.
+    // Подпись поля: <label>, иначе aria-label, иначе name. Только
+    // control.labels: селектор label[for="…"] из id с кавычкой бросал
+    // до preventDefault, и форма уходила без проверки.
     function labelOf(control) {
-      var label = (control.labels && control.labels[0]) || (control.getAttribute('id') ? el.querySelector('label[for="' + control.getAttribute('id') + '"]') : null);
+      var label = control.labels && control.labels[0];
       var text = label ? String(label.textContent || '').trim() : '';
 
       return text || control.getAttribute('aria-label') || control.getAttribute('name') || '';

@@ -34,7 +34,9 @@
 
     if (!(max > 0)) throw new Error('the field has no maxlength: nothing to count');
 
-    var out = o.out ? document.querySelector(o.out) : null;
+    // Цель — в своей форме (без формы — в документе): out приходит
+    // и из данных, и out: main не должен сделать подписью <main>.
+    var out = o.out ? (G.closest(el, 'form') || document).querySelector(o.out) : null;
     var created = false;
 
     if (!out) {

@@ -18,6 +18,65 @@ function changes(node) {
   return log;
 }
 
+// Клон края цикла — декорация на время доезда: плеер во фрейме-клоне
+// грузился бы вторым (с autoplay — играл бы невидимо), <video> качал
+// бы файл ещё раз. Медиа в клоне без src; настоящие слайды не тронуты.
+test('цикл: клоны краёв не грузят медиа — у iframe, video, audio и source в клоне нет src', () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 3);
+
+  slides[0].appendChild(el('iframe', { src: 'https://www.youtube.com/embed/x?autoplay=1', sandbox: 'allow-scripts' }));
+  slides[1].appendChild(el('video', { src: 'clip.mp4', poster: 'clip.jpg', autoplay: '' }));
+  slides[2].appendChild(el('audio', {}, [el('source', { src: 'track.mp3' })]));
+  slides[2].appendChild(el('iframe', { srcdoc: '<p>плеер</p>' }));
+
+  const t = G.track(node, { loop: true });
+  const clones = t._engine()._clones();
+
+  assert.equal(clones.length, 2);
+
+  for (const clone of clones) {
+    for (const media of clone.querySelectorAll('iframe, video, audio, source')) {
+      assert.equal(media.hasAttribute('src'), false, `у ${media.tagName} в клоне остался src`);
+      assert.equal(media.hasAttribute('srcdoc'), false, `у ${media.tagName} в клоне остался srcdoc`);
+    }
+  }
+
+  assert.ok(clones.some((c) => c.querySelector('iframe')), 'клон слайда с фреймом не построен');
+  assert.equal(slides[0].querySelector('iframe').getAttribute('src'), 'https://www.youtube.com/embed/x?autoplay=1', 'настоящий слайд тронут');
+  assert.equal(slides[1].querySelector('video').getAttribute('src'), 'clip.mp4');
+  assert.equal(slides[2].querySelector('source').getAttribute('src'), 'track.mp3');
+
+  t.destroy();
+});
+
+test('цикл: слайд — сам <video>: клон без src', () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 3, 100, {}, 1, 'video');
+
+  slides.forEach((s, i) => s.setAttribute('src', i + '.mp4'));
+
+  const t = G.track(node, { loop: true });
+
+  for (const clone of t._engine()._clones()) assert.equal(clone.hasAttribute('src'), false, 'клон-видео качал бы файл');
+  assert.equal(slides[0].getAttribute('src'), '0.mp4');
+
+  t.destroy();
+});
+
+test('цикл: слайд — сам <img>: клон картинки с src, она нужна на доезде', () => {
+  const { G, doc } = setup(PARTS);
+  const { node, slides } = build(doc, 3, 100, {}, 1, 'img');
+
+  slides.forEach((s, i) => s.setAttribute('src', i + '.jpg'));
+
+  const t = G.track(node, { loop: true });
+
+  for (const clone of t._engine()._clones()) assert.ok(clone.getAttribute('src'), 'клон картинки пуст');
+
+  t.destroy();
+});
+
 test('дорожка поднимается по data-gr-track: aria на слайдах, активный — aria-current, остальные inert', () => {
   const { G, doc } = setup(PARTS);
   const { node, slides } = build(doc, 4, 100, { 'data-gr-track': '' });

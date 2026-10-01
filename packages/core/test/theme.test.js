@@ -121,6 +121,18 @@ test('data-persist="false" отключает запоминание', () => {
   assert.equal(storage.items.size, 0, 'выбор не должен был попасть в хранилище');
 });
 
+// <img name="currentScript"> перекрывает свойство документа: флаги
+// и nonce читаются только у настоящего тега <script>.
+test('currentScript, подменённый <img name>: ни data-persist, ни nonce', () => {
+  const script = el('img', { 'data-persist': 'false', nonce: 'gr0test' });
+  const { doc, theme, storage } = setupThemeDom({ script });
+
+  theme.set('dark');
+
+  assert.equal(storage.items.get('gr-theme'), 'dark', 'data-persist картинки отключил запоминание');
+  assert.equal(freezeStyle(doc).hasAttribute('nonce'), false, 'nonce взят у картинки');
+});
+
 test('старт применяет сохранённый выбор, при пустом хранилище уважает разметку', () => {
   const saved = setupThemeDom({ stored: { 'gr-theme': 'dark', 'gr-a11y': 'low-vision' } });
 

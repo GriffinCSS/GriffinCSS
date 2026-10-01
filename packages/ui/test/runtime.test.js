@@ -9,7 +9,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const path = require('node:path');
-const { MockDialog, setupDom, click } = require('./helpers/dom');
+const { MockDialog, MockElement, setupDom, click } = require('./helpers/dom');
 
 const PKG = require('../package.json');
 const SRC = readFileSync(path.join(__dirname, '..', 'src', 'griffincss-ui.js'), 'utf8');
@@ -147,10 +147,22 @@ test('автостарт отключается атрибутом на теге
   const { doc, ui } = setupDom();
 
   ui.destroy();
-  doc.currentScript = { getAttribute: (name) => (name === 'data-auto' ? 'false' : null) };
+  doc.currentScript = new MockElement('script', { 'data-auto': 'false' });
   ui._autoStart();
 
   assert.equal(doc.count('click', false), 0, 'data-auto="false" не остановил автостарт');
+});
+
+// <img name="currentScript"> перекрывает свойство документа: data-auto
+// картинки — чужая разметка, а не флаг тега.
+test('data-auto у <img name="currentScript"> автостарт не отключает', () => {
+  const { doc, ui } = setupDom();
+
+  ui.destroy();
+  doc.currentScript = new MockElement('img', { 'data-auto': 'false' });
+  ui._autoStart();
+
+  assert.equal(doc.count('click', false), 1, 'атрибут картинки остановил автостарт');
 });
 
 // --- Волна 8c: закрытие крестиком -------------------------------------------
@@ -209,6 +221,20 @@ test('крестик без цели ничего не сносит и гово�
 
   assert.equal(close.parentNode, doc.body, 'крестик снёс сам себя');
   assert.equal(said.length, 1, `ожидалось одно предупреждение, получено ${said.length}`);
+});
+
+// Разметка из данных: значение data-gr-dismiss — селектор, и крестик
+// с data-gr-dismiss="main" убирал бы <main>. Цель — только то, что доки
+// обещают закрывать крестиком: .gr-alert, .gr-toast, .gr-tag.
+test('крестик с целью не из сообщений ничего не сносит и говорит об этом', () => {
+  const { doc } = setupDom();
+  const main = mount(doc, el('main'));
+  const close = mount(doc, el('button', { 'data-gr-dismiss': 'main' }));
+
+  const said = captureWarnings(() => click(doc, close, 10, 10));
+
+  assert.equal(main.parentNode, doc.body, '<main> снесён крестиком');
+  assert.equal(said.length, 1, said.join('\n'));
 });
 
 // --- Волна 8c: тосты ---------------------------------------------------------

@@ -206,6 +206,47 @@ test('ajax: свой адрес — запрос в режиме same-origin; о
   G.destroy();
 });
 
+// Тип — целиком, а не префиксом: text/htmlx — не HTML, а склеенный из двух
+// заголовков «text/html, application/json» браузер при прямом открытии
+// читает по последнему типу — вставка исполнила бы то, что он показал бы текстом.
+test('ajax: тип ответа — только text/html с параметрами; префикс и склейка типов — error', async () => {
+  const { G, doc } = setup(PARTS);
+  const types = {
+    'text/htmlx': false,
+    'text/html-x': false,
+    'text/html, application/json': false,
+    'text/html; charset=utf-8, application/json': false,
+    'text/html': true,
+    'TEXT/HTML; charset=UTF-8': true,
+  };
+  const windows = Object.keys(types).map((type, i) => [type, dialog(doc, 't' + i, { 'data-gr-dialog': '', 'data-gr-src': '/frag/' + i }, [el('div', { 'data-gr-content': '' })])]);
+  let current = '';
+  global.location = { origin: ORIGIN, hash: '', pathname: '/catalog/', search: '' };
+  global.fetch = () => Promise.resolve(response('<p>Фрагмент</p>', current));
+
+  G.start();
+
+  for (const [type, d] of windows) {
+    current = type;
+    await warnings(async () => { G.dialog.open(d); await tick(); await tick(); });
+
+    const body = d.querySelector('[data-gr-content]');
+
+    if (types[type]) {
+      assert.equal(body.innerHTML, '<p>Фрагмент</p>', type);
+    } else {
+      assert.equal(d.getAttribute('data-gr-state'), 'error', type);
+      assert.equal(body.innerHTML, '', `вставлено при типе ${type}`);
+    }
+
+    d.close();
+  }
+
+  delete global.fetch;
+  delete global.location;
+  G.destroy();
+});
+
 test('hash: открытие пишет #id в историю, закрытие возвращает назад, popstate закрывает окно', () => {
   const { G, doc } = setup(PARTS);
   const pushed = [];

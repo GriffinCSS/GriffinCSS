@@ -6,7 +6,10 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { setup, el, mount, event, track: build } = require('./helpers/griffinjs-dom');
+const { setup, el, mount, event, track: build, ORIGIN } = require('./helpers/griffinjs-dom');
+
+// Origin страницы под тестом: запись 'self' списка кадров сверяется с ним.
+global.location = { origin: ORIGIN };
 
 const PARTS = [
   'core/options.js', 'core/registry.js', 'core/motion.js', 'core/track.js', 'engines/scroll.js',
@@ -346,6 +349,85 @@ test('лайтбокс: кадр группы с отвергнутым адре
   G.destroy();
 });
 
+// Два отвергнутых кадра: номер открываемого сверяется с исходным номером
+// в группе, а не со сдвинутым — иначе окно встаёт на чужой кадр или
+// отвергнутый открываемый не узнаётся.
+test('лайтбокс: два отвергнутых кадра в группе — окно на своём кадре или окна нет', () => {
+  const { G, doc } = setup(PARTS);
+  const js = { src: 'javascript:alert(1)', type: 'image' };
+  const img = (src) => ({ src, type: 'image' });
+  const shown = () => {
+    const dialog = G.lightbox._dialog();
+
+    if (!dialog) return null;
+
+    const track = G.lightbox._track();
+    const real = dialog.querySelectorAll('img').filter((n) => !n.closest('[data-gr-clone]'));
+    const counter = dialog.querySelector('.gr-lightbox-counter');
+
+    return { src: real[track ? track.index : 0].getAttribute('src'), n: real.length, counter: counter ? counter.textContent : null };
+  };
+  const run = (items, index) => {
+    let result;
+
+    warnings(() => { result = G.lightbox.open(items, index); });
+
+    const out = { result: result ? 'api' : result, shown: shown() };
+
+    G.lightbox.close();
+
+    return out;
+  };
+
+  G.start();
+
+  assert.deepEqual(run([js, img('a.jpg'), js], 2), { result: null, shown: null }, '[js, a, js] открыть 2');
+  assert.deepEqual(run([js, img('a.jpg'), img('b.jpg'), js, img('c.jpg')], 3), { result: null, shown: null }, '[js, a, b, js, c] открыть 3');
+  assert.deepEqual(run([js, js, img('a.jpg')], 2), { result: 'api', shown: { src: 'a.jpg', n: 1, counter: null } }, '[js, js, a] открыть 2');
+  assert.deepEqual(run([js, img('a.jpg'), js, img('b.jpg')], 3), { result: 'api', shown: { src: 'b.jpg', n: 2, counter: '2 / 2' } }, '[js, a, js, b] открыть 3');
+
+  G.destroy();
+});
+
+test('лайтбокс: щелчок по отвергнутому кадру в группе с двумя отвергнутыми остаётся ссылке', () => {
+  const { G, doc } = setup(PARTS);
+  const bad = (n) => el('a', { href: '#bad-' + n, 'data-gr-src': 'javascript:alert(' + n + ')', 'data-gr-lightbox': 'g' });
+  const links = [bad(1), el('a', { href: 'a.jpg', 'data-gr-lightbox': 'g' }), bad(2)];
+  mount(doc, el('div', {}, links));
+
+  G.start();
+
+  const click = event('click', links[2]);
+
+  warnings(() => doc.fire('click', click));
+
+  assert.equal(G.lightbox._dialog(), null, 'окно открылось на чужом кадре');
+  assert.equal(click.defaultPrevented, false, 'щелчок отменён');
+
+  G.destroy();
+});
+
+// Адрес из кода проверяется и пишется одной строкой: объект с toString,
+// отдающим разное, проверку прошёл бы безопасной строкой, а в атрибут
+// лёг бы другой.
+test('лайтбокс: open() из кода — адрес приводится к строке один раз', () => {
+  const { G } = setup(PARTS);
+  let calls = 0;
+  const src = { toString() { calls++; return calls === 1 ? 'b.jpg' : 'javascript:alert(1)'; } };
+  const items = [{ src, type: 'image' }];
+
+  G.start();
+  warnings(() => G.lightbox.open(items));
+
+  const dialog = G.lightbox._dialog();
+
+  assert.ok(dialog, 'окно не построено');
+  assert.equal(dialog.querySelector('img').getAttribute('src'), 'b.jpg', 'в атрибут лёг не проверенный адрес');
+  assert.equal(items[0].src, src, 'описание кадра вызывающего изменено');
+
+  G.destroy();
+});
+
 test('лайтбокс: open() из кода — то же правило адреса', () => {
   const { G, doc } = setup(PARTS);
 
@@ -390,6 +472,254 @@ test('лайтбокс: плеер угадывается по хосту адр
 
     assert.equal(frameOf(G, doc, link).tag, cases[src], src);
   }
+
+  G.destroy();
+});
+
+// Имя группы из данных не склеивается в селектор: кавычка роняла
+// querySelectorAll, подобранное имя собирало в группу чужие ссылки.
+test('лайтбокс: имя группы с кавычкой — группа только из своих ссылок', () => {
+  const { G, doc } = setup(PARTS);
+  const name = 'a"b';
+  const links = [
+    el('a', { href: 'a.jpg', 'data-gr-lightbox': name }),
+    el('a', { href: 'b.jpg', 'data-gr-lightbox': name }),
+    el('a', { href: 'c.jpg', 'data-gr-lightbox': 'a' }),
+  ];
+  mount(doc, el('div', {}, links));
+
+  G.start();
+
+  const click = event('click', links[1]);
+
+  assert.doesNotThrow(() => doc.fire('click', click));
+
+  const dialog = G.lightbox._dialog();
+  const real = dialog.querySelectorAll('img').filter((n) => !n.closest('[data-gr-clone]'));
+
+  assert.deepEqual(real.map((n) => n.getAttribute('src')), ['a.jpg', 'b.jpg']);
+  assert.equal(click.defaultPrevented, true);
+
+  G.destroy();
+});
+
+// --- кадры лайтбокса: список GriffinJS.config.frames и песочница ------------
+
+const DEFAULT_FRAMES = ['self', 'youtube.com', 'youtu.be', 'vimeo.com', 'rutube.ru', 'vkvideo.ru', 'vk.com/video'];
+// allow-presentation не входит: WebKit считает его неизвестным и пишет ошибку
+// в консоль на каждый кадр, а плеерам он по замеру не нужен.
+const SANDBOX = ['allow-scripts', 'allow-popups', 'allow-popups-to-escape-sandbox'];
+
+// Щелчок по ссылке: что открылось (кадр и его песочница) или что щелчок остался ссылке.
+function openLink(G, doc, link) {
+  const click = event('click', link);
+  const said = warnings(() => doc.fire('click', click));
+  const dialog = G.lightbox._dialog();
+  const media = dialog ? dialog.querySelector('.gr-lightbox-item').children[0] : null;
+  const out = {
+    tag: media ? media.tagName.toLowerCase() : null,
+    sandbox: media && media.hasAttribute('sandbox') ? media.getAttribute('sandbox').split(/\s+/).sort() : null,
+    prevented: click.defaultPrevented,
+    said,
+  };
+
+  G.lightbox.close();
+
+  return out;
+}
+
+const frameLink = (src, attrs = {}) => el('a', Object.assign({ href: '#page', 'data-gr-src': src, 'data-gr-type': 'iframe', 'data-gr-lightbox': '' }, attrs));
+
+test('кадры: список по умолчанию — свой сайт и плееры четырёх хостингов', () => {
+  const { G } = setup(PARTS);
+
+  assert.deepEqual(G.config.frames, DEFAULT_FRAMES);
+});
+
+test('кадры: хост списка — фрейм в песочнице с allow-same-origin; свой сайт (self) — без него; allow-top-navigation — никогда', () => {
+  const { G, doc } = setup(PARTS);
+  const player = frameLink('https://www.youtube.com/embed/x');
+  const own = frameLink('/player/1.html');
+  mount(doc, el('div', {}, [player, own]));
+
+  G.start();
+
+  const a = openLink(G, doc, player);
+  const b = openLink(G, doc, own);
+
+  assert.equal(a.tag, 'iframe');
+  assert.deepEqual(a.sandbox, [...SANDBOX, 'allow-same-origin'].sort(), 'песочница хоста списка');
+  assert.equal(b.tag, 'iframe');
+  assert.deepEqual(b.sandbox, [...SANDBOX].sort(), 'свой адрес получил allow-same-origin');
+
+  for (const r of [a, b]) assert.ok(!r.sandbox.some((t) => t.startsWith('allow-top-navigation')), 'кадр может увести вкладку');
+
+  G.destroy();
+});
+
+test('кадры: data-gr-type="iframe" с адресом вне списка — отказ, щелчок остаётся ссылке, в группе кадр выпадает', () => {
+  const { G, doc } = setup(PARTS);
+  const foreign = frameLink('https://evil.example/player.html');
+  const data = frameLink('data:text/html,<p>форма входа</p>');
+  const blob = frameLink('blob:https://example.com/0a1b2c');
+  const group = [
+    el('a', { href: 'a.jpg', 'data-gr-lightbox': 'g' }),
+    frameLink('https://evil.example/player.html', { 'data-gr-lightbox': 'g' }),
+    el('a', { href: 'c.jpg', 'data-gr-lightbox': 'g' }),
+  ];
+  mount(doc, el('div', {}, [foreign, data, blob, ...group]));
+
+  G.start();
+
+  for (const [link, src] of [[foreign, 'https://evil.example/player.html'], [data, 'data:text/html'], [blob, 'blob:']]) {
+    const r = openLink(G, doc, link);
+
+    assert.equal(r.tag, null, `окно открылось: ${src}`);
+    assert.equal(r.prevented, false, `щелчок отменён: ${src}`);
+    assert.ok(r.said.some((m) => m.includes(src) && m.includes('GriffinJS.config.frames')), `нет предупреждения: ${src}\n${r.said.join('\n')}`);
+  }
+
+  warnings(() => doc.fire('click', event('click', group[2])));
+
+  const dialog = G.lightbox._dialog();
+  const real = dialog.querySelectorAll('.gr-lightbox-item').filter((n) => !n.closest('[data-gr-clone]'));
+
+  assert.equal(real.length, 2, 'кадр вне списка остался в группе');
+  assert.equal(dialog.querySelector('iframe'), null);
+
+  G.destroy();
+});
+
+test('кадры: push расширяет список, присваивание заменяет, пустой массив — фреймов нет', () => {
+  const { G, doc } = setup(PARTS);
+  const custom = frameLink('https://player.example.ru/embed/7');
+  const sub = frameLink('https://cdn.player.example.ru/embed/7');
+  const youtube = frameLink('https://www.youtube.com/embed/x');
+  const own = frameLink('/player/1.html');
+  mount(doc, el('div', {}, [custom, sub, youtube, own]));
+
+  G.start();
+
+  assert.equal(openLink(G, doc, custom).tag, null, 'хост вне списка открылся');
+
+  G.config.frames.push('player.example.ru');
+  assert.equal(openLink(G, doc, custom).tag, 'iframe', 'push не расширил список');
+  assert.equal(openLink(G, doc, sub).tag, 'iframe', 'поддомен записи не вошёл');
+  assert.ok(openLink(G, doc, custom).sandbox.includes('allow-same-origin'));
+
+  G.config.frames = ['self', 'player.example.ru'];
+  assert.equal(openLink(G, doc, youtube).tag, null, 'присваивание не заменило список');
+  assert.equal(openLink(G, doc, custom).tag, 'iframe');
+  assert.equal(openLink(G, doc, own).tag, 'iframe');
+
+  G.config.frames = ['player.example.ru'];
+  assert.equal(openLink(G, doc, own).tag, null, 'без self свой адрес открылся фреймом');
+
+  G.config.frames = [];
+  for (const link of [custom, youtube, own]) assert.equal(openLink(G, doc, link).tag, null, 'пустой список открыл фрейм');
+
+  G.destroy();
+});
+
+test('кадры: запись с путём — только начало пути; хост сверяется целиком, а не подстрокой', () => {
+  const { G, doc } = setup(PARTS);
+  const cases = {
+    'https://vk.com/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+    'https://m.vk.com/video_ext.php?oid=-1&id=2&hash=f00d': 'iframe',
+    'https://vk.com/wall-1_2': null,
+    'https://evilyoutube.com/embed/x': null,
+    'https://youtube.com.evil.example/embed/x': null,
+    'https://evil.example/www.youtube.com/embed/x': null,
+  };
+  const links = Object.keys(cases).map((src) => [src, frameLink(src)]);
+  mount(doc, el('div', {}, links.map(([, n]) => n)));
+
+  G.start();
+
+  for (const [src, link] of links) assert.equal(openLink(G, doc, link).tag, cases[src], src);
+
+  G.destroy();
+});
+
+test('кадры: без data-gr-type фреймом угадываются хосты списка, но не свой сайт', () => {
+  const { G, doc } = setup(PARTS);
+  const guess = (src) => el('a', { href: '#', 'data-gr-src': src, 'data-gr-lightbox': '' });
+  const player = guess('https://player.example.ru/embed/7');
+  const own = guess('/player/1.html');
+  mount(doc, el('div', {}, [player, own]));
+
+  G.start();
+
+  assert.equal(openLink(G, doc, player).tag, 'img', 'хост вне списка угадан фреймом');
+
+  G.config.frames.push('player.example.ru');
+  assert.equal(openLink(G, doc, player).tag, 'iframe', 'хост из списка не угадан');
+  assert.equal(openLink(G, doc, own).tag, 'img', 'свой адрес угадан фреймом');
+
+  G.destroy();
+});
+
+// Страница с диска: у неё и у её файлов origin непрозрачный ('null'),
+// и своё узнаётся по протоколу file: — иначе с диска не открылся бы ни
+// один свой кадр (демо документации). data: и blob: — по-прежнему нет.
+test('кадры: страница с диска — свои файлы по записи self, в песочнице без allow-same-origin', () => {
+  const { G, doc } = setup(PARTS);
+  const own = frameLink('fragments/player-1.html');
+  const data = frameLink('data:text/html,<p>форма входа</p>');
+  const saved = global.location;
+
+  doc.baseURI = 'file:///Users/me/site/docs/page.html';
+  global.location = { origin: 'null', protocol: 'file:' };
+  mount(doc, el('div', {}, [own, data]));
+
+  try {
+    G.start();
+
+    const r = openLink(G, doc, own);
+
+    assert.equal(r.tag, 'iframe', 'свой файл с диска не открылся кадром');
+    assert.deepEqual(r.sandbox, [...SANDBOX].sort());
+    assert.equal(openLink(G, doc, data).tag, null, 'data: открылся кадром');
+
+    G.config.frames = ['youtube.com'];
+    assert.equal(openLink(G, doc, own).tag, null, 'без self свой файл открылся');
+
+    // Картинка по относительному адресу с диска — тоже file:.
+    const photo = el('a', { href: 'photo.jpg', 'data-gr-lightbox': '' });
+
+    mount(doc, photo);
+    assert.deepEqual(frameOf(G, doc, photo), { tag: 'img', src: 'photo.jpg' }, 'картинка с диска не открылась');
+  } finally {
+    global.location = saved;
+    G.destroy();
+  }
+});
+
+test('кадры: страница по http — адрес file: кадром не открывается', () => {
+  const { G, doc } = setup(PARTS);
+  const local = frameLink('file:///Users/me/player.html');
+  mount(doc, el('div', {}, [local]));
+
+  G.start();
+
+  assert.equal(openLink(G, doc, local).tag, null);
+
+  G.destroy();
+});
+
+test('кадры: open() из кода — то же правило списка', () => {
+  const { G } = setup(PARTS);
+
+  G.start();
+
+  let result;
+  const said = warnings(() => { result = G.lightbox.open([{ src: 'https://evil.example/p.html', type: 'iframe' }]); });
+
+  assert.equal(result, null);
+  assert.ok(said.some((m) => m.includes('https://evil.example/p.html')));
+
+  G.lightbox.open([{ src: 'https://player.vimeo.com/video/1', type: 'iframe' }]);
+  assert.ok(G.lightbox._dialog().querySelector('iframe').getAttribute('sandbox').includes('allow-same-origin'));
 
   G.destroy();
 });

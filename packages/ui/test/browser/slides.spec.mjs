@@ -69,6 +69,71 @@ test('лайтбокс: открывается по щелчку, стрелка
   await expect(page.locator('#gr-lab-lightbox-2')).toBeFocused();
 });
 
+// Клоны краёв цикла — декорация на время доезда: плеер в клоне не грузится.
+// Группа из трёх видео грузит три плеера, а не пять (два клона краёв).
+test('лайтбокс: группа из трёх видео грузит три плеера, клоны краёв — без src; цикл листает', async ({ page }) => {
+  const players = [];
+
+  page.on('request', (r) => { if (/fragments\/player-\d\.html/.test(r.url())) players.push(r.url()); });
+  await page.goto('/docs/griffinjs-slides.html');
+  await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+  await page.locator('a[data-gr-src="fragments/player-1.html"]').click();
+
+  const dialog = page.locator('dialog.gr-lightbox');
+
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('1 / 3');
+  await expect.poll(() => players.length, 'плееров загружено не три: клоны краёв грузят свои').toBe(3);
+  await expect(dialog.locator('[data-gr-clone] iframe[src]'), 'клон краёв грузит плеер').toHaveCount(0);
+
+  // Цикл работает и без медиа в клонах: назад с первого — на последний.
+  await page.keyboard.press('ArrowLeft');
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('3 / 3');
+  expect(players.length, 'лишние загрузки плеера').toBe(3);
+});
+
+// Дорожка окна строится после showModal(): у закрытого <dialog> раскладки
+// нет, и первый замер давал нулевые смещения. В Firefox второе окно
+// после закрытия первого читало по ним прокрутку и уезжало на соседний кадр.
+test('лайтбокс: второе окно после закрытия первого открывается на своём кадре', async ({ page }) => {
+  await page.goto('/docs/griffinjs-slides.html');
+  await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+
+  const dialog = page.locator('dialog.gr-lightbox');
+  const promo = page.locator('a[data-gr-lightbox="promo"]');
+
+  await promo.nth(0).click();
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('1 / 3');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+
+  await promo.nth(1).click();
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('2 / 3');
+  // Окно на уезд, будь он: проверяется, что кадр не сменился сам.
+  await page.waitForTimeout(400);
+  await expect(dialog.locator('.gr-lightbox-counter'), 'окно уехало на соседний кадр').toHaveText('2 / 3');
+});
+
+// Документацию открывают и с диска: у страницы и её файлов origin
+// непрозрачный, своё — по протоколу file:. Кадры-заглушки демо и картинки
+// по относительному адресу обязаны открываться и так.
+test('лайтбокс с диска: видео-превью открывают заглушки плееров, группа картинок — окно', async ({ page }) => {
+  await page.goto(new URL('../../../../docs/griffinjs-slides.html', import.meta.url).href);
+  await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+
+  await page.locator('a[data-gr-src="fragments/player-2.html"]').click();
+
+  const dialog = page.locator('dialog.gr-lightbox');
+
+  await expect(dialog.locator('.gr-lightbox-counter'), 'окно с диска не открылось').toHaveText('2 / 3');
+  await expect(page.frameLocator('dialog.gr-lightbox .gr-lightbox-item:not([data-gr-clone]) iframe >> nth=1').locator('p')).toContainText('VK Видео');
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+
+  await page.locator('a[data-gr-lightbox="promo"]').nth(1).click();
+  await expect(dialog.locator('.gr-lightbox-counter')).toHaveText('2 / 3');
+});
+
 test('страница «Слайды»: все виджеты поднимаются, консоль чистая, без скрипта органы управления скрыты', async ({ page }) => {
   const errors = [];
 

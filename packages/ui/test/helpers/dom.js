@@ -74,6 +74,9 @@ class MockElement {
   }
 
   matches(selector) {
+    // Как браузер: селектор с непарной кавычкой — SyntaxError, а не «не совпало».
+    if ((String(selector).split('"').length - 1) % 2) throw new SyntaxError(`'${selector}' is not a valid selector`);
+
     return selector
       .split(',')
       .map((part) => part.trim())

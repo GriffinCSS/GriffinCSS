@@ -102,6 +102,18 @@ test('точка с запятой в значении — предупрежд�
   assert.equal(warnings.length, 1, warnings.join(' | '));
 });
 
+// Кавычка в значении открывала строку, и та поглощала все следующие
+// правила общего листа ядра: «}» уже съеден, перевод строки не спасает.
+test('кавычка и обратная косая в значении — предупреждение и пропуск, следующие правила целы', () => {
+  for (const bad of ['gr-p-["x]', "gr-p-['x]", 'gr-p-[\\78]']) {
+    const { css, warnings } = setupQuiet(el('body', {}, [el('div', { class: bad }), el('div', { class: 'gr-mt-[13px]' })]));
+
+    assert.ok(!css.includes('gr-p-'), `значение ${bad} прошло: ` + css);
+    assert.ok(css.includes('margin-top:13px'), `следующее правило пропало после ${bad}: ` + css);
+    assert.equal(warnings.length, 1, bad + ': ' + warnings.join(' | '));
+  }
+});
+
 test('пустые скобки — предупреждение и пропуск', () => {
   const { css, warnings } = setupQuiet(el('body', {}, [el('div', { class: 'gr-mt-[]' })]));
 

@@ -173,6 +173,17 @@ test('поток отключается data-stream="false"', () => {
   assert.ok(generatedCSS(doc).includes('--gr-r:max(0px,calc(2rem - 8px))'), 'финальный проход всё равно был');
 });
 
+// <img name="currentScript"> перекрывает свойство документа: data-stream
+// картинки — чужая разметка, флаги читаются только у тега <script>.
+test('data-stream у <img name="currentScript"> поток не отключает', () => {
+  const body = el('body');
+  const { doc } = setupDom(body, {}, { readyState: 'loading', script: el('img', { 'data-stream': 'false' }) });
+  const utils = loadUtilsRuntime();
+
+  observerFrom(() => utils._autoStart());
+  doc.fire('DOMContentLoaded');
+});
+
 test('observe достраивает поддерево, вставленное после загрузки', async () => {
   const root = el('div');
   const { doc } = setupDom(el('body', {}, [root]));

@@ -79,13 +79,14 @@ test('форма отправляет два параметра цены, а н�
   await expect(page.locator('#p-price-min')).toHaveValue('1000');
 
   await page.locator('form[action="#katalog-s-fasetami"] button[type="submit"]').click();
-  await page.waitForURL(/price_min=/);
+  // Нужен адрес отправленной формы, а не load новой страницы.
+  await page.waitForURL(/price_min=/, { waitUntil: 'commit' });
 
-  const keys = await page.evaluate(() => [...new URL(location.href).searchParams.keys()].sort());
+  const params = new URL(page.url()).searchParams;
 
-  expect(keys).toEqual(['brand', 'cat', 'price_max', 'price_min', 'sort']);
-  expect(await page.evaluate(() => new URL(location.href).searchParams.get('price_min'))).toBe('1000');
-  expect(await page.evaluate(() => new URL(location.href).searchParams.get('price_max'))).toBe('200000');
+  expect([...params.keys()].sort()).toEqual(['brand', 'cat', 'price_max', 'price_min', 'sort']);
+  expect(params.get('price_min')).toBe('1000');
+  expect(params.get('price_max')).toBe('200000');
 });
 
 test('без griffinjs.js фасет цены — два рабочих числовых поля', async ({ page }) => {
@@ -98,9 +99,7 @@ test('без griffinjs.js фасет цены — два рабочих числ
 
   await min.fill('3000');
   await page.locator('form[action="#katalog-s-fasetami"] button[type="submit"]').click();
-  await page.waitForURL(/price_min=3000/);
+  await page.waitForURL(/price_min=3000/, { waitUntil: 'commit' });
 
-  const keys = await page.evaluate(() => [...new URL(location.href).searchParams.keys()].sort());
-
-  expect(keys).toEqual(['brand', 'cat', 'price_max', 'price_min', 'sort']);
+  expect([...new URL(page.url()).searchParams.keys()].sort()).toEqual(['brand', 'cat', 'price_max', 'price_min', 'sort']);
 });

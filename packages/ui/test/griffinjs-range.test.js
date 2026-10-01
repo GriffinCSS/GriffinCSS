@@ -288,3 +288,26 @@ test('fields: селектор без элемента — виджет не п�
 
   G.destroy();
 });
+
+// Разметка из данных: поля fields — только <input> своей формы.
+test('fields ищутся в своей форме и только среди <input>: чужой узел — виджет не поднимается', () => {
+  const quiet = (fn) => { const b = console.warn; console.warn = () => {}; try { fn(); } finally { console.warn = b; } };
+
+  for (const selectors of ['main, #price-max', '#note, #price-max', '#outside, #price-max']) {
+    const { G, doc } = setup(PARTS);
+    const main = mount(doc, el('main'));
+    const outside = mount(doc, number({ id: 'outside' }));
+    const from = slider({ min: '0', max: '20000', step: '500', value: '4000' });
+    const to = slider({ min: '0', max: '20000', step: '500', value: '12000' });
+    const pair = el('div', { class: 'gr-range-pair', 'data-gr-range': 'fields: ' + selectors }, [from, to]);
+    mount(doc, el('form', {}, [pair, el('div', { id: 'note' }), number({ id: 'price-max' })]));
+
+    quiet(() => G.start());
+
+    assert.equal(G.instance(pair, 'range'), null, `виджет поднялся: ${selectors}`);
+    assert.equal(main.hasAttribute('value'), false, '<main> получил значение');
+    assert.equal(outside.hasAttribute('value'), false, 'поле вне формы получило значение');
+
+    G.destroy();
+  }
+});

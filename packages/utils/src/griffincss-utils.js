@@ -1,5 +1,5 @@
 /*!
- * Griffincss Utils — Runtime v0.27.1
+ * Griffincss Utils — Runtime v0.28.0
  * Достраивает то, чего статический CSS выразить не может.
  * Пишется руками и не компилируется — правится этот файл.
  */
@@ -23,7 +23,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.1';
+  var VERSION = '0.28.0';
 
   // Таблица правил выводится из SCSS-карт скриптом scripts/sync-rule-table.mjs.
   // Правьте карты в SCSS, а не этот блок: npm run sync -- --fix перепишет его.
@@ -320,10 +320,12 @@
 
   // Содержимое скобок — ввод из разметки, и проверяется он так же, как
   // строка раскладки в ядре: длина и запрет на то, чем правило можно
-  // закрыть досрочно. Пробела в имени класса не бывает по определению,
-  // но проверяется и он: classValue вызывают и напрямую.
+  // закрыть досрочно. Кавычка открыла бы строку, а обратная косая —
+  // экранирование, и они поглотили бы все следующие правила общего листа.
+  // Пробела в имени класса не бывает по определению, но проверяется и он:
+  // classValue вызывают и напрямую.
   var MAX_VALUE_LENGTH = 48;
-  var BAD_VALUE = /[{};]|\/\*|\s/;
+  var BAD_VALUE = /[{};"'\\]|\/\*|\s/;
 
   // Элементы с произвольным значением: скобка в имени класса.
   var ARBITRARY_SELECTOR = '[class*="["]';
@@ -545,7 +547,9 @@
     try {
       var script = document.currentScript;
 
-      if (script) {
+      // Только настоящий тег: <img name="currentScript"> перекрывает
+      // свойство документа, его атрибуты — чужая разметка.
+      if (script && script.tagName === 'SCRIPT') {
         if (script.getAttribute('data-auto') === 'false') auto = false;
         if (script.getAttribute('data-stream') === 'false') streaming = false;
         if (script.getAttribute('data-observe') === 'false') watching = false;

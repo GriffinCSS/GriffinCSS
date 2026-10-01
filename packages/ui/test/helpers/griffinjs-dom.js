@@ -22,6 +22,11 @@ class Style {
   removeProperty(name) { this.props.delete(name); }
 }
 
+function walkTree(node, fn) {
+  fn(node);
+  for (const c of node.children || []) walkTree(c, fn);
+}
+
 class Element extends base.MockElement {
   constructor(tag, attrs = {}) {
     super(tag, attrs);
@@ -76,6 +81,40 @@ class Element extends base.MockElement {
 
   get id() { return this.getAttribute('id') || ''; }
   set id(value) { this.setAttribute('id', value); }
+
+  // <template>: содержимое — та же строка без разбора, что у innerHTML мока;
+  // чистку куска разметки (meta, base, link) проверяет браузерная спека.
+  get content() {
+    if (this.tagName !== 'TEMPLATE') return undefined;
+
+    return { nodeType: 11, _html: this._html || '', querySelectorAll: () => [] };
+  }
+
+  replaceChildren(...nodes) {
+    this.innerHTML = nodes.map((n) => (n && n._html !== undefined ? n._html : '')).join('');
+
+    for (const n of nodes) if (n && n.nodeType === 1) this.appendChild(n);
+  }
+
+  // Подписи поля, как у платформы: <label for="id"> в документе и объемлющий <label>.
+  get labels() {
+    if (!/^(INPUT|SELECT|TEXTAREA|BUTTON|OUTPUT)$/.test(this.tagName)) return undefined;
+
+    const found = [];
+    let root = this;
+
+    while (root.parentNode) root = root.parentNode;
+
+    const id = this.getAttribute('id');
+
+    if (id) walkTree(root, (n) => { if (n.tagName === 'LABEL' && n.getAttribute('for') === id) found.push(n); });
+
+    const wrap = this.closest('label');
+
+    if (wrap && !found.includes(wrap)) found.push(wrap);
+
+    return found;
+  }
 
   // input.value: в браузере это живое значение, в моке — зеркало атрибута.
   // Виджету ползунка достаточно: он и читает, и пишет одно и то же свойство.
@@ -337,9 +376,10 @@ function mount(doc, node) {
 
 // Дорожка из n слайдов шириной width, видимая область — тоже width.
 // perView — сколько слайдов видно разом: окно дорожки шире слайда во столько раз.
-function track(doc, n, width = 100, attrs = {}, perView = 1) {
+// tag — элемент слайда: видео-слайдер ставит слайдом сам <video>.
+function track(doc, n, width = 100, attrs = {}, perView = 1, tag = 'div') {
   const slides = [];
-  for (let i = 0; i < n; i++) slides.push(el('div', { class: 'gr-slide' }));
+  for (let i = 0; i < n; i++) slides.push(el(tag, { class: 'gr-slide' }));
   const node = mount(doc, el('div', attrs, slides));
   node.clientWidth = width * perView;
   node.scrollWidth = width * n;

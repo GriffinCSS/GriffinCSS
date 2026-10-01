@@ -792,9 +792,10 @@
 
     // Сосед по паре: уже поднятый — как есть, иначе поднимается здесь;
     // сканер на нём потом найдёт живой экземпляр.
+    // Сосед — поле с data-gr-datetime своей формы (без формы — документа).
     if (o.to && mode !== 'time') {
-      var target = document.querySelector(o.to);
-      var other = target && G.mount(target, 'datetime');
+      var target = (G.closest(el, 'form') || document).querySelector(o.to);
+      var other = target && target.hasAttribute('data-gr-datetime') && G.mount(target, 'datetime');
 
       if (other) { peer = other; role = 'from'; other.pair(api); push(); }
       else G.warn('datetime: the "to" field is not found: ' + o.to);

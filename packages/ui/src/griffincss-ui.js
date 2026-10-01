@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.27.1
+ * Griffincss UI — Runtime v0.28.0
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -50,7 +50,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.27.1';
+  var VERSION = '0.28.0';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -229,12 +229,18 @@
   // всегда, даже когда закрывать оказалось нечего.
   function dismissFrom(event, trigger) {
     var selector = trigger.getAttribute(DISMISS_ATTR);
-    var target = selector
-      ? (typeof document.querySelector === 'function' ? document.querySelector(selector) : null)
-      : closest(trigger, DISMISSIBLE);
+    var target = null;
+
+    // Цель из атрибута — только сообщение, как обещают доки: значение
+    // пишут и данные, и data-gr-dismiss="main" иначе убрал бы <main>.
+    if (!selector) target = closest(trigger, DISMISSIBLE);
+    else {
+      try { target = document.querySelector(selector); } catch (e) { /* не селектор */ }
+      if (target && closest(target, DISMISSIBLE) !== target) target = null;
+    }
 
     if (!target) {
-      warn('close button has nothing to close: no data-gr-dismiss target and no enclosing message');
+      warn('close button has nothing to close: no .gr-alert, .gr-toast or .gr-tag as data-gr-dismiss target or around it');
       return true;
     }
 
@@ -659,7 +665,9 @@
   function autoStart() {
     try {
       var script = document.currentScript;
-      if (script && script.getAttribute('data-auto') === 'false') return;
+      // Только настоящий тег: <img name="currentScript"> перекрывает
+      // свойство документа, его атрибуты — чужая разметка.
+      if (script && script.tagName === 'SCRIPT' && script.getAttribute('data-auto') === 'false') return;
     } catch (e) { /* currentScript недоступен */ }
 
     if (document.readyState === 'loading') {
