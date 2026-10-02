@@ -211,6 +211,111 @@ test('ajax-панель: data-gr-src грузится при первом отк
   G.destroy();
 });
 
+// Пункт, открытый разметкой: toggle от open браузеры шлют в разное время —
+// при разборе, на interactive или после load, — и слой, стартующий
+// по DOMContentLoaded, ловил его не всегда: панель оставалась пустой.
+// Атрибут open до подъёма мок событий не шлёт — как пропущенный toggle.
+test('ajax-панель: пункт, открытый разметкой до подъёма, грузит панель при подъёме', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.html', open: '' } });
+  const calls = [];
+
+  global.location = { origin: ORIGIN };
+  global.fetch = (url) => {
+    calls.push(url);
+    return Promise.resolve(response('<p>Бренды</p>'));
+  };
+
+  try {
+    G.start();
+
+    assert.equal(b.itemB.open, true, 'пункт закрылся');
+    assert.equal(b.sumB.getAttribute('aria-expanded'), 'true');
+    assert.equal(b.itemB.getAttribute('data-gr-state'), 'loading', 'панель не грузится');
+    await tick();
+    await tick();
+    assert.equal(b.panelB.innerHTML, '<p>Бренды</p>');
+    assert.equal(b.itemB.getAttribute('data-gr-state'), 'ready');
+    assert.equal(calls.length, 1);
+  } finally {
+    delete global.fetch;
+    delete global.location;
+    G.destroy();
+  }
+});
+
+// Открытым бывает один пункт: из двух с open в разметке остаётся первый,
+// второй закрывается сразу — без closing (на подъёме смотреть нечему)
+// и без запроса. Поздний toggle ничего не меняет.
+test('ajax-панель: два пункта с open в разметке — открыт первый, второй закрыт без closing и без запроса', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.html', open: '' } });
+  const calls = [];
+
+  b.itemA.setAttribute('open', '');
+  b.itemA.setAttribute('data-gr-src', '/menu/a.html');
+  global.location = { origin: ORIGIN };
+  global.fetch = (url) => {
+    calls.push(url);
+    return Promise.resolve(response('<p>панель</p>'));
+  };
+
+  try {
+    G.start();
+    await tick();
+    await tick();
+
+    assert.equal(b.itemA.open, true, 'первый пункт закрыт');
+    assert.equal(b.itemA.getAttribute('data-gr-state'), 'ready');
+    assert.equal(b.itemB.open, false, 'второй пункт остался открытым');
+    assert.notEqual(b.itemB.getAttribute('data-gr-state'), 'closing');
+    assert.notEqual(b.itemB.getAttribute('data-gr-state'), 'loading');
+    assert.equal(b.sumB.getAttribute('aria-expanded'), 'false');
+    assert.equal(calls.length, 1, 'запросов не один');
+    assert.match(String(calls[0]), /\/menu\/a\.html$/);
+  } finally {
+    delete global.fetch;
+    delete global.location;
+    G.destroy();
+  }
+});
+
+// Поздний toggle от open из разметки — WebKit присылает его то до старта,
+// то после load: после подъёма он ничего не меняет — ни запроса, ни смены
+// состояния, ни закрытия первого пункта.
+test('ajax-панель: поздний toggle после подъёма ничего не меняет', async () => {
+  const { G, doc } = setup(PARTS);
+  const b = bar(doc, { itemB: { 'data-gr-src': '/menu/b.html', open: '' } });
+  const calls = [];
+
+  b.itemA.setAttribute('open', '');
+  b.itemA.setAttribute('data-gr-src', '/menu/a.html');
+  global.location = { origin: ORIGIN };
+  global.fetch = (url) => {
+    calls.push(url);
+    return Promise.resolve(response('<p>панель</p>'));
+  };
+
+  try {
+    G.start();
+    await tick();
+    await tick();
+
+    const before = [b.itemA.open, b.itemA.getAttribute('data-gr-state'), b.itemB.open, b.itemB.getAttribute('data-gr-state')];
+
+    for (const item of [b.itemA, b.itemB]) item.dispatchEvent(event('toggle', item, { bubbles: false }));
+    await tick();
+    await tick();
+
+    assert.deepEqual([b.itemA.open, b.itemA.getAttribute('data-gr-state'), b.itemB.open, b.itemB.getAttribute('data-gr-state')], before);
+    assert.equal(calls.length, 1, 'поздний toggle дал запрос');
+  } finally {
+    delete global.fetch;
+    delete global.location;
+    G.destroy();
+  }
+});
+
 // Предупреждения слоя за время fn(), в том числе асинхронные — до конца промиса.
 async function warnings(fn) {
   const said = [];

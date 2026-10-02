@@ -588,6 +588,26 @@
 
     for (var i = 0; i < items.length; i++) setup(items[i]);
 
+    // Пункт, открытый разметкой: toggle от open браузеры шлют в разное
+    // время — при разборе, на interactive или после load, — и обработчик
+    // ловил его не всегда. Решается здесь, один раз: открыт первый пункт
+    // с open, его панель грузится; остальные закрываются сразу, без closing —
+    // на подъёме смотреть нечему. Поздний toggle безвреден: load не грузит
+    // дважды, закрытые закрывать нечего.
+    var first = null;
+
+    for (i = 0; i < items.length; i++) {
+      if (!items[i].el.open) continue;
+      if (first) {
+        items[i].el.open = false;
+        setAttr(items[i].summary, 'aria-expanded', 'false');
+      } else {
+        first = items[i];
+      }
+    }
+
+    if (first) load(first);
+
     unmedia = G.media.on(o.bp, onMedia);
 
     listen(el, 'pointerover', onPointerOver);

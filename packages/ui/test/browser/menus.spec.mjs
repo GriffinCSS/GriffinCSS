@@ -94,6 +94,52 @@ test.describe('мегаменю', () => {
     await hover(page, page.locator('#gr-lab-status'));
     await expect(second).toHaveJSProperty('open', false);
   });
+
+  // Пункт, открытый разметкой: toggle от open браузеры шлют в разное время —
+  // при разборе, на interactive или после load, — и слой ловил его не всегда:
+  // панель оставалась пустой, а пункт выглядел закрытым. При подъёме открыт
+  // первый пункт с open, его панель загружена, остальные закрыты сразу.
+  test('пункты, открытые разметкой: после старта открыт первый, его панель загружена, остальные закрыты', async ({ page }) => {
+    const fragments = [];
+    const item = (n) => `<li><details class="gr-megamenu-item" open data-gr-src="/megamenu-open/${n}.html">`
+      + `<summary class="gr-nav-link">Пункт ${n}</summary><div class="gr-megamenu-panel"></div></details></li>`;
+
+    await page.route('**/megamenu-open/**', (route) => {
+      const { pathname } = new URL(route.request().url());
+
+      if (pathname.endsWith('/page.html')) {
+        return route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Открыт разметкой</title>
+<link rel="stylesheet" href="/packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="/packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="/packages/ui/dist/griffinjs.css">
+<script defer src="/packages/ui/dist/griffinjs.js"></script></head><body>
+<nav class="gr-navbar gr-megamenu" data-gr-megamenu="hover: false"><ul class="gr-nav">${item(1)}${item(2)}</ul></nav>
+</body></html>` });
+      }
+
+      fragments.push(pathname);
+
+      return route.fulfill({ contentType: 'text/html; charset=utf-8', body: `<p class="frag">Панель ${pathname}</p>` });
+    });
+
+    await page.goto('/megamenu-open/page.html');
+    await page.waitForFunction(() => window.GriffinJS && window.GriffinJS._started());
+
+    const items = page.locator('details.gr-megamenu-item');
+
+    await expect(items.nth(0), 'панель первого пункта не загружена').toHaveAttribute('data-gr-state', 'ready');
+    await expect(items.nth(0).locator('.frag')).toHaveCount(1);
+    await expect(items.nth(0)).toHaveJSProperty('open', true);
+    await expect(items.nth(0).locator('summary')).toHaveAttribute('aria-expanded', 'true');
+    await expect(items.nth(1)).toHaveJSProperty('open', false);
+    await expect(items.nth(1).locator('summary')).toHaveAttribute('aria-expanded', 'false');
+    // Окно на позднее событие toggle и на мигание: состояние обязано устояться.
+    await page.waitForTimeout(600);
+    expect(await items.nth(1).getAttribute('data-gr-state'), 'второй пункт в closing или loading').toBeNull();
+    expect(await items.nth(0).evaluate((d) => d.open), 'первый пункт закрылся поздним событием').toBe(true);
+    expect(fragments, 'грузится не только первый пункт').toEqual(['/megamenu-open/1.html']);
+  });
 });
 
 test.describe('дропдаун', () => {
