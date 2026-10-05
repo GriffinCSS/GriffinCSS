@@ -322,6 +322,85 @@ test('у таблицы есть и плотный, и разреженный в
   assert.ok(ui.includes('.gr-table-relaxed th,'), 'нет .gr-table-relaxed');
 });
 
+// Правило по преамбуле: тело первого блока, чей селектор совпал целиком.
+function ruleBody(css, prelude) {
+  const at = css.indexOf(`${prelude}{`);
+
+  return at < 0 ? null : css.slice(at + prelude.length + 1, css.indexOf('}', at));
+}
+
+test('таблица прозы прокручивается как .gr-table-scroll, .gr-table это отменяет', () => {
+  // Автор текста из редактора классов не знает: таблица прозы прокручивается
+  // сама. Таблица библиотеки в прозе — своя раскладка, без прокрутки.
+  const body = ruleBody(ui, '.gr-table-scroll,:where(.gr-prose table:not(.gr-table))');
+
+  assert.ok(body, 'таблица прозы и .gr-table-scroll — не одно правило');
+
+  for (const declaration of ['display:block', 'inline-size:max-content', 'max-inline-size:100%', 'overflow-x:auto', 'overscroll-behavior-x:contain']) {
+    assert.ok(body.includes(declaration), `у прокрутки таблицы нет ${declaration}`);
+  }
+});
+
+test('заголовки в одну строку — только у .gr-table, в прозе переносятся', () => {
+  // В прозе неразрывность заголовков некому снять: класс на <th> редактор
+  // не поставит, а таблица из четырёх столбцов становилась шире колонки.
+  assert.ok(ruleBody(ui, '.gr-table th')?.includes('white-space:nowrap'), 'у .gr-table th нет nowrap');
+
+  for (const prelude of parseSelectors(ui).filter((s) => s.includes('.gr-prose table th'))) {
+    assert.ok(!ruleBody(ui, prelude).includes('white-space'), `проза снова держит заголовки в строку: ${prelude}`);
+  }
+});
+
+test('подсказка прокрутки: анимация — только под @supports, без шкалы — шторка', () => {
+  // Без поддержки animation-timeline анимация отыграла бы мгновенно
+  // (длительность 0, fill both): тень у начала висела бы всегда, даже
+  // у таблицы, которая помещается. Поэтому вне @supports её быть не должно.
+  const timeline = ui.search(/@supports ?\(animation-timeline: ?scroll\(\)\)/);
+  const fallback = ui.search(/@supports not \(animation-timeline: ?scroll\(\)\)/);
+
+  assert.ok(timeline > 0, 'нет ветки с анимацией по прокрутке');
+  assert.ok(fallback > 0, 'нет запасной ветки со шторкой');
+
+  const block = (at) => ui.slice(at, ui.indexOf('}}', at) + 2);
+  const outside = ui.replace(block(timeline), '').replace(block(fallback), '');
+
+  assert.ok(!/animation:gr-scroll-/.test(outside), 'анимация подсказки вне @supports');
+  assert.ok(block(timeline).includes('animation-timeline:scroll(self inline)'), 'анимацию ведёт не прокрутка области');
+  // Шторки — первые два слоя общего правила, прозрачные, пока ветка без
+  // шкалы не задаст им цвет подложки и не включит тени на полную силу.
+  assert.ok(outside.includes('background-attachment:local,local,scroll,scroll'), 'у подсказки нет слоёв шторки');
+  for (const declaration of ['--gr-scroll-start: 1', '--gr-scroll-end: 1', '--gr-scroll-cover: var(--gr-scroll-hint-bg']) {
+    assert.ok(block(fallback).replace(/:(?! )/g, ': ').includes(declaration), `в ветке без шкалы нет ${declaration}`);
+  }
+
+  // Регистрация силы теней — вне области .griffin: @property вложить
+  // в селектор нельзя, правило бы пропало.
+  for (const [name, css] of [['ui', ui], ['ui-scoped', scoped]]) {
+    for (const property of ['--gr-scroll-start', '--gr-scroll-end']) {
+      assert.ok(css.includes(`@property ${property}{`), `${name}: нет @property ${property}`);
+    }
+  }
+});
+
+test('высоту фрейма прозы снимает только пропорция из атрибутов', () => {
+  // Без attr() одно block-size: auto сплющило бы фрейм до 150 px высоты
+  // по умолчанию: своей пропорции у фрейма нет.
+  const supports = ui.search(/@supports ?\(aspect-ratio: ?attr\(width type\(<number>\)\)/);
+
+  assert.ok(supports > 0, 'нет пропорции фрейма из атрибутов');
+  assert.ok(ui.slice(supports).includes('.gr-prose iframe[width][height]'), 'пропорция не у фрейма прозы');
+
+  const outside = ui.slice(0, supports) + ui.slice(ui.indexOf('}}', supports) + 2);
+  const frame = parseSelectors(outside).filter((s) => s.includes('.gr-prose iframe'));
+
+  assert.ok(frame.length > 0, 'нет ограничения ширины фрейма прозы');
+
+  for (const prelude of frame) {
+    assert.ok(ruleBody(outside, prelude).includes('max-inline-size:100%'), `фрейм шире колонки: ${prelude}`);
+    assert.ok(!ruleBody(outside, prelude).includes('block-size'), `высота фрейма снята без пропорции: ${prelude}`);
+  }
+});
+
 // Этап 47c (фидбек темы griffin по 0.25.0, п. 5): ниже порога строка
 // таблицы кабинета становится карточкой. Шапка остаётся читалке, подпись
 // ячейки — из data-label, без него ячейка идёт без подписи.

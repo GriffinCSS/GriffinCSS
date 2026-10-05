@@ -20,6 +20,8 @@ const body = `
   <hr id="hr">
   <table id="bare-table"><thead><tr><th id="bth">Параметр</th><th>Значение</th></tr></thead>
     <tbody><tr><td id="btd">Вес</td><td>1,2 кг</td></tr></tbody></table>
+  <table id="cls-table" class="gr-table"><thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+    <tbody><tr><td>Вес</td><td>1,2 кг</td></tr></tbody></table>
   <ul id="menu" class="gr-menu"><li><a class="gr-menu-item" href="#m">Пункт меню</a></li></ul>
   <p id="last">Последний абзац.</p>
 </div>
@@ -159,7 +161,9 @@ for (const reset of [true, false]) {
         th: pick('bth'), refTh: pick('rth'),
         td: pick('btd'), refTd: pick('rtd'),
         table: table('bare-table'), refTable: table('ref-table'),
-        full: document.getElementById('bare-table').getBoundingClientRect().width === document.getElementById('prose').getBoundingClientRect().width,
+        // Во всю ширину — таблица с .gr-table: без класса таблица прозы
+        // прокручивается сама и стоит по ширине содержимого.
+        full: document.getElementById('cls-table').getBoundingClientRect().width === document.getElementById('prose').getBoundingClientRect().width,
       };
     });
 
@@ -169,6 +173,213 @@ for (const reset of [true, false]) {
     expect(m.full).toBe(true);
   });
 }
+
+// --- Ширина содержимого: колонка, таблица, фрейм -----------------------------
+//
+// Окно 390 px, поля страницы 12 px: колонка прозы — 366 px, рядом с боковой
+// колонкой 100 px через зазор 12 px — 254 px. Содержимое не шире колонки,
+// страница вбок не уезжает.
+
+const LAYOUT = '/prose-layout.html';
+
+const layoutPage = (html) => `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Проза: ширина</title>
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="/packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="/packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="/packages/ui/dist/griffincss-ui.css">
+<link rel="stylesheet" href="/packages/utils/dist/griffincss-utils.css">
+<style>
+  body { margin: 12px; }
+  .row { display: flex; gap: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 100px; gap: 12px; }
+  aside { flex: 0 0 100px; }
+</style>
+</head><body>${html}</body></html>`;
+
+async function openLayout(pw, html, width = 390) {
+  await pw.setViewportSize({ width, height: 800 });
+  await pw.route(`**${LAYOUT}`, (route) => route.fulfill({
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+    body: layoutPage(html),
+  }));
+  await pw.goto(LAYOUT);
+}
+
+const URL_TEXT = '<p>Адрес без пробелов: https://example.ru/catalog/elektronika/smartfony/apple-iphone-15-pro-max-256gb-naturalnyj-titan-dve-sim-karty.</p>';
+const CODE = '<pre><code>curl -s \'https://example.ru/index.php?route=product/search&amp;search=iphone&amp;category_id=24&amp;sub_category=true\'</code></pre>';
+
+const row = (cells, tag) => `<tr>${cells.map((c) => `<${tag}>${c}</${tag}>`).join('')}</tr>`;
+const T2 = (attrs = '') => `<table id="tb"${attrs}><thead>${row(['Параметр', 'Значение'], 'th')}</thead><tbody>${row(['Вес', '1,2 кг'], 'td')}${row(['Цвет', 'чёрный'], 'td')}</tbody></table>`;
+const T4 = `<table id="tb"><thead>${row(['Модель', 'Мощность, Вт', 'Объем чаши, л', 'Гарантия, мес.'], 'th')}</thead><tbody>${row(['Philips HD9252/90', '1400', '4,1', '24'], 'td')}${row(['Tefal EY501D15', '1550', '4,2', '12'], 'td')}</tbody></table>`;
+const T9 = (attrs = '') => `<table id="tb"${attrs}><thead>${row(['Модель', 'Диагональ', 'Разрешение', 'Частота', 'Матрица', 'Яркость', 'HDR', 'Вес, кг', 'Гарантия'], 'th')}</thead><tbody>${row(['Samsung QE55Q60C', '55″', '3840×2160', '60 Гц', 'QLED', '400 кд/м²', 'HDR10+', '16,9', '24 мес.'], 'td')}</tbody></table>`;
+
+// Ширина статьи и таблицы, своя прокрутка, уход страницы вбок.
+const measure = () => {
+  const box = (el) => el && Math.round(el.getBoundingClientRect().width);
+  const scrolls = (el) => !!el && el.scrollWidth > el.clientWidth;
+  const t = document.getElementById('t');
+  const tb = document.getElementById('tb');
+  const pre = t.querySelector('pre');
+
+  return {
+    article: box(t),
+    table: box(tb),
+    rows: tb && box(tb.tBodies[0]),
+    tableDisplay: tb && getComputedStyle(tb).display,
+    tableScrolls: scrolls(tb),
+    pre: box(pre),
+    preScrolls: scrolls(pre),
+    preContent: pre && pre.scrollWidth,
+    over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  };
+};
+
+for (const [name, html] of [
+  ['флекс-элемент', `<div class="row"><article id="t" class="gr-prose">${URL_TEXT}${CODE}</article><aside>колонка</aside></div>`],
+  ['дорожка 1fr', `<div class="grid"><article id="t" class="gr-prose">${URL_TEXT}${CODE}</article><aside>колонка</aside></div>`],
+]) {
+  test(`проза — ${name}: длинный адрес и строка кода не распирают колонку`, async ({ page: pw }) => {
+    await openLayout(pw, html);
+    const m = await pw.evaluate(measure);
+
+    expect(m.article).toBe(254);
+    expect(m.over).toBe(0);
+    expect(m.preScrolls).toBe(true);
+  });
+}
+
+test('проза, сжатая по содержимому, не схлопывается: короткий код без прокрутки', async ({ page: pw }) => {
+  // Страж против contain: inline-size у pre — он обнулил бы и полную ширину
+  // кода, и статья сжалась бы до «Код:».
+  await openLayout(pw, '<div class="row"><article id="t" class="gr-prose"><p>Код:</p><pre><code>npm i griffincss</code></pre></article><aside>колонка</aside></div>');
+  const m = await pw.evaluate(measure);
+
+  expect(m.preScrolls).toBe(false);
+  expect(m.article).toBeGreaterThanOrEqual(m.preContent);
+});
+
+test('таблица прозы: заголовки переносятся, четыре столбца — в колонке и без разрывов посреди слова', async ({ page: pw }) => {
+  await openLayout(pw, `<article id="t" class="gr-prose">${T4}</article><table id="ref" class="gr-table"><thead><tr><th id="ref-th">Заголовок</th></tr></thead></table>`);
+
+  const m = await pw.evaluate(() => {
+    const tb = document.getElementById('tb');
+    const broken = [];
+
+    for (const cell of tb.querySelectorAll('th, td')) {
+      const node = cell.firstChild;
+
+      for (const word of node.data.matchAll(/\S+/g)) {
+        const range = document.createRange();
+
+        range.setStart(node, word.index);
+        range.setEnd(node, word.index + word[0].length);
+        if (new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size > 1) broken.push(word[0]);
+      }
+    }
+
+    return {
+      table: Math.round(tb.getBoundingClientRect().width),
+      article: Math.round(document.getElementById('t').getBoundingClientRect().width),
+      scrolls: tb.scrollWidth > tb.clientWidth,
+      wrap: getComputedStyle(tb.querySelector('th')).whiteSpace,
+      refWrap: getComputedStyle(document.getElementById('ref-th')).whiteSpace,
+      broken,
+    };
+  });
+
+  expect(m.wrap).toBe('normal');
+  expect(m.table).toBeLessThanOrEqual(m.article);
+  expect(m.scrolls).toBe(false);
+  expect(m.broken).toEqual([]);
+  // У таблицы библиотеки заголовки по-прежнему в одну строку.
+  expect(m.refWrap).toBe('nowrap');
+});
+
+for (const [name, html] of [
+  ['без класса', `<article id="t" class="gr-prose">${T9()}</article>`],
+  ['с чужим классом', `<article id="t" class="gr-prose">${T9(' class="table table-bordered"')}</article>`],
+  ['во флекс-колонке', `<div class="row"><article id="t" class="gr-prose"><p>Сравнение моделей:</p>${T9()}</article><aside>колонка</aside></div>`],
+]) {
+  test(`широкая таблица прозы ${name} прокручивается сама, страница не уезжает`, async ({ page: pw }) => {
+    await openLayout(pw, html);
+    const m = await pw.evaluate(measure);
+
+    expect(m.table).toBe(m.article);
+    expect(m.tableScrolls).toBe(true);
+    expect(m.over).toBe(0);
+  });
+}
+
+test('.gr-table в прозе отменяет прокрутку, .gr-table-scroll возвращает', async ({ page: pw }) => {
+  await openLayout(pw, `<article id="t" class="gr-prose">${T2(' class="gr-table"')}</article>`, 1024);
+  const own = await pw.evaluate(measure);
+
+  // Таблица библиотеки — её раскладка: во всю ширину, своей прокрутки нет.
+  expect(own.tableDisplay).toBe('table');
+  expect(own.table).toBe(own.article);
+
+  await openLayout(pw, `<article id="t" class="gr-prose">${T9(' class="gr-table gr-table-scroll" tabindex="0"')}</article>`);
+  const scroll = await pw.evaluate(measure);
+
+  expect(scroll.table).toBe(scroll.article);
+  expect(scroll.tableScrolls).toBe(true);
+  expect(scroll.over).toBe(0);
+});
+
+test('узкая таблица прозы стоит по ширине содержимого', async ({ page: pw }) => {
+  // Цена своей прокрутки: строки собирает анонимная таблица внутри блока,
+  // и она сжимается по содержимому. Во всю ширину — class="gr-table".
+  await openLayout(pw, `<article id="t" class="gr-prose">${T2()}</article>`, 1024);
+  const m = await pw.evaluate(measure);
+
+  expect(m.tableDisplay).toBe('block');
+  expect(m.table).toBe(m.rows);
+  expect(m.table).toBeLessThan(m.article / 2);
+  expect(m.tableScrolls).toBe(false);
+});
+
+test('фрейм прозы не шире колонки; пропорция — из атрибутов, где движок умеет attr()', async ({ page: pw, browserName }) => {
+  await openLayout(pw, `<article id="t" class="gr-prose">
+    <iframe id="video" width="560" height="315" src="about:blank" title="видео"></iframe>
+    <iframe id="audio" width="560" height="80" src="about:blank" title="аудио"></iframe>
+    <iframe id="map" width="100%" height="400" src="about:blank" title="карта"></iframe>
+  </article>`);
+
+  const m = await pw.evaluate(() => {
+    const size = (id) => {
+      const r = document.getElementById(id).getBoundingClientRect();
+
+      return { w: r.width, h: r.height };
+    };
+
+    return {
+      supports: CSS.supports('aspect-ratio', 'attr(width type(<number>)) / attr(height type(<number>))'),
+      article: document.getElementById('t').getBoundingClientRect().width,
+      video: size('video'),
+      audio: size('audio'),
+      map: size('map'),
+      over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+
+  // Поддержка закреплена по движку: когда Firefox получит attr(), тест
+  // покраснеет и напомнит поправить доки.
+  expect(m.supports).toBe(browserName !== 'firefox');
+  expect(m.over).toBe(0);
+  expect(m.video.w).toBeLessThanOrEqual(m.article);
+  expect(m.map.h).toBe(400);
+
+  if (m.supports) {
+    // Рамка фрейма по умолчанию — в ширине и высоте одинаково: сравнивается
+    // пропорция бокса целиком, с допуском в пиксель.
+    expect(Math.abs(m.video.h - (m.video.w * 315) / 560)).toBeLessThanOrEqual(1.5);
+    expect(m.audio.h).toBe(80);
+  } else {
+    expect(m.video.h).toBe(315);
+  }
+});
 
 test('.gr-max-w-prose — мера строки 65ch', async ({ page: pw }) => {
   await open(pw, true);

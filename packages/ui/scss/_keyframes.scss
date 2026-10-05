@@ -37,3 +37,32 @@
     opacity: 0.45;
   }
 }
+
+// Подсказка прокрутки у таблицы (_table.scss): сила тени у начала и у конца
+// области, от 0 до 1. Зарегистрированы числом, чтобы анимация по прокрутке
+// вела их плавно; ненаследуемые — вложенная таблица не перенимает тени
+// внешней. initial-value: 0 — без переполнения шкала прокрутки неактивна,
+// анимация не действует, и теней нет.
+@property --gr-scroll-start {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --gr-scroll-end {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes gr-scroll-start {
+  to {
+    --gr-scroll-start: 1;
+  }
+}
+
+@keyframes gr-scroll-end {
+  from {
+    --gr-scroll-end: 1;
+  }
+}

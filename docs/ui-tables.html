@@ -43,6 +43,7 @@
   <tr><td><code>.gr-table-relaxed</code></td><td>Обратное компактному: воздуха больше стандартного</td></tr>
   <tr><td><code>.gr-table-hover</code></td><td>Подсветка строки под указателем</td></tr>
   <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой</td></tr>
+  <tr><td><code>.gr-table-scroll</code></td><td>Горизонтальная прокрутка на самой таблице, без обёртки — для широких таблиц</td></tr>
   <tr><td><code>.gr-table-sticky</code></td><td>Шапка остаётся видна при прокрутке тела</td></tr>
   <tr><td><code>.gr-table-stack</code>, <code>-{sm,md,lg,xl}</code>, <code>-c{sm,md,lg,xl}</code></td><td>Карточки вместо строк: всегда, ниже ширины окна или ниже ширины контейнера</td></tr>
 </table>
@@ -150,6 +151,28 @@
   оставляет прокрутку внутри себя.
 </p>
 
+<p>
+  Край области обрезает таблицу ровно по столбцу, а полосы прокрутки
+  macOS и телефонов видны только при касании. Поэтому у края, за которым
+  ещё есть содержимое, лежит мягкая тень — радиальная, растянутая
+  по высоте и гаснущая к верху и низу; докрутили до конца — тень у этого
+  края гаснет, у таблицы, которая помещается, теней нет. Подсказка есть
+  у <code>.gr-table-wrap</code>, у <code>.gr-table-scroll</code> и у таблицы
+  в форматированном тексте.
+</p>
+
+<div class="callout">
+  <p>
+    Тень ведёт анимация по прокрутке, и подложка под таблицей может быть
+    любой. Firefox такой анимации не знает: там тень у края, до которого
+    докрутили, закрывает шторка цвета страницы. На карточке или цветной
+    секции задайте цвет подложки — <code>--gr-scroll-hint-bg</code>, иначе
+    у края ляжет полоса цвета страницы.
+  </p>
+</div>
+
+<pre><code>.gr-card { --gr-scroll-hint-bg: var(--gr-card-bg, var(--gr-color-surface)); }</code></pre>
+
 <div class="callout callout-warning">
   <p>
     Прокручиваемой области нужен <code>tabindex="0"</code>: без него до
@@ -185,6 +208,53 @@
 <pre><code>&lt;div class="gr-table-wrap" tabindex="0" role="region" aria-label="Данные"&gt;
   &lt;table class="gr-table gr-table-sticky"&gt;…&lt;/table&gt;
 &lt;/div&gt;</code></pre>
+
+<h3>Прокрутка без обёртки</h3>
+
+<p>
+  Когда обёртку поставить некому — таблица приходит готовой разметкой, —
+  прокрутку даёт класс на самой таблице: <code>.gr-table-scroll</code>.
+  Таблица становится блоком не шире колонки, а то, что не влезло,
+  прокручивается внутри неё. Для клавиатуры — тот же
+  <code>tabindex="0"</code>, имя — <code>aria-label</code>; а вот
+  <code>role="region"</code>, как у обёртки, таблице не ставят: он отнял бы
+  у неё роль таблицы.
+</p>
+
+<pre><code>&lt;table class="gr-table gr-table-scroll" tabindex="0" aria-label="Сравнение моделей"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th&gt;Модель&lt;/th&gt;&lt;th&gt;Диагональ&lt;/th&gt;&lt;th&gt;Разрешение&lt;/th&gt;&lt;th&gt;Частота&lt;/th&gt;&lt;th&gt;Матрица&lt;/th&gt;&lt;th&gt;Яркость&lt;/th&gt;&lt;th&gt;HDR&lt;/th&gt;&lt;th&gt;Динамики&lt;/th&gt;&lt;th&gt;Вес с подставкой&lt;/th&gt;&lt;th&gt;Гарантия производителя&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;Samsung QE55Q60C&lt;/td&gt;&lt;td&gt;55″&lt;/td&gt;&lt;td&gt;3840×2160&lt;/td&gt;&lt;td&gt;60 Гц&lt;/td&gt;&lt;td&gt;QLED&lt;/td&gt;&lt;td&gt;400 кд/м²&lt;/td&gt;&lt;td&gt;HDR10+&lt;/td&gt;&lt;td&gt;20 Вт&lt;/td&gt;&lt;td&gt;16,9 кг&lt;/td&gt;&lt;td&gt;24 месяца&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;LG OLED55C3&lt;/td&gt;&lt;td&gt;55″&lt;/td&gt;&lt;td&gt;3840×2160&lt;/td&gt;&lt;td&gt;120 Гц&lt;/td&gt;&lt;td&gt;OLED&lt;/td&gt;&lt;td&gt;800 кд/м²&lt;/td&gt;&lt;td&gt;Dolby Vision&lt;/td&gt;&lt;td&gt;40 Вт&lt;/td&gt;&lt;td&gt;18,9 кг&lt;/td&gt;&lt;td&gt;12 месяцев&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Десять столбцов — прокрутка внутри таблицы</div>
+  <table class="gr-table gr-table-scroll" tabindex="0" aria-label="Сравнение моделей">
+    <thead>
+      <tr><th>Модель</th><th>Диагональ</th><th>Разрешение</th><th>Частота</th><th>Матрица</th><th>Яркость</th><th>HDR</th><th>Динамики</th><th>Вес с подставкой</th><th>Гарантия производителя</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Samsung QE55Q60C</td><td>55″</td><td>3840×2160</td><td>60 Гц</td><td>QLED</td><td>400 кд/м²</td><td>HDR10+</td><td>20 Вт</td><td>16,9 кг</td><td>24 месяца</td></tr>
+      <tr><td>LG OLED55C3</td><td>55″</td><td>3840×2160</td><td>120 Гц</td><td>OLED</td><td>800 кд/м²</td><td>Dolby Vision</td><td>40 Вт</td><td>18,9 кг</td><td>12 месяцев</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout">
+  <p>
+    <strong>Класс — для широких таблиц.</strong> Строки внутри блока
+    собирает анонимная таблица, и она сжимается по содержимому: узкая
+    таблица с этим классом не растягивается во всю колонку. Липкой шапке
+    нужна область заданной высоты — для неё остаётся <code>.gr-table-wrap</code>.
+    Таблица внутри <a href="typography.html">форматированного текста</a>
+    прокручивается так и без класса: автор текста из редактора о классах
+    не знает. <code>class="gr-table"</code> возвращает ей раскладку таблицы
+    библиотеки — во всю ширину, без своей прокрутки.
+  </p>
+</div>
 
 <div class="callout">
   <p>

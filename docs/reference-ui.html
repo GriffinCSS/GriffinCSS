@@ -157,17 +157,25 @@
   <tr><td><code>.gr-table</code></td><td>Схлопнутые границы, отступы в ячейках, приглушённая шапка</td></tr>
   <tr><td><code>.gr-table-striped</code> / <code>-bordered</code> / <code>-compact</code> / <code>-relaxed</code> / <code>-hover</code></td><td>Полосы, полная сетка, плотный и разреженный варианты, подсветка строки</td></tr>
   <tr><td><code>.gr-table-wrap</code></td><td>Обёртка с горизонтальной прокруткой — вбок уезжает таблица, а не страница</td></tr>
+  <tr><td><code>.gr-table-scroll</code></td><td>Прокрутка на самой таблице, без обёртки: блок не шире колонки, лишнее прокручивается внутри. Для широких таблиц — узкая стоит по ширине содержимого</td></tr>
   <tr><td><code>.gr-table-sticky</code></td><td>Липкая шапка внутри прокручиваемой области; линию под ней рисует внутренняя тень — схлопнутая граница с уехавшей ячейкой не едет</td></tr>
   <tr><td><code>.gr-table-stack</code>, <code>-{sm,md,lg,xl}</code>, <code>-c{sm,md,lg,xl}</code></td><td>Карточки вместо строк: всегда, ниже ширины окна или ниже ширины ближайшего <code>.gr-cq</code>. Суффикс называет порог: <code>-md</code> — карточки, пока уже 768 px. Шапка ужата в пиксель (не <code>display: none</code> — читалке нужна), подпись ячейки — из <code>data-label</code>, без атрибута — без подписи</td></tr>
   <tr><td><code>th[aria-sort]</code></td><td>Указатель направления сортировки у заголовка — рисуется из <code>aria-sort</code>, а не из класса, и потому работает и на таблице, отсортированной сервером</td></tr>
   <tr><td><code>[data-gr-sortable]</code></td><td>Сортировка строк виджетом слоя <a href="griffinjs.html">GriffinJS</a>: атрибут на <code>&lt;table&gt;</code>, <code>aria-sort="none"</code> на сортируемых заголовках, необязательный <code>data-gr-sort-value</code> на ячейке — <a href="ui-tables.html#griffinjs">«Таблицы»</a></td></tr>
 </table>
 
+<p>У <code>.gr-table-wrap</code>, <code>.gr-table-scroll</code> и таблицы прозы — подсказка прокрутки: мягкая радиальная тень у края, за которым ещё есть содержимое; докрутили до конца — тень у этого края гаснет. Цвет и сила — как у теней библиотеки (<code>--gr-shadow-color</code>, <code>--gr-shadow-strength</code>). Где браузер не знает анимации по прокрутке (Firefox), тень у края прячет шторка цвета подложки:</p>
+
+<table>
+  <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
+  <tr><td><code>--gr-scroll-hint-bg</code></td><td><code>--gr-color-bg</code></td><td>шторка подсказки прокрутки в браузерах без анимации по прокрутке; задают на подложке, отличной от цвета страницы, — иначе у края ляжет полоса цвета страницы</td></tr>
+</table>
+
 <h2>Форматированный текст (<code>scss/_prose.scss</code>)</h2>
 
 <table>
   <tr><th>Класс</th><th>Описание</th></tr>
-  <tr><td><code>.gr-prose</code></td><td>Обёртка HTML из редактора: ритм между соседями (<code>--gr-gap</code>; у подзаголовка сверху <code>--gr-gap-lg</code>, снизу <code>--gr-gap-sm</code>), списки и ссылки без класса, цитата с линией акцента, <code>hr</code>, картинки не шире колонки, <code>&lt;table&gt;</code> — вид <code>.gr-table</code>. Правила детей — под <code>:where()</code>: любой класс на ребёнке сильнее. Поля ставит сама, от ресета не зависит; меры строки нет — <code>.gr-max-w-prose</code> из утилит</td></tr>
+  <tr><td><code>.gr-prose</code></td><td>Обёртка HTML из редактора: ритм между соседями (<code>--gr-gap</code>; у подзаголовка сверху <code>--gr-gap-lg</code>, снизу <code>--gr-gap-sm</code>), списки и ссылки без класса, цитата с линией акцента, <code>hr</code>, картинки и фреймы не шире колонки (у фрейма — пропорция из <code>width</code> и <code>height</code>, где браузер читает <code>attr()</code> с типом), <code>&lt;table&gt;</code> — вид <code>.gr-table</code> с переносом заголовков и своей прокруткой, как у <code>.gr-table-scroll</code>; <code>class="gr-table"</code> её отменяет. Сама сжимается вместе с колонкой флекса и сетки (<code>min-inline-size: 0</code>). Правила детей — под <code>:where()</code>: любой класс на ребёнке сильнее. Поля ставит сама, от ресета не зависит; меры строки нет — <code>.gr-max-w-prose</code> из утилит</td></tr>
 </table>
 
 <h2>Сообщения (<code>scss/_alert.scss</code>)</h2>

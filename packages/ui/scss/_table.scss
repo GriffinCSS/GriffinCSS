@@ -10,7 +10,8 @@
 // Таблица внутри .gr-prose оформлена теми же правилами: класс на <table>
 // редактор не поставит. Селекторы прозы — под :where(), с нулевым весом:
 // варианты (.gr-table-compact и другие) на такой таблице по-прежнему
-// сильнее базы.
+// сильнее базы. Отличий от .gr-table два: заголовки переносятся, а широкая
+// таблица прокручивается сама (см. .gr-table-scroll).
 
 @use 'sass:string';
 @use 'griffincss-core/scss/breakpoints' as bp;
@@ -39,6 +40,13 @@
   color: var(--gr-color-text-secondary);
   font-size: 0.875rem;
   font-weight: 600;
+}
+
+// Заголовок в одну строку — только у таблицы библиотеки: перенос ей снимают
+// классом (.gr-whitespace-normal). В прозе снять некому — класс на <th>
+// редактор не поставит, — и таблица из четырёх столбцов с заголовками
+// становилась шире колонки.
+.gr-table th {
   white-space: nowrap;
 }
 
@@ -224,6 +232,94 @@
   max-block-size: 100%;
   overflow: auto;
   overscroll-behavior-x: contain;
+}
+
+// Прокрутка на самой таблице, без обёртки: таблица становится блоком,
+// строки собирает анонимная таблица внутри него. Блок по ширине содержимого,
+// но не шире колонки; шире — прокручивается сам. Цена — узкая таблица
+// не растягивается во всю колонку: анонимная таблица сжимается по
+// содержимому, поэтому класс — для широких таблиц. position: relative —
+// по той же причине, что у обёртки.
+//
+// Таблица прозы ведёт себя так же без класса: автор текста о классах
+// не знает. Таблица библиотеки в прозе (.gr-table) — своя раскладка,
+// во всю ширину и без прокрутки; .gr-table-scroll возвращает прокрутку.
+.gr-table-scroll,
+:where(.gr-prose table:not(.gr-table)) {
+  display: block;
+  position: relative;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+// Подсказка прокрутки. Край колонки обрезает таблицу ровно по столбцу,
+// а полосы прокрутки macOS и телефонов видны только при касании — скрытые
+// столбцы легко не заметить. У края, за которым ещё есть содержимое,
+// лежит мягкая тень: радиальная, растянутая по высоте области и гаснущая
+// к верху и низу. Докрутили до конца — тень у этого края гаснет.
+//
+// Силу теней (--gr-scroll-start / -end, _keyframes.scss) ведёт анимация
+// по прокрутке самой области: шторка цвета подложки не нужна, и подсказка
+// верна на любой подложке — карточке, цветной секции, в тёмной теме.
+// Без переполнения шкала прокрутки неактивна, и теней нет. Цвет и сила —
+// как у теней библиотеки: тёмная тема сильнее, на печати теней нет.
+// Спад не линейный: промежуточная точка собирает тень у самого края,
+// и хвост растворяется — линейный рисовал «линзу» с заметной границей.
+@function gr-scroll-shade($side, $amount) {
+  @return radial-gradient(
+    farthest-side at $side 50%,
+    hsl(var(--gr-shadow-color), calc(#{$amount} * 16% * var(--gr-shadow-strength))),
+    hsl(var(--gr-shadow-color), calc(#{$amount} * 6% * var(--gr-shadow-strength))) 45%,
+    transparent
+  );
+}
+
+$gr-scroll-areas: '.gr-table-wrap, .gr-table-scroll, :where(.gr-prose table:not(.gr-table))';
+
+// Первые два слоя — шторки для Firefox (см. ниже); здесь они прозрачные.
+#{$gr-scroll-areas} {
+  background-image:
+    linear-gradient(to right, var(--gr-scroll-cover, transparent) 30%, transparent),
+    linear-gradient(to left, var(--gr-scroll-cover, transparent) 30%, transparent),
+    gr-scroll-shade(0, var(--gr-scroll-start)),
+    gr-scroll-shade(100%, var(--gr-scroll-end));
+  background-repeat: no-repeat;
+  background-position: 0 50%, 100% 50%;
+  background-size: 2.5rem 100%, 2.5rem 100%, 1rem 100%, 1rem 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+@supports (animation-timeline: scroll()) {
+  #{$gr-scroll-areas} {
+    animation: gr-scroll-start linear both, gr-scroll-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: 0 2rem, calc(100% - 2rem) 100%;
+  }
+
+  // В RTL прокрутка начинается справа: та же пара анимаций, но тень у левого
+  // края гаснет к концу шкалы, а у правого появляется с её начала.
+  .gr-table-wrap:dir(rtl),
+  .gr-table-scroll:dir(rtl),
+  :where(.gr-prose table:not(.gr-table):dir(rtl)) {
+    animation-direction: reverse;
+    animation-range: calc(100% - 2rem) 100%, 0 2rem;
+  }
+}
+
+// Firefox шкалы прокрутки не знает: там тени у краёв стоят на полной силе,
+// а прячет их шторка — первые два слоя фона, которые едут вместе
+// с содержимым (background-attachment: local) и закрывают тень у края,
+// до которого докрутили. Шторка — цвета подложки: --gr-scroll-hint-bg,
+// по умолчанию цвет страницы. На другой подложке его задают, иначе у края
+// в покое ляжет полоса цвета страницы.
+@supports not (animation-timeline: scroll()) {
+  #{$gr-scroll-areas} {
+    --gr-scroll-start: 1;
+    --gr-scroll-end: 1;
+    --gr-scroll-cover: var(--gr-scroll-hint-bg, var(--gr-color-bg));
+  }
 }
 
 // Шапка остаётся видна при прокрутке тела. Работает внутри .gr-table-wrap
