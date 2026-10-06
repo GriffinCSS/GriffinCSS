@@ -25,6 +25,10 @@
   background-color: var(--gr-color-surface);
   color: var(--gr-color-text);
   overflow: hidden;
+
+  // Подложка — и шторке подсказки прокрутки (_table.scss): без шкалы прокрутки
+  // (Firefox) тень у края таблицы прячет шторка этого цвета.
+  --gr-scroll-hint-bg: var(--gr-color-surface);
 }
 
 // Разделы отбиты линией друг от друга, но не от краёв обёртки: первая
@@ -155,4 +159,9 @@
   border-block-start: 0;
   border-radius: 0;
   background-color: transparent;
+
+  // Своего фона нет — шторке подсказки прокрутки нужен цвет того, что под
+  // аккордеоном: токен родителя (карточки, окна), а без него — страницы.
+  // Цвет обёртки .gr-accordion здесь дал бы полосы у краёв таблицы.
+  --gr-scroll-hint-bg: inherit;
 }

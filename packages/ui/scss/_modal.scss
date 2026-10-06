@@ -51,6 +51,10 @@
   color: var(--gr-color-text);
   box-shadow: var(--gr-shadow-xl);
   overflow: hidden;
+
+  // Подложка — и шторке подсказки прокрутки (_table.scss): без шкалы прокрутки
+  // (Firefox) тень у края таблицы прячет шторка этого цвета.
+  --gr-scroll-hint-bg: var(--gr-color-surface-overlay);
 }
 
 // Единственное, что различает открытое и закрытое окно, — показано оно или

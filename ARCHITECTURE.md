@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.29.0
+- **Version:** 0.29.1
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -103,10 +103,13 @@ theme are excluded from the scope for the same class of reason. `check-dist.mjs`
 `[data-gr-style` anywhere in `griffincss-ui-scoped.css` is a failure.
 
 **Linting:** two levels.
-- `stylelint` (`.stylelintrc.json`) over the sources — style, `gr-` prefixes, no `@import`, no `!important`.
+- `stylelint` (`.stylelintrc.json`) over the sources — style, `gr-` prefixes, no `@import`, no `!important`
+  (one line is exempt — see below).
   `selector-class-pattern` is off on purpose: most class names are interpolated.
 - `scripts/check-dist.mjs` over the compiled CSS, where every selector is literal —
-  `gr-` prefix on all classes, no `!important`, only breakpoint-map values inside `@media`,
+  `gr-` prefix on all classes, no `!important` except one declaration (the width of a
+  `.gr-prose` table with an inline `style` — Word and Google Docs put the width there, and an
+  inline style yields to nothing else), only breakpoint-map values inside `@media`,
   range notation only, layer order declared and nothing left outside its layer,
   `--gr-bp-*` tokens matching the map, no class shared between any two packages
   (checked pairwise: `core ↔ ui`, `core ↔ utils`, `ui ↔ utils`),
@@ -205,7 +208,8 @@ The order string is one constant repeated in **nine** places — six entry point
 `packages/core/test/generate.test.js`. They are cross-checked, so a missed copy fails the
 build rather than causing a silent defect.
 
-Consequences: user CSS outside layers always wins without `!important`, and the
+Consequences: user CSS outside layers always wins without `!important` (the one exception
+is the inline-styled `.gr-prose` table width above), and the
 final cascade no longer depends on `<link>` order. The runtime emits the same
 declaration plus `@layer griffincss.core { … }` around its `<style>` content, so
 a page with only the JS loaded lands in the same layer. Compile-time output can
@@ -224,7 +228,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.29.0)
+### JS Runtime Key Features (v0.29.1)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** creates its own `<style id="griffincss-dynamic">` (never looks one up by id — a node from markup with that id is not the runtime's sheet) — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`

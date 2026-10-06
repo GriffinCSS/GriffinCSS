@@ -168,14 +168,15 @@
 
 <table>
   <tr><th>Токен</th><th>По умолчанию</th><th>Читает</th></tr>
-  <tr><td><code>--gr-scroll-hint-bg</code></td><td><code>--gr-color-bg</code></td><td>шторка подсказки прокрутки в браузерах без анимации по прокрутке; задают на подложке, отличной от цвета страницы, — иначе у края ляжет полоса цвета страницы</td></tr>
+  <tr><td><code>--gr-scroll-hint-bg</code></td><td><code>--gr-color-bg</code></td><td>шторка подсказки прокрутки в браузерах без анимации по прокрутке. Контейнеры со своим фоном — <code>.gr-card</code> и её варианты, <code>.gr-accordion</code>, <code>.gr-modal</code>, <code>.gr-drawer</code>, <code>.gr-megamenu-panel</code> — задают его сами (<code>.gr-accordion-flush</code> своего фона не имеет и берёт цвет того, что под ним); на своей подложке сайта его задают тем же цветом, что фон</td></tr>
+  <tr><td><code>--gr-scroll-hint-inset</code></td><td><code>0</code></td><td>отступ подсказки от начала строки — ширина липкого первого столбца: начальная тень встаёт у его края (в RTL — у правого)</td></tr>
 </table>
 
 <h2>Форматированный текст (<code>scss/_prose.scss</code>)</h2>
 
 <table>
   <tr><th>Класс</th><th>Описание</th></tr>
-  <tr><td><code>.gr-prose</code></td><td>Обёртка HTML из редактора: ритм между соседями (<code>--gr-gap</code>; у подзаголовка сверху <code>--gr-gap-lg</code>, снизу <code>--gr-gap-sm</code>), списки и ссылки без класса, цитата с линией акцента, <code>hr</code>, картинки и фреймы не шире колонки (у фрейма — пропорция из <code>width</code> и <code>height</code>, где браузер читает <code>attr()</code> с типом), <code>&lt;table&gt;</code> — вид <code>.gr-table</code> с переносом заголовков и своей прокруткой, как у <code>.gr-table-scroll</code>; <code>class="gr-table"</code> её отменяет. Сама сжимается вместе с колонкой флекса и сетки (<code>min-inline-size: 0</code>). Правила детей — под <code>:where()</code>: любой класс на ребёнке сильнее. Поля ставит сама, от ресета не зависит; меры строки нет — <code>.gr-max-w-prose</code> из утилит</td></tr>
+  <tr><td><code>.gr-prose</code></td><td>Обёртка HTML из редактора: ритм между соседями (<code>--gr-gap</code>; у подзаголовка сверху <code>--gr-gap-lg</code>, снизу <code>--gr-gap-sm</code>), списки и ссылки без класса, цитата с линией акцента, <code>hr</code>, картинки и фреймы не шире колонки (у фрейма — пропорция из <code>width</code> и <code>height</code>, где браузер читает <code>attr()</code> с типом), <code>&lt;table&gt;</code> — вид <code>.gr-table</code> с переносом заголовков и своей прокруткой, как у <code>.gr-table-scroll</code>; <code>class="gr-table"</code> её отменяет. Ширину из <code>style</code> таблицы (вставка из Word и Google Docs) перебивает — единственное <code>!important</code> библиотеки. Сама сжимается вместе с колонкой флекса и сетки (<code>min-inline-size: 0</code>). Правила детей — под <code>:where()</code>: любой класс на ребёнке сильнее. Поля ставит сама, от ресета не зависит; меры строки нет — <code>.gr-max-w-prose</code> из утилит</td></tr>
 </table>
 
 <h2>Сообщения (<code>scss/_alert.scss</code>)</h2>
@@ -502,7 +503,7 @@
 
 <h2>Рантайм компонентов (<code>dist/griffincss-ui.js</code>)</h2>
 
-<p>ES5-совместимый файл без зависимостей, пишется руками и не компилируется. Автостарт по <code>DOMContentLoaded</code>; отключается атрибутом <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code>. Делает четыре вещи, которых платформа не даёт:</p>
+<p>ES5-совместимый файл без зависимостей, пишется руками и не компилируется. Автостарт по <code>DOMContentLoaded</code>; отключается атрибутом <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code>. Делает пять вещей, которых платформа не даёт:</p>
 
 <table>
   <tr><th>Что</th><th>Как</th></tr>
@@ -510,6 +511,7 @@
   <tr><td>Крестик</td><td><code>[data-gr-dismiss]</code> внутри <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>; значение атрибута — селектор цели, если она снаружи. Цель — только <code>.gr-alert</code>, <code>.gr-toast</code> или <code>.gr-tag</code>: другой узел крестик не закрывает, причина — в консоли</td></tr>
   <tr><td>Тосты</td><td><code>Griffincss.ui.toast(text, options)</code></td></tr>
   <tr><td>Клавиатура вкладок</td><td><code>data-gr-tabs</code> на обёртке: роли, <code>aria-selected</code>, стрелки, Home/End, roving tabindex, <code>hidden</code> у неактивных панелей</td></tr>
+  <tr><td>Широкая таблица прозы в порядке Tab</td><td>перед каждым Tab — <code>tabindex="0"</code> таблице в <code>.gr-prose</code>, которая шире колонки и без ссылок и полей внутри; снимает, когда таблица стала помещаться, свой <code>tabindex</code> автора не трогает. Chromium и Firefox ставят такую область в порядок обхода сами, Safari — нет</td></tr>
 </table>
 
 <table>

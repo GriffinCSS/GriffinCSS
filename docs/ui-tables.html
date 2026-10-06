@@ -165,13 +165,18 @@
   <p>
     Тень ведёт анимация по прокрутке, и подложка под таблицей может быть
     любой. Firefox такой анимации не знает: там тень у края, до которого
-    докрутили, закрывает шторка цвета страницы. На карточке или цветной
-    секции задайте цвет подложки — <code>--gr-scroll-hint-bg</code>, иначе
-    у края ляжет полоса цвета страницы.
+    докрутили, закрывает шторка цвета подложки — <code>--gr-scroll-hint-bg</code>.
+    Контейнеры библиотеки со своим фоном — карточка, аккордеон, окно,
+    выдвижная панель, панель мегаменю — задают его сами. На своей подложке
+    сайта задайте его тем же цветом, что фон, иначе у края ляжет полоса
+    цвета страницы.
   </p>
 </div>
 
-<pre><code>.gr-card { --gr-scroll-hint-bg: var(--gr-card-bg, var(--gr-color-surface)); }</code></pre>
+<pre><code>.order-panel {
+  background-color: var(--gr-color-surface-sunken);
+  --gr-scroll-hint-bg: var(--gr-color-surface-sunken);
+}</code></pre>
 
 <div class="callout callout-warning">
   <p>
@@ -253,6 +258,84 @@
     прокручивается так и без класса: автор текста из редактора о классах
     не знает. <code>class="gr-table"</code> возвращает ей раскладку таблицы
     библиотеки — во всю ширину, без своей прокрутки.
+  </p>
+  <p>
+    С клавиатуры: Chromium и Firefox ставят прокручиваемую таблицу в порядок
+    Tab сами, Safari — только с <code>tabindex="0"</code>. Таблице
+    в форматированном тексте его ставит <a href="reference-ui.html">рантайм
+    компонентов</a> — перед каждым Tab, пока таблица шире колонки и внутри
+    неё нет ссылок и полей.
+  </p>
+</div>
+
+<h3>Таблица с липким первым столбцом</h3>
+
+<p>
+  В таблице сравнения первый столбец — названия характеристик — остаётся
+  на месте, а модели уезжают. Тень «в начале ещё есть столбцы» тогда
+  нужна у края липкого столбца, а не у края области: там её закрывает
+  сам столбец, а в строке без липкой ячейки — заголовке группы на всю
+  ширину — она проступала бы пятном. Отступ подсказки от начала строки —
+  токен <code>--gr-scroll-hint-inset</code>, ширина липкого столбца.
+  Он же держит ширину столбца: у таблицы, которая не помещается, ширина
+  у <code>&lt;col&gt;</code> или у ячейки — лишь пожелание, и столбец ужимается;
+  держит её <code>min-inline-size</code> на липкой ячейке шапки.
+</p>
+
+<pre><code>&lt;div class="gr-table-wrap" tabindex="0" role="region" aria-label="Сравнение телевизоров" style="--gr-scroll-hint-inset: 9rem; --gr-scroll-hint-bg: var(--gr-color-surface)"&gt;
+  &lt;table class="gr-table"&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th class="gr-sticky gr-start-0 gr-bg-surface" style="min-inline-size: var(--gr-scroll-hint-inset)"&gt;Модель&lt;/th&gt;
+        &lt;th&gt;Samsung QE55Q60C&lt;/th&gt;&lt;th&gt;LG OLED55C3&lt;/th&gt;&lt;th&gt;Sony KD-55X85L&lt;/th&gt;&lt;th&gt;Xiaomi TV A Pro 55&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;&lt;th colspan="5"&gt;&lt;span class="gr-sticky gr-inline-block" style="inset-inline-start: calc(var(--gr-gap) * 0.75)"&gt;Экран&lt;/span&gt;&lt;/th&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;th scope="row" class="gr-sticky gr-start-0 gr-bg-surface"&gt;Диагональ&lt;/th&gt;&lt;td&gt;55″&lt;/td&gt;&lt;td&gt;55″&lt;/td&gt;&lt;td&gt;55″&lt;/td&gt;&lt;td&gt;55″&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;th scope="row" class="gr-sticky gr-start-0 gr-bg-surface"&gt;Частота&lt;/th&gt;&lt;td&gt;60 Гц&lt;/td&gt;&lt;td&gt;120 Гц&lt;/td&gt;&lt;td&gt;100 Гц&lt;/td&gt;&lt;td&gt;60 Гц&lt;/td&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;th colspan="5"&gt;&lt;span class="gr-sticky gr-inline-block" style="inset-inline-start: calc(var(--gr-gap) * 0.75)"&gt;Звук&lt;/span&gt;&lt;/th&gt;&lt;/tr&gt;
+      &lt;tr&gt;&lt;th scope="row" class="gr-sticky gr-start-0 gr-bg-surface"&gt;Динамики&lt;/th&gt;&lt;td&gt;20 Вт&lt;/td&gt;&lt;td&gt;40 Вт&lt;/td&gt;&lt;td&gt;20 Вт&lt;/td&gt;&lt;td&gt;30 Вт&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+<div class="demo-block">
+  <div class="demo-block-title">Сравнение: первый столбец на месте, тень — у его края</div>
+  <div class="gr-table-wrap" tabindex="0" role="region" aria-label="Сравнение телевизоров" style="--gr-scroll-hint-inset: 9rem; --gr-scroll-hint-bg: var(--gr-color-surface)">
+    <table class="gr-table">
+      <thead>
+        <tr>
+          <th class="gr-sticky gr-start-0 gr-bg-surface" style="min-inline-size: var(--gr-scroll-hint-inset)">Модель</th>
+          <th>Samsung QE55Q60C</th><th>LG OLED55C3</th><th>Sony KD-55X85L</th><th>Xiaomi TV A Pro 55</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th colspan="5"><span class="gr-sticky gr-inline-block" style="inset-inline-start: calc(var(--gr-gap) * 0.75)">Экран</span></th></tr>
+        <tr><th scope="row" class="gr-sticky gr-start-0 gr-bg-surface">Диагональ</th><td>55″</td><td>55″</td><td>55″</td><td>55″</td></tr>
+        <tr><th scope="row" class="gr-sticky gr-start-0 gr-bg-surface">Частота</th><td>60 Гц</td><td>120 Гц</td><td>100 Гц</td><td>60 Гц</td></tr>
+        <tr><th colspan="5"><span class="gr-sticky gr-inline-block" style="inset-inline-start: calc(var(--gr-gap) * 0.75)">Звук</span></th></tr>
+        <tr><th scope="row" class="gr-sticky gr-start-0 gr-bg-surface">Динамики</th><td>20 Вт</td><td>40 Вт</td><td>20 Вт</td><td>30 Вт</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="callout">
+  <p>
+    Фон липких ячеек — цвет подложки под таблицей, иначе сквозь них
+    просвечивают уезжающие столбцы; тот же цвет — шторке подсказки
+    (<code>--gr-scroll-hint-bg</code>). Пример стоит на подложке
+    <code>--gr-color-surface</code>, отсюда <code>.gr-bg-surface</code> и токен
+    шторки. На странице — <code>.gr-bg-page</code>, и токен не нужен;
+    в карточке библиотеки шторку задаёт она сама. В RTL столбец и тень —
+    у правого края.
+  </p>
+  <p>
+    Подпись группы — ячейка на всю ширину строки — уезжала бы с прокруткой,
+    и строка группы в конце оставалась пустой. Её держит липкий
+    <code>&lt;span&gt;</code> с отступом <code>calc(var(--gr-gap) * 0.75)</code> —
+    тем же, что у ячеек таблицы, поэтому подпись стоит ровно над текстом
+    липкого столбца на любой ширине окна.
   </p>
 </div>
 

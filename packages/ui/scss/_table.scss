@@ -254,6 +254,18 @@
   overscroll-behavior-x: contain;
 }
 
+// Word и Google Docs кладут ширину таблицы в style — 100 %, пиксели,
+// пункты. Блок растягивался по ней, а строки — анонимная таблица внутри —
+// вставали по содержимому: рамка и фон уходили далеко за ячейки. Встроенный
+// стиль сильнее любого правила без !important, поэтому здесь — единственное
+// !important библиотеки, и только у таблицы прозы со встроенной шириной:
+// у остальных таблиц ширину по-прежнему перебивает любой CSS сайта.
+// Тема из подслоя ниже ui снимает его своим !important.
+:where(.gr-prose table:not(.gr-table)[style*="width" i]) {
+  // stylelint-disable-next-line declaration-no-important
+  inline-size: max-content !important;
+}
+
 // Подсказка прокрутки. Край колонки обрезает таблицу ровно по столбцу,
 // а полосы прокрутки macOS и телефонов видны только при касании — скрытые
 // столбцы легко не заметить. У края, за которым ещё есть содержимое,
@@ -279,6 +291,11 @@
 $gr-scroll-areas: '.gr-table-wrap, .gr-table-scroll, :where(.gr-prose table:not(.gr-table))';
 
 // Первые два слоя — шторки для Firefox (см. ниже); здесь они прозрачные.
+//
+// --gr-scroll-hint-inset — отступ подсказки от начала строки: у таблицы
+// с липким первым столбцом тень «в начале ещё есть столбцы» лежит у его
+// края, а не у края области, где её закрывает или (в строке без липкой
+// ячейки) пятнает сам столбец. Сдвигаются начальная тень и шторка.
 #{$gr-scroll-areas} {
   background-image:
     linear-gradient(to right, var(--gr-scroll-cover, transparent) 30%, transparent),
@@ -286,7 +303,7 @@ $gr-scroll-areas: '.gr-table-wrap, .gr-table-scroll, :where(.gr-prose table:not(
     gr-scroll-shade(0, var(--gr-scroll-start)),
     gr-scroll-shade(100%, var(--gr-scroll-end));
   background-repeat: no-repeat;
-  background-position: 0 50%, 100% 50%;
+  background-position: var(--gr-scroll-hint-inset, 0) 50%, 100% 50%;
   background-size: 2.5rem 100%, 2.5rem 100%, 1rem 100%, 1rem 100%;
   background-attachment: local, local, scroll, scroll;
 }
@@ -297,15 +314,18 @@ $gr-scroll-areas: '.gr-table-wrap, .gr-table-scroll, :where(.gr-prose table:not(
     animation-timeline: scroll(self inline);
     animation-range: 0 2rem, calc(100% - 2rem) 100%;
   }
+}
 
-  // В RTL прокрутка начинается справа: та же пара анимаций, но тень у левого
-  // края гаснет к концу шкалы, а у правого появляется с её начала.
-  .gr-table-wrap:dir(rtl),
-  .gr-table-scroll:dir(rtl),
-  :where(.gr-prose table:not(.gr-table):dir(rtl)) {
-    animation-direction: reverse;
-    animation-range: calc(100% - 2rem) 100%, 0 2rem;
-  }
+// В RTL строка начинается справа: отступ — у правого края, а та же пара
+// анимаций идёт в обратную сторону — тень у левого края гаснет к концу
+// шкалы, у правого появляется с её начала. Вне @supports: отступ нужен
+// и шторке Firefox, а animation-* там без анимации ничего не делают.
+.gr-table-wrap:dir(rtl),
+.gr-table-scroll:dir(rtl),
+:where(.gr-prose table:not(.gr-table):dir(rtl)) {
+  background-position: 0 50%, right var(--gr-scroll-hint-inset, 0) center;
+  animation-direction: reverse;
+  animation-range: calc(100% - 2rem) 100%, 0 2rem;
 }
 
 // Firefox шкалы прокрутки не знает: там тени у краёв стоят на полной силе,

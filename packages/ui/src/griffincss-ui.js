@@ -1,10 +1,10 @@
 /*!
- * Griffincss UI — Runtime v0.29.0
+ * Griffincss UI — Runtime v0.29.1
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
  *
- * Здесь четыре вещи:
+ * Здесь пять вещей:
  *
  *   1. Закрытие модального окна и выдвижной панели щелчком по подложке.
  *      <dialog> закрывается по Esc сам, но щелчок мимо окна ему безразличен,
@@ -26,6 +26,12 @@
  *   4. Клавиатура вкладок — стрелки, Home/End, roving tabindex и aria-*
  *      для разметки с [data-gr-tabs]. Без скрипта та же разметка остаётся
  *      списком ссылок-якорей и секциями подряд.
+ *
+ *   5. Широкая таблица в .gr-prose — в порядке Tab. Она прокручивается
+ *      сама, и Chromium с Firefox ставят такую область в порядок Tab сами,
+ *      а Safari — нет; tabindex в тексте из редактора поставить некому.
+ *      Перед каждым Tab рантайм ставит его сам — и снимает, когда таблица
+ *      стала помещаться.
  *
  * Всё, что умеют <details>, <dialog> и Popover API, остаётся за ними.
  */
@@ -50,7 +56,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.29.0';
+  var VERSION = '0.29.1';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -73,11 +79,20 @@
 
   var TABS_ATTR = 'data-gr-tabs';
 
+  // Таблица прозы со своей прокруткой (_table.scss) и то, что делает
+  // таблицу доступной с клавиатуры и без tabindex: Tab по ссылке или полю
+  // внутри и так докручивает таблицу до них.
+  var PROSE_TABLES = '.gr-prose table:not(.gr-table)';
+  var FOCUSABLE = 'a[href],button,input,select,textarea,summary,iframe,[tabindex],[contenteditable]';
+
   // Причина закрытия попадает в dialog.returnValue: обработчик close
   // на странице отличит щелчок мимо от кнопки «Сохранить».
   var OVERLAY_REASON = 'overlay';
 
   var started = false;
+
+  // Таблицы, которым tabindex поставил рантайм: снимается только свой.
+  var focusTables = [];
 
   // Цель нажатия. Щелчок — это пара «нажал» и «отпустил», и закрывать окно
   // нужно, только если обе половины пришлись на подложку: выделение текста,
@@ -611,6 +626,38 @@
     return Array.prototype.indexOf.call(list, node);
   }
 
+  // --- Широкая таблица прозы в порядке Tab ------------------------------------
+
+  // Перед каждым Tab, в перехвате: порядок обхода браузер считает после
+  // обработчиков, и отметка, поставленная здесь, уже в нём. Так не нужны
+  // ни наблюдатели, ни замеры вне нажатия. Ширина — по прокрутке самой
+  // таблицы: шире колонки — значит, прокручивается.
+  function onTabPress(event) {
+    if (event.key !== 'Tab') return;
+
+    focusTables = focusTables.filter(function (table) { return table.isConnected; });
+
+    var tables = document.querySelectorAll(PROSE_TABLES);
+
+    for (var i = 0; i < tables.length; i++) {
+      var table = tables[i];
+      var marked = focusTables.indexOf(table) !== -1;
+      var wide = table.scrollWidth > table.clientWidth;
+
+      if (wide && !marked && !table.hasAttribute('tabindex') && !table.querySelector(FOCUSABLE)) {
+        table.setAttribute('tabindex', '0');
+        focusTables.push(table);
+      } else if (!wide && marked) {
+        unmarkTable(table);
+      }
+    }
+  }
+
+  function unmarkTable(table) {
+    table.removeAttribute('tabindex');
+    focusTables.splice(focusTables.indexOf(table), 1);
+  }
+
   // Один делегированный обработчик на документ, а не по слушателю на окно:
   // окна появляются и исчезают вместе с разметкой, и переподписываться
   // на каждое пришлось бы вручную.
@@ -630,13 +677,17 @@
     pressed = null;
     listen('removeEventListener');
 
+    while (focusTables.length) unmarkTable(focusTables[0]);
+
     return publicApi;
   }
 
   // Подписка и отписка — один список: диспетчер на каждый тип события
-  // из реестра плюс перехват нажатия для щелчка по подложке.
+  // из реестра плюс перехват нажатия для щелчка по подложке и Tab
+  // для широких таблиц прозы.
   function listen(method) {
     document[method]('pointerdown', onPointerDown, true);
+    document[method]('keydown', onTabPress, true);
 
     for (var type in registry) {
       if (Object.prototype.hasOwnProperty.call(registry, type)) {

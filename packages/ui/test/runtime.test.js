@@ -115,13 +115,16 @@ test('destroy() снимает обработчики, start() ставит их
 
   assert.equal(doc.count('click', false), 1);
   assert.equal(doc.count('pointerdown', true), 1);
+  assert.equal(doc.count('keydown', true), 1, 'нет перехвата Tab для широких таблиц прозы');
 
   ui.start();
   assert.equal(doc.count('click', false), 1, 'повторный start() удвоил подписку');
+  assert.equal(doc.count('keydown', true), 1, 'повторный start() удвоил перехват Tab');
 
   ui.destroy();
   assert.equal(doc.count('click', false), 0);
   assert.equal(doc.count('pointerdown', true), 0);
+  assert.equal(doc.count('keydown', true), 0);
 
   const dialog = modal({ 'data-gr-overlay-close': '' });
   dialog.showModal();

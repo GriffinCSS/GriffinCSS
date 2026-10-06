@@ -32,6 +32,10 @@
   background-color: var(--gr-card-bg, var(--gr-color-surface));
   color: var(--gr-color-text);
   overflow: var(--gr-card-overflow, hidden);
+
+  // Подложка — и шторке подсказки прокрутки (_table.scss): без шкалы прокрутки
+  // (Firefox) тень у края таблицы прячет шторка этого цвета.
+  --gr-scroll-hint-bg: var(--gr-card-bg, var(--gr-color-surface));
 }
 
 // Тело забирает остаток высоты, поэтому подвал остаётся внизу
@@ -75,6 +79,9 @@
   border-color: transparent;
   background-color: var(--gr-color-surface-raised);
   box-shadow: var(--gr-shadow-md);
+
+  // Шторке подсказки прокрутки — свой фон (см. .gr-card).
+  --gr-scroll-hint-bg: var(--gr-color-surface-raised);
 }
 
 // Плоская: только фон, ни границы, ни тени.
@@ -82,6 +89,9 @@
   border-color: transparent;
   background-color: var(--gr-color-surface);
   box-shadow: none;
+
+  // Шторке подсказки прокрутки — свой фон (см. .gr-card).
+  --gr-scroll-hint-bg: var(--gr-color-surface);
 }
 
 // На сером: панель витрины — buybox, сводка заказа, шаги оформления —
@@ -92,6 +102,9 @@
 // в которой токенов не ставят.
 .gr-card-overlay {
   background-color: var(--gr-color-surface-overlay);
+
+  // Шторке подсказки прокрутки — свой фон (см. .gr-card).
+  --gr-scroll-hint-bg: var(--gr-color-surface-overlay);
 }
 
 // --- Кликабельная карточка --------------------------------------------------

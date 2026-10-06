@@ -382,6 +382,70 @@ test('подсказка прокрутки: анимация — только �
   }
 });
 
+test('контейнер со своим фоном передаёт его шторке подсказки прокрутки', () => {
+  // Без шкалы прокрутки (Firefox) тень у края прячет шторка цвета
+  // --gr-scroll-hint-bg. Контейнер с произвольным содержимым и своим фоном
+  // задаёт токен этим фоном. .gr-alert — нет: подложка у него полупрозрачная
+  // поверх фона, одним цветом без color-mix её не выразить; сообщение
+  // со своей подложкой настраивает приложение.
+  const containers = {
+    '.gr-card': 'var(--gr-card-bg, var(--gr-color-surface))',
+    '.gr-card-raised': 'var(--gr-color-surface-raised)',
+    '.gr-card-flat': 'var(--gr-color-surface)',
+    '.gr-card-overlay': 'var(--gr-color-surface-overlay)',
+    '.gr-accordion': 'var(--gr-color-surface)',
+    '.gr-modal': 'var(--gr-color-surface-overlay)',
+    '.gr-drawer': 'var(--gr-color-surface-overlay)',
+  };
+
+  for (const [selector, value] of Object.entries(containers)) {
+    const body = ruleBody(ui, selector) || '';
+
+    assert.ok(body.replace(/\s/g, '').includes(`--gr-scroll-hint-bg:${value.replace(/\s/g, '')}`), `${selector}: шторка не знает подложки`);
+  }
+
+  assert.ok(
+    (ruleBody(griffinjs, '.gr-megamenu-panel') || '').replace(/\s/g, '').includes('--gr-scroll-hint-bg:var(--gr-color-surface-overlay)'),
+    '.gr-megamenu-panel: шторка не знает подложки',
+  );
+
+  // Вариант без своего фона возвращает шторке подложку родителя: иначе
+  // она осталась бы цвета обёртки, которой не видно, — полосы у краёв
+  // таблицы в аккордеоне без рамки на странице или в карточке.
+  assert.ok(
+    (ruleBody(ui, '.gr-accordion-flush') || '').replace(/\s/g, '').includes('--gr-scroll-hint-bg:inherit'),
+    '.gr-accordion-flush: шторка цвета обёртки без фона',
+  );
+});
+
+test('начальная тень и шторка отступают от начала на --gr-scroll-hint-inset', () => {
+  // Липкий первый столбец: тень «слева ещё есть столбцы» — у его края,
+  // а не у края области, под столбцом.
+  const body = ruleBody(ui, '.gr-table-wrap,.gr-table-scroll,:where(.gr-prose table:not(.gr-table))') || '';
+
+  assert.ok(/background-position:var\(--gr-scroll-hint-inset, ?0\) 50%,100% 50%/.test(body), 'отступа у начальной тени нет');
+});
+
+test('единственный !important — ширина таблицы прозы со встроенным style', () => {
+  // Ширину, которую вставляют Word и Google Docs в style, иначе не перебить:
+  // встроенный стиль сильнее любого правила без !important. Больше
+  // исключений нет — обещание «CSS сайта вне слоёв выигрывает» в силе.
+  const dist = ['packages/core/dist', 'packages/ui/dist', 'packages/utils/dist']
+    // Только файлы сборки: соседние тесты кладут в dist временные листы
+    // (purge-preset-output.css) и тут же их удаляют.
+    .flatMap((dir) => fs.readdirSync(path.join(ROOT, dir)).filter((f) => /^griffin(css|js)[\w-]*\.css$/.test(f)).map((f) => path.join(dir, f)));
+  const found = dist.flatMap((file) => {
+    const css = fs.readFileSync(path.join(ROOT, file), 'utf8');
+
+    return [...css.matchAll(/([^{}]*)\{([^{}]*!important[^{}]*)\}/g)].map((m) => `${file}: ${m[1].trim()}{${m[2]}}`);
+  });
+
+  const allowed = /:where\(\.gr-prose table:not\(\.gr-table\)\[style\*=width i\]\)\{inline-size:max-content !important\}$/;
+
+  assert.deepEqual(found.filter((line) => !allowed.test(line)), [], 'лишний !important');
+  assert.equal(found.filter((line) => line.includes('griffincss-ui.css')).length, 1, 'нет !important у ширины таблицы прозы');
+});
+
 test('высоту фрейма прозы снимает только пропорция из атрибутов', () => {
   // Без attr() одно block-size: auto сплющило бы фрейм до 150 px высоты
   // по умолчанию: своей пропорции у фрейма нет.

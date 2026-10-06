@@ -95,6 +95,10 @@ $gr-megamenu-expand: map.get(bp.$gr-breakpoints, md);
   border-block-end: var(--gr-border-width) solid var(--gr-color-border);
   background-color: var(--gr-color-surface-overlay);
   color: var(--gr-color-text);
+
+  // Подложка — и шторке подсказки прокрутки (_table.scss): без шкалы прокрутки
+  // (Firefox) тень у края таблицы прячет шторка этого цвета.
+  --gr-scroll-hint-bg: var(--gr-color-surface-overlay);
 }
 
 // Ajax-панель, пока грузится: место под содержимое, чтобы полоса

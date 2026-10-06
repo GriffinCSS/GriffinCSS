@@ -182,7 +182,7 @@ for (const reset of [true, false]) {
 
 const LAYOUT = '/prose-layout.html';
 
-const layoutPage = (html) => `<!doctype html>
+const layoutPage = (html, head = '') => `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><title>Проза: ширина</title>
 <meta name="viewport" content="width=device-width">
 <link rel="stylesheet" href="/packages/core/dist/griffincss-reset.css">
@@ -194,15 +194,15 @@ const layoutPage = (html) => `<!doctype html>
   .row { display: flex; gap: 12px; }
   .grid { display: grid; grid-template-columns: 1fr 100px; gap: 12px; }
   aside { flex: 0 0 100px; }
-</style>
+</style>${head}
 </head><body>${html}</body></html>`;
 
-async function openLayout(pw, html, width = 390) {
+async function openLayout(pw, html, width = 390, head = '') {
   await pw.setViewportSize({ width, height: 800 });
   await pw.route(`**${LAYOUT}`, (route) => route.fulfill({
     status: 200,
     headers: { 'content-type': 'text/html; charset=utf-8' },
-    body: layoutPage(html),
+    body: layoutPage(html, head),
   }));
   await pw.goto(LAYOUT);
 }
@@ -390,4 +390,92 @@ test('.gr-max-w-prose — мера строки 65ch', async ({ page: pw }) => {
   }));
 
   expect(Math.abs(px(m.max) - m.ch)).toBeLessThanOrEqual(0.5);
+});
+
+// --- Встроенная ширина из офисных редакторов --------------------------------
+//
+// Word и Google Docs вставляют таблицу с style="width:100%" (или в пикселях
+// и пунктах). Блок с прокруткой растягивался по ней, а ячейки — анонимная
+// таблица внутри — вставали по содержимому: рамка шире строк.
+
+const OFFICE = (width) => `<article id="t" class="gr-prose"><table id="tb" style="width:${width};border:1px solid #888;border-collapse:collapse"><tbody>${row(['Вес', '1,2 кг'], 'td')}${row(['Цвет', 'чёрный'], 'td')}</tbody></table></article>`;
+
+for (const width of ['100%', '600px', '451.3pt']) {
+  test(`таблица прозы со встроенной шириной ${width} — блок по строкам, а не шире`, async ({ page: pw }) => {
+    await openLayout(pw, OFFICE(width), 1440);
+    const m = await pw.evaluate(measure);
+
+    // Разница — только рамка блока.
+    expect(m.table - m.rows).toBeLessThanOrEqual(2);
+    expect(m.tableScrolls).toBe(false);
+  });
+}
+
+test('широкая таблица прозы со встроенной шириной по-прежнему прокручивается внутри колонки', async ({ page: pw }) => {
+  await openLayout(pw, `<article id="t" class="gr-prose">${T9(' style="width:100%"')}</article>`);
+  const m = await pw.evaluate(measure);
+
+  expect(m.table).toBe(m.article);
+  expect(m.tableScrolls).toBe(true);
+  expect(m.over).toBe(0);
+});
+
+// --- Клавиатура: широкая таблица прозы в порядке Tab -------------------------
+//
+// Chromium и Firefox ставят прокручиваемую область без своих фокусируемых
+// потомков в порядок Tab сами, WebKit — нет, а tabindex в тексте из
+// редактора поставить некому: его ставит рантайм компонентов перед Tab.
+// Прокрутку стрелками безголовый WebKit не воспроизводит — проверяется фокус.
+
+const RUNTIME = '<script src="/packages/ui/dist/griffincss-ui.js"></script>';
+
+async function tabFrom(pw, id, shift = false) {
+  await pw.focus(`#${id}`);
+  await pw.keyboard.press(shift ? 'Shift+Tab' : 'Tab');
+
+  return pw.evaluate(() => document.activeElement.id || document.activeElement.tagName.toLowerCase());
+}
+
+test('Tab с поля перед широкой таблицей прозы приводит на таблицу', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+
+  expect(await tabFrom(pw, 'before')).toBe('tb');
+  expect(await tabFrom(pw, 'after', true)).toBe('tb');
+});
+
+test('узкой таблице и таблице со ссылкой tabindex не ставится, чужой не трогается', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before">
+    <article class="gr-prose" id="t">${T2(' id="narrow"').replace('id="tb" ', '')}
+      <table id="linked"><tbody><tr><td><a id="link" href="#x">Samsung QE55Q60C</a></td><td>55 дюймов</td><td>3840×2160</td><td>60 Гц</td><td>QLED</td><td>400 кд/м²</td><td>HDR10+</td><td>20 Вт</td><td>16,9 кг</td><td>24 месяца</td></tr></tbody></table>
+      ${T9(' tabindex="-1"').replace('id="tb"', 'id="own"')}
+    </article><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+
+  const m = await pw.evaluate(() => ({
+    narrow: document.getElementById('narrow').getAttribute('tabindex'),
+    linked: document.getElementById('linked').getAttribute('tabindex'),
+    own: document.getElementById('own').getAttribute('tabindex'),
+  }));
+
+  expect(m.narrow).toBe(null);
+  expect(m.linked).toBe(null);
+  expect(m.own).toBe('-1');
+});
+
+test('таблица, ставшая помещаться, теряет поставленный tabindex; destroy() снимает свои', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe('0');
+
+  // Окно шире — таблица помещается: на следующем Tab отметка снимается.
+  await pw.setViewportSize({ width: 1440, height: 800 });
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe(null);
+
+  await pw.setViewportSize({ width: 390, height: 800 });
+  await tabFrom(pw, 'before');
+  await pw.evaluate(() => window.Griffincss.ui.destroy());
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe(null);
 });
