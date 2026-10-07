@@ -416,6 +416,14 @@ test('контейнер со своим фоном передаёт его шт
     (ruleBody(ui, '.gr-accordion-flush') || '').replace(/\s/g, '').includes('--gr-scroll-hint-bg:inherit'),
     '.gr-accordion-flush: шторка цвета обёртки без фона',
   );
+
+  // Подложка сообщения — фон страницы под вуалью: точный цвет — только
+  // color-mix() (рецепт сайта), библиотека даёт нижний слой. Без него
+  // сообщение в .gr-bg-* наследовало бы цвет секции.
+  assert.ok(
+    (ruleBody(ui, '.gr-alert') || '').replace(/\s/g, '').includes('--gr-scroll-hint-bg:var(--gr-color-bg)'),
+    '.gr-alert: шторка наследует цвет секции',
+  );
 });
 
 test('начальная тень и шторка отступают от начала на --gr-scroll-hint-inset', () => {

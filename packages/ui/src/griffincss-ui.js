@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.29.1
+ * Griffincss UI — Runtime v0.29.2
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -27,11 +27,14 @@
  *      для разметки с [data-gr-tabs]. Без скрипта та же разметка остаётся
  *      списком ссылок-якорей и секциями подряд.
  *
- *   5. Широкая таблица в .gr-prose — в порядке Tab. Она прокручивается
- *      сама, и Chromium с Firefox ставят такую область в порядок Tab сами,
- *      а Safari — нет; tabindex в тексте из редактора поставить некому.
- *      Перед каждым Tab рантайм ставит его сам — и снимает, когда таблица
- *      стала помещаться.
+ *   5. Таблица в .gr-prose. Она прокручивается сама и потому — блок:
+ *      Firefox считает такую таблицу без заголовков таблицей раскладки,
+ *      и рантайм ставит ей role="table". Широкую он ставит в порядок Tab:
+ *      Chromium с Firefox делают это сами, Safari — нет, а tabindex в тексте
+ *      из редактора поставить некому; стала помещаться — снимает. Таблицы
+ *      в поверхности редактора (contenteditable) не трогает. Разметке,
+ *      вставленной позже, роль ставит повторный start(), фрагменту
+ *      GriffinJS — событие griffin:load.
  *
  * Всё, что умеют <details>, <dialog> и Popover API, остаётся за ними.
  */
@@ -56,7 +59,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.29.1';
+  var VERSION = '0.29.2';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -79,11 +82,18 @@
 
   var TABS_ATTR = 'data-gr-tabs';
 
-  // Таблица прозы со своей прокруткой (_table.scss) и то, что делает
-  // таблицу доступной с клавиатуры и без tabindex: Tab по ссылке или полю
-  // внутри и так докручивает таблицу до них.
+  // Таблица прозы со своей прокруткой (_table.scss) и то, на чём внутри
+  // неё может остановиться Tab: он и так докручивает таблицу до своей
+  // остановки. Кандидаты отсеивает stopsTab(): tabindex="-1", отключённое
+  // и скрытое разметкой — не остановки. Ссылки и кнопки Safari обычным Tab
+  // пропускает, до них доходит Option+Tab.
   var PROSE_TABLES = '.gr-prose table:not(.gr-table)';
-  var FOCUSABLE = 'a[href],button,input,select,textarea,summary,iframe,[tabindex],[contenteditable]';
+  var FOCUSABLE = 'a[href],button,input:not([type=hidden]),select,textarea,summary,iframe,' +
+    '[tabindex],[contenteditable]:not([contenteditable=false])';
+
+  // Скрыто разметкой: hidden (и until-found), inert, закрытый details вне
+  // своего summary. Проверка по дереву — раскладку не трогает.
+  var UNSHOWN = '[hidden],[inert],details:not([open])>:not(summary)';
 
   // Причина закрытия попадает в dialog.returnValue: обработчик close
   // на странице отличит щелчок мимо от кнопки «Сохранить».
@@ -91,8 +101,11 @@
 
   var started = false;
 
-  // Таблицы, которым tabindex поставил рантайм: снимается только свой.
-  var focusTables = [];
+  // Таблицы, которым рантайм поставил tabindex и роль: снимается только
+  // своё. Слабые наборы — таблицу, убранную из документа на время
+  // перерисовки, рантайм не держит и, вернувшуюся, не забывает.
+  var tabTables = new WeakSet();
+  var roleTables = new WeakSet();
 
   // Цель нажатия. Щелчок — это пара «нажал» и «отпустил», и закрывать окно
   // нужно, только если обе половины пришлись на подложку: выделение текста,
@@ -626,46 +639,189 @@
     return Array.prototype.indexOf.call(list, node);
   }
 
-  // --- Широкая таблица прозы в порядке Tab ------------------------------------
+  // --- Таблица прозы: роль и порядок Tab ---------------------------------------
 
-  // Перед каждым Tab, в перехвате: порядок обхода браузер считает после
-  // обработчиков, и отметка, поставленная здесь, уже в нём. Так не нужны
-  // ни наблюдатели, ни замеры вне нажатия. Ширина — по прокрутке самой
-  // таблицы: шире колонки — значит, прокручивается.
-  function onTabPress(event) {
-    if (event.key !== 'Tab') return;
+  // Firefox решает, таблица это данных или раскладки, по числу столбцов
+  // у её рамки, а у таблицы со своей прокруткой рамка — блок без столбцов:
+  // без признаков данных она для читалки — раскладка, без «таблица, N строк»
+  // и перехода по ячейкам. Явная роль возвращает данные. В Chromium
+  // и WebKit своя прокрутка роли не отнимает, и роль там лишь подтверждает
+  // таблицу — а WebKit и сам гадает о раскладке: таблицу, где второй
+  // столбец даёт один rowspan, роль делает таблицей и для него. Как
+  // в Firefox у таблицы без своей прокрутки:
+  // от двух строк и двух столбцов по карте таблицы (colspan и rowspan),
+  // без своих признаков данных (th, thead, tfoot, col; у вложенной таблицы —
+  // её признаки). Пустой role — не роль. Таблица, ставшая редактируемой,
+  // теряет свои роль и tabindex: иначе они уйдут в HTML, который сохранит
+  // редактор.
+  function markRole(table) {
+    if (table.isContentEditable) {
+      unmark(table, tabTables, 'tabindex', '0');
+      return unmark(table, roleTables, 'role', 'table');
+    }
+    if (table.getAttribute('role') || table.tHead || table.tFoot || table.querySelector(':scope>col,:scope>colgroup')) return;
 
-    focusTables = focusTables.filter(function (table) { return table.isConnected; });
+    var rows = table.rows;
+    var spans = []; // ячейки с rowspan сверху: [colSpan, строк осталось]
+    var columns = false;
 
-    var tables = document.querySelectorAll(PROSE_TABLES);
+    for (var i = 0; i < rows.length; i++) {
+      var cols = 0;
 
-    for (var i = 0; i < tables.length; i++) {
-      var table = tables[i];
-      var marked = focusTables.indexOf(table) !== -1;
-      var wide = table.scrollWidth > table.clientWidth;
-
-      if (wide && !marked && !table.hasAttribute('tabindex') && !table.querySelector(FOCUSABLE)) {
-        table.setAttribute('tabindex', '0');
-        focusTables.push(table);
-      } else if (!wide && marked) {
-        unmarkTable(table);
+      for (var k = spans.length; k--;) {
+        cols += spans[k][0];
+        if (!--spans[k][1]) spans.splice(k, 1);
       }
+
+      for (var j = 0, cell; (cell = rows[i].cells[j]); j++) {
+        if (cell.tagName === 'TH') return;
+        cols += cell.colSpan;
+        if (cell.rowSpan > 1) spans.push([cell.colSpan, cell.rowSpan - 1]);
+      }
+
+      if (cols > 1) columns = true;
+    }
+
+    if (columns && rows.length > 1) {
+      table.setAttribute('role', 'table');
+      roleTables.add(table);
     }
   }
 
-  function unmarkTable(table) {
-    table.removeAttribute('tabindex');
-    focusTables.splice(focusTables.indexOf(table), 1);
+  function markRoles() {
+    eachTable(PROSE_TABLES, markRole);
+  }
+
+  // Перед каждым Tab, в перехвате: порядок обхода браузер считает после
+  // обработчиков, и отметка, поставленная здесь, уже в нём. Так не нужны
+  // ни наблюдатели, ни замеры вне нажатия. Мерить все таблицы нельзя:
+  // в Chromium каждое чтение раскладки стоит пропорционально числу анимаций
+  // по прокрутке, и замер всех на каждый Tab — квадрат их числа. Поэтому —
+  // от фокуса по ходу Tab до первой широкой: дальше неё Tab не уйдёт.
+  // Фокус на body — откуда пойдёт Tab, неизвестно (щелчок в текст), и
+  // меряются все.
+  function onTabPress(event) {
+    if (event.key !== 'Tab') return;
+
+    var tables = document.querySelectorAll(PROSE_TABLES);
+    var from = document.activeElement;
+    var all = !from || from === document.body;
+    var step = all || !event.shiftKey ? 1 : -1;
+    var i = all ? 0 : firstAfter(tables, from) - (step < 0 ? 1 : 0);
+
+    // Shift+Tab с самой таблицы: она уже позади, замер — с предыдущей.
+    // Иначе отмеченная под фокусом останавливала его сразу, а предыдущая
+    // широкая оставалась без отметки — Safari её пропускал.
+    if (tables[i] === from) i += step;
+
+    // Встать можно только на таблице, до которой Tab дойдёт: невидимую
+    // широкую (закрытый details, inert) он пропустит — за ней идём дальше.
+    for (; i >= 0 && i < tables.length; i += step) {
+      markRole(tables[i]);
+      if (syncTabStop(tables[i]) && !all && shown(tables[i])) return;
+    }
+  }
+
+  // Tab до таблицы может дойти: она не скрыта разметкой и видна —
+  // checkVisibility (второе имя опции — у Chrome 105–120), а в Safari
+  // до 17.4, где его нет, — вычисленное visibility.
+  function shown(node) {
+    return !node.closest(UNSHOWN) && (node.checkVisibility
+      ? node.checkVisibility({ visibilityProperty: true, checkVisibilityCSS: true })
+      : getComputedStyle(node).visibility !== 'hidden');
+  }
+
+  // Остановка Tab внутри таблицы — только по дереву: в Chromium и чтение
+  // раскладки, и checkVisibility стоят по числу анимаций по прокрутке
+  // на странице, а таблиц со ссылками в тексте бывают сотни. Цена —
+  // ссылка, скрытая только стилями (visibility, display классом),
+  // считается остановкой. Хост правки tabIndex не даёт, но остановка.
+  function stopsTab(table) {
+    var found = table.querySelectorAll(FOCUSABLE);
+
+    for (var i = 0; i < found.length; i++) {
+      var node = found[i];
+
+      if ((node.tabIndex >= 0 || node.isContentEditable && !node.hasAttribute('tabindex')) &&
+        !node.matches(':disabled') && !node.closest(UNSHOWN)) return true;
+    }
+
+    return false;
+  }
+
+  // Первая таблица после узла в порядке документа — двоичным поиском:
+  // сравнение позиций раскладку не трогает. Таблица внутри узла — после
+  // него (4 — DOCUMENT_POSITION_FOLLOWING), таблица вокруг узла — до.
+  function firstAfter(tables, node) {
+    var lo = 0;
+    var hi = tables.length;
+
+    while (lo < hi) {
+      var mid = (lo + hi) >> 1;
+
+      if (node.compareDocumentPosition(tables[mid]) & 4) hi = mid;
+      else lo = mid + 1;
+    }
+
+    return lo;
+  }
+
+  // tabindex="0" — широкой таблице, где Tab больше не на чем остановиться;
+  // стала помещаться — снять. Своё — в наборе и сейчас "0": значение
+  // страницы (окно-ловушка фокуса ставит -1 на время, потом возвращает
+  // сохранённое) рантайм не снимает и не возвращает, а вернувшийся "0" —
+  // снова его. Атрибут сняли совсем (морфинг разметки) — это не значение
+  // страницы: отметка ставится заново. Остановки внутри — раньше ширины:
+  // по дереву они дешевле, а таблицу, где Tab и так остановится, мерить
+  // незачем. true — таблица теперь остановка Tab.
+  function syncTabStop(table) {
+    var mine = tabTables.has(table);
+    var value = table.getAttribute('tabindex');
+
+    if (mine && value === null) {
+      tabTables.delete(table);
+      mine = false;
+    }
+
+    if (mine ? value !== '0' : value !== null) return false;
+
+    var wide = !table.isContentEditable && !stopsTab(table) && table.scrollWidth > table.clientWidth;
+
+    if (wide && !mine) {
+      table.setAttribute('tabindex', '0');
+      tabTables.add(table);
+    } else if (!wide) {
+      unmark(table, tabTables, 'tabindex', '0');
+    }
+
+    return wide;
+  }
+
+  // Снять своё — атрибут, который поставил рантайм и с тех пор не сменили.
+  function unmark(table, set, name, value) {
+    if (set.has(table) && table.getAttribute(name) === value) table.removeAttribute(name);
+    set.delete(table);
+  }
+
+  function eachTable(selector, fn) {
+    var tables = document.querySelectorAll(selector);
+
+    for (var i = 0; i < tables.length; i++) fn(tables[i]);
   }
 
   // Один делегированный обработчик на документ, а не по слушателю на окно:
   // окна появляются и исчезают вместе с разметкой, и переподписываться
-  // на каждое пришлось бы вручную.
+  // на каждое пришлось бы вручную. Повторный вызов подписки не удваивает,
+  // а проходит таблицы прозы ещё раз: разметке, вставленной после старта
+  // (смена варианта товара, догруженный текст), роль нужна сразу — читалка
+  // идёт по тексту без Tab и прохода перед Tab может не дождаться.
   function start() {
-    if (started) return publicApi;
+    if (!started) {
+      started = true;
+      listen('addEventListener');
+    }
 
-    started = true;
-    listen('addEventListener');
+    markRoles();
 
     return publicApi;
   }
@@ -677,17 +833,23 @@
     pressed = null;
     listen('removeEventListener');
 
-    while (focusTables.length) unmarkTable(focusTables[0]);
+    // Все таблицы документа с такими значениями, а не только таблицы прозы:
+    // отмеченную могли вынести из прозы или дать ей класс .gr-table.
+    eachTable('table[tabindex="0"],table[role=table]', function (table) {
+      unmark(table, tabTables, 'tabindex', '0');
+      unmark(table, roleTables, 'role', 'table');
+    });
 
     return publicApi;
   }
 
   // Подписка и отписка — один список: диспетчер на каждый тип события
   // из реестра плюс перехват нажатия для щелчка по подложке и Tab
-  // для широких таблиц прозы.
+  // для широких таблиц прозы и конец вставки фрагмента GriffinJS.
   function listen(method) {
     document[method]('pointerdown', onPointerDown, true);
     document[method]('keydown', onTabPress, true);
+    document[method]('griffin:load', markRoles);
 
     for (var type in registry) {
       if (Object.prototype.hasOwnProperty.call(registry, type)) {

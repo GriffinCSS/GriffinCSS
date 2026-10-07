@@ -51,7 +51,7 @@
     Единственное исключение — закрытие окна щелчком по подложке: этого
     <code>&lt;dialog&gt;</code> не умеет, и его добавляет опциональный
     <code>griffincss-ui.js</code>. Он подключён на этой странице, включается
-    атрибутом на самом окне и стоит <!--gr:size:js-ui-->3,0 КБ<!--/gr:size:js-ui--> gzip — вместе
+    атрибутом на самом окне и стоит <!--gr:size:js-ui-->3,6 КБ<!--/gr:size:js-ui--> gzip — вместе
     со всем остальным поведением компонентов.
   </p>
 </div>
@@ -331,7 +331,7 @@ m.removeAttribute('aria-busy');</code></pre>
   <tr><th>Что</th><th>Как</th></tr>
   <tr><td><code>data-gr-overlay-close</code></td><td>Атрибут на <code>&lt;dialog&gt;</code>: окно или панель закрывается щелчком мимо</td></tr>
   <tr><td><code>dialog.returnValue</code></td><td>После такого закрытия равно <code>"overlay"</code> — обработчик отличит щелчок мимо от кнопки «Сохранить»</td></tr>
-  <tr><td><code>Griffincss.ui.start()</code> / <code>.destroy()</code></td><td>Ручной запуск и снятие обработчиков; автостарт отключается <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code></td></tr>
+  <tr><td><code>Griffincss.ui.start()</code> / <code>.destroy()</code></td><td>Ручной запуск и снятие обработчиков; повторный <code>start()</code> подписки не удваивает, а ставит роль таблицам прозы, вставленным позже; автостарт отключается <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code></td></tr>
 </table>
 
 <div class="callout">

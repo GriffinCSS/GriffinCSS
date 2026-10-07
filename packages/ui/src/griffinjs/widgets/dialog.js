@@ -232,9 +232,13 @@
 
       setAttr(el, 'data-gr-state', 'loading');
 
+      // griffin:load — конец вставки: его знает только окно. По нему
+      // рантайм компонентов ставит роль таблице прозы во фрагменте,
+      // а страница — оживляет свои скрипты.
       fragment(src).then(function (html) {
         target.replaceChildren(html);
         setAttr(el, 'data-gr-state', isOpen() ? 'open' : 'ready');
+        G.emit('griffin:load', el, { dialog: el });
       }, function (error) {
         G.warn('dialog: ' + src + ' not loaded: ' + (error && error.message));
         setAttr(el, 'data-gr-state', 'error');

@@ -479,3 +479,415 @@ test('таблица, ставшая помещаться, теряет пост
   await pw.evaluate(() => window.Griffincss.ui.destroy());
   expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe(null);
 });
+
+test('отметка за широкой таблицей идёт дальше по ходу Tab: узкие пропускаются, следующая широкая — следующая остановка', async ({ page: pw }) => {
+  const narrow = (id) => T2().replace('id="tb"', `id="${id}"`);
+  const wide = (id) => T9().replace('id="tb"', `id="${id}"`);
+
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">
+    ${narrow('n1')}${narrow('n2')}${wide('w1')}${narrow('n3')}${wide('w2')}
+    </article><input id="after">`, 390, RUNTIME);
+
+  expect(await tabFrom(pw, 'before')).toBe('w1');
+  await pw.keyboard.press('Tab');
+  expect(await pw.evaluate(() => document.activeElement.id)).toBe('w2');
+  await pw.keyboard.press('Tab');
+  expect(await pw.evaluate(() => document.activeElement.id)).toBe('after');
+  expect(await tabFrom(pw, 'after', true)).toBe('w2');
+});
+
+test('Shift+Tab с широкой таблицы приводит на предыдущую широкую, а не мимо неё', async ({ page: pw }) => {
+  // Замер назад с самой таблицы начинался с неё же: отмеченная под фокусом
+  // останавливала его, предыдущая широкая оставалась без отметки,
+  // и Safari её пропускал. Отметка проверяется во всех движках.
+  const narrow = (id) => T2().replace('id="tb"', `id="${id}"`);
+  const wide = (id) => T9().replace('id="tb"', `id="${id}"`);
+
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">
+    ${wide('w1')}${narrow('n1')}${wide('w2')}
+    </article><input id="after">`, 390, RUNTIME);
+
+  expect(await tabFrom(pw, 'after', true)).toBe('w2');
+  await pw.keyboard.press('Shift+Tab');
+  expect(await pw.evaluate(() => document.getElementById('w1').getAttribute('tabindex'))).toBe('0');
+  expect(await pw.evaluate(() => document.activeElement.id)).toBe('w1');
+  await pw.keyboard.press('Shift+Tab');
+  expect(await pw.evaluate(() => document.activeElement.id)).toBe('before');
+});
+
+test('Tab меряет только таблицы по ходу фокуса, а не все таблицы прозы', async ({ page: pw }) => {
+  // В Chromium каждое чтение раскладки стоит пропорционально числу анимаций
+  // по прокрутке: замер всех таблиц на каждый Tab — квадрат их числа.
+  // Счётчик — на геттере scrollWidth: Tab с поля перед прозой доходит
+  // до первой широкой таблицы, Shift+Tab с поля после — до последней.
+  const tables = Array.from({ length: 200 }, (_, i) => T9().replace('id="tb"', `id="w${i}"`)).join('');
+
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">${tables}</article><input id="after">`, 390, RUNTIME);
+  await pw.evaluate(() => {
+    const own = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollWidth');
+
+    window.reads = 0;
+    Object.defineProperty(Element.prototype, 'scrollWidth', {
+      configurable: true,
+      get() { window.reads += 1; return own.get.call(this); },
+    });
+  });
+
+  expect(await tabFrom(pw, 'before')).toBe('w0');
+  expect(await pw.evaluate(() => window.reads)).toBeLessThanOrEqual(2);
+
+  await pw.evaluate(() => { window.reads = 0; });
+  expect(await tabFrom(pw, 'after', true)).toBe('w199');
+  expect(await pw.evaluate(() => window.reads)).toBeLessThanOrEqual(2);
+});
+
+test('таблицу в поверхности редактора рантайм не трогает', async ({ page: pw }) => {
+  // В contenteditable фокус у хоста редактирования: tabindex на таблице
+  // уводил бы его на <table> щелчком в ячейку (Firefox) или парой
+  // focusout/focusin (Chromium), и редактор терял бы выделение.
+  await openLayout(pw, `<input id="before"><div class="gr-prose" id="t" contenteditable="true"><p>Абзац.</p>${T9()}
+    <table id="bare"><tbody>${row(['1', '2'], 'td')}${row(['3', '4'], 'td')}</tbody></table></div><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+  await pw.keyboard.press('Tab');
+
+  const m = await pw.evaluate(() => ({
+    tabindex: document.getElementById('tb').getAttribute('tabindex'),
+    role: document.getElementById('bare').getAttribute('role'),
+  }));
+
+  expect(m.tabindex).toBe(null);
+  expect(m.role).toBe(null);
+});
+
+test('tabindex, сменённый страницей, рантайм не снимает и не возвращает', async ({ page: pw }) => {
+  // Окно-ловушка фокуса и полифилы inert ставят -1 на время и возвращают
+  // сохранённое: значение страницы — не отметка рантайма.
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+  const tabindex = () => pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'));
+
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('0');
+  await pw.evaluate(() => document.getElementById('tb').setAttribute('tabindex', '-1'));
+
+  // Помещается — на Shift+Tab значение страницы на месте.
+  await pw.setViewportSize({ width: 1440, height: 800 });
+  await tabFrom(pw, 'after', true);
+  expect(await tabindex()).toBe('-1');
+
+  // Снова шире колонки — таблица, выведенная из обхода, в него не вернулась.
+  await pw.setViewportSize({ width: 390, height: 800 });
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('-1');
+
+  await pw.evaluate(() => window.Griffincss.ui.destroy());
+  expect(await tabindex()).toBe('-1');
+});
+
+test('таблица, отсоединённая на время Tab, остаётся своей: стала помещаться — отметка снята', async ({ page: pw }) => {
+  // Перерисовка разметки в SPA: узел убрали и вернули. Рантайм не обязан
+  // помнить его вечно, но и бросать свою отметку в обходе не должен.
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+  const tabindex = () => pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'));
+
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('0');
+
+  await pw.evaluate(() => { window.detached = document.getElementById('tb'); window.detached.remove(); });
+  await tabFrom(pw, 'before');
+  await pw.evaluate(() => document.getElementById('t').appendChild(window.detached));
+
+  await pw.setViewportSize({ width: 1440, height: 800 });
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe(null);
+});
+
+for (const [name, inner] of [
+  ['tabindex="-1"', '<span tabindex="-1">*</span>'],
+  ['скрытое поле', '<input type="hidden" name="sku" value="1">'],
+  ['отключённая кнопка', '<button type="button" disabled>*</button>'],
+  ['contenteditable="false"', '<span contenteditable="false">*</span>'],
+]) {
+  test(`широкая таблица, где Tab остановиться не на чем (${name}), — в порядке Tab`, async ({ page: pw }) => {
+    await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9().replace('<td>Samsung', `<td>${inner}Samsung`)}</article><input id="after">`, 390, RUNTIME);
+
+    expect(await tabFrom(pw, 'before')).toBe('tb');
+  });
+}
+
+// --- Firefox: таблица прозы без заголовков ---------------------------------
+//
+// Gecko считает таблицу без признаков данных (th, thead, tfoot, col, role,
+// caption с текстом) таблицей раскладки, если у её рамки один столбец,
+// а у таблицы со своей прокруткой (display: block) рамка — блок без столбцов.
+// Читалка с Firefox теряет «таблица, N строк», координаты и переход по ячейкам.
+// В 0.28.2 те же таблицы были данными; роль возвращает это без CSS.
+// Chromium и WebKit роль не меняют — она ставится во всех движках.
+
+const GRID = (id, rows, cols, attrs = '') => `<table id="${id}"${attrs}><tbody>${Array.from({ length: rows }, (_, r) => row(Array.from({ length: cols }, (__, c) => `${r}.${c}`), 'td')).join('')}</tbody></table>`;
+
+test('таблице прозы без признаков данных рантайм ставит role="table"; destroy() снимает свою', async ({ page: pw }) => {
+  await openLayout(pw, `<article class="gr-prose" id="t">
+    ${GRID('bare', 3, 3)}
+    ${GRID('wide', 2, 12)}
+    <table id="titled"><tbody><tr><td colspan="3">Заголовок группы</td></tr>${row(['1', '2', '3'], 'td')}</tbody></table>
+    ${T2().replace('id="tb"', 'id="headed"')}
+    <table id="cols"><colgroup><col><col></colgroup><tbody>${row(['1', '2'], 'td')}${row(['3', '4'], 'td')}</tbody></table>
+    ${GRID('own', 2, 2, ' role="grid"')}
+    ${GRID('row1', 1, 3)}
+    ${GRID('col1', 3, 1)}
+    <table id="outer"><tbody><tr><td>${GRID('inner', 2, 2)}</td><td>2</td></tr>${row(['3', '4'], 'td')}</tbody></table>
+    ${GRID('lib', 2, 2, ' class="gr-table"')}
+    <table id="spans"><tbody><tr><td colspan="2">Только объединённые</td></tr><tr><td colspan="2">ячейки</td></tr></tbody></table>
+    ${GRID('empty', 2, 2, ' role=""')}
+    </article>`, 1024, RUNTIME);
+
+  const roles = () => pw.evaluate(() => Object.fromEntries(
+    [...document.querySelectorAll('table')].map((t) => [t.id, t.getAttribute('role')]),
+  ));
+
+  // Как Gecko у таблицы с рамкой ячеек без своей прокрутки (0.28.2):
+  // вложенная таблица внешнюю раскладкой не делает, столбцы — по карте
+  // таблицы (colspan), пустой role — не роль.
+  expect(await roles()).toEqual({
+    bare: 'table', wide: 'table', titled: 'table',
+    headed: null, cols: null, own: 'grid', row1: null, col1: null,
+    outer: 'table', inner: 'table', lib: null, spans: 'table', empty: 'table',
+  });
+
+  await pw.evaluate(() => window.Griffincss.ui.destroy());
+  const after = await roles();
+
+  expect(after.bare).toBe(null);
+  expect(after.inner).toBe(null);
+  expect(after.own).toBe('grid');
+});
+
+test('таблица прозы, вставленная позже, получает роль в проходе перед Tab', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t"></article><input id="after">`, 1024, RUNTIME);
+  await pw.evaluate((html) => { document.getElementById('t').innerHTML = html; }, GRID('late', 2, 2));
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('late').getAttribute('role'))).toBe('table');
+});
+
+test('повторный start() ставит роль таблице прозы, вставленной после старта', async ({ page: pw }) => {
+  // Смена варианта товара, догруженный текст: читалка идёт по тексту
+  // без Tab, и роль нужна, не дожидаясь прохода перед Tab.
+  await openLayout(pw, `<article class="gr-prose" id="t"></article>`, 1024, RUNTIME);
+  await pw.evaluate((html) => { document.getElementById('t').innerHTML = html; }, GRID('late', 2, 2));
+  await pw.evaluate(() => window.Griffincss.ui.start());
+
+  expect(await pw.evaluate(() => document.getElementById('late').getAttribute('role'))).toBe('table');
+});
+
+// --- Второй круг: невидимая таблица, чужой "0", destroy(), редактор ----------
+
+const TW = (id) => `<table id="${id}"><tbody>${row(Array.from({ length: 30 }, (_, c) => `Ячейка ${c}`), 'td')}${row(Array.from({ length: 30 }, () => 'x'), 'td')}</tbody></table>`;
+
+// Обход перед Tab встаёт на первой широкой таблице — до неё Tab и дойдёт.
+// До невидимой не дойдёт: на ней обход вставать не должен, иначе видимая
+// широкая за ней остаётся без отметки, и Safari её пропускает.
+for (const [name, wrap] of [
+  ['закрытый details', (t) => `<details><summary id="sum">Ещё</summary>${t}</details>`],
+  ['visibility: hidden', (t) => `<div style="visibility: hidden">${t}</div>`],
+  ['inert', (t) => `<div inert>${t}</div>`],
+  ['hidden="until-found"', (t) => `<div hidden="until-found">${t}</div>`],
+]) {
+  test(`невидимая широкая таблица (${name}) не прячет следующую из порядка Tab`, async ({ page: pw }) => {
+    await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">${wrap(TW('hid'))}${T9().replace('id="tb"', 'id="vis"')}</article><input id="after">`, 390, RUNTIME);
+    await pw.focus('#before');
+
+    const path = [];
+
+    for (let i = 0; i < 4 && path[path.length - 1] !== 'after'; i++) {
+      await pw.keyboard.press('Tab');
+      path.push(await pw.evaluate(() => document.activeElement.id || document.activeElement.tagName.toLowerCase()));
+    }
+
+    expect(path).toContain('vis');
+    expect(await pw.evaluate(() => document.getElementById('vis').getAttribute('tabindex'))).toBe('0');
+  });
+}
+
+test('отметка за невидимой широкой таблицей снимается, когда таблица стала помещаться', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t"><details><summary>Ещё</summary>${TW('hid')}</details>${T9().replace('id="tb"', 'id="vis"')}</article><input id="after">`, 390, RUNTIME);
+
+  // Shift+Tab с поля после — отметка на видимой.
+  expect(await tabFrom(pw, 'after', true)).toBe('vis');
+
+  await pw.setViewportSize({ width: 1440, height: 800 });
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('vis').getAttribute('tabindex'))).toBe(null);
+});
+
+test('страница вернула сохранённый "0" — отметка снова своя: стала помещаться — снята', async ({ page: pw }) => {
+  // Окно-ловушка фокуса ставит -1, пока открыто, и возвращает сохранённое.
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+  const tabindex = () => pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'));
+
+  await tabFrom(pw, 'before');
+  await pw.evaluate(() => document.getElementById('tb').setAttribute('tabindex', '-1'));
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('-1');
+
+  await pw.evaluate(() => document.getElementById('tb').setAttribute('tabindex', '0'));
+  await pw.setViewportSize({ width: 1440, height: 800 });
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe(null);
+});
+
+for (const [name, move] of [
+  ['вынесенной из прозы', 'document.body.appendChild(t)'],
+  ['получившей class="gr-table"', 't.classList.add("gr-table")'],
+]) {
+  test(`destroy() снимает своё и у таблицы, ${name}`, async ({ page: pw }) => {
+    await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${TW('tb')}</article><input id="after">`, 390, RUNTIME);
+
+    await tabFrom(pw, 'before');
+    expect(await pw.evaluate(() => [document.getElementById('tb').getAttribute('tabindex'), document.getElementById('tb').getAttribute('role')])).toEqual(['0', 'table']);
+
+    await pw.evaluate(`(() => { const t = document.getElementById('tb'); ${move}; window.Griffincss.ui.destroy(); })()`);
+    expect(await pw.evaluate(() => [document.getElementById('tb').getAttribute('tabindex'), document.getElementById('tb').getAttribute('role')])).toEqual([null, null]);
+  });
+}
+
+test('редактор, включённый на показанной прозе: start() снимает свою роль, Tab — свой tabindex', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><div id="t" class="gr-prose">${GRID('bare', 3, 3)}${T9()}</div><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => [document.getElementById('bare').getAttribute('role'), document.getElementById('tb').getAttribute('tabindex')])).toEqual(['table', '0']);
+
+  await pw.evaluate(() => { document.getElementById('t').contentEditable = 'true'; window.Griffincss.ui.start(); });
+  await tabFrom(pw, 'before');
+
+  expect(await pw.evaluate(() => [document.getElementById('bare').getAttribute('role'), document.getElementById('tb').getAttribute('tabindex')])).toEqual([null, null]);
+});
+
+for (const [name, inner] of [
+  ['ссылка с tabindex="-1"', '<a href="#x" tabindex="-1">*</a>'],
+  ['ссылка в hidden', '<span hidden><a href="#x">*</a></span>'],
+  ['ссылка в inert', '<span inert><a href="#x">*</a></span>'],
+  ['отключённая кнопка с tabindex="0"', '<button type="button" disabled tabindex="0">*</button>'],
+]) {
+  test(`широкая таблица, где Tab остановиться не на чем (${name}), — в порядке Tab и с отметкой`, async ({ page: pw }) => {
+    await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9().replace('<td>Samsung', `<td>${inner}Samsung`)}</article><input id="after">`, 390, RUNTIME);
+
+    expect(await tabFrom(pw, 'before')).toBe('tb');
+    expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe('0');
+  });
+}
+
+// --- Третий круг: таблицы со ссылками, Safari без checkVisibility, края -----
+
+const LINKED = (id) => T9().replace('id="tb"', `id="${id}"`).replace('<td>Samsung', '<td><a href="#x">Samsung</a> ');
+
+test('таблицы со ссылкой внутри обход проходит, не читая раскладку', async ({ page: pw }) => {
+  // Остановка внутри решается по дереву: ширину таблицы, где Tab и так
+  // остановится, мерить незачем, а в Chromium каждое чтение — цена всех
+  // анимаций по прокрутке на странице.
+  const tables = Array.from({ length: 200 }, (_, i) => LINKED(`l${i}`)).join('');
+
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">${tables}</article><input id="after">`, 390, RUNTIME);
+  await pw.evaluate(() => {
+    const own = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollWidth');
+
+    window.reads = 0;
+    Object.defineProperty(Element.prototype, 'scrollWidth', {
+      configurable: true,
+      get() { window.reads += 1; return own.get.call(this); },
+    });
+  });
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => window.reads)).toBeLessThanOrEqual(2);
+});
+
+test('широкая таблица за таблицей со ссылкой — в порядке Tab (Safari ссылки пропускает)', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">${LINKED('lt')}${T9().replace('id="tb"', 'id="w"')}</article><input id="after">`, 390, RUNTIME);
+  await pw.focus('#before');
+
+  const path = [];
+
+  for (let i = 0; i < 4 && path[path.length - 1] !== 'after'; i++) {
+    await pw.keyboard.press('Tab');
+    path.push(await pw.evaluate(() => document.activeElement.id || document.activeElement.tagName.toLowerCase()));
+  }
+
+  expect(path).toContain('w');
+  expect(await pw.evaluate(() => document.getElementById('lt').getAttribute('tabindex'))).toBe(null);
+});
+
+// Safari 15.4–17.3 checkVisibility не знает: невидимость — по дереву
+// и вычисленному visibility. Модель — метод, удалённый до старта рантайма.
+const NO_CHECK = '<script>delete Element.prototype.checkVisibility;</script>';
+
+for (const [name, wrap] of [
+  ['закрытый details', (t) => `<details><summary id="sum">Ещё</summary>${t}</details>`],
+  ['visibility: hidden', (t) => `<div style="visibility: hidden">${t}</div>`],
+  ['hidden="until-found"', (t) => `<div hidden="until-found">${t}</div>`],
+]) {
+  test(`без checkVisibility невидимая широкая таблица (${name}) не прячет следующую`, async ({ page: pw }) => {
+    await openLayout(pw, `<input id="before"><article class="gr-prose" id="t">${wrap(TW('hid'))}${T9().replace('id="tb"', 'id="vis"')}</article><input id="after">`, 390, NO_CHECK + RUNTIME);
+    await pw.focus('#before');
+
+    for (let i = 0; i < 3; i++) await pw.keyboard.press('Tab');
+
+    expect(await pw.evaluate(() => document.getElementById('vis').getAttribute('tabindex'))).toBe('0');
+  });
+}
+
+test('без checkVisibility ссылка в hidden не запрещает отметку', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9().replace('<td>Samsung', '<td><span hidden><a href="#x">*</a></span>Samsung')}</article><input id="after">`, 390, NO_CHECK + RUNTIME);
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe('0');
+});
+
+test('ссылка, скрытая только стилями, считается остановкой (принятое ограничение)', async ({ page: pw }) => {
+  // Видимость стилями — цена чтения раскладки у каждой таблицы со ссылкой;
+  // остановки внутри ищутся по дереву. Без отметки — как в 0.29.1.
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9().replace('<td>Samsung', '<td><span style="visibility: hidden"><a href="#x">*</a></span>Samsung')}</article><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe(null);
+});
+
+test('роль: th только во вложенной таблице и столбцы только из rowspan', async ({ page: pw }) => {
+  // Признаки данных — свои у таблицы; столбцы — по карте с rowspan:
+  // так у Gecko и у таблицы без своей прокрутки.
+  await openLayout(pw, `<article class="gr-prose" id="t">
+    <table id="outerTh"><tbody><tr><td><table id="innerTh"><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table></td><td>2</td></tr>${row(['3', '4'], 'td')}</tbody></table>
+    <table id="rows"><tbody><tr><td rowspan="2">Объединённая</td></tr><tr><td>Ячейка</td></tr></tbody></table>
+    </article>`, 1024, RUNTIME);
+
+  expect(await pw.evaluate(() => ['outerTh', 'innerTh', 'rows'].map((id) => document.getElementById(id).getAttribute('role')))).toEqual(['table', null, 'table']);
+});
+
+test('редактор, включённый на прозе с фокусом на таблице: start() снимает и роль, и tabindex', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><div id="t" class="gr-prose">${TW('tb')}</div><input id="after">`, 390, RUNTIME);
+
+  expect(await tabFrom(pw, 'before')).toBe('tb');
+  await pw.evaluate(() => { document.getElementById('t').contentEditable = 'true'; window.Griffincss.ui.start(); });
+
+  expect(await pw.evaluate(() => [document.getElementById('tb').getAttribute('role'), document.getElementById('tb').getAttribute('tabindex')])).toEqual([null, null]);
+});
+
+test('остров contenteditable в ячейке — остановка Tab: отметки нет', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9().replace('<td>Samsung', '<td><span id="island" contenteditable="true">правка</span> Samsung')}</article><input id="after">`, 390, RUNTIME);
+
+  await tabFrom(pw, 'before');
+  expect(await pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'))).toBe(null);
+});
+
+test('страница сняла tabindex совсем — на следующем Tab отметка снова стоит', async ({ page: pw }) => {
+  await openLayout(pw, `<input id="before"><article id="t" class="gr-prose">${T9()}</article><input id="after">`, 390, RUNTIME);
+  const tabindex = () => pw.evaluate(() => document.getElementById('tb').getAttribute('tabindex'));
+
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('0');
+
+  await pw.evaluate(() => document.getElementById('tb').removeAttribute('tabindex'));
+  await tabFrom(pw, 'before');
+  expect(await tabindex()).toBe('0');
+});

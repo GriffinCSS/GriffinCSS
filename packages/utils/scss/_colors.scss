@@ -13,12 +13,24 @@
 @use 'palette';
 
 // Background utilities
+//
+// Фон утилиты — подложка со своим цветом, как у карточки: тот же цвет
+// получает шторка подсказки прокрутки таблицы (--gr-scroll-hint-bg,
+// _table.scss в пакете компонентов). Там, где нет анимации по прокрутке
+// (Firefox), тень у края таблицы прячет шторка, и цвета страницы она
+// легла бы у краёв полосой. Без пакета компонентов токен ничего не делает.
+@mixin gr-bg($value) {
+  background-color: $value;
+
+  --gr-scroll-hint-bg: #{$value};
+}
+
 @each $name, $hsl in palette.$gr-grays {
-  .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
+  .gr-bg-#{$name} { @include gr-bg(hsl(#{$hsl})); }
 }
 
 @each $name, $hsl in palette.$gr-accents {
-  .gr-bg-#{$name} { background-color: hsl(#{$hsl}); }
+  .gr-bg-#{$name} { @include gr-bg(hsl(#{$hsl})); }
 }
 
 // Text color utilities
@@ -43,11 +55,11 @@
 // Литеральные классы выше (.gr-bg-white, .gr-text-gray-900) остаются
 // буквальными по контракту: белое обязано быть белым в любой теме.
 // Разметку, которая должна жить по теме, пишут на этих классах.
-.gr-bg-page    { background-color: var(--gr-color-bg); }
-.gr-bg-surface { background-color: var(--gr-color-surface); }
-.gr-bg-raised  { background-color: var(--gr-color-surface-raised); }
-.gr-bg-sunken  { background-color: var(--gr-color-surface-sunken); }
-.gr-bg-accent  { background-color: var(--gr-color-accent); }
+.gr-bg-page    { @include gr-bg(var(--gr-color-bg)); }
+.gr-bg-surface { @include gr-bg(var(--gr-color-surface)); }
+.gr-bg-raised  { @include gr-bg(var(--gr-color-surface-raised)); }
+.gr-bg-sunken  { @include gr-bg(var(--gr-color-surface-sunken)); }
+.gr-bg-accent  { @include gr-bg(var(--gr-color-accent)); }
 
 .gr-text-ink           { color: var(--gr-color-text); }
 .gr-text-ink-secondary { color: var(--gr-color-text-secondary); }

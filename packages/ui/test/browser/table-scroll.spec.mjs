@@ -210,6 +210,59 @@ for (const [name, html] of [
   });
 }
 
+// Утилита фона — тоже подложка со своим цветом: светлая тема, где серая
+// подложка и светлый тон акцента отличаются от страницы сильнее всего.
+for (const [name, theme] of [['.gr-bg-sunken', ''], ['.gr-bg-sunken', 'dark'], ['.gr-bg-primary-light', '']]) {
+  test(`шторка подсказки — цвета утилиты фона: ${name}${theme ? ' (тёмная тема)' : ''}`, async ({ page: pw }) => {
+    await openFull(pw, `<div class="${name.slice(1)}" style="padding: 12px"><div class="gr-table-wrap" id="w">${SMALL}</div></div>`, { theme });
+
+    const box = await pw.locator('#w').boundingBox();
+    const cell = await pw.locator('#w td').first().boundingBox();
+    const y = cell.y + cell.height / 2;
+    const [left, right, surface] = await lumAt(pw, [[box.x + 2, y], [box.x + box.width - 3, y], [box.x - 4, y]]);
+
+    expect(Math.abs(left - surface)).toBeLessThanOrEqual(2);
+    expect(Math.abs(right - surface)).toBeLessThanOrEqual(2);
+  });
+}
+
+// Сообщение токен не задаёт: подложка — фон под полупрозрачной вуалью,
+// одним цветом её даёт только color-mix(). Рецепт из «Таблиц» — в CSS сайта.
+for (const theme of ['', 'dark']) {
+  test(`рецепт шторки для .gr-alert — цвета подложки сообщения${theme ? ' (тёмная тема)' : ''}`, async ({ page: pw }) => {
+    await openFull(pw, `<style>.gr-alert { --gr-scroll-hint-bg: color-mix(in srgb, var(--gr-alert-fill) 10%, var(--gr-color-bg)); }</style>
+      <div class="gr-alert gr-alert-warning" role="status"><div><div class="gr-table-wrap" id="w">${SMALL}</div></div></div>`, { theme });
+
+    const box = await pw.locator('#w').boundingBox();
+    const cell = await pw.locator('#w td').first().boundingBox();
+    const y = cell.y + cell.height / 2;
+    const [left, right, surface] = await lumAt(pw, [[box.x + 2, y], [box.x + box.width - 3, y], [box.x - 4, y]]);
+
+    expect(Math.abs(left - surface)).toBeLessThanOrEqual(2);
+    expect(Math.abs(right - surface)).toBeLessThanOrEqual(2);
+  });
+}
+
+// Без рецепта сообщение в цветной секции не должно брать цвет секции:
+// утилита фона задаёт токен, и он наследовался бы в сообщение — полоса
+// цвета секции на почти белой (в тёмной теме — почти чёрной) подложке.
+// Библиотека даёт сообщению цвет страницы — нижний слой его подложки:
+// полоса не сильнее вуали статуса.
+for (const theme of ['', 'dark']) {
+  test(`.gr-alert в .gr-bg-primary-light без рецепта — шторка цвета страницы, а не секции${theme ? ' (тёмная тема)' : ''}`, async ({ page: pw }) => {
+    await openFull(pw, `<div class="gr-bg-primary-light" style="padding: 12px">
+      <div class="gr-alert gr-alert-info" role="status"><div><div class="gr-table-wrap" id="w">${SMALL}</div></div></div></div>`, { theme });
+
+    const box = await pw.locator('#w').boundingBox();
+    const cell = await pw.locator('#w td').first().boundingBox();
+    const y = cell.y + cell.height / 2;
+    const [left, right, surface] = await lumAt(pw, [[box.x + 2, y], [box.x + box.width - 3, y], [box.x - 4, y]]);
+
+    expect(Math.abs(left - surface)).toBeLessThanOrEqual(30);
+    expect(Math.abs(right - surface)).toBeLessThanOrEqual(30);
+  });
+}
+
 // Сравнение товаров: первый столбец липкий, строка группы — на всю ширину
 // без липкой ячейки. Ширину столбца держит min-inline-size липкой ячейки
 // шапки: ширина у <col> для таблицы, которая не помещается, — лишь пожелание.

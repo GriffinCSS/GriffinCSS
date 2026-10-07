@@ -7,7 +7,7 @@
 ## Project Identity
 - **Name:** griffincss (private monorepo root, npm workspaces)
 - **Packages:** `griffincss-core` (core), `griffincss-ui` (components) and `griffincss-utils` (utilities) — both add-ons peer-depend on the core, all under `packages/*`
-- **Version:** 0.29.1
+- **Version:** 0.29.2
 - **Type:** Modular SCSS CSS library + JS runtime
 - **Language:** SCSS (Dart Sass), JavaScript (IIFE)
 - **License:** MIT
@@ -228,7 +228,7 @@ not `null`, because `!default` treats `null` as "unset".
   `-md` is the window, `-cmd` the nearest ancestor with `container-type`. `check-dist.mjs`
   checks an `@container` prelude exactly as it checks `@media`
 
-### JS Runtime Key Features (v0.29.1)
+### JS Runtime Key Features (v0.29.2)
 1. **DOM scan:** reads `data-gr-layout`, `data-gr-layout-{sm,md,lg,xl}` (window) and `data-gr-layout-c{sm,md,lg,xl}` (container) attributes — `BP_ORDER` holds all nine keys and everything else (attribute names, selector, FOUC guard) is derived from it
 2. **Class per layout set:** the per-element set is hashed (djb2 → base36) into `.gr-l-<hash>`; rules target that class, never the attribute value, so identical base layouts with different responsive variants never collide. Same set → same hash → one rule
 3. **CSS generation:** creates its own `<style id="griffincss-dynamic">` (never looks one up by id — a node from markup with that id is not the runtime's sheet) — the layer-order declaration, then `@layer griffincss.core { … }` around three sections: `/* FOUC guard */`, `/* Grid Layouts */`, `/* Grid Areas */`, closed by `/* end */`
@@ -423,7 +423,7 @@ These widgets write the control's `value` — the declared extension of invarian
 | `packages/ui/scss/_nav.scss` | `.gr-nav` / `.gr-nav-link` with `[aria-current]` highlighting, `.gr-navbar`; the collapsible header keeps the nav as the **sibling** of `<details>` — a browser hides the details' own content and nothing but a script or `::details-content` brings it back on a wide screen |
 | `packages/ui/scss/_breadcrumb.scss` | Path with a `::before` separator (`--gr-breadcrumb-sep`); the last item is `[aria-current="page"]`, not a link |
 | `packages/ui/scss/_menu.scss` | Action list — header, separator on `<hr>`, danger item, icon and shortcut slots; no disclosure of its own. The `<li>` reset is written as `> :where(li)` so a class put on the `<li>` itself still wins |
-| `packages/ui/src/griffincss-ui.js` | Optional component runtime, hand-written like the core's. One job so far: closing a `<dialog>` on an overlay click (`data-gr-overlay-close` on the dialog itself). One delegated listener on the document; both halves of the click must land outside the dialog box, so a text selection started inside does not close it. `dialog.returnValue` becomes `"overlay"` |
+| `packages/ui/src/griffincss-ui.js` | Optional component runtime, hand-written like the core's. Five jobs: closing a `<dialog>` on an overlay click (`data-gr-overlay-close` on the dialog itself; both halves of the click must land outside the dialog box, so a text selection started inside does not close it; `dialog.returnValue` becomes `"overlay"`), the `[data-gr-dismiss]` close button, toasts, keyboard for `[data-gr-tabs]`, and the table in `.gr-prose` — `role="table"` for a table without header cells (Firefox treats a `display: block` table without them as a layout table) and `tabindex="0"` for a wide one before each Tab, measured only along the focus path. Delegated listeners on the document; a repeated `start()` does not double them but re-applies the role to prose tables inserted after start, and so does GriffinJS `griffin:load` (a dialog or megamenu fragment inserted); tables inside `contenteditable` are left alone |
 | `packages/ui/scss/_dropdown.scss` | Two paths, both scriptless: `<details>` everywhere, `popover` + anchor positioning under `@supports` (with `anchor-scope`, or every dropdown would latch onto the last anchor in the document); insets come from `anchor()` rather than `position-area` — under an area the panel's margins are spent on alignment inside it and the gap to the button disappears; the popover also needs an explicit `margin: 0`, since the UA sheet sets `auto`. Without anchor support the popover panel opens as a sheet at the bottom edge. A third opener, `.gr-dropdown-hover`, shows the same panel on `:hover` (inside `@media (hover: hover)`) and on `:focus-within` — no script, but no `aria-expanded` and no Esc either, so it is for navigation, not for destructive actions |
 | `packages/ui/scss/_accordion.scss` | `<details>` sections; exclusivity is the platform's shared `name` attribute — zero CSS. Height animation lives entirely inside `@supports (interpolate-size) and selector(::details-content)` |
 | `packages/ui/scss/_tabs.scss` | `.gr-tablist` draws its line with an inset shadow, not a border: a border sits outside the row's content, so the active tab had to be pulled over it by a negative margin — and a scrolling row clips whatever leaves its box, cutting the 2px line down to 1px. Panels are hidden by the `hidden` attribute, never by a `display: none` rule |

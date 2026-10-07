@@ -23,6 +23,11 @@
   --gr-alert-fill-hsl: var(--gr-hsl-status-info);
   --gr-alert-veil: hsl(var(--gr-alert-fill-hsl), 10%);
 
+  // Шторка подсказки прокрутки таблицы (Firefox) — цвета нижнего слоя
+  // подложки: иначе в цветной секции (.gr-bg-*) сообщение наследовало бы
+  // её цвет. Точный цвет с вуалью — только color-mix(), рецепт — в доках.
+  --gr-scroll-hint-bg: var(--gr-color-bg);
+
   display: flex;
   box-sizing: border-box;
   align-items: flex-start;

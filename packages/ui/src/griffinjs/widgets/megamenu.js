@@ -329,9 +329,11 @@
 
       setAttr(item.el, 'data-gr-state', 'loading');
 
+      // griffin:load — конец вставки, как у окна.
       fragment(src).then(function (html) {
         item.panel.replaceChildren(html);
         setAttr(item.el, 'data-gr-state', 'ready');
+        G.emit('griffin:load', item.el, { item: item.el, panel: item.panel });
       }, function (error) {
         G.warn('megamenu: panel ' + src + ' not loaded: ' + (error && error.message));
         setAttr(item.el, 'data-gr-state', 'error');

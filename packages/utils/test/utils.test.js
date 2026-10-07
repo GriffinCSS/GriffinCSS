@@ -126,9 +126,29 @@ test('семантические утилиты цвета есть и ссыл�
 
 test('литеральные цветовые утилиты остались литеральными', () => {
   assert.ok(
-    utils.includes('.gr-bg-white{background-color:hsl(var(--gr-hsl-white))}'),
+    utils.includes('.gr-bg-white{background-color:hsl(var(--gr-hsl-white));'),
     '.gr-bg-white обязан оставаться белым в любой теме',
   );
+});
+
+test('утилита фона передаёт свой цвет шторке подсказки прокрутки', () => {
+  // Без шкалы прокрутки (Firefox) тень у края таблицы прячет шторка цвета
+  // --gr-scroll-hint-bg. Утилита фона — подложка библиотеки со своим цветом,
+  // как карточка: токен равен фону, иначе у краёв таблицы на ней полосы.
+  for (const [name, css] of [['griffincss-utils.css', utils], ['griffincss-utils-scoped.css', scoped]]) {
+    const rules = [...css.matchAll(/\.gr-bg-([a-z0-9-]+)\{([^}]*)\}/g)];
+
+    assert.equal(rules.length, 35, `${name}: утилит фона не 35`);
+
+    for (const [, cls, body] of rules) {
+      const bg = /(?:^|;)background-color:([^;]+)/.exec(body);
+      const hint = /(?:^|;)--gr-scroll-hint-bg:\s*([^;]+)/.exec(body);
+
+      assert.ok(bg, `${name}: .gr-bg-${cls} без background-color`);
+      assert.ok(hint, `${name}: .gr-bg-${cls} — шторка не знает подложки`);
+      assert.equal(hint[1].trim(), bg[1].trim(), `${name}: .gr-bg-${cls} — шторка другого цвета`);
+    }
+  }
 });
 
 test('базовая ширина границы берётся из токена, явные ширины — нет', () => {

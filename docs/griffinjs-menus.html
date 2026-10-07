@@ -127,7 +127,7 @@
   <tr><td>Закрытие</td><td>тот же щелчок, панель пропадает сразу</td><td>плюс щелчок мимо полосы, уход указателя, <kbd>Esc</kbd>, уход фокуса; уход панели анимирует тема — <a href="#closing">состояние <code>closing</code></a></td></tr>
   <tr><td>Клавиатура</td><td><kbd>Tab</kbd>, <kbd>Enter</kbd>/<kbd>Space</kbd> на заголовке</td><td>плюс <kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd> по ряду, <kbd>↓</kbd> в панель, <kbd>↑</kbd> <kbd>↓</kbd> внутри, <kbd>Esc</kbd> назад</td></tr>
   <tr><td>Состояние для программ чтения</td><td>родное у <code>&lt;summary&gt;</code></td><td>плюс <code>aria-expanded</code> и <code>aria-controls</code> на заголовке</td></tr>
-  <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии — только со своего сайта и только HTML; пункт, открытый разметкой (<code>open</code>), — сразу при подъёме</td></tr>
+  <tr><td>Ajax-панели</td><td>—</td><td><code>data-gr-src</code> грузится при первом открытии — только со своего сайта и только HTML; пункт, открытый разметкой (<code>open</code>), — сразу при подъёме. Панель вставлена — событие <code>griffin:load</code> на пункте, со всплытием (<code>detail.item</code>, <code>detail.panel</code>): по нему рантайм компонентов ставит роль таблице форматированного текста в панели, а страница оживляет свои скрипты</td></tr>
   <tr><td>Узкий экран</td><td>аккордеон в свёрнутой навигации</td><td>тот же аккордеон, одна открытая панель, <kbd>Esc</kbd></td></tr>
 </table>
 
