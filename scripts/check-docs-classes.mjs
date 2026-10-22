@@ -22,7 +22,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
-import { parse } from './purge.mjs';
+import { parse } from '../packages/utils/bin/purge.mjs';
 
 // Исключения: шаблон (звёздочка — хвост имени) и причина. Причина
 // обязательна — исключение без неё скрывает ошибку, а не объясняет.

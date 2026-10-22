@@ -173,9 +173,9 @@ Rules:
   property: value;
 }
 
-// Responsive variants (if applicable) — shared map, range notation, suffix naming
+// Responsive variants (if applicable) — shared map, Media Queries 3 notation, suffix naming
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     .gr-<utility-name>-#{$bp-name} {
       property: value;
     }
@@ -183,8 +183,12 @@ Rules:
 }
 ```
 
-Never declare a breakpoint map inside a module, and never write `min-width` / `max-width` —
-both stylelint and `scripts/check-dist.mjs` reject it.
+Never declare a breakpoint map inside a module. A window query is Media Queries 3:
+`(min-width: X)`, and below a breakpoint `not all and (min-width: X)` — its exact
+complement, no `-1px`. Never `max-width` and never range syntax in `@media`: it raises
+the floor to Chrome 104 / Safari 16.4, above cascade layers (Stage 78). `@container`
+keeps range syntax — container queries know it from day one. Both stylelint
+(`media-feature-range-notation: prefix`) and `scripts/check-dist.mjs` enforce it.
 
 ### 2. Register the module
 
@@ -308,7 +312,7 @@ and `griffincss-utils` reach it by package path — both peer-depend on `griffin
 @use 'breakpoints' as bp;
 
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) { … }
+  @media (min-width: $bp-value) { … }
 }
 ```
 
@@ -392,7 +396,7 @@ Rules for modifying existing SCSS files in the library.
   @use 'breakpoints' as bp;
 
   @each $bp-name, $bp-value in bp.$gr-breakpoints {
-    @media (width >= $bp-value) { … }
+    @media (min-width: $bp-value) { … }
   }
   ```
   Changing a value is a one-line edit in that map, then `npm run build` — it propagates to
@@ -501,17 +505,18 @@ packages/utils/scss/griffincss-utils-scoped.scss — the same, prefixed with :wh
 Edit the module's `_*.scss` in `packages/*/scss/`. Rebuild. Done.
 
 #### Adding a responsive variant
-Follow the existing pattern — shared map, range notation, suffix naming:
+Follow the existing pattern — shared map, Media Queries 3 notation, suffix naming:
 ```scss
 @use 'breakpoints' as bp;
 
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     .gr-{utility}-#{$bp-name} { ... }
   }
 }
 ```
-`min-width` / `max-width` are rejected by both stylelint and `check-dist.mjs`.
+Range syntax and `max-width` in `@media` are rejected by stylelint and `check-dist.mjs`;
+below a breakpoint is `not all and (min-width: …)`. `@container` keeps range syntax.
 
 #### Adding a new SCSS function
 Add to `packages/core/scss/_functions.scss`. Prefix with `gr-`. Rebuild.
@@ -576,11 +581,16 @@ Rules for modifying `packages/core/src/griffincss.js` — the DOM-scanning grid 
    or media ranges in JS means changing the mixin in the same commit.
    The runtime writes no `gap`: the default comes from `[class*="gr-l-"]` in
    `_grid-parser.scss`, so `.gr-gap-*` can override it. Do not add the declaration back.
-3. **Ranges use range syntax** — `(width < 768px)`, `(768px <= width < 1024px)`,
-   `(width >= 1280px)`. No `-1px` arithmetic, no `min-width`/`max-width`.
-   The same text serves `@media` and `@container`: `rangeQuery()` builds the range,
-   `wrapInQuery(rule, …)` picks the at-rule. Window and container form **two
-   independent chains**; the base layout is wrapped in both at once
+3. **Window ranges — Media Queries 3, container ranges — range syntax** (Stage 78).
+   `@media`: `not all and (min-width: 768px)` below the first breakpoint,
+   `(min-width: 768px)` with a nested `not all and (min-width: 1024px)` for a middle
+   range, `(min-width: 1280px)` for the last — `mediaQueries()` builds the list,
+   `wrapInMedia()` nests it. Range syntax in `@media` is known to Chrome 104 and
+   Safari 16.4 only — above the cascade-layer floor. `@container`: `(width < 768px)`,
+   `(768px <= width < 1024px)`, `(width >= 1280px)` — `rangeQuery()`; container
+   queries know range syntax from day one. No `-1px` arithmetic and no `max-width`
+   anywhere: «below X» is the exact complement of «from X». Window and container form
+   **two independent chains**; the base layout is wrapped in both at once
    (`@media { @container { … } }`), or it would cover the other axis' range and
    the winner would depend on rule order rather than on width.
 4. **All generated CSS goes inside `@layer griffincss.core`,** preceded by the full order
@@ -678,15 +688,15 @@ Module-level caches persist across `refresh()` calls:
 [data-gr-layout].gr-ready, …      { opacity: 1; transition: opacity 0.3s ease; }
 
 /* Grid Layouts — оконная и контейнерная цепочки */
-@media (width < 768px) { @container (width < 768px) { .gr-l-2m7q0z { … } } }
-@media (width >= 768px)     { .gr-l-2m7q0z { … } }
-@container (width >= 768px) { .gr-l-2m7q0z { … } }
+@media not all and (min-width: 768px) { @container (width < 768px) { .gr-l-2m7q0z { … } } }
+@media (min-width: 768px)     { .gr-l-2m7q0z { … } }
+@container (width >= 768px)   { .gr-l-2m7q0z { … } }
 
 /* Grid Layouts */
 .gr-l-1f4x9k { display: grid; grid-template-areas: …; }   /* gap приходит из статики */
 .gr-l-1f4x9k > [class*="gr-area-"]:not(.gr-area-a):not(.gr-area-b) { display: none; }
-@media (width < 768px)  { .gr-l-2m7q0z { … } }
-@media (width >= 768px) { .gr-l-2m7q0z { … } }
+@media not all and (min-width: 768px) { .gr-l-2m7q0z { … } }
+@media (min-width: 768px)             { .gr-l-2m7q0z { … } }
 
 /* Grid Areas */
 .gr-area-a { grid-area: a; }

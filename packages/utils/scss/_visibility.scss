@@ -1,6 +1,8 @@
 // Griffincss — Visibility Utilities
 // Display, visibility, and accessibility helpers
 
+@use 'sass:list';
+@use 'sass:map';
 @use 'griffincss-core/scss/breakpoints' as bp;
 @use 'griffincss-core/scss/container-mixins' as cq;
 
@@ -88,9 +90,10 @@
 
 // Адаптивный набор — один на оба вида запроса. Оконный вариант получает
 // суффикс брейкпоинта, контейнерный — тот же суффикс с буквой c; правила
-// описаны один раз, поэтому разойтись не могут.
-@mixin gr-visibility-scale($suffix) {
-  .gr-hidden#{$suffix} {
+// описаны один раз, поэтому разойтись не могут. $hidden — имена, которые
+// скрывают «от брейкпоинта» (см. «Скрытие по диапазонам» ниже).
+@mixin gr-visibility-scale($suffix, $hidden: '.gr-hidden#{$suffix}') {
+  #{$hidden} {
     display: none;
   }
 
@@ -107,16 +110,111 @@
   }
 }
 
-// Адаптивное скрытие по ширине окна
-@each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
-    @include gr-visibility-scale('-#{$bp-name}');
+// --- Скрытие по диапазонам (Этап 78) -----------------------------------------
+//
+// Имя брейкпоинта — диапазон: lg — от lg до следующего, xl — от xl и выше.
+// Слово — граница:
+//   .gr-hidden-in-lg    — только в диапазоне lg;
+//   .gr-hidden-to-lg    — до lg включительно (ниже следующего);
+//   .gr-hidden-under-lg — ниже lg;
+//   .gr-hidden-from-lg  — от lg; то же, что голый .gr-hidden-lg;
+//   .gr-hidden-over-lg  — выше lg (от следующего).
+// Пары to/from включают диапазон, under/over в него не заходят. Имена,
+// совпадающие по ширине (from-lg и over-md, to-md и under-lg), — одним
+// правилом. Пустые (over-xl) и тотальные (to-xl — это .gr-hidden)
+// не заводятся. Контейнерные — те же слова с буквой c: .gr-hidden-under-cmd.
+//
+// Вне диапазона скрытия у элемента нет display от утилит, и он показывается
+// своим — .gr-flex ядра, компонент, CSS приложения: «скрыть, а потом
+// показать от брейкпоинта» не нужно. Правила under и in стоят после шкалы
+// показа (.gr-block-md …) — скрытие в своём диапазоне её перебивает.
+$_gr-bp-names: map.keys(bp.$gr-breakpoints);
+
+// Имена «от брейкпоинта» с номером $i: голый суффикс, from, over
+// предыдущего и in последнего. $c — '' для окна, 'c' для контейнера.
+@function _gr-hidden-from($i, $c) {
+  $bp: list.nth($_gr-bp-names, $i);
+  $names: ('.gr-hidden-#{$c}#{$bp}', '.gr-hidden-from-#{$c}#{$bp}');
+
+  @if $i > 1 {
+    $names: list.append($names, '.gr-hidden-over-#{$c}#{list.nth($_gr-bp-names, $i - 1)}', comma);
+  }
+
+  @if $i == list.length($_gr-bp-names) {
+    $names: list.append($names, '.gr-hidden-in-#{$c}#{$bp}', comma);
+  }
+
+  @return $names;
+}
+
+// Имена «ниже брейкпоинта» с номером $i: under и to предыдущего.
+@function _gr-hidden-under($i, $c) {
+  $names: ('.gr-hidden-under-#{$c}#{list.nth($_gr-bp-names, $i)}',);
+
+  @if $i > 1 {
+    $names: list.append($names, '.gr-hidden-to-#{$c}#{list.nth($_gr-bp-names, $i - 1)}', comma);
+  }
+
+  @return $names;
+}
+
+// Адаптивное скрытие и показ по ширине окна
+@for $i from 1 through list.length($_gr-bp-names) {
+  $bp-name: list.nth($_gr-bp-names, $i);
+
+  @media (min-width: map.get(bp.$gr-breakpoints, $bp-name)) {
+    @include gr-visibility-scale('-#{$bp-name}', _gr-hidden-from($i, ''));
   }
 }
 
-// Контейнерное скрытие — от ширины ближайшего предка с .gr-cq
-@each $bp-name, $bp-value in bp.$gr-breakpoints {
+// Контейнерное — от ширины ближайшего предка с .gr-cq
+@for $i from 1 through list.length($_gr-bp-names) {
+  $bp-name: list.nth($_gr-bp-names, $i);
+
   @include cq.gr-container-media($bp-name) {
-    @include gr-visibility-scale('-c#{$bp-name}');
+    @include gr-visibility-scale('-c#{$bp-name}', _gr-hidden-from($i, 'c'));
+  }
+}
+
+// Ниже брейкпоинта и только в диапазоне — окно: «ниже X» — точное
+// дополнение «от X», средний диапазон — вложенным @media (запись Media
+// Queries 3, порог каскадных слоёв); контейнер — в диапазонах.
+@for $i from 1 through list.length($_gr-bp-names) {
+  $bp-name: list.nth($_gr-bp-names, $i);
+  $value: map.get(bp.$gr-breakpoints, $bp-name);
+
+  @media not all and (min-width: $value) {
+    #{_gr-hidden-under($i, '')} {
+      display: none;
+    }
+  }
+
+  @if $i < list.length($_gr-bp-names) {
+    @media (min-width: $value) {
+      @media not all and (min-width: map.get(bp.$gr-breakpoints, list.nth($_gr-bp-names, $i + 1))) {
+        .gr-hidden-in-#{$bp-name} {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@for $i from 1 through list.length($_gr-bp-names) {
+  $bp-name: list.nth($_gr-bp-names, $i);
+  $value: map.get(bp.$gr-breakpoints, $bp-name);
+
+  @include cq.gr-container-below($bp-name) {
+    #{_gr-hidden-under($i, 'c')} {
+      display: none;
+    }
+  }
+
+  @if $i < list.length($_gr-bp-names) {
+    @container (#{$value} <= width < #{map.get(bp.$gr-breakpoints, list.nth($_gr-bp-names, $i + 1))}) {
+      .gr-hidden-in-c#{$bp-name} {
+        display: none;
+      }
+    }
   }
 }

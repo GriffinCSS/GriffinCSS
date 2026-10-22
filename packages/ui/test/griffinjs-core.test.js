@@ -325,7 +325,7 @@ test('сканер поднимает виджеты на появившихся
 
 // --- media ------------------------------------------------------------------
 
-test('брейкпоинты читаются из --gr-bp-*, запрос в range-синтаксисе', () => {
+test('брейкпоинты читаются из --gr-bp-*, запрос — в записи Media Queries 3 (порог слоёв)', () => {
   const { G } = setup(['core/media.js']);
   const queries = [];
 
@@ -334,11 +334,11 @@ test('брейкпоинты читаются из --gr-bp-*, запрос в ra
 
   try {
     assert.equal(G.media.value('md'), '768px');
-    assert.equal(G.media.query('md'), '(width >= 768px)');
+    assert.equal(G.media.query('md'), '(min-width: 768px)');
     assert.equal(G.media.matches('md'), true);
     assert.equal(G.media.query('xx'), null);
     assert.equal(G.media.matches('xx'), false, 'неизвестный брейкпоинт — false, не исключение');
-    assert.deepEqual(queries, ['(width >= 768px)']);
+    assert.deepEqual(queries, ['(min-width: 768px)']);
 
     const seen = [];
     const off = G.media.on('md', (m) => seen.push(m));
@@ -348,4 +348,31 @@ test('брейкпоинты читаются из --gr-bp-*, запрос в ra
     delete global.getComputedStyle;
     delete global.matchMedia;
   }
+});
+
+
+// Ревью CHU, п. 33: запись атрибутов снимает только своё значение.
+// Фреймворк или страница поменяли атрибут после виджета — значение уже
+// не его, и restore() его не трогает (то же правило, что у tabindex
+// таблиц прозы). Поставил виджет то же значение снова — оно опять его.
+test('запись атрибутов снимает только своё значение', () => {
+  const { G, doc } = setup();
+  const node = mount(doc, el('button'));
+  const record = G.recorder();
+
+  record.set(node, 'role', 'menuitem');
+  node.setAttribute('role', 'menuitemradio');
+  record.restore();
+
+  assert.equal(node.getAttribute('role'), 'menuitemradio', 'чужое значение снято');
+
+  const toggle = mount(doc, el('button'));
+  const again = G.recorder();
+
+  again.set(toggle, 'aria-expanded', 'true');
+  toggle.setAttribute('aria-expanded', 'false');
+  again.set(toggle, 'aria-expanded', 'false');
+  again.restore();
+
+  assert.equal(toggle.hasAttribute('aria-expanded'), false, 'значение, поставленное записью повторно, не снято');
 });

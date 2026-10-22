@@ -230,7 +230,7 @@
 // -cmd — пока уже 768px ближайший предок с .gr-cq. Разметка одна на оба
 // вида: подпись и пояснение — в .gr-step-body.
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width < $bp-value) {
+  @media not all and (min-width: $bp-value) {
     @include gr-steps-vertical('.gr-steps-stack-#{$bp-name}');
   }
 

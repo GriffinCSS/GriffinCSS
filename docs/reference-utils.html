@@ -447,8 +447,16 @@ document.addEventListener('griffincss:themechange', function (e) {
   <tr><td><code>.gr-sr-only</code></td><td>Скрыт визуально, доступен скринридеру (<code>clip-path: inset(50%)</code>)</td></tr>
   <tr><td><code>.gr-sr-only-focusable</code></td><td>То же, но появляется при фокусе с клавиатуры — ссылка «к содержимому»</td></tr>
   <tr><td><code>.gr-not-sr-only</code></td><td>Вернуть в поток</td></tr>
-  <tr><td><code>.gr-hidden-sm</code> / <code>md</code> / <code>lg</code> / <code>xl</code></td><td>Скрытие от брейкпоинта</td></tr>
+  <tr><td><code>.gr-hidden-sm</code> / <code>md</code> / <code>lg</code> / <code>xl</code></td><td>Скрытие от брейкпоинта — то же, что <code>-from-</code></td></tr>
+  <tr><td><code>.gr-hidden-in-{sm,md,lg,xl}</code></td><td>Только в диапазоне брейкпоинта (lg — от 1024 до 1280px)</td></tr>
+  <tr><td><code>.gr-hidden-to-{sm,md,lg}</code></td><td>До диапазона включительно</td></tr>
+  <tr><td><code>.gr-hidden-under-{sm,md,lg,xl}</code></td><td>Ниже диапазона</td></tr>
+  <tr><td><code>.gr-hidden-from-{sm,md,lg,xl}</code></td><td>От диапазона и выше</td></tr>
+  <tr><td><code>.gr-hidden-over-{sm,md,lg}</code></td><td>Выше диапазона</td></tr>
+  <tr><td><code>.gr-hidden-{in,to,under,from,over}-c{sm,md,lg,xl}</code></td><td>То же по ширине контейнера <code>.gr-cq</code></td></tr>
 </table>
+
+<p>Классы скрытия складываются — все они одно <code>display: none</code>: <code>gr-hidden-under-md gr-hidden-over-md</code> — виден только на md. Вне своего диапазона класс ничего не объявляет, и элемент показывается своим <code>display</code>: «показать флекс от md» — <code>gr-flex gr-hidden-under-md</code>. Подробно — <a href="visibility.html#diapazony">«Адаптивное скрытие»</a>.</p>
 
 <p>Полосу прокрутки движок рисует поверх собственного края элемента и по <code>border-radius</code> не обрезает: у скруглённого блока с <code>overflow: auto</code> она срезает углы, а если у блока есть рамка — съедает и её нижнюю сторону. Приёма два, и выбор между ними не вкусовой:</p>
 
@@ -490,7 +498,7 @@ document.addEventListener('griffincss:themechange', function (e) {
 <p>Адаптивных классов радиуса нет: значение приходит из <code>--gr-r</code>, поэтому меняется обычным медиа-запросом, а каскад по вложенности пересчитывается сам.</p>
 
 <pre><code>.card { --gr-r: 0; }
-@media (width &gt;= 768px) { .card { --gr-r: 1rem; } }</code></pre>
+@media (min-width: 768px) { .card { --gr-r: 1rem; } }</code></pre>
 
 <p><strong>Пример / Example:</strong></p>
 
@@ -676,7 +684,7 @@ Griffincss.utils.stop();               // снять всё наблюдение
 
 <p>Замер: <strong>14 945 → 10 876 Б</strong> gzip (−27,2 %), классов 2490 → 1546. Шкала кегля тянет за собой адаптивные и контейнерные варианты, поэтому платит за себя больше остальных; после размена односторонних отступов на логические то же делает и шкала отступов — логические классы несут полные адаптивные наборы.</p>
 
-<p>Целая группа убирается ещё проще — строкой <code>@include</code> меньше: не нужны тени, не подключайте <code>shadows</code>. Отсечение неиспользуемого (<code>npm run purge</code>) решает ту же задачу по факту разметки; переопределение решает её по решению, до сборки.</p>
+<p>Целая группа убирается ещё проще — строкой <code>@include</code> меньше: не нужны тени, не подключайте <code>shadows</code>. Отсечение неиспользуемого (<code>npx -p griffincss-utils griffincss-purge</code>) решает ту же задачу по факту разметки; переопределение решает её по решению, до сборки.</p>
 
 <div class="callout">
   <p><strong>Рантайм тут ни при чём.</strong> Переопределение на компилтайме меняет состав и имена классов в CSS. Рантайм утилит (<code>griffincss-utils.js</code>) разбирает произвольные значения <code>gr-*-[…]</code> и каскад скруглений по своей таблице, которая читается из исходников пакета при сборке. Это два несвязанных механизма: урезав шкалу <code>$gr-spacing-steps</code>, вы не отнимете у рантайма <code>gr-p-[13px]</code>, а переименовав акценты — не научите его новым именам.</p>

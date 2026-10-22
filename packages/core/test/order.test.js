@@ -34,7 +34,7 @@ test('.gr-order-first / -last / -none — первым, последним и п
 
 test('оконные варианты повторяют базовые от своего порога', () => {
   for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
-    const media = bodies(`@media (width >= ${value})`);
+    const media = bodies(`@media (min-width: ${value})`);
 
     assert.equal(ruleIn(media, `.gr-order-first-${bp}`), 'order:-9999', `.gr-order-first-${bp}`);
     assert.equal(ruleIn(media, `.gr-order-last-${bp}`), 'order:9999', `.gr-order-last-${bp}`);

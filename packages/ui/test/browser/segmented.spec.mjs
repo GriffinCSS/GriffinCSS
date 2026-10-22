@@ -128,3 +128,68 @@ test('избыточный радиус движок ужимает до пол�
   expect(frame.tl, `рамка: ${JSON.stringify(frame)}, потолок ${cap.toFixed(1)}`).toBeLessThanOrEqual(Math.ceil(cap));
   expect(frame.tl, `рамка: ${JSON.stringify(frame)}, потолок ${cap.toFixed(1)}`).toBeGreaterThanOrEqual(Math.floor(cap * 0.7));
 });
+
+// Вложенный span подписи (Этап 77). Правила сегмента шли по любому span
+// внутри переключателя: значок, счётчик, текст для читалки в подписи
+// получали блок, поля, серый цвет невыбранного — и на акцентной заливке
+// выбранного тоже, — а во втором и следующих сегментах ещё и внутреннюю
+// рамку соседа.
+const NESTED = '/segmented-nested-fixture.html';
+
+const nested = `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Сегмент с вложенным span</title>
+<link rel="stylesheet" href="/packages/core/dist/griffincss-reset.css">
+<link rel="stylesheet" href="/packages/core/dist/griffincss-core.css">
+<link rel="stylesheet" href="/packages/ui/dist/griffincss-ui.css">
+<style>:root { --gr-transition: 0s; } body { padding: 40px; }</style>
+</head><body>
+<fieldset class="gr-segmented" aria-label="Экран">
+  <label><input type="radio" name="s" checked><span id="a">Десктоп <span id="a-in">(1280)</span></span></label>
+  <label><input type="radio" name="s"><span id="b">Телефон <span id="b-in">(390)</span></span></label>
+</fieldset>
+</body></html>`;
+
+test('вложенный span подписи — не сегмент: строчный, без полей и рамки, цвета своего сегмента', async ({ page }) => {
+  await page.route(`**${NESTED}`, (route) => route.fulfill({
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+    body: nested,
+  }));
+  await page.goto(NESTED);
+
+  const read = () => page.evaluate(() => Object.fromEntries(['a', 'a-in', 'b', 'b-in'].map((id) => {
+    const s = getComputedStyle(document.getElementById(id));
+
+    return [id, {
+      display: s.display,
+      padding: s.paddingInlineStart,
+      border: s.borderInlineStartWidth,
+      color: s.color,
+      background: s.backgroundColor,
+    }];
+  })));
+  const styles = await read();
+
+  // Сами сегменты — как прежде.
+  expect(styles.a.display).toBe('block');
+  expect(styles.a.padding).not.toBe('0px');
+  expect(styles.b.border, 'у второго сегмента пропала внутренняя рамка').not.toBe('0px');
+
+  for (const [inner, outer] of [['a-in', 'a'], ['b-in', 'b']]) {
+    expect(styles[inner], `${inner}: ${JSON.stringify(styles)}`).toEqual({
+      display: 'inline',
+      padding: '0px',
+      border: '0px',
+      color: styles[outer].color,
+      background: 'rgba(0, 0, 0, 0)',
+    });
+  }
+
+  // Под указателем подсвечивается сегмент, а не вложенный span.
+  await page.hover('#b-in');
+
+  const hovered = await read();
+
+  expect(hovered['b-in'].background, 'вложенный span подсвечен отдельно').toBe('rgba(0, 0, 0, 0)');
+  expect(hovered['b-in'].color, 'цвет вложенного span не идёт за сегментом').toBe(hovered.b.color);
+});

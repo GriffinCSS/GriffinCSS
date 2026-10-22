@@ -6,9 +6,9 @@
 
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
-| **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | <!--gr:size:core-->3,8 КБ<!--/gr:size:core--> CSS + <!--gr:size:js-pkg-core-->5,2 КБ<!--/gr:size:js-pkg-core--> JS |
+| **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | <!--gr:size:core-->3,8 КБ<!--/gr:size:core--> CSS + <!--gr:size:js-pkg-core-->5,3 КБ<!--/gr:size:js-pkg-core--> JS |
 | **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->13,5 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->3,6 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->20,0 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
-| **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | <!--gr:size:utils-->14,8 КБ<!--/gr:size:utils--> CSS + <!--gr:size:js-utils-->2,4 КБ<!--/gr:size:js-utils--> JS |
+| **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | <!--gr:size:utils-->15,0 КБ<!--/gr:size:utils--> CSS + <!--gr:size:js-utils-->2,4 КБ<!--/gr:size:js-utils--> JS |
 
 ### Раскладки: две дорожки, одна строка
 
@@ -60,11 +60,11 @@ peer-зависят от него: дизайн-токены и карта бр�
 поднимается только вместе с тем, что покупается, и подо что оставлен
 запас — записано рядом с каждой цифрой в `scripts/check-dist.mjs`.
 Для сравнения (замер сторонних файлов — 2026-08-30, gzip): ресет, ядро,
-компоненты и утилиты вместе — <!--gr:size:css-all-->32,7 КБ<!--/gr:size:css-all-->
+компоненты и утилиты вместе — <!--gr:size:css-all-->32,9 КБ<!--/gr:size:css-all-->
 против 30,1 КБ у `bootstrap.min.css` и 63,1 КБ у `bulma.min.css`;
 ресет, ядро и компоненты — <!--gr:size:css-ui-stack-->17,9 КБ<!--/gr:size:css-ui-stack-->
 против 29,3 КБ у `uikit.min.css`; четыре рантайма —
-<!--gr:size:js-all-->11,2 КБ<!--/gr:size:js-all--> против 23,2 КБ
+<!--gr:size:js-all-->11,3 КБ<!--/gr:size:js-all--> против 23,2 КБ
 у `bootstrap.bundle.min.js`.
 
 A modular SCSS library for modern layouts based on CSS Grid and Flexbox.
@@ -96,6 +96,12 @@ JS-рантайм не требует сборки и не имеет завис
 `color-mix()`: оттенки и подсветки собраны из hsl-триплетов темы и 
 полупрозрачных слоёв. Иначе порог поднялся бы до Chrome 111 · Safari 16.2
  · Firefox 113, то есть выше каскадных слоёв, ради оттенка кнопки при наведении.
+По той же причине брейкпоинты окна записаны в Media Queries 3 —
+`(min-width: X)` и его точное дополнение `not all and (min-width: X)`:
+синтаксис диапазонов в `@media` знают только Chrome 104 · Safari 16.4,
+и браузер со слоями, но без него, получал бы раскладку узкого экрана
+на любой ширине. В `@container` — диапазоны: их контейнерные запросы
+знают с первого дня.
 
 | Возможность | Минимальные версии | Требуется для | В мире | В России |
 |---|---|---|---|---|
@@ -141,7 +147,7 @@ anywhere in the library.
 
 ## Установка / Installation
 
-> **Текущая версия `0.29.2`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.30.0`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -168,10 +174,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.29.2/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.30.0/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss.js"></script>
 ```
 
 Стратегии оформления `data-gr-style` — отдельный файл, по желанию: все три
@@ -179,9 +185,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 
 ```html
 <!-- все три стиля -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-styles.css">
 <!-- или один — вместо предыдущей строки, а не вдобавок к ней -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-style-strict.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-style-strict.css">
 ```
 
 Разбор и веса по каждому файлу — [docs/style-presets.html](docs/style-presets.html).
@@ -192,8 +198,8 @@ npm i griffincss-core griffincss-ui griffincss-utils
 сортируемая таблица):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffinjs.css">
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffinjs.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs.css">
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs.js"></script>
 ```
 
 `defer` — потому что до первой отрисовки слою ставить нечего; синхронно
@@ -204,13 +210,13 @@ npm i griffincss-core griffincss-ui griffincss-utils
 Расширенные поля форм — маска, телефон, дата и время, файл с удалением
 по одному, ввод оценки, одноразовый код, счётчик символов, сводка ошибок —
 лежат вторым файлом слоя и подключаются после него; набор «ядро + поля»
-весит <!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip,
+весит <!--gr:size:griffinjs-fields-set-->13,8 КБ<!--/gr:size:griffinjs-fields-set--> gzip,
 `griffinjs.js` от них не растёт ни на байт:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffinjs-fields.css">
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffinjs-fields.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.29.2/dist/griffinjs-countries.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-fields.css">
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-fields.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-countries.js"></script>
 ```
 
 Поля нужны на трёх страницах из трёхсот, а тег стоит в шапке для всех?
@@ -227,7 +233,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
@@ -529,32 +535,48 @@ npm run check        # lint + build + test — полный шлюз
 брейкпоинтах. Странице столько не нужно: отсечение оставляет только те
 правила, чьи классы встретились в вашей разметке.
 
+Отсечение едет в пакете `griffincss-utils` командой `griffincss-purge`
+(ноль зависимостей) и модулем `griffincss-utils/purge` — те же `purge()`,
+`parse()`, `extractClasses()` и пресеты для своей сборки. В клоне
+репозитория та же команда — `npm run purge --`. Зовите её с пакетом:
+`npx -p griffincss-utils griffincss-purge`. Без `-p` npx, не найдя команды
+в проекте (поставлены только компоненты), пошёл бы в реестр за пакетом
+с именем команды — а это имя не библиотеки.
+
 ```bash
-npm run purge -- --out dist/utils.css src/                 # каталог целиком
-npm run purge -- --css node_modules/griffincss-utils/dist/griffincss-utils.css \
-                 --out public/utils.css --safelist 'gr-r-*,gr-radius-*' src/
+npx -p griffincss-utils griffincss-purge --out public/utils.css src/   # каталог целиком
+npx -p griffincss-utils griffincss-purge \
+    --css node_modules/griffincss-utils/dist/griffincss-utils.css \
+    --out public/utils.css --safelist 'gr-r-*,gr-radius-*' src/
 ```
 
 | Опция | Что делает |
 |---|---|
-| `--css <файл>` | Что отсекать. По умолчанию `packages/utils/dist/griffincss-utils.css` |
+| `--css <файл>` | Что отсекать. По умолчанию — `dist/griffincss-utils.css` своего пакета |
 | `--out <файл>` | Куда писать. Без неё результат идёт в `stdout`, а отчёт — в `stderr` |
 | `--safelist a,b*` | Имена и шаблоны, которые сохраняются, даже если в разметке их нет |
 | `--preset ui` | Готовый safelist классов, которые ставят скрипты пакета `griffincss-ui` — см. «Отсечение компонентов» ниже |
 | `<файлы/каталоги>` | Разметка. Каталог обходится рекурсивно: `.html`, `.jsx`, `.vue`, `.svelte`, `.php`, `.twig`, `.md`, `.py`, `.jinja`/`.j2`, `.django`, `.tmpl`/`.gotmpl`, `.rs` и прочие шаблоны. Явно переданный файл берётся всегда, с любым расширением — список действует только при обходе каталога |
 
 Отчёт печатается всегда — счётчики и есть та проверка, по которой видно,
-что safelist собран правильно:
+что safelist собран правильно (прогон по `docs/patterns.html`):
 
 ```
-purge: 43 файлов разметки, найдено классов: 682
-purge: правил оставлено 230 из 2525, выброшено 2295
-purge: 105.5 КБ → 22.8 КБ (gzip 14565 → 4231 Б, brotli 7399 → 3551 Б)
+purge: 1 файлов разметки, имён в разметке: 178, из них классов этого CSS: 66
+purge: правил оставлено 81 из 2528, выброшено 2447
+purge: 113.0 КБ → 16.7 КБ (gzip 15354 → 2948 Б, brotli 7968 → 2461 Б)
 ```
+
+Имён в разметке больше, чем классов: значение `class` делится по пробелам,
+и на шаблонах (Twig, JSX) среди имён — обрывки вроде `{{` и `th-total{%`.
+Отсечению они не мешают — с классом из CSS не совпадут, — а диагностика —
+второе число.
 
 **Что скрипт видит.** Значение атрибута `class`, `className`, `:class`,
-`class:list` — в том числе в экранированных примерах внутри `<pre>`.
-В файлах с кодом (`.js`, `.jsx`, `.ts`, `.vue`, `.svelte`, `.py`, `.rs`) —
+`class:list` — в том числе в экранированных примерах внутри `<pre>`
+(`class=&quot;…&quot;`). Имя в значении — всё между пробелами, с любыми
+знаками и не только латиницей: `md:gr-a`, `-foo`, `кнопка`; в выражении
+(`{'gr-a': on}`) имя достаётся из кавычек. В файлах с кодом (`.js`, `.jsx`, `.ts`, `.vue`, `.svelte`, `.py`, `.rs`) —
 дополнительно строковые литералы, поэтому `clsx('gr-p-4')` и
 `row_class = 'gr-p-4'` находятся.
 
@@ -577,7 +599,24 @@ purge: 105.5 КБ → 22.8 КБ (gzip 14565 → 4231 Б, brotli 7399 → 3551 Б
 переменными, `@property`, правила без классов в селекторе (по тегу,
 по атрибуту — кроме разобранного выше `data-gr-style`). `@keyframes`
 остаётся, только если на анимацию ссылается уцелевшее правило;
-опустевший `@media` не остаётся вовсе.
+опустевший `@media` не остаётся вовсе. Опустевший блок именованного
+слоя остаётся объявлением `@layer имя;`, если выше в том же списке правил
+имя не встречалось: порядок слоёв задаёт первое появление имени, и без
+объявления слой переехал бы ниже. Комментарии между правилами и по краям
+селектора в вывод не идут; комментарий вплотную между двумя знаками
+становится пустым `/**/` — браузер видит на его месте ту же границу
+(`.a/**/b` — не `.a b`); в телах правил комментарии остаются как есть.
+
+**Рассчитано на валидный CSS.** Классы в селекторе читаются, как их
+читает браузер: с экранированием (`.\31 0` — класс `10`, `.a\,b` — один
+класс `a,b`), без учёта регистра у `:not()`, `:is()`, `:where()`, `:has()`,
+точка и `:is(` внутри строки атрибута (`a[href$=".pdf"]`) — не класс
+и не псевдокласс, а `.a#b` — класс `a` и id `b`. Лишняя `;` между
+правилами разбирается так же, как в браузере: правило за ней браузер
+не применяет, и отсечение его выбрасывает. Незакрытую скобку `(` скрипт не разбирает —
+браузер проглатывает за ней всё до парной скобки, а отсечение режет
+по `{}`, и после такой опечатки правило может уйти или ожить не так,
+как в исходнике. CSS темы проверяйте до отсечения.
 
 Отсечение необратимо на вашей стороне: ошибка в safelist видна не в сборке,
 а как пропавший стиль на странице. Поэтому счётчики — часть вывода,
@@ -594,11 +633,22 @@ purge: 105.5 КБ → 22.8 КБ (gzip 14565 → 4231 Б, brotli 7399 → 3551 Б
 Для них есть пресет — `--preset ui`, тот же safelist, только готовый:
 
 ```bash
-npm run purge -- --css node_modules/griffincss-ui/dist/griffincss-ui.css \
-                 --preset ui --out public/ui.css src/
-npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css \
-                 --preset ui --out public/griffinjs.css src/          # слой виджетов — тем же пресетом
+npx -p griffincss-utils griffincss-purge \
+    --css node_modules/griffincss-ui/dist/griffincss-ui.css --preset ui --out public/ui.css src/
+npx -p griffincss-utils griffincss-purge \
+    --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui --out public/griffinjs.css src/   # слой виджетов
 ```
+
+Команда — из `griffincss-utils`: проекту с одними компонентами
+`-p` ставит его на время запуска, последней версии. Пресет при этом
+идёт за версией отсекаемого CSS: сперва — `purge-presets.json` рядом
+с файлом из `--css` (он лежит в той же `dist`, что `griffincss-ui.css`
+и `griffinjs.css`; перенося файлы библиотеки к себе, кладите его рядом
+с CSS), затем — `griffincss-ui`, найденный от текущего каталога так же,
+как его нашёл бы `require`: и в `node_modules` выше по дереву
+(в монорепозитории так находится корневой), иначе — встроенный
+(с 0.30.0). Отчёт печатает путь найденного файла: если список пришёл
+из чужого `griffincss-ui` выше по дереву, это видно сразу.
 
 Список пресета не ведётся руками: тест собирает его из исходников
 рантайма и слоя и роняет `npm test`, если пресет отстал от кода.
@@ -608,7 +658,10 @@ npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css \
 Цена пресета — правила всех компонентов, которые строит скрипт, даже
 не использованных на странице: на этой — 678 Б в `griffincss-ui.css`
 и 1 457 Б в `griffinjs.css`. Нужен точнее — соберите `--safelist`
-сами из списка `PRESETS.ui` в `scripts/purge.mjs`.
+сами из списка пресета: он экспортируется (`PRESETS` из
+`griffincss-utils/purge`) и лежит данными рядом с CSS компонентов —
+`griffincss-ui/dist/purge-presets.json`, для сборки не на Node.
+Имя со звёздочкой (`gr-toast-*`) — шаблон, как в `--safelist`.
 
 Пресет не знает про ось оформления: значения `data-gr-style`, которые
 ставятся не в разметке, а из настроек или рантаймом
@@ -803,6 +856,8 @@ GriffinCSS/
 │       │   └── _visibility.scss             # Display, overflow, доступность
 │       ├── src/
 │       │   └── griffincss-utils.js          # JS-рантайм каскада скруглений
+│       ├── bin/
+│       │   └── purge.mjs                    # griffincss-purge — отсечение неиспользуемого CSS (--preset ui)
 │       ├── test/
 │       └── dist/
 ├── scripts/
@@ -812,7 +867,7 @@ GriffinCSS/
 │   ├── check-links.mjs           # Целостность ссылок документации
 │   ├── check-docs-classes.mjs    # Классы документации — только из собранного CSS
 │   ├── build-docs-index.mjs      # Поисковый индекс доксайта
-│   ├── purge.mjs                 # Отсечение неиспользуемого CSS: утилиты, компоненты (--preset ui)
+│   ├── build-purge-presets.mjs   # Пресеты отсечения данными: griffincss-ui/dist/purge-presets.json
 │   └── serve-stream.mjs          # Стенд потоковой раскладки
 ├── docs/                         # Демо и страницы документации
 └── .gitverse/workflows/          # Непрерывная проверка

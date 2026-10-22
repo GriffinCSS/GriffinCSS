@@ -28,11 +28,11 @@
     Компактная, расширяемая, без лишнего кода. Описывайте сложные сетки одной строкой.
   </p>
   <div class="hero-badges">
-    <span class="badge badge-accent">v0.29.2</span>
+    <span class="badge badge-accent">v0.30.0</span>
     <span class="badge">Dart Sass</span>
     <span class="badge">CSS Grid</span>
     <span class="badge">Flexbox</span>
-    <span class="badge">JS <!--gr:size:js-all-->11,2 КБ<!--/gr:size:js-all--> gzip</span>
+    <span class="badge">JS <!--gr:size:js-all-->11,3 КБ<!--/gr:size:js-all--> gzip</span>
     <span class="badge">MIT</span>
   </div>
 </div>
@@ -83,7 +83,7 @@
   <tr><td>Современность</td><td>Только CSS Grid и Flexbox. Никаких float, inline-block хаков, табличной вёрстки.</td></tr>
   <tr><td>Строковый DSL</td><td>Компактный формат <code>"a3b4-c2d5"</code> — интуитивно понятнее, чем ручное описание grid-template-areas.</td></tr>
   <tr><td>Дедупликация</td><td>JS-рантайм генерирует CSS-правила однократно. Даже если на странице 100 одинаковых раскладок, в DOM попадёт ровно один блок CSS.</td></tr>
-  <tr><td>Непересекающиеся брейкпоинты</td><td>Адаптивные правила используют диапазоны в range-синтаксисе (<code>(768px &lt;= width &lt; 1024px)</code>), исключая конфликты между брейкпоинтами и щели на дробных ширинах.</td></tr>
+  <tr><td>Непересекающиеся брейкпоинты</td><td>Адаптивные правила — непересекающиеся диапазоны: «ниже X» — точное дополнение «от X» (<code>not all and (min-width: 768px)</code>), без конфликтов между брейкпоинтами и щелей на дробных ширинах, с порогом каскадных слоёв.</td></tr>
   <tr><td>Сохранение display</td><td>Авто-скрытие элементов через <code>:not()</code> добавляет <code>display:none</code> только скрываемым. Исходный display (flex, table, etc.) сохраняется.</td></tr>
   <tr><td>CSS-переменные</td><td>Все ключевые значения вынесены в CSS custom properties на <code>:root</code>. Переопределяются в рантайме без пересборки.</td></tr>
   <tr><td>Независимость раскладок</td><td>Вложенные <code>data-gr-layout</code> контейнеры полностью изолированы. Имена grid-area не конфликтуют между родителем и потомком.</td></tr>

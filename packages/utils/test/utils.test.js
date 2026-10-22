@@ -332,13 +332,15 @@ test('контейнерные варианты живут внутри @contain
 
   assert.ok(containers.length > 0, '@container в собранном файле не найден');
 
+  // От брейкпоинта, ниже него и средний диапазон (скрытие по диапазонам,
+  // Этап 78) — всё в синтаксисе диапазонов: @container знает его с первого дня.
   for (const query of containers) {
-    assert.match(query, /^\(width>=\d+px\)$/, `запрос не в range-синтаксисе: ${query}`);
+    assert.match(query, /^\((width>=\d+px|width<\d+px|\d+px<=width<\d+px)\)$/, `запрос не в синтаксисе диапазонов: ${query}`);
   }
 });
 
 test('шкала контейнерных запросов — та же карта брейкпоинтов', () => {
-  const inMedia = new Set([...squeezed.matchAll(/@media\(width>=(\d+px)\)/g)].map((m) => m[1]));
+  const inMedia = new Set([...squeezed.matchAll(/@media\(min-width:(\d+px)\)/g)].map((m) => m[1]));
   const inContainer = new Set([...squeezed.matchAll(/@container\(width>=(\d+px)\)/g)].map((m) => m[1]));
 
   assert.deepEqual([...inContainer].sort(), [...inMedia].sort());
@@ -346,7 +348,7 @@ test('шкала контейнерных запросов — та же кар�
 
 test('контейнерные варианты есть у отступов, размеров, типографики и видимости', () => {
   for (const name of ['gr-p-4-cmd', 'gr-my-8-csm', 'gr-w-full-cxl', 'gr-text-lg-clg', 'gr-hidden-csm']) {
-    assert.ok(utils.includes(`.${name}{`), `контейнерный класс .${name} отсутствует`);
+    assert.ok(new RegExp(`\\.${name}[,{]`).test(utils), `контейнерный класс .${name} отсутствует`);
   }
 });
 
@@ -641,5 +643,31 @@ test('класс пропорции уступает утилите высоты
 
     assert.ok(aspect !== -1 && height !== -1, `${name}: правил нет — разбор сломан`);
     assert.ok(aspect < height, `${name}: .gr-aspect-square (${aspect}) стоит после .gr-h-full (${height})`);
+  }
+});
+
+// Этап 78: скрытие по диапазонам. Имя брейкпоинта — диапазон (lg — от lg
+// до xl), слово — граница: in — только диапазон, to — до него включительно,
+// under — ниже него, from — от него, over — выше него. Голый суффикс —
+// то же, что from, как у всех адаптивных утилит. Пустые (over-xl)
+// и тотальные (to-xl — это .gr-hidden) не заводятся.
+test('классы скрытия по диапазонам — полный набор, окно и контейнер', () => {
+  const window = [
+    'in-sm', 'to-sm', 'under-sm', 'from-sm', 'over-sm',
+    'in-md', 'to-md', 'under-md', 'from-md', 'over-md',
+    'in-lg', 'to-lg', 'under-lg', 'from-lg', 'over-lg',
+    'in-xl', 'under-xl', 'from-xl',
+  ];
+
+  for (const name of window) {
+    assert.ok(utils.includes(`.gr-hidden-${name}`), `нет .gr-hidden-${name}`);
+
+    const [word, bp] = name.split('-');
+
+    assert.ok(utils.includes(`.gr-hidden-${word}-c${bp}`), `нет контейнерного .gr-hidden-${word}-c${bp}`);
+  }
+
+  for (const absent of ['to-xl', 'over-xl', 'to-cxl', 'over-cxl']) {
+    assert.ok(!utils.includes(`.gr-hidden-${absent}`), `заведён пустой или тотальный .gr-hidden-${absent}`);
   }
 });

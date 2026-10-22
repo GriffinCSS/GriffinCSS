@@ -160,13 +160,13 @@
 
 <h3>Адаптивные раскладки / Responsive layouts</h3>
 
-<p>Атрибуты <code>data-gr-layout-{sm,md,lg,xl}</code> задают раскладку для соответствующего брейкпоинта. JS-рантайм читает значения из CSS-переменных <code>--gr-bp-*</code> и генерирует <strong>непересекающиеся</strong> диапазоны в range-синтаксисе:</p>
+<p>Атрибуты <code>data-gr-layout-{sm,md,lg,xl}</code> задают раскладку для соответствующего брейкпоинта. JS-рантайм читает значения из CSS-переменных <code>--gr-bp-*</code> и генерирует <strong>непересекающиеся</strong> диапазоны — в записи Media Queries 3, с порогом каскадных слоёв:</p>
 
 <table>
   <tr><th>Раскладка</th><th>Диапазон</th></tr>
-  <tr><td>базовая <code>data-gr-layout</code></td><td><code>@media (width &lt; 768px)</code> — до первой адаптивной</td></tr>
-  <tr><td><code>data-gr-layout-md</code></td><td><code>@media (768px &lt;= width &lt; 1024px)</code></td></tr>
-  <tr><td><code>data-gr-layout-lg</code> (последняя)</td><td><code>@media (width &gt;= 1024px)</code></td></tr>
+  <tr><td>базовая <code>data-gr-layout</code></td><td><code>@media not all and (min-width: 768px)</code> — до первой адаптивной</td></tr>
+  <tr><td><code>data-gr-layout-md</code></td><td><code>@media (min-width: 768px)</code>, внутри — <code>@media not all and (min-width: 1024px)</code></td></tr>
+  <tr><td><code>data-gr-layout-lg</code> (последняя)</td><td><code>@media (min-width: 1024px)</code></td></tr>
 </table>
 
 <p>В любой момент активна ровно одна раскладка. Арифметики <code>-1px</code> нет, поэтому щелей на дробных ширинах не возникает, а единицы измерения брейкпоинта могут быть любыми (<code>px</code>, <code>rem</code>, <code>em</code>).</p>

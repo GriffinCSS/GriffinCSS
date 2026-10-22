@@ -113,7 +113,7 @@
 
 // --- Responsive variants ---
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     .gr-flex-#{$bp-name} { display: flex; }
     .gr-inline-flex-#{$bp-name} { display: inline-flex; }
 

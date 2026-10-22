@@ -191,6 +191,20 @@
   </p>
 </div>
 
+<div class="callout">
+  <p>
+    <strong>Вкладки, вставленные после загрузки.</strong> Рантайм размечает
+    вкладки при старте. Вставленные позже — догруженный фрагмент, отрисовка
+    фреймворка — размечает повторный <code>Griffincss.ui.start()</code>
+    или <code>Griffincss.ui.tabs(узел)</code>: узел — сами вкладки
+    с <code>data-gr-tabs</code> или любой их предок. Фрагмент окна
+    и мегаменю GriffinJS размечается сам, по событию <code>griffin:load</code>.
+    Выбранную вкладку повторная разметка не меняет. Вкладкам, выбор которых
+    ведёт состояние фреймворка, атрибут не нужен — об этом
+    <a href="frameworks.html#vkladki">восьмая оговорка</a>.
+  </p>
+</div>
+
 <div class="demo-block">
   <div class="demo-block-title">Заливкой — <code>.gr-tabs-pills</code></div>
   <div class="gr-tabs gr-tabs-pills">

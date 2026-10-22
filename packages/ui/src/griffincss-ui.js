@@ -1,5 +1,5 @@
 /*!
- * Griffincss UI — Runtime v0.29.2
+ * Griffincss UI — Runtime v0.30.0
  * Опциональный рантайм пакета компонентов. Делает ровно то, чего платформа
  * не даёт вовсе; всё, что умеют <details>, <dialog> и Popover API, остаётся
  * за ними. Без этого файла компоненты работают — просто без перечисленного.
@@ -59,7 +59,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.29.2';
+  var VERSION = '0.30.0';
 
   var OVERLAY_ATTR = 'data-gr-overlay-close';
 
@@ -465,9 +465,13 @@
   // читается и печатается целиком. Скрипт добавляет роли, прячет неактивные
   // панели атрибутом hidden и заводит roving tabindex, при котором Tab
   // выводит из ряда вкладок, а не идёт по всем его пунктам.
+  // Корень — и сам узел вкладок: во фреймворке в tabs() передают ref
+  // самих вкладок, а querySelectorAll себя не находит.
   function initTabs(root) {
     var scope = root || document;
     var groups = scope.querySelectorAll('[' + TABS_ATTR + ']');
+
+    if (scope.hasAttribute && scope.hasAttribute(TABS_ATTR)) initGroup(scope);
 
     for (var i = 0; i < groups.length; i++) initGroup(groups[i]);
 
@@ -809,19 +813,34 @@
     for (var i = 0; i < tables.length; i++) fn(tables[i]);
   }
 
+  // Разметка, вставленная после старта: роль таблицам прозы и вкладки.
+  // Таблице роль нужна сразу — читалка идёт по тексту без Tab и прохода
+  // перед Tab может не дождаться; вкладки во фреймворке почти всегда
+  // отрисовываются позже DOMContentLoaded (Этап 77). Повторная разметка
+  // группы выбора не меняет: он читается из aria-selected. Повторный
+  // start() проходит весь документ — фреймворк мог перерисовать любую
+  // группу; фрагмент GriffinJS — только себя.
+  function markInserted(root) {
+    markRoles();
+    initTabs(root);
+  }
+
+  function onFragment(event) {
+    markInserted(event.target);
+  }
+
   // Один делегированный обработчик на документ, а не по слушателю на окно:
   // окна появляются и исчезают вместе с разметкой, и переподписываться
   // на каждое пришлось бы вручную. Повторный вызов подписки не удваивает,
-  // а проходит таблицы прозы ещё раз: разметке, вставленной после старта
-  // (смена варианта товара, догруженный текст), роль нужна сразу — читалка
-  // идёт по тексту без Tab и прохода перед Tab может не дождаться.
+  // а размечает вставленное после старта (смена варианта товара,
+  // догруженный текст, вкладки фреймворка).
   function start() {
     if (!started) {
       started = true;
       listen('addEventListener');
     }
 
-    markRoles();
+    markInserted();
 
     return publicApi;
   }
@@ -849,7 +868,7 @@
   function listen(method) {
     document[method]('pointerdown', onPointerDown, true);
     document[method]('keydown', onTabPress, true);
-    document[method]('griffin:load', markRoles);
+    document[method]('griffin:load', onFragment);
 
     for (var type in registry) {
       if (Object.prototype.hasOwnProperty.call(registry, type)) {
@@ -884,12 +903,11 @@
     } catch (e) { /* currentScript недоступен */ }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () { start(); initTabs(); });
+      document.addEventListener('DOMContentLoaded', start);
       return;
     }
 
     start();
-    initTabs();
   }
 
   var publicApi = {

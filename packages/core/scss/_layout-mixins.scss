@@ -19,10 +19,9 @@
 // и вернул бы дефолт. У самого миксина в аргументе годится и null, и false.
 $gr-default-layer: 'griffincss.core' !default;
 
-// Непересекающийся диапазон для брейкпоинта; '' — базовая раскладка.
-// Range-синтаксис: без арифметики -1px и без щелей на дробных ширинах.
-// Запись одна на оба вида запроса: @container понимает range наравне
-// с @media, а различает их только обёртка.
+// Непересекающийся диапазон контейнера для брейкпоинта; '' — базовая
+// раскладка. Синтаксис диапазонов: без арифметики -1px и без щелей
+// на дробных ширинах; @container знает его с первого дня.
 @function _gr-range($bp, $active) {
   @if list.length($active) == 0 {
     @return null;
@@ -39,6 +38,45 @@ $gr-default-layer: 'griffincss.core' !default;
   }
 
   @return '(#{cq.gr-bp-value($bp)} <= width < #{cq.gr-bp-value(list.nth($active, $index + 1))})';
+}
+
+// Тот же диапазон окна — в записи Media Queries 3 (Этап 78): синтаксис
+// диапазонов в @media знают только Chrome 104 и Safari 16.4, выше порога
+// каскадных слоёв. «Ниже X» — `not all and (min-width: X)`, точное
+// дополнение «от X»: без вычитания, без щелей на дробной ширине, единицы
+// не важны. Средний диапазон — два запроса, вложенным @media (_gr-media).
+// Тот же текст пишет рантайм (mediaQueries).
+@function _gr-media-range($bp, $active) {
+  @if list.length($active) == 0 {
+    @return null;
+  }
+
+  @if $bp == '' {
+    @return ('not all and (min-width: #{cq.gr-bp-value(list.nth($active, 1))})',);
+  }
+
+  $index: list.index($active, $bp);
+  $from: '(min-width: #{cq.gr-bp-value($bp)})';
+
+  @if $index == list.length($active) {
+    @return ($from,);
+  }
+
+  @return ($from, 'not all and (min-width: #{cq.gr-bp-value(list.nth($active, $index + 1))})');
+}
+
+@mixin _gr-media($queries) {
+  @if list.length($queries) == 1 {
+    @media #{list.nth($queries, 1)} {
+      @content;
+    }
+  } @else {
+    @media #{list.nth($queries, 1)} {
+      @media #{list.nth($queries, 2)} {
+        @content;
+      }
+    }
+  }
 }
 
 // Правило сетки + авто-скрытие чужих областей.
@@ -123,20 +161,20 @@ $gr-default-layer: 'griffincss.core' !default;
   @if $base {
     $grid: fn.gr-parse-layout($base);
     $grids: list.append($grids, $grid, comma);
-    $window-range: _gr-range('', $win-active);
+    $window-range: _gr-media-range('', $win-active);
     $container-range: _gr-range('', $cq-active);
 
     // Базу закрывают обе цепочки сразу. Оставь её открытой по одной
     // из осей — она накрыла бы диапазон другой, и какая раскладка
     // победит, решал бы порядок правил, а не ширина.
     @if $window-range and $container-range {
-      @media #{$window-range} {
+      @include _gr-media($window-range) {
         @container #{$container-range} {
           @include _gr-layout-block($selector, $grid);
         }
       }
     } @else if $window-range {
-      @media #{$window-range} {
+      @include _gr-media($window-range) {
         @include _gr-layout-block($selector, $grid);
       }
     } @else if $container-range {
@@ -157,7 +195,7 @@ $gr-default-layer: 'griffincss.core' !default;
         @include _gr-layout-block($selector, $grid);
       }
     } @else {
-      @media #{_gr-range($bp, $win-active)} {
+      @include _gr-media(_gr-media-range($bp, $win-active)) {
         @include _gr-layout-block($selector, $grid);
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "griffincss-utils",
-  "version": "0.29.2",
+  "version": "0.30.0",
   "description": "Griffincss Utils — утилитарные классы: отступы, типографика, цвета, видимость, скругления",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
   "repository": {
@@ -23,15 +23,20 @@
     "./scss": "./scss/griffincss-utils.scss",
     "./scss/*": "./scss/*",
     "./dist/*": "./dist/*",
+    "./purge": "./bin/purge.mjs",
     "./package.json": "./package.json"
   },
+  "bin": {
+    "griffincss-purge": "bin/purge.mjs"
+  },
   "files": [
+    "bin/",
     "dist/",
     "scss/",
     "src/"
   ],
   "peerDependencies": {
-    "griffincss-core": "^0.29.2"
+    "griffincss-core": "^0.30.0"
   },
   "keywords": [
     "css",

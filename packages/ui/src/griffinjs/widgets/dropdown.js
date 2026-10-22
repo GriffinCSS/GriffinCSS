@@ -141,7 +141,12 @@
       setAttr(trigger, 'aria-expanded', now ? 'true' : 'false');
       setAttr(el, 'data-gr-state', now ? 'open' : 'ready');
 
-      if (now) place();
+      // Роли — при каждом открытии, как и пункты клавиатуры (items()):
+      // во фреймворке состав меню зависит от состояния (Этап 77).
+      if (now) {
+        roles();
+        place();
+      }
 
       if (now && viaKeyboard) focusTo(items()[0]);
       viaKeyboard = false;
@@ -218,8 +223,10 @@
       cancelTimer();
 
       // Открытие во время закрытия отменяет его: панель остаётся на месте.
+      // Роли — и здесь: пункт могли сменить, пока панель уходила.
       if (closing) {
         settleClosing();
+        roles();
         setAttr(el, 'data-gr-state', 'open');
         return;
       }
@@ -246,24 +253,33 @@
 
     // --- Роли -----------------------------------------------------------------
 
+    // Роли состава меню — своей записью, которая перед каждой раздачей
+    // снимает прежние: роли раздаются при каждом открытии, и общая запись
+    // копила бы пункты, которые фреймворк пересоздал, до destroy(), а пункт,
+    // вынутый и возвращённый тем же узлом, теряла бы. После снятия у пунктов
+    // остаются только роли автора — их раздача и не трогает.
+    var roleAttrs = G.recorder();
+
     function roles() {
       if (o.role !== 'menu') return;
+
+      roleAttrs.restore();
 
       var list = panel.querySelector('ul, ol') || panel;
 
       setAttr(trigger, 'aria-haspopup', 'menu');
-      setAttr(list, 'role', 'menu');
+      roleAttrs.set(list, 'role', 'menu');
 
       var lis = list.querySelectorAll('li');
-      for (var i = 0; i < lis.length; i++) setAttr(lis[i], 'role', 'none');
+      for (var i = 0; i < lis.length; i++) roleAttrs.set(lis[i], 'role', 'none');
 
       var seps = list.querySelectorAll('hr');
-      for (var j = 0; j < seps.length; j++) setAttr(seps[j], 'role', 'separator');
+      for (var j = 0; j < seps.length; j++) roleAttrs.set(seps[j], 'role', 'separator');
 
       var all = list.querySelectorAll('a[href], button');
       for (var k = 0; k < all.length; k++) {
         if (all[k].getAttribute('role')) continue;
-        setAttr(all[k], 'role', all[k].hasAttribute('aria-checked') ? 'menuitemcheckbox' : 'menuitem');
+        roleAttrs.set(all[k], 'role', all[k].hasAttribute('aria-checked') ? 'menuitemcheckbox' : 'menuitem');
       }
     }
 
@@ -376,6 +392,7 @@
       finishClosing();
       events.removeAll();
       if (kind === 'popover' && G.anchor) G.anchor.clear(panel);
+      roleAttrs.restore();
       attrs.restore();
     }
 

@@ -156,7 +156,7 @@
   <tr><td><a href="spacing.html">Spacing</a></td><td><code>.gr-p-4-cmd</code>, <code>.gr-px-8-clg</code>, <code>.gr-my-6-csm</code>, <code>.gr-mx-auto-cxl</code></td></tr>
   <tr><td><a href="sizing.html">Sizing</a></td><td><code>.gr-w-full-cmd</code>, <code>.gr-w-1/2-clg</code>, <code>.gr-h-auto-csm</code></td></tr>
   <tr><td><a href="typography.html">Typography</a></td><td><code>.gr-text-lg-csm</code>, <code>.gr-font-bold-clg</code>, <code>.gr-text-center-csm</code>, <code>.gr-truncate-cxl</code></td></tr>
-  <tr><td><a href="visibility.html">Visibility</a></td><td><code>.gr-hidden-cmd</code>, <code>.gr-block-clg</code>, <code>.gr-inline-block-csm</code></td></tr>
+  <tr><td><a href="visibility.html">Visibility</a></td><td><code>.gr-hidden-cmd</code>, <code>.gr-hidden-under-csm</code>, <code>.gr-hidden-in-clg</code>, <code>.gr-block-clg</code>, <code>.gr-inline-block-csm</code></td></tr>
 </table>
 
 <div class="callout">
@@ -192,9 +192,9 @@
           От 640px ширины <em>контейнера</em> — картинка слева,
           текст справа, и кегль заголовка на ступень крупнее.
         </p>
-        <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0 gr-hidden gr-block-csm">
+        <p class="gr-text-xs gr-text-ink-secondary gr-mt-2 gr-mb-0 gr-hidden-under-csm">
           Эта строка появляется только в широком контейнере
-          (<code>.gr-hidden .gr-block-csm</code>).
+          (<code>.gr-hidden-under-csm</code>).
         </p>
       </div>
     </article>
@@ -333,11 +333,18 @@
 
 <pre><code>&lt;div data-gr-layout="a1" data-gr-layout-md="a1b1" data-gr-layout-cmd="a2b1"&gt;</code></pre>
 
-<pre><code>@media (width &lt; 768px) {
+<pre><code>@media not all and (min-width: 768px) {
   @container (width &lt; 768px) { .gr-l-<em>хеш</em> { /* a1 */ } }
 }
-@media (width &gt;= 768px)     { .gr-l-<em>хеш</em> { /* a1b1 */ } }
-@container (width &gt;= 768px) { .gr-l-<em>хеш</em> { /* a2b1 */ } }</code></pre>
+@media (min-width: 768px)     { .gr-l-<em>хеш</em> { /* a1b1 */ } }
+@container (width &gt;= 768px)   { .gr-l-<em>хеш</em> { /* a2b1 */ } }</code></pre>
+
+<p>
+  Окно записано в Media Queries 3 — <code>min-width</code> и его точное
+  дополнение <code>not all and (min-width: …)</code>: синтаксис диапазонов
+  в <code>@media</code> поднял бы порог библиотеки до Chrome 104 и Safari 16.4.
+  Контейнер — в диапазонах: <code>@container</code> знает их с первого дня.
+</p>
 
 <p>
   Оставь база открытой по одной из осей — она накрыла бы диапазон другой,
@@ -446,7 +453,7 @@
   и немногословна, в широкой — раскладывается картинкой влево
   (<code>data-gr-layout-csm</code>), укрупняет заголовок
   (<code>.gr-text-lg-csm</code>) и показывает описание, которого в узкой
-  версии нет вовсе: <code>.gr-hidden .gr-block-csm</code> — скрытие тоже
+  версии нет вовсе: <code>.gr-hidden-under-csm</code> — скрытие тоже
   меряется контейнером. Обёртка-клетка получает <code>.gr-cq</code>,
   сама карточка — нет: элемент не может измерять себя.
 </p>
@@ -456,7 +463,7 @@
     &lt;img class="gr-area-a gr-w-full gr-aspect-video gr-object-cover gr-radius-1" src="…" alt=""&gt;
     &lt;div class="gr-area-b"&gt;
       &lt;h3 class="gr-text-base gr-text-lg-csm"&gt;Кресло «Дюна»&lt;/h3&gt;
-      &lt;p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary"&gt;
+      &lt;p class="gr-hidden-under-csm gr-text-sm gr-text-ink-secondary"&gt;
         Описание видно только в широкой клетке.
       &lt;/p&gt;
       &lt;p class="gr-font-bold"&gt;12 400 ₽&lt;/p&gt;
@@ -471,7 +478,7 @@
         <div class="gr-area-a cq-thumb gr-radius-1">Фото</div>
         <div class="gr-area-b">
           <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Кресло «Дюна»</h3>
-          <p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
+          <p class="gr-hidden-under-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
           <p class="gr-font-bold gr-mb-0">12 400 ₽</p>
         </div>
       </article>
@@ -481,7 +488,7 @@
         <div class="gr-area-a cq-thumb gr-radius-1">Фото</div>
         <div class="gr-area-b">
           <h3 class="gr-text-base gr-text-lg-csm gr-font-semibold gr-mt-3 gr-mt-0-csm gr-mb-1">Кресло «Дюна»</h3>
-          <p class="gr-hidden gr-block-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
+          <p class="gr-hidden-under-csm gr-text-sm gr-text-ink-secondary gr-mb-1">Ротанг, съёмные подушки, каркас из бука — описание видно только в широкой клетке.</p>
           <p class="gr-font-bold gr-mb-0">12 400 ₽</p>
         </div>
       </article>

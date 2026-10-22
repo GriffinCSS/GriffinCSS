@@ -68,7 +68,7 @@ $gr-heights: (
 
 // Адаптивные варианты — только у width и height
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     @include gr-sizing-scale('-#{$bp-name}');
   }
 }

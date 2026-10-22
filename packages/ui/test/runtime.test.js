@@ -518,3 +518,85 @@ test('показ тоста шлёт griffincss:toast со статусом', ()
 
   assert.deepEqual(events, ['success']);
 });
+
+// --- Этап 77: вкладки, отрисованные после старта -----------------------------
+//
+// Во фреймворке вкладки почти всегда появляются позже DOMContentLoaded.
+// Повторный start() размечает их так же, как роль таблицам прозы, —
+// а фрагмент окна и мегаменю GriffinJS приходит с событием griffin:load.
+
+test('повторный start() размечает вкладки, вставленные после старта', () => {
+  const { doc, ui } = setupDom();
+
+  ui.start();
+
+  const { tabs, panels } = tabsMarkup(doc);
+
+  assert.equal(tabs[0].hasAttribute('role'), false, 'вкладки размечены до вызова');
+
+  ui.start();
+
+  assert.equal(tabs[0].getAttribute('role'), 'tab', 'вставленные вкладки без ролей');
+  assert.equal(tabs[1].getAttribute('tabindex'), '-1');
+  assert.equal(panels[1].hasAttribute('hidden'), true, 'неактивная панель видна');
+});
+
+test('повторный start() выбранную вкладку не сбивает и событий не шлёт', () => {
+  const { doc, ui } = setupDom();
+  const { tabs, panels } = tabsMarkup(doc);
+
+  ui.start();
+
+  const events = [];
+
+  doc.addEventListener('griffincss:tabchange', () => events.push(1));
+  doc.fire('pointerdown', { target: tabs[2], clientX: 10, clientY: 10 });
+  doc.fire('click', { target: tabs[2], clientX: 10, clientY: 10, preventDefault: () => {} });
+
+  ui.start();
+
+  assert.equal(tabs[2].getAttribute('aria-selected'), 'true', 'выбор вернулся к первой вкладке');
+  assert.equal(panels[2].hasAttribute('hidden'), false);
+  assert.equal(panels[0].hasAttribute('hidden'), true);
+  assert.equal(events.length, 1, 'повторная разметка — не действие пользователя');
+});
+
+test('вкладки во фрагменте GriffinJS размечаются по griffin:load', () => {
+  const { doc, ui } = setupDom();
+
+  ui.start();
+
+  const { group, tabs } = tabsMarkup(doc);
+
+  doc.fire('griffin:load', { target: group });
+
+  assert.equal(tabs[0].getAttribute('role'), 'tab', 'вкладки фрагмента без ролей');
+});
+
+test('ui.tabs(узел) размечает и сам узел с data-gr-tabs, а не только потомков', () => {
+  // Во фреймворке в ui.tabs() передают ref самих вкладок.
+  const { doc, ui } = setupDom();
+  const { group, tabs } = tabsMarkup(doc);
+
+  ui.tabs(group);
+
+  assert.equal(tabs[0].getAttribute('role'), 'tab', 'узел вкладок, переданный сам, не размечен');
+});
+
+test('griffin:load размечает вкладки фрагмента, а не всего документа', () => {
+  // Ревью CHU этапа 77, п. 25: проход всех групп документа на каждый
+  // загруженный фрагмент — платный, а нужен только сам фрагмент.
+  const { doc, ui } = setupDom();
+
+  ui.start();
+
+  const outside = tabsMarkup(doc);
+  const inside = tabsMarkup(doc);
+  const fragment = el('div', {}, [inside.group]);
+
+  mount(doc, fragment);
+  doc.fire('griffin:load', { target: fragment });
+
+  assert.equal(inside.tabs[0].getAttribute('role'), 'tab', 'вкладки фрагмента без ролей');
+  assert.equal(outside.tabs[0].hasAttribute('role'), false, 'размечены вкладки вне фрагмента');
+});

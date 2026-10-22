@@ -1,6 +1,6 @@
 'use strict';
 
-// Отсечение неиспользуемого: scripts/purge.mjs оставляет в собранном CSS
+// Отсечение неиспользуемого: bin/purge.mjs оставляет в собранном CSS
 // только правила, чьи классы встретились в разметке. Ошибка здесь стоит
 // пропавшего стиля в проде, поэтому проверяется и то, что скрипт
 // сохраняет (структурные правила, :root, @layer), и то, что он считает.
@@ -8,12 +8,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
-const SCRIPT = path.join(ROOT, 'scripts', 'purge.mjs');
+const SCRIPT = path.join(__dirname, '..', 'bin', 'purge.mjs');
 const DOCS = path.join(ROOT, 'docs');
 const UTILS_CSS = path.join(ROOT, 'packages', 'utils', 'dist', 'griffincss-utils.css');
 
@@ -371,5 +372,434 @@ test('ось оформления: отчёт называет оставлен�
     assert.ok(!written.includes('[data-gr-style=airy]'), 'лишний стиль остался');
   } finally {
     for (const file of [out, page, css]) fs.rmSync(file, { force: true });
+  }
+});
+
+// --- CSS темы и приложения (фидбек CHU по 0.29.2, Этап 76) -------------------
+//
+// Тесты выше идут по `dist` библиотеки: он без комментариев, валиден, имена
+// в нём строчные. CSS темы и приложения бывает любым — и отсечение обязано
+// решать о нём так же, как браузер: правило живо или мертво до отсечения
+// ровно так же, как после.
+
+const S = (...names) => new Set(names);
+
+test('незакрытый комментарий не зацикливает разбор', () => {
+  // Бесконечный цикл роняет сборку, а не тест: проверка — в дочернем
+  // процессе с таймаутом и малой кучей.
+  const code = `import(${JSON.stringify(pathToFileURL(SCRIPT).href)}).then(({ purge }) => {
+    const set = new Set(['gr-a']);
+    const out = [purge('.gr-a{color:red} /* x', set), purge('@media print{.gr-a{color:red} /* x}', set)];
+    process.stdout.write(JSON.stringify(out.map(({ css, kept, dropped }) => ({ css, kept, dropped }))));
+  });`;
+  const run = spawnSync(process.execPath, ['--max-old-space-size=64', '-e', code], { encoding: 'utf8', timeout: 5000 });
+
+  assert.equal(run.signal, null, 'разбор не завершился за 5 с');
+  assert.equal(run.status, 0, 'разбор упал: ' + run.stderr.slice(0, 300));
+  assert.deepEqual(JSON.parse(run.stdout), [
+    { css: '.gr-a{color:red}', kept: 1, dropped: 0 },
+    { css: '@media print{.gr-a{color:red}}', kept: 1, dropped: 0 },
+  ]);
+});
+
+test('комментарий перед at-правилом не делает его селектором', async () => {
+  const { purge } = await load();
+  const result = purge('/* см. SPEC.md */\n@media print{.gr-a{color:red}}', S('gr-a'));
+
+  assert.deepEqual([result.css, result.kept, result.dropped], ['@media print{.gr-a{color:red}}', 1, 0]);
+});
+
+test('запятая и точка в комментарии не режут селектор и не дают класса', async () => {
+  const { purge } = await load();
+
+  // Обрывок «/* шапка,» в выводе открывал бы комментарий, который
+  // не закрыт, — браузер потерял бы всё до следующего «*/».
+  assert.equal(purge('/* шапка, подвал */\n.x,.gr-a{color:red}', S('gr-a')).css, '.gr-a{color:red}');
+  assert.equal(
+    purge('.gr-b{color:red}/* a, .b */.gr-a{color:red}', S('gr-a', 'gr-b')).css,
+    '.gr-b{color:red}.gr-a{color:red}',
+  );
+  assert.equal(purge('/* порядок */@layer a,b;.gr-a{color:red}', S('gr-a')).css, '@layer a,b;.gr-a{color:red}');
+});
+
+test('комментарий внутри селектора и прелюдии — не текст правила, но граница токенов', async () => {
+  const { purge } = await load();
+
+  // Вплотную между знаками браузер видит на месте комментария границу
+  // токенов: ни пробел (это комбинатор), ни склейка её не передают —
+  // передаёт пустой комментарий.
+  assert.equal(purge('.gr-a/* c */.gr-b{color:red}', S('gr-a', 'gr-b')).css, '.gr-a/**/.gr-b{color:red}');
+  assert.equal(purge('.gr-a/* c */.gr-b{color:red}', S('gr-a')).css, '', 'класс за комментарием не потребован');
+  assert.equal(purge('@media/* c */print{.gr-a{color:red}}', S('gr-a')).css, '@media/**/print{.gr-a{color:red}}');
+  // `.a/**/b` в браузере — два слова без пробела, правило негодно; пробел
+  // сделал бы его живым правилом для `b` внутри `.a`.
+  assert.equal(purge('.a/**/b{color:red}', S('a')).css, '.a/**/b{color:red}');
+  // `and/**/(` — слово и скобка; склейка дала бы функцию `and(` и `not all`.
+  assert.equal(
+    purge('@media screen and/**/(min-width:1px){.m{color:red}}', S('m')).css,
+    '@media screen and/**/(min-width:1px){.m{color:red}}',
+  );
+  // Рядом с пробелом комментарий просто уходит.
+  assert.equal(purge('.a /* c */.b{color:red}', S('a', 'b')).css, '.a .b{color:red}');
+});
+
+test('опустевший блок именованного слоя остаётся объявлением — порядок слоёв прежний', async () => {
+  const { purge } = await load();
+
+  // Порядок слоёв задаёт первое появление имени: без объявления base
+  // встал бы после top, и красный перебил бы синий.
+  assert.equal(
+    purge('@layer base{.u{color:green}}@layer top{.c{color:blue}}@layer base{.c{color:red}}', S('c')).css,
+    '@layer base;@layer top{.c{color:blue}}@layer base{.c{color:red}}',
+  );
+  assert.equal(purge('@layer a{@layer b{.u{color:red}}}', S()).css, '@layer a{@layer b;}', 'вложенный слой');
+  assert.equal(
+    purge('@layer anim{@keyframes x{to{opacity:0}}}@layer top{.c{color:blue}}@layer anim{.c{color:red}}', S('c')).css,
+    '@layer anim;@layer top{.c{color:blue}}@layer anim{.c{color:red}}',
+    'слой, опустевший на втором проходе — без @keyframes',
+  );
+  // Пустой комментарий вместо пробела после `@layer` имени не прячет
+  // (ревью CHU, п. 28): для браузера `@layer/**/base` — `@layer base`.
+  assert.equal(
+    purge('@layer/**/base{.u{color:green}}@layer top{.c{color:blue}}@layer base{.c{color:red}}', S('c')).css,
+    '@layer base;@layer top{.c{color:blue}}@layer base{.c{color:red}}',
+  );
+  assert.equal(
+    purge('@layer/**/base,top;@layer base{.u{color:green}}@layer top{.c{color:blue}}', S('c')).css,
+    '@layer/**/base,top;@layer top{.c{color:blue}}',
+  );
+  // Безымянный слой своего места в порядке у других не держит.
+  assert.equal(purge('@layer{.u{color:red}}.c{color:blue}', S('c')).css, '.c{color:blue}');
+  // Место уже задано объявлением выше — как в каждом файле библиотеки:
+  // блок уходит, байтов за повтор нет.
+  assert.equal(
+    purge('@layer base, top;@layer base{.u{color:green}}@layer top{.c{color:blue}}', S('c')).css,
+    '@layer base, top;@layer top{.c{color:blue}}',
+  );
+});
+
+test('лишняя «;» вне правила — начало следующего правила, как в браузере', async () => {
+  const { purge } = await load();
+  const css = '.a{color:green};.u{color:green}.d{color:blue}';
+
+  // В браузере «;.u{…}» — негодное правило, а .d синий; отсечённое .u
+  // не должно отдать «;» правилу .d.
+  assert.equal(purge(css, S('a', 'd')).css, '.a{color:green}.d{color:blue}');
+  // Правило с «;» в селекторе браузер не применяет целиком, какие бы
+  // классы ни встретились, — оно уходит, вид не меняется.
+  assert.equal(purge(css, S('a', 'u', 'd')).css, '.a{color:green}.d{color:blue}');
+  // Весь список негоден: часть без «;» не оживает, когда часть с ней ушла.
+  assert.equal(purge('.a{color:green};.u,.v{color:red}', S('a', 'v')).css, '.a{color:green}');
+});
+
+test('точка в строке атрибута — не класс', async () => {
+  const { purge } = await load();
+
+  assert.equal(
+    purge('a[href$=".pdf"]{color:red}a[href$="x"]{color:blue}', S()).css,
+    'a[href$=".pdf"]{color:red}a[href$="x"]{color:blue}',
+  );
+  assert.equal(purge('[data-x="a.b"] .gr-a{color:red}', S()).css, '', 'класс вне скобок по-прежнему обязателен');
+});
+
+test('функциональные псевдоклассы и animation — без учёта регистра', async () => {
+  const { purge } = await load();
+
+  assert.equal(purge('p:NOT(.featured){margin:0}', S()).css, 'p:NOT(.featured){margin:0}');
+  assert.equal(purge('.x:IS(li,.a){color:red}', S('x')).css, '.x:IS(li,.a){color:red}');
+  assert.ok(
+    purge('@keyframes spin{to{rotate:1turn}}.a{ANIMATION:spin 1s}', S('a')).css.includes('@keyframes spin'),
+    'используемые кадры выброшены',
+  );
+});
+
+test('экранирование в селекторе — как у браузера', async () => {
+  const { purge } = await load();
+
+  // `\31 0` — кодовая точка «1» и пробел-ограничитель, затем «0»: класс `10`.
+  assert.equal(purge('.\\31 0{color:red}', S('10')).css, '.\\31 0{color:red}');
+  assert.equal(purge('.\\31 0{color:red}', S('31')).css, '');
+  // `\,` — знак имени, а не разделитель списка: иначе вывод красил бы все <b>.
+  assert.equal(purge('.a\\,b{color:red}', S()).css, '');
+  assert.equal(purge('.a\\,b{color:red}', S('a,b')).css, '.a\\,b{color:red}');
+  assert.equal(purge('.x:is(.a\\),li){color:red}', S('x')).css, '.x:is(.a\\),li){color:red}', 'экранированная скобка');
+});
+
+test('разметка: все классы экранированного примера, имена не из ASCII и с любыми знаками', async () => {
+  const { extractClasses } = await load();
+
+  assert.deepEqual([...extractClasses('<pre>&lt;p class=&quot;gr-p-4 gr-m-2&quot;&gt;</pre>')].sort(), ['gr-m-2', 'gr-p-4']);
+  assert.ok(extractClasses('<p class="кнопка">').has('кнопка'), 'имя кириллицей');
+  assert.ok(extractClasses('<b :class="{\'кнопка\': on}"/>').has('кнопка'), 'имя кириллицей в выражении');
+
+  const found = extractClasses('<p class="md:gr-a -foo gr-b!">');
+
+  for (const name of ['md:gr-a', '-foo', 'gr-b!']) assert.ok(found.has(name), `${name} не найден: ${[...found].join(' ')}`);
+});
+
+// --- ревью CHU этапа 76: пп. 17, 19–22 --------------------------------------
+
+test('класс перед id — свой класс: имя класса — только знаки имени', async () => {
+  const { purge } = await load();
+
+  // `.a#b` — класс `a` и id `b`, а не класс `a#b`.
+  assert.equal(purge('.a#b{color:red}', S('a')).css, '.a#b{color:red}');
+});
+
+test('экранированные `{` и `"` в селекторе не открывают блок и строку', async () => {
+  const { purge } = await load();
+
+  // Иначе блок или строка съедали и соседнее правило.
+  assert.equal(purge('.a\\{b{color:red}.c{color:blue}', S('c')).css, '.c{color:blue}');
+  assert.equal(purge('.a\\{b{color:red}.c{color:blue}', S('a{b', 'c')).css, '.a\\{b{color:red}.c{color:blue}');
+  assert.equal(purge('.a\\"b{color:red}.c{color:blue}', S('c')).css, '.c{color:blue}');
+});
+
+test('`:is(` внутри строки атрибута — не псевдокласс', async () => {
+  const { purge } = await load();
+
+  assert.equal(purge('a[title=":is(.x)"]{color:red}', S()).css, 'a[title=":is(.x)"]{color:red}');
+  // Альтернатива из одного атрибута — живая: так звёздочка обязательного
+  // поля (`.gr-field:has([required])`) уходила из отсечённого CSS.
+  assert.equal(
+    purge('.gr-field:has([required]) .gr-label{color:red}', S('gr-field', 'gr-label')).css,
+    '.gr-field:has([required]) .gr-label{color:red}',
+  );
+});
+
+test('значение class делится только пробелами ASCII, как в HTML', async () => {
+  const { extractClasses } = await load();
+
+  // Неразрывный пробел (знак, не `&nbsp;`) — часть имени: браузер видит
+  // один класс `a\a0 b`.
+  assert.ok(extractClasses('<p class="a\u00a0b">').has('a\u00a0b'), 'класс с неразрывным пробелом разрезан');
+});
+
+test('цена разбора линейна: тысячи слоёв и лишних «;»', () => {
+  // Опустевший слой искал своё имя перебором всех уцелевших соседей,
+  // а каждая лишняя «;» заново резала и чистила прелюдию от её начала —
+  // 8 000 пар слоёв стоили 15 с. Здесь — вдвое больше, с запасом в таймауте.
+  const code = `import(${JSON.stringify(pathToFileURL(SCRIPT).href)}).then(({ purge }) => {
+    let layers = '';
+    const used = new Set();
+    for (let i = 0; i < 16000; i++) {
+      layers += '@layer k' + i + '{.k' + i + '{color:red}}@layer e' + i + '{.u{color:red}}';
+      used.add('k' + i);
+    }
+    const a = purge(layers, used);
+    const b = purge('/* x */' + 'a;'.repeat(65536) + '.c{color:red}', new Set(['c']));
+    process.stdout.write(JSON.stringify([a.kept, a.css.includes('@layer e15999;'), b.css]));
+  });`;
+  const run = spawnSync(process.execPath, ['-e', code], { encoding: 'utf8', timeout: 10000 });
+
+  assert.equal(run.signal, null, 'разбор не уложился в 10 с');
+  assert.equal(run.status, 0, 'разбор упал: ' + run.stderr.slice(0, 300));
+  assert.deepEqual(JSON.parse(run.stdout), [16000, true, '']);
+});
+
+test('вложенность функциональных псевдоклассов глубже предела — внятная ошибка, а не переполнение стека', async () => {
+  // Ревью CHU, п. 30: разбор рекурсивен по вложенности `:is(`, и 2 000
+  // уровней роняли отсечение RangeError без места. Обычная глубина —
+  // как прежде.
+  const { purge } = await load();
+  const deep = (n) => `.x${':is('.repeat(n)}li${')'.repeat(n)}{color:red}`;
+
+  assert.equal(purge(deep(32), S('x')).css, deep(32));
+  assert.throws(() => purge(deep(2000), S('x')), /вложенность/);
+  // Место — начало селектора правила, а не самая внутренняя часть
+  // (ревью CHU, п. 32); `:not()` вглубь не разбирается и не назван.
+  assert.throws(() => purge(deep(65), S('x')), (error) => {
+    assert.match(error.message, /«\.x:is\(:is\(/, 'в ошибке нет начала селектора: ' + error.message);
+    assert.ok(!error.message.includes(':not('), 'ошибка называет :not(): ' + error.message);
+    return true;
+  });
+});
+
+// --- команда пакета (фидбек CHU по 0.29.2, п. 6) ----------------------------
+//
+// Скрипт едет в пакете griffincss-utils командой griffincss-purge: у того,
+// кто поставил библиотеку из npm, `npm run purge` нет — он есть только
+// в клоне репозитория.
+
+test('без --css скрипт берёт CSS своего пакета, а не текущего каталога', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-purge-'));
+
+  try {
+    fs.writeFileSync(path.join(dir, 'page.html'), '<div class="gr-p-4"></div>');
+
+    const run = spawnSync(process.execPath, [SCRIPT, 'page.html'], { cwd: dir, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.ok(run.stdout.includes('.gr-p-4{'), 'класс со страницы не найден в выводе: ' + run.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// npm кладёт в node_modules/.bin ссылку на файл: process.argv[1] — путь
+// ссылки, а не модуля, и проверка «модуль запущен, а не импортирован»
+// обязана это знать — иначе команда молча ничего не делает.
+test('команда работает по ссылке из .bin', {
+  skip: process.platform === 'win32' && 'npm под Windows ставит обёртку .cmd, которая зовёт сам файл',
+}, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-purge-'));
+
+  try {
+    const link = path.join(dir, 'griffincss-purge');
+
+    fs.symlinkSync(SCRIPT, link);
+    fs.writeFileSync(path.join(dir, 'page.html'), '<div class="gr-p-4"></div>');
+
+    const run = spawnSync(process.execPath, [link, 'page.html'], { cwd: dir, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.match(run.stderr, /правил оставлено \d+/, 'по ссылке скрипт не запустился');
+    assert.ok(run.stdout.includes('.gr-p-4{'), 'класс со страницы не найден в выводе');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Ревью CHU, п. 29: проекту с одними компонентами `npx -p griffincss-utils`
+// ставит последнюю версию утилит, а пресет ui — список классов, которые
+// ставят скрипты ui своей версии. Пресет идёт за установленными
+// компонентами: из griffincss-ui/dist/purge-presets.json проекта.
+test('пресет ui берётся из griffincss-ui проекта, если он там есть', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-preset-'));
+
+  try {
+    const ui = path.join(dir, 'node_modules', 'griffincss-ui');
+
+    fs.mkdirSync(path.join(ui, 'dist'), { recursive: true });
+    fs.writeFileSync(path.join(ui, 'package.json'), JSON.stringify({
+      name: 'griffincss-ui',
+      version: '9.9.9',
+      exports: { './dist/*': './dist/*', './package.json': './package.json' },
+    }));
+    fs.writeFileSync(path.join(ui, 'dist', 'purge-presets.json'), JSON.stringify({ ui: ['gr-only-in-project'] }));
+    fs.writeFileSync(path.join(dir, 'ui.css'), '.gr-only-in-project{color:red}.gr-toast{color:blue}');
+    fs.writeFileSync(path.join(dir, 'page.html'), '<p></p>');
+
+    const run = spawnSync(process.execPath, [SCRIPT, '--css', 'ui.css', '--preset', 'ui', 'page.html'], { cwd: dir, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.ok(run.stdout.includes('.gr-only-in-project{'), 'пресет взят не из проекта: ' + run.stdout);
+    assert.ok(!run.stdout.includes('.gr-toast{'), 'остался класс встроенного пресета');
+    assert.match(run.stderr, /node_modules[\\/]griffincss-ui[\\/]dist[\\/]purge-presets\.json, griffincss-ui 9\.9\.9/, 'отчёт не называет, откуда пресет: ' + run.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Ревью OcapiCMS к 0.30.0, п. 1: разрешение модулей от текущего каталога
+// идёт и в node_modules выше по дереву — чужой griffincss-ui подменял пресет
+// молча. Пресет идёт за версией отсекаемого CSS: первым — purge-presets.json
+// рядом с файлом из --css (та же dist, что griffincss-ui.css и griffinjs.css),
+// затем griffincss-ui проекта, затем встроенный.
+test('пресет ui — сперва purge-presets.json рядом с отсекаемым CSS', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-preset-'));
+
+  try {
+    const parent = path.join(dir, 'node_modules', 'griffincss-ui');
+    const shop = path.join(dir, 'shop');
+
+    fs.mkdirSync(path.join(parent, 'dist'), { recursive: true });
+    fs.writeFileSync(path.join(parent, 'package.json'), JSON.stringify({
+      name: 'griffincss-ui', version: '0.31.0', exports: { './dist/*': './dist/*', './package.json': './package.json' },
+    }));
+    fs.writeFileSync(path.join(parent, 'dist', 'purge-presets.json'), JSON.stringify({ ui: ['gr-only-from-parent'] }));
+
+    fs.mkdirSync(path.join(shop, 'vendor'), { recursive: true });
+    fs.writeFileSync(path.join(shop, 'vendor', 'griffinjs.css'), '.gr-only-from-parent{color:red}.gr-toast{color:blue}.gr-card{color:green}');
+    fs.writeFileSync(path.join(shop, 'vendor', 'purge-presets.json'), JSON.stringify({ ui: ['gr-toast'] }));
+    fs.writeFileSync(path.join(shop, 'page.html'), '<div class="gr-card"></div>');
+
+    const run = spawnSync(process.execPath, [SCRIPT, '--preset', 'ui', '--css', 'vendor/griffinjs.css', 'page.html'], { cwd: shop, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.ok(run.stdout.includes('.gr-toast{'), 'пресет взят не из файла рядом с CSS: ' + run.stdout);
+    assert.ok(!run.stdout.includes('.gr-only-from-parent{'), 'пресет взят из griffincss-ui выше по дереву');
+    assert.match(run.stderr, /vendor[\\/]purge-presets\.json/, 'отчёт не называет файл рядом с CSS: ' + run.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Ревью OcapiCMS к 0.30.0, п. 2: слова между пробелами в значении class
+// на шаблонах (Twig, JSX) — и обрывки вроде `{{` и `th-total{%`. Отсечению
+// они не мешают — с классом из CSS не совпадут, — но счётчик найденного
+// перестал быть диагностикой: отчёт называет, сколько из них — классы CSS.
+test('отчёт называет, сколько найденных имён — классы отсекаемого CSS', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-purge-'));
+
+  try {
+    fs.writeFileSync(path.join(dir, 'x.css'), '.gr-card{color:red}.gr-total{color:blue}.gr-unused{color:green}');
+    fs.writeFileSync(path.join(dir, 'page.twig'), "<div class=\"gr-total{% if final %} gr-card{% endif %} {{ cls|default('') }}\"></div>");
+
+    const run = spawnSync(process.execPath, [SCRIPT, '--css', 'x.css', 'page.twig'], { cwd: dir, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.match(run.stderr, /из них классов этого CSS: 2\b/, 'счётчик классов CSS: ' + run.stderr);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Ревью OcapiCMS к 0.30.0, п. 4: на macOS рабочий каталог приходит в NFD
+// (так имя хранит файловая система), а путь из аргумента, набранный
+// руками, — в NFC; общая часть путей обрывалась на первой «й», и отчёт
+// печатал рабочий, но длинный обход. Только на APFS: она к нормализации
+// имён нечувствительна, а на ext4 NFC и NFD — разные имена.
+test('отчёт называет файл пресета коротким путём и при разной нормализации путей', {
+  skip: process.platform !== 'darwin' && 'нечувствительна к нормализации имён только APFS',
+}, () => {
+  const base = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'griffincss-nfd-'));
+
+  try {
+    const stored = path.join(base, 'Сайты'.normalize('NFD'));
+
+    fs.mkdirSync(path.join(stored, 'vendor'), { recursive: true });
+    fs.writeFileSync(path.join(stored, 'vendor', 'ui.css'), '.gr-toast{color:red}');
+    fs.writeFileSync(path.join(stored, 'vendor', 'purge-presets.json'), JSON.stringify({ ui: ['gr-toast'] }));
+    fs.writeFileSync(path.join(stored, 'page.html'), '<p></p>');
+
+    const typed = path.join(base, 'Сайты'.normalize('NFC'), 'vendor', 'ui.css');
+    const run = spawnSync(process.execPath, [SCRIPT, '--preset', 'ui', '--css', typed, 'page.html'], { cwd: stored, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.match(run.stderr, /пресет ui \(vendor[\\/]purge-presets\.json\)/, 'путь к пресету в обход: ' + run.stderr);
+  } finally {
+    fs.rmSync(base, { recursive: true, force: true });
+  }
+});
+
+// Ревью CHU, п. 36: CSS перенесён без purge-presets.json, griffincss-ui
+// в каталоге нет — разрешение модулей, как у require, поднимается выше
+// по дереву (в монорепозитории так находится корневой node_modules)
+// и может найти чужой griffincss-ui. Отчёт печатает путь найденного файла,
+// а не «проекта»: откуда список, видно сразу.
+test('пресет из griffincss-ui выше по дереву — отчёт печатает путь найденного файла', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-preset-'));
+
+  try {
+    const parent = path.join(dir, 'node_modules', 'griffincss-ui');
+    const shop = path.join(dir, 'shop');
+
+    fs.mkdirSync(path.join(parent, 'dist'), { recursive: true });
+    fs.writeFileSync(path.join(parent, 'package.json'), JSON.stringify({
+      name: 'griffincss-ui', version: '9.9.9', exports: { './dist/*': './dist/*', './package.json': './package.json' },
+    }));
+    fs.writeFileSync(path.join(parent, 'dist', 'purge-presets.json'), JSON.stringify({ ui: ['gr-only-from-parent'] }));
+    fs.mkdirSync(path.join(shop, 'vendor'), { recursive: true });
+    fs.writeFileSync(path.join(shop, 'vendor', 'griffinjs.css'), '.gr-only-from-parent{color:red}');
+    fs.writeFileSync(path.join(shop, 'page.html'), '<p></p>');
+
+    const run = spawnSync(process.execPath, [SCRIPT, '--css', 'vendor/griffinjs.css', '--preset', 'ui', 'page.html'], { cwd: shop, encoding: 'utf8' });
+
+    assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+    assert.match(run.stderr, /пресет ui \(\.\.[\\/]node_modules[\\/]griffincss-ui[\\/]dist[\\/]purge-presets\.json, griffincss-ui 9\.9\.9\)/, 'путь не напечатан: ' + run.stderr);
+    assert.ok(!run.stderr.includes('проекта'), 'отчёт называет чужой griffincss-ui пакетом проекта');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
 });

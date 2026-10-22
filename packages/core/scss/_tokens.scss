@@ -189,7 +189,7 @@ $gr-gap-step: map.get(bp.$gr-breakpoints, md);
 // Адаптивный шаг отступов. Живёт здесь, а не в _gap.scss: токены собираются
 // в оба пакета, а слой griffincss.utils старше griffincss.core — переопределение
 // из модуля ядра проиграло бы блоку :root, приехавшему с griffincss-utils.
-@media (width >= $gr-gap-step) {
+@media (min-width: $gr-gap-step) {
   :root {
     @include m.gr-gap-scale-lg;
   }

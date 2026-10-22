@@ -222,7 +222,7 @@ $gr-nav-expand: map.get(bp.$gr-breakpoints, md);
 
 // Со средних экранов сворачивания нет вовсе: кнопка убирается, навигация
 // возвращается в строку шапки независимо от того, открыт <details> или нет.
-@media (width >= $gr-nav-expand) {
+@media (min-width: $gr-nav-expand) {
   .gr-nav-toggle {
     display: none;
   }

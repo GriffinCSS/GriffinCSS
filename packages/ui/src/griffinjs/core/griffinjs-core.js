@@ -1,5 +1,5 @@
 /*!
- * GriffinJS — Core v0.29.2
+ * GriffinJS — Core v0.30.0
  * Опциональный слой виджетов с состоянием поверх Griffincss: слайдер,
  * галерея, лайтбокс, параллакс, мегаменю. Подключается одной строкой
  * и одним файлом; страница без него — законное и рабочее состояние.
@@ -45,7 +45,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.29.2';
+  var VERSION = '0.30.0';
 
   // Реестры. Модуль зовёт defineEngine/defineWidget; ядро — единственное
   // место, которое знает, как их применить.
@@ -146,23 +146,24 @@
 
   // Учёт атрибутов, которые рантайм ставит на элементы: restore() возвращает
   // исходные значения до последнего. Один помощник на все виджеты — иначе
-  // у каждого своя копия и свой шанс забыть что-то снять.
+  // у каждого своя копия и свой шанс забыть что-то снять. Снимается только
+  // своё значение: атрибут, который после виджета поменял фреймворк или
+  // страница, — уже не его (роль пункта меню, сменённая на menuitemradio).
   function recorder() {
     var touched = [];
 
     return {
       set: function (node, name, value) {
         var current = node.getAttribute(name);
-
-        if (current === value) return;
-
-        var known = false;
+        var entry = null;
 
         for (var i = 0; i < touched.length; i++) {
-          if (touched[i].el === node && touched[i].attr === name) { known = true; break; }
+          if (touched[i].el === node && touched[i].attr === name) { entry = touched[i]; break; }
         }
 
-        if (!known) touched.push({ el: node, attr: name, before: current });
+        if (entry) entry.value = value;
+        if (current === value) return;
+        if (!entry) touched.push({ el: node, attr: name, before: current, value: value });
 
         if (value === null) node.removeAttribute(name);
         else node.setAttribute(name, value);
@@ -170,6 +171,8 @@
       restore: function () {
         for (var i = touched.length - 1; i >= 0; i--) {
           var t = touched[i];
+
+          if (t.el.getAttribute(t.attr) !== t.value) continue;
 
           if (t.before === null) t.el.removeAttribute(t.attr);
           else t.el.setAttribute(t.attr, t.before);

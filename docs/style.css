@@ -582,9 +582,11 @@ table:not(.gr-table) tbody tr:hover td {
   font-size: 0.875rem;
 }
 
-/* --- узкий экран --- */
+/* --- узкий экран ---
+   Запись Media Queries 3, как у библиотеки: синтаксис диапазонов в @media
+   знают только Chrome 104 и Safari 16.4 — выше порога каскадных слоёв. */
 
-@media (width < 48rem) {
+@media not all and (min-width: 48rem) {
   .docs-layout {
     flex-direction: column;
   }
@@ -798,7 +800,7 @@ table:not(.gr-table) tbody tr:hover td {
   font-size: 0.8125rem;
 }
 
-@media (width >= 80rem) {
+@media (min-width: 80rem) {
   .toc { display: block; }
 }
 

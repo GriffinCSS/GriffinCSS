@@ -1,6 +1,6 @@
 {
   "name": "griffincss",
-  "version": "0.29.2",
+  "version": "0.30.0",
   "private": true,
   "description": "Монорепозиторий Griffincss: ядро griffincss-core, утилиты griffincss-utils и компоненты griffincss-ui",
   "homepage": "https://gitverse.ru/BarneyScott/GriffinCSS",
@@ -33,7 +33,7 @@
     "sync-rule-table": "node scripts/sync-rule-table.mjs",
     "sync-griffinjs": "node scripts/sync-griffinjs.mjs",
     "sync-sizes": "node scripts/sync-sizes.mjs",
-    "purge": "node scripts/purge.mjs",
+    "purge": "node packages/utils/bin/purge.mjs",
     "coverage": "node scripts/coverage.mjs",
     "demo:stream": "node scripts/serve-stream.mjs",
     "watch": "sass --watch packages/core/scss:packages/core/dist packages/ui/scss:packages/ui/dist packages/utils/scss:packages/utils/dist --load-path=node_modules --style=compressed --no-source-map",

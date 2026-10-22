@@ -23,7 +23,7 @@
 
 <div class="hero">
   <h1>JS-рантайм</h1>
-  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,6 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->11,2 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->9,7 КБ<!--/gr:size:bundle--> одним файлом.</p>
+  <p><code>griffincss.js</code> — компактный IIFE-скрипт (<!--gr:size:js-core-raw-->9,9 КБ<!--/gr:size:js-core-raw-->, <!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip), который сканирует DOM, парсит <code>data-gr-layout</code> атрибуты и генерирует CSS Grid правила на лету. Все четыре рантайма библиотеки вместе — <!--gr:size:js-all-->11,3 КБ<!--/gr:size:js-all--> gzip, а бандлом <code>griffincss-all.js</code> — <!--gr:size:bundle-->9,8 КБ<!--/gr:size:bundle--> одним файлом.</p>
   <div class="hero-badges">
     <span class="badge badge-accent"><!--gr:size:js-core-->3,9 КБ<!--/gr:size:js-core--> gzip</span>
     <span class="badge">IIFE</span>
@@ -49,7 +49,7 @@
   </div>
   <div class="feature-card">
     <h4>Непересекающиеся брейкпоинты</h4>
-    <p>Диапазоны в range-синтаксисе: <code>(768px &lt;= width &lt; 1024px)</code>. Без арифметики <code>-1px</code>, поэтому единицы измерения не важны и щелей на дробных ширинах нет.</p>
+    <p>Окно — в записи Media Queries 3: «от X» — <code>(min-width: X)</code>, «ниже X» — его точное дополнение <code>not all and (min-width: X)</code>, средний диапазон — вложенным <code>@media</code>. Без арифметики <code>-1px</code>, поэтому единицы измерения не важны и щелей на дробных ширинах нет; порог — порог каскадных слоёв. Контейнер — в синтаксисе диапазонов: <code>@container</code> знает его с первого дня.</p>
   </div>
 </div>
 
@@ -136,7 +136,7 @@ Griffincss.parseLayout('hdr4-main4-side2_2-ftr4');
 <h3>Griffincss.version</h3>
 
 <pre><code>// Версия рантайма — строка, совпадающая с версией пакета griffincss-core.
-Griffincss.version;   // '0.29.2'</code></pre>
+Griffincss.version;   // '0.30.0'</code></pre>
 
 <h2>Валидация раскладок</h2>
 
@@ -226,7 +226,7 @@ Griffincss.version;   // '0.29.2'</code></pre>
   <tr><td><code>griffincss-ui.js</code></td><td><code>defer</code></td><td>синхронно в <code>&lt;head&gt;</code> он всё равно ждёт <code>DOMContentLoaded</code> — выигрыша нет, а блокирующий путь длиннее. Панели вкладок до старта видны все (база без скрипта); если это заметно, ставьте <code>hidden</code> неактивным в разметке</td></tr>
   <tr><td><code>griffincss-utils.js</code></td><td><code>defer</code></td><td>синхронно он достраивает углы вложенных <code>.gr-radius</code> по мере разбора, с <code>defer</code> — одним проходом после; первый уровень и его прямые дети скруглены статикой в обоих случаях</td></tr>
   <tr><td><code>griffinjs.js</code></td><td><code>defer</code></td><td>до старта разметка живёт базой без скрипта — <code>&lt;details&gt;</code>, <code>&lt;dialog&gt;</code>, дорожка со scroll-snap; это рабочее состояние, а не поломка. Старт — на <code>DOMContentLoaded</code>, после всех отложенных тегов; тег, вставленный скриптом в готовый документ, стартует сразу после своего файла</td></tr>
-  <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->9,7 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,2 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
+  <tr><td><code>griffincss-all.js</code></td><td>синхронно, <code>&lt;head&gt;</code></td><td>бандл «для простоты»: одним файлом легче суммы четырёх, но тема и раскладки внутри него держат в блокирующем пути и компоненты с утилитами — <!--gr:size:bundle-->9,8 КБ<!--/gr:size:bundle--> gzip вместо <!--gr:size:js-pkg-core-->5,3 КБ<!--/gr:size:js-pkg-core--> у двух файлов пакета <code>core</code></td></tr>
 </table>
 
 <p>
@@ -405,8 +405,8 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
 
   /* Grid Layouts */
   .gr-l-k7gi9w { … }
-  @media (width &lt; 768px)  { .gr-l-19l1jw3 { … } }
-  @media (width &gt;= 768px) { .gr-l-19l1jw3 { … } }
+  @media not all and (min-width: 768px) { .gr-l-19l1jw3 { … } }
+  @media (min-width: 768px)             { .gr-l-19l1jw3 { … } }
 
   /* Grid Areas */
   .gr-area-a { grid-area: a; }
@@ -451,12 +451,22 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
 
 <table>
   <tr><th>Layout</th><th>@media-правило</th></tr>
-  <tr><td>Базовый (<code>data-gr-layout</code>)</td><td><code>(width &lt; 640px)</code> — до первого адаптивного</td></tr>
-  <tr><td><code>data-gr-layout-sm</code></td><td><code>(640px &lt;= width &lt; 768px)</code></td></tr>
-  <tr><td><code>data-gr-layout-md</code></td><td><code>(768px &lt;= width &lt; 1024px)</code></td></tr>
-  <tr><td><code>data-gr-layout-lg</code></td><td><code>(1024px &lt;= width &lt; 1280px)</code></td></tr>
-  <tr><td><code>data-gr-layout-xl</code> (последний)</td><td><code>(width &gt;= 1280px)</code> — от последнего</td></tr>
+  <tr><td>Базовый (<code>data-gr-layout</code>)</td><td><code>not all and (min-width: 640px)</code> — до первого адаптивного</td></tr>
+  <tr><td><code>data-gr-layout-sm</code></td><td><code>(min-width: 640px)</code>, внутри — <code>not all and (min-width: 768px)</code></td></tr>
+  <tr><td><code>data-gr-layout-md</code></td><td><code>(min-width: 768px)</code>, внутри — <code>not all and (min-width: 1024px)</code></td></tr>
+  <tr><td><code>data-gr-layout-lg</code></td><td><code>(min-width: 1024px)</code>, внутри — <code>not all and (min-width: 1280px)</code></td></tr>
+  <tr><td><code>data-gr-layout-xl</code> (последний)</td><td><code>(min-width: 1280px)</code> — от последнего</td></tr>
 </table>
+
+<p>
+  Средний диапазон — два вложенных <code>@media</code>: «от своего брейкпоинта»
+  и «не от следующего». Запись Media Queries 3 выбрана ради порога: синтаксис
+  диапазонов в <code>@media</code> (<code>768px &lt;= width &lt; 1024px</code>)
+  знают только Chrome 104 и Safari 16.4 — выше каскадных слоёв, — и браузер
+  со слоями, но без него, получал бы раскладку узкого экрана на любой ширине.
+  <code>data-gr-layout-c*</code> пишутся в <code>@container</code> диапазонами:
+  контейнерные запросы знают их с первого дня.
+</p>
 
 <div class="callout">
   <p><strong>Зачем?</strong> Это гарантирует, что только один набор правил активен в любой момент. Правила авто-скрытия из одного брейкпоинта не конфликтуют с другим.</p>
@@ -466,7 +476,7 @@ el.sheet ? el.sheet.cssRules.length : 'лист заблокирован пол�
   <p><strong>Границы считаются по атрибутам элемента, а не по всей шкале.</strong> В таблице выше
   заданы все четыре варианта, поэтому диапазоны идут подряд. Если на элементе только
   <code>data-gr-layout</code> и <code>data-gr-layout-lg</code>, диапазонов будет два:
-  <code>(width &lt; 1024px)</code> и <code>(width &gt;= 1024px)</code>. Раскладка без единого
+  <code>not all and (min-width: 1024px)</code> и <code>(min-width: 1024px)</code>. Раскладка без единого
   адаптивного варианта правило в <code>@media</code> не заворачивает вовсе.</p>
 </div>
 

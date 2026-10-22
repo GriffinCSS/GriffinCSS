@@ -31,10 +31,12 @@
     return found;
   }
 
+  // Запись Media Queries 3, как у CSS библиотеки (Этап 78): синтаксис
+  // диапазонов в @media и matchMedia знают только Chrome 104 и Safari 16.4.
   function query(name) {
     var px = value(name);
 
-    return px ? '(width >= ' + px + ')' : null;
+    return px ? '(min-width: ' + px + ')' : null;
   }
 
   function matches(name) {

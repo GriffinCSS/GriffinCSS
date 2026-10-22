@@ -98,7 +98,7 @@ $gr-spacing-steps: (0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16) !default;
 
 // Адаптивные варианты
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     @include gr-spacing-scale('-#{$bp-name}');
   }
 }

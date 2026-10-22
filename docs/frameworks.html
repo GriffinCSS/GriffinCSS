@@ -95,7 +95,7 @@
   </p>
 </div>
 
-<h2>Семь оговорок</h2>
+<h2>Восемь оговорок</h2>
 
 <h3>1. StrictMode монтирует дважды — и это безопасно</h3>
 
@@ -234,6 +234,14 @@
   <code>GriffinJS.init(node)</code> после того, как содержимое приехало.
 </p>
 
+<p>
+  Состав, меняющийся после подъёма, — не та ловушка. Меню
+  <code>data-gr-dropdown</code>, где пункт «Сделать общим» сменяется
+  пунктом «Отвязать», пересоздавать не нужно: роли пунктов контроллер
+  раздаёт при каждом открытии, как и клавиатура берёт пункты заново.
+  Пункт, вставленный в уже открытое меню, получит роль при следующем открытии.
+</p>
+
 <h3>6. Класс контейнера раскладки — не ваш</h3>
 
 <p>
@@ -313,6 +321,33 @@
   форма отправляет ISO из скрытого спутника, и в состояние стоит класть
   его — из <code>griffin:change</code> на поле, где <code>detail.value</code>
   и есть ISO.
+</p>
+
+<h3 id="vkladki">8. Вкладки <code>data-gr-tabs</code> пишут разметку сами</h3>
+
+<p>
+  Эта оговорка — про рантайм компонентов <code>griffincss-ui.js</code>,
+  а не про слой виджетов. Вкладкам с <code>data-gr-tabs</code> он ставит
+  роли, <code>aria-selected</code>, roving <code>tabindex</code> и прячет
+  неактивные панели атрибутом <code>hidden</code> — прямо на узлах.
+  Наблюдателя у него нет, а во фреймворке вкладки почти всегда появляются
+  позже <code>DOMContentLoaded</code>: без разметки они показывают все
+  панели сразу и без клавиатуры. Размечает их повторный
+  <code>Griffincss.ui.start()</code> или <code>Griffincss.ui.tabs(узел)</code>
+  после отрисовки — узел может быть и самими вкладками; выбранную вкладку
+  повторная разметка не меняет.
+</p>
+
+<pre><code>useEffect(() =&gt; { Griffincss.ui.tabs(ref.current); }, []);
+
+&lt;div ref={ref} className="gr-tabs" data-gr-tabs&gt;…&lt;/div&gt;</code></pre>
+
+<p>
+  Не совмещайте атрибут со вкладками, выбор которых ведёт состояние
+  фреймворка: рантайм и отрисовка будут спорить за <code>hidden</code>
+  и <code>aria-selected</code>, как маска и управляемое поле в седьмой
+  оговорке. Такие вкладки — классы <code>.gr-tabs</code> без атрибута,
+  а роли и клавиатура — в своём компоненте.
 </p>
 
 <h2>Хук, когда узлы живут недолго</h2>
@@ -432,7 +467,7 @@ onBeforeUnmount(() =&gt; {
 
 <p>
   Единственное, чего делать не стоит, — собирать имя класса из кусков
-  в рантайме. Отсечение неиспользуемого (<code>npm run purge</code>) читает
+  в рантайме. Отсечение неиспользуемого (<code>npx -p griffincss-utils griffincss-purge</code>) читает
   разметку статически, и <code>{`gr-p-${n}`}</code> оно не увидит:
   класс уедет из сборки, а страница молча останется без отступа.
   Полное имя класса в исходнике — условие того, что отсечение безопасно.
@@ -454,8 +489,8 @@ onBeforeUnmount(() =&gt; {
   скриптов тестом.
 </p>
 
-<pre><code>npm run purge -- --css node_modules/griffincss-ui/dist/griffincss-ui.css --preset ui --out public/ui.css src/
-npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui --out public/griffinjs.css src/</code></pre>
+<pre><code>npx -p griffincss-utils griffincss-purge --css node_modules/griffincss-ui/dist/griffincss-ui.css --preset ui --out public/ui.css src/
+npx -p griffincss-utils griffincss-purge --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui --out public/griffinjs.css src/</code></pre>
 
 <p>
   Замер на странице примеров витрины (<code>patterns.html</code>, компоненты
@@ -464,7 +499,8 @@ npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui
   2 880 → 1 596 Б. Цена пресета — правила всех компонентов, которые строит
   скрипт, даже не использованных на странице: здесь 678 Б в первом файле
   и 1 457 во втором. Точнее — свой <code>--safelist</code> из списка
-  <code>PRESETS.ui</code> в <code>scripts/purge.mjs</code>.
+  пресета: <code>PRESETS.ui</code> из модуля <code>griffincss-utils/purge</code>
+  или <code>griffincss-ui/dist/purge-presets.json</code>.
 </p>
 
 <p>
@@ -489,7 +525,7 @@ npm run purge -- --css node_modules/griffincss-ui/dist/griffinjs.css --preset ui
 </p>
 
 <p>
-  Что действительно нужно потребителю — не пакет, а шесть оговорок выше
+  Что действительно нужно потребителю — не пакет, а восемь оговорок выше
   и тридцать строк хука, которые можно скопировать себе и держать
   под своим контролем. Они на этой странице.
 </p>

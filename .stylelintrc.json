@@ -16,7 +16,7 @@
     "container-name-pattern": null,
     "layer-name-pattern": null,
     "scss/comment-no-empty": null,
-    "media-feature-range-notation": "context",
+    "media-feature-range-notation": "prefix",
     "value-keyword-case": ["lower", { "ignoreProperties": ["/^--gr-font-/"] }],
     "length-zero-no-unit": [true, { "ignoreFunctions": ["var", "calc", "min", "max", "clamp"] }],
     "property-no-vendor-prefix": [true, { "ignoreProperties": ["/text-size-adjust/"] }],

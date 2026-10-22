@@ -177,7 +177,7 @@
     ? window.Griffincss.theme.get()
     : { theme: 'auto', a11y: false, style: 'standard' };
 
-  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.29.2</span></a>';
+  var html = '<a href="index.html" class="sidebar-logo">Griffincss<span>v0.30.0</span></a>';
 
   html += '<div class="sidebar-controls">';
   html += '<fieldset class="gr-segmented gr-w-full" aria-label="Цветовая тема">';
@@ -222,7 +222,10 @@
 
   nav.innerHTML = html;
 
-  var wide = window.matchMedia ? window.matchMedia('(width >= 48rem)') : null;
+  // Запись Media Queries 3, как у библиотеки: синтаксис диапазонов в matchMedia
+  // знают только Chrome 104 и Safari 16.4 — в Safari 15.4–16.3 навигация вела
+  // бы себя как на узком экране при любой ширине.
+  var wide = window.matchMedia ? window.matchMedia('(min-width: 48rem)') : null;
   var list = nav.querySelector('.sidebar-nav');
 
   if (wide && list) {

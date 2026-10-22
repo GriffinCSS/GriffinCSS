@@ -97,7 +97,10 @@
 //
 // Селекторы по элементам, а не по классам: разметка внутри фиксирована
 // (label > input + span), и требовать класс на каждом из трёх уровней
-// значило бы разменивать краткость на ничто.
+// значило бы разменивать краткость на ничто. Сегмент — span прямо
+// в подписи, а не любой span внутри: значок, счётчик или текст для
+// читалки в подписи — не сегмент (Этап 77). `:where(label)` держит
+// прежнюю специфичность.
 .gr-segmented {
   // Внутренний радиус: скругление рамки за вычетом её толщины. Он нужен
   // крайним сегментам ниже, чтобы их заливка легла ровно по рамке.
@@ -130,7 +133,7 @@
   pointer-events: none;
 }
 
-.gr-segmented span {
+.gr-segmented :where(label) > span {
   display: block;
   padding-block: 0.375rem;
   padding-inline: var(--gr-ui-gap);
@@ -148,7 +151,7 @@
 // (в том числе скрытый, .gr-sr-only), и первым потомком он отнимал
 // у первого сегмента скругление и левую рамку, а хвостовой <script>
 // или скрытое поле — скругление у последнего (фидбек темы griffin, п. 2).
-.gr-segmented label ~ label span {
+.gr-segmented label ~ label > span {
   border-inline-start: var(--gr-border-width) solid var(--gr-color-border);
 }
 
@@ -157,18 +160,18 @@
 // но с ВНЕШНИМ радиусом, поэтому в углах между заливкой и рамкой оставался
 // зазор — фон переключателя не совпадал с его границами. Свои радиусы
 // у сегментов ложатся по рамке точно.
-.gr-segmented label:first-of-type span {
+.gr-segmented label:first-of-type > span {
   border-start-start-radius: var(--gr-segmented-radius);
   border-end-start-radius: var(--gr-segmented-radius);
 }
 
-.gr-segmented label:last-of-type span {
+.gr-segmented label:last-of-type > span {
   border-start-end-radius: var(--gr-segmented-radius);
   border-end-end-radius: var(--gr-segmented-radius);
 }
 
 @media (hover: hover) {
-  .gr-segmented span:hover {
+  .gr-segmented :where(label) > span:hover {
     background-color: var(--gr-color-surface-raised);
     color: var(--gr-color-text);
   }

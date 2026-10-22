@@ -16,7 +16,8 @@ const { spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
-const SCRIPT = path.join(ROOT, 'scripts', 'purge.mjs');
+const SCRIPT = path.join(__dirname, '..', 'bin', 'purge.mjs');
+const PRESETS_JSON = path.join(ROOT, 'packages', 'ui', 'dist', 'purge-presets.json');
 const UI_SRC = path.join(ROOT, 'packages', 'ui', 'src');
 const UI_CSS = path.join(ROOT, 'packages', 'ui', 'dist', 'griffincss-ui.css');
 const LAYER_CSS = path.join(ROOT, 'packages', 'ui', 'dist', 'griffinjs.css');
@@ -46,7 +47,9 @@ function literals(code) {
     const c = code[i];
 
     if (c === '/' && code[i + 1] === '*') {
-      i = (code.indexOf('*/', i + 2) + 2) || code.length;
+      const end = code.indexOf('*/', i + 2);
+
+      i = end === -1 ? code.length : end + 2;
       continue;
     }
 
@@ -108,8 +111,19 @@ test('пресет ui равен списку классов, которые с�
     'разбор src/ не нашёл классов тоста и комбобокса: ' + expected.join(' '));
 
   assert.deepEqual(PRESETS.ui, expected,
-    'пресет ui в scripts/purge.mjs разошёлся с src/ — перепишите список так:\n'
+    'пресет ui в packages/utils/bin/purge.mjs разошёлся с src/ — перепишите список так:\n'
       + JSON.stringify(expected, null, 2));
+});
+
+// Пресеты — ещё и данными (фидбек CHU по 0.29.2, п. 6): сайт, который
+// отсекает CSS не на Node, берёт список из dist пакета ui рядом с CSS.
+// Файл собирается из PRESETS при сборке ui и обязан не отставать от него.
+test('пресеты лежат в dist пакета ui данными — тем же списком', async () => {
+  const { PRESETS } = await load();
+
+  assert.ok(fs.existsSync(PRESETS_JSON), 'нет packages/ui/dist/purge-presets.json — npm run build:ui');
+  assert.deepEqual(JSON.parse(fs.readFileSync(PRESETS_JSON, 'utf8')), PRESETS,
+    'purge-presets.json отстал от PRESETS — npm run build:ui');
 });
 
 // Пресет один на оба файла пакета: тост и кнопка его крестика лежат

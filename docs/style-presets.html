@@ -465,10 +465,10 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
 </p>
 
 <pre><code>&lt;!-- все три стиля --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-styles.css"&gt;
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-styles.css"&gt;
 
 &lt;!-- или один — вместо предыдущей строки, а не вдобавок к ней --&gt;
-&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.29.2/dist/griffincss-style-strict.css"&gt;</code></pre>
+&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-style-strict.css"&gt;</code></pre>
 
 <table>
   <thead>
@@ -498,14 +498,14 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
     115 Б brotli на всех, поэтому отдельных сборок компонентов ради них
     не заводится: нужно отсечь и их — соберите <code>griffincss-ui</code>
     из SCSS с тем же списком или пропустите готовый файл через
-    <code>npm run purge</code>.
+    <code>npx -p griffincss-utils griffincss-purge</code>.
   </p>
 </div>
 
 <h3>Отсечение: за чужие стили можно не платить</h3>
 
 <p>
-  Собирать из SCSS ради одного стиля не обязательно. <code>npm run purge</code>
+  Собирать из SCSS ради одного стиля не обязательно. <code>npx -p griffincss-utils griffincss-purge</code>
   читает <code>data-gr-style</code> в разметке и выбрасывает правила и блоки
   токенов остальных стилей — без единой настройки. Замер на странице
   со стилем <code>compact</code>: <code>griffincss-styles.css</code>
@@ -520,7 +520,7 @@ Griffincss.theme.get();             // {theme, resolved, style, a11y, resolvedA1
     <code>Griffincss.theme.style('strict')</code> в файле с кодом найдётся
     строковым литералом, а тот же вызов в инлайновом <code>&lt;script&gt;</code>
     внутри HTML — нет. Имя такого стиля добавляется в safelist наравне
-    с классами: <code>npm run purge -- --safelist strict …</code>. Отчёт
+    с классами: <code>npx -p griffincss-utils griffincss-purge --safelist strict …</code>. Отчёт
     называет и оставленные стили, и выброшенные — по нему и видно, что
     safelist собран верно.
   </p>

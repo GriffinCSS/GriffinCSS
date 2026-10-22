@@ -377,8 +377,10 @@
 
 <div class="callout callout-success">
   <p><strong>Непересекающиеся диапазоны:</strong> в отличие от простого накопления <code>min-width</code>,
-  griffincss описывает каждый брейкпоинт диапазоном в range-синтаксисе:
-  <code>(width &lt; 768px)</code>, <code>(768px &lt;= width &lt; 1024px)</code>, <code>(width &gt;= 1024px)</code>.
+  griffincss описывает каждый брейкпоинт диапазоном:
+  <code>not all and (min-width: 768px)</code>; <code>(min-width: 768px)</code> с вложенным
+  <code>not all and (min-width: 1024px)</code>; <code>(min-width: 1024px)</code>.
+  «Ниже X» — точное дополнение «от X», а не <code>max-width</code> с вычитанием пикселя.
   Правило базовой раскладки действует до первой адаптивной, промежуточные — в своих диапазонах,
   а последняя — от своего значения и выше. Арифметики <code>-1px</code> нет, поэтому щелей
   на дробных ширинах не остаётся, а единицы измерения брейкпоинта могут быть любыми.

@@ -310,3 +310,33 @@ test('дропдаун на <details>: таймаут, destroy и 0s', async () 
 
   restore();
 });
+
+// Ревью CHU этапа 77, п. 23: открытие во время закрытия отменяет его
+// короткой веткой — без sync(true), где раздаются роли. Пункт, который
+// фреймворк сменил за эти доли секунды, оставался без роли.
+test('дропдаун: открытие во время закрытия раздаёт роли — и пункту, сменённому за это время', () => {
+  const { G, doc } = setup(DROP);
+  const restore = withStyles(doc);
+  const d = dropdown(doc);
+
+  G.start();
+
+  const w = G.instance(d.root, 'dropdown');
+
+  d.root.open = true;
+  w.close();
+  assert.equal(d.root.getAttribute('data-gr-state'), 'closing');
+
+  const added = el('button', { class: 'gr-menu-item', type: 'button' });
+  const li = el('li', {}, [added]);
+
+  d.panel.querySelector('ul').appendChild(li);
+  w.open();
+
+  assert.equal(d.root.getAttribute('data-gr-state'), 'open');
+  assert.equal(added.getAttribute('role'), 'menuitem', 'новый пункт без роли');
+  assert.equal(li.getAttribute('role'), 'none');
+
+  restore();
+  G.destroy();
+});

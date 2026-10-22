@@ -66,7 +66,7 @@
   <tr><td><code>.gr-hint</code></td><td>Пояснение под полем</td></tr>
   <tr><td><code>.gr-error</code></td><td>Сообщение об ошибке</td></tr>
   <tr><td><code>.gr-success</code></td><td>Подпись о принятом значении: пара к <code>.gr-error</code></td></tr>
-  <tr><td><code>.gr-required</code></td><td>Звёздочка обязательности вручную — для групп; у поля с <code>required</code> она появляется сама</td></tr>
+  <tr><td><code>.gr-required</code></td><td>Звёздочка обязательности вручную — для групп; у поля с <code>required</code> или <code>aria-required="true"</code> она появляется сама</td></tr>
   <tr><td><code>.gr-input</code></td><td>Однострочное поле любого типа — включая <code>date</code>, <code>time</code> и <code>color</code>: ни один селектор семьи не ограничен типом</td></tr>
   <tr><td><code>.gr-input-no-spin</code></td><td>Числовое поле без системных стрелок шага: в счётчике количества шагают кнопки рядом. Клавиатурный шаг <kbd>↑</kbd> / <kbd>↓</kbd> остаётся</td></tr>
   <tr><td><code>.gr-textarea</code></td><td>Многострочное; растёт по содержимому (<code>field-sizing: content</code>: Chrome 123, Firefox 152, Safari 26.2) от двух строк до <code>max-block-size</code>, если его задать; тянется ручкой только по вертикали. Где свойства нет — высота прежняя</td></tr>
@@ -214,7 +214,13 @@
     <strong>Звёздочка декоративна.</strong> Обязательность объявляет атрибут
     <code>required</code>: его читает и платформа, и скринридер, и проверка
     формы. Звёздочка лишь показывает её глазами — и появляется от того же
-    атрибута, без класса в разметке. Цвет и знак не заменяют слова: в примере
+    атрибута, без класса в разметке; у своего поля — поверхности редактора,
+    комбобокса на <code>role</code> — от <code>aria-required="true"</code>.
+    В имя поля она не входит: читалка
+    называет поле «Телефон», а не «Телефон звёздочка», и обязательность
+    объявляет по атрибуту (Chrome, Edge, Firefox 128+, Safari 17.4+ —
+    браузеры, знающие пустую альтернативу у <code>content</code>; в остальных
+    знак, как прежде, звучит в имени). Цвет и знак не заменяют слова: в примере
     выше обязательность продублирована подсказкой, как того же требует правило
     «статус читается словом» от сообщений.
   </p>
@@ -222,7 +228,9 @@
     Группе, где обязательность лежит не на одном контроле — набор флажков
     в <code>&lt;fieldset&gt;</code>, из которого нужно выбрать хотя бы один, —
     звёздочка ставится вручную: <code>&lt;legend class="gr-label
-    gr-required"&gt;</code>. Атрибута, выражающего такое условие, в платформе нет.
+    gr-required"&gt;</code>. Атрибута, выражающего такое условие, в платформе нет,
+    поэтому здесь знак остаётся в имени группы — другого признака у неё нет;
+    слово в подсказке («выберите хотя бы один») надёжнее знака.
   </p>
 </div>
 
@@ -596,7 +604,10 @@
   и внутренние рамки считаются по ярлыкам (<code>label:first-of-type</code>,
   <code>label:last-of-type</code>), а не по любым потомкам, поэтому ни
   <code>&lt;legend&gt;</code> первым, ни скрытое поле или
-  <code>&lt;script&gt;</code> последним сегменты не ломают.
+  <code>&lt;script&gt;</code> последним сегменты не ломают. Сегмент —
+  <code>span</code> прямо в ярлыке; значок, счётчик или текст для читалки
+  внутри подписи — своим <code>span</code> — оформления сегмента
+  не получают и берут его цвет.
 </p>
 
 <div class="demo-block">
@@ -1159,7 +1170,7 @@ for (const [name, message] of Object.entries(errors)) {
     и пишет на каждую ручку одно свойство — <code>--gr-progress</code>,
     долю пройденного пути от <code>min</code> до <code>max</code>. Рисует
     по ней CSS модуля. Набор для этого — <code>griffinjs-core.js</code>
-    плюс <code>griffinjs-range.js</code>, <b><!--gr:size:griffinjs-range-set-->3,3 КБ<!--/gr:size:griffinjs-range-set--> gzip</b>.
+    плюс <code>griffinjs-range.js</code>, <b><!--gr:size:griffinjs-range-set-->3,4 КБ<!--/gr:size:griffinjs-range-set--> gzip</b>.
   </p>
 </div>
 
@@ -1417,7 +1428,7 @@ for (const [name, message] of Object.entries(errors)) {
     скрипта, а <code>griffinjs.js</code> от них не растёт ни на байт:
     файл подключают только те, кому он нужен, после <code>griffinjs.js</code>
     или <code>griffinjs-core.js</code>. Набор «ядро + anchor + поля» —
-    <b><!--gr:size:griffinjs-fields-set-->13,7 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>.
+    <b><!--gr:size:griffinjs-fields-set-->13,8 КБ<!--/gr:size:griffinjs-fields-set--> gzip</b>.
     Здесь — поля, которые чаще всего стоят в форме рядом;
     остальные и подробности — на странице
     <a href="griffinjs-fields.html">«Поля форм»</a>.

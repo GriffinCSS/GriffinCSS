@@ -206,7 +206,7 @@
 @include gr-table-stack('.gr-table-stack');
 
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width < $bp-value) {
+  @media not all and (min-width: $bp-value) {
     @include gr-table-stack('.gr-table-stack-#{$bp-name}');
   }
 

@@ -129,7 +129,7 @@ $gr-megamenu-expand: map.get(bp.$gr-breakpoints, md);
 // Панель отрывается от пункта и ложится под всю полосу — от края до края
 // .gr-megamenu. Тень отделяет её от страницы; линия сверху продолжает
 // нижнюю границу шапки.
-@media (width >= $gr-megamenu-expand) {
+@media (min-width: $gr-megamenu-expand) {
   .gr-megamenu-panel {
     position: absolute;
     z-index: var(--gr-z-dropdown);

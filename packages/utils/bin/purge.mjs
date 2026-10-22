@@ -10,12 +10,17 @@
 // ('gr-mt-' + n). Для них есть --safelist, и молчать об этом нельзя:
 // отчёт печатается всегда.
 //
+// Едет в пакете griffincss-utils командой griffincss-purge и экспортом
+// `griffincss-utils/purge` (фидбек CHU по 0.29.2, п. 6): у того, кто
+// поставил библиотеку из npm, `npm run purge` клона нет.
+//
 // Ноль зависимостей.
 
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, realpathSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { gzipSync, brotliCompressSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
-import { join, extname, resolve } from 'node:path';
+import { join, extname, resolve, dirname, relative } from 'node:path';
 
 // --- разбор CSS -------------------------------------------------------------
 
@@ -37,6 +42,49 @@ function skipString(css, i) {
   return css.length;
 }
 
+// Пробельные знаки CSS (CSS Syntax 4.2) — не `\s` JS: неразрывный пробел
+// для CSS и HTML — знак, а не разделитель.
+const WHITESPACE = /[ \t\n\r\f]/;
+
+// Комментарии из прелюдии (Этап 76, фидбек CHU по 0.29.2, п. 7): решение
+// о правиле принимается по тексту без них, и в вывод они не идут — иначе
+// at-правило после комментария читалось как селектор, точка в комментарии —
+// как класс, а запятая резала его так, что вывод открывал незакрытый
+// комментарий. Вплотную между двумя знаками комментарий для браузера —
+// граница токенов: `.a/**/b` — два слова без пробела (правило негодно),
+// `and/**/(` — слово и скобка, а не функция. Пробел дал бы комбинатор,
+// склейка — функцию; ту же границу даёт только пустой комментарий.
+function stripComments(text) {
+  if (!text.includes('/*')) return text;
+
+  let out = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+
+    if (c === '\\') {
+      out += text.slice(i, i + 2);
+      i++;
+    } else if (c === '"' || c === "'") {
+      const end = skipString(text, i);
+
+      out += text.slice(i, end);
+      i = end - 1;
+    } else if (c === '/' && text[i + 1] === '*') {
+      const end = text.indexOf('*/', i + 2);
+      const next = end === -1 ? text.length : end + 2;
+
+      if (out && !WHITESPACE.test(out[out.length - 1]) && next < text.length && !WHITESPACE.test(text[next])) {
+        out += '/**/';
+      }
+
+      i = next - 1;
+    } else out += c;
+  }
+
+  return out;
+}
+
 // Индекс парной закрывающей скобки: i указывает на `{`.
 function blockEnd(css, i) {
   let depth = 0;
@@ -44,8 +92,13 @@ function blockEnd(css, i) {
   for (; i < css.length; i++) {
     const c = css[i];
 
-    if (c === '"' || c === "'") i = skipString(css, i) - 1;
-    else if (c === '/' && css[i + 1] === '*') i = css.indexOf('*/', i + 2) + 1 || css.length;
+    if (c === '\\') i++;
+    else if (c === '"' || c === "'") i = skipString(css, i) - 1;
+    else if (c === '/' && css[i + 1] === '*') {
+      const end = css.indexOf('*/', i + 2);
+
+      i = end === -1 ? css.length : end + 1;
+    }
     else if (c === '{') depth++;
     else if (c === '}' && --depth === 0) return i;
   }
@@ -56,32 +109,54 @@ function blockEnd(css, i) {
 export function parse(css, from = 0, to = css.length) {
   const nodes = [];
   let start = from;
+  // Первый значащий знак прелюдии: at-правило ли она, решается один раз,
+  // а не на каждой `;` заново от `start` — иначе тысячи лишних `;` стоили
+  // квадрат длины.
+  let lead = '';
   let i = from;
 
   while (i < to) {
     const c = css[i];
+
+    if (!lead && !WHITESPACE.test(c) && !(c === '/' && css[i + 1] === '*')) lead = c;
+
+    // Экранированный знак — часть имени: `\{` не открывает блок, `\"` — строку.
+    if (c === '\\') {
+      i += 2;
+      continue;
+    }
 
     if (c === '"' || c === "'") {
       i = skipString(css, i);
       continue;
     }
 
+    // Незакрытый комментарий тянется до конца (п. 8): `indexOf` даёт −1,
+    // и прежняя запись `−1 + 2` возвращала разбор к позиции 1 — по кругу.
     if (c === '/' && css[i + 1] === '*') {
-      i = (css.indexOf('*/', i + 2) + 2) || to;
+      const end = css.indexOf('*/', i + 2);
+
+      i = end === -1 ? to : end + 2;
       continue;
     }
 
+    // `;` завершает только at-правило (п. 13). Лишняя `;` в списке правил
+    // для браузера — начало прелюдии следующего правила, и оно гибнет;
+    // здесь она так же входит в его селектор, и правило уходит целиком
+    // (straySemicolon).
     if (c === ';') {
-      const text = css.slice(start, i + 1).trim();
+      if (lead === '@') {
+        nodes.push({ type: 'statement', text: `${stripComments(css.slice(start, i)).trim()};` });
+        start = i + 1;
+        lead = '';
+      }
 
-      if (text) nodes.push({ type: 'statement', text });
-
-      start = ++i;
+      i++;
       continue;
     }
 
     if (c === '{') {
-      const prelude = css.slice(start, i).trim();
+      const prelude = stripComments(css.slice(start, i)).trim();
       const end = blockEnd(css, i);
       const name = prelude.startsWith('@') ? prelude.slice(1).match(/^[\w-]+/) : null;
 
@@ -94,6 +169,7 @@ export function parse(css, from = 0, to = css.length) {
       }
 
       start = i = end + 1;
+      lead = '';
       continue;
     }
 
@@ -129,7 +205,8 @@ export function splitSelector(selector) {
   for (; i < selector.length; i++) {
     const c = selector[i];
 
-    if (c === '"' || c === "'") i = skipString(selector, i) - 1;
+    if (c === '\\') i++;
+    else if (c === '"' || c === "'") i = skipString(selector, i) - 1;
     else if (c === '(' || c === '[') depth++;
     else if (c === ')' || c === ']') depth--;
     else if (c === ',' && depth === 0) {
@@ -143,14 +220,79 @@ export function splitSelector(selector) {
   return parts.map((part) => part.trim()).filter(Boolean);
 }
 
-const CLASS_IN_SELECTOR = /\.((?:\\.|[^\s.,:>+~()[\]{}'"*|=$^!])+)/g;
+// Экранирование — по CSS Syntax 4.3.7: `\` и до шести шестнадцатеричных
+// знаков с необязательным пробелом — кодовая точка, иначе — следующий знак.
+// Имя — только знаки имени (CSS Syntax 4.3.9): `.a#b` — класс `a` и id `b`,
+// а `/` в `.a/**/.b` имя заканчивает.
+const CLASS_IN_SELECTOR = /\.((?:\\[0-9a-fA-F]{1,6}[ \t\n\r\f]?|\\.|[-\w\u0080-\uffff])+)/g;
 
-// `.gr-w-1\/2` → `gr-w-1/2`: браузер сопоставляет класс с разметкой
-// уже без экранирования, и скрипт обязан сравнивать так же.
-const unescape = (name) => name.replace(/\\(.)/g, '$1');
+// `.gr-w-1\/2` → `gr-w-1/2`, `.\31 0` → `10`: браузер сопоставляет класс
+// с разметкой уже без экранирования, и скрипт обязан сравнивать так же.
+function unescape(name) {
+  return name.replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\(.)/g, (match, hex, char) => {
+    if (char !== undefined) return char;
 
-function classesInPart(part) {
-  return [...part.matchAll(CLASS_IN_SELECTOR)].map(([, name]) => unescape(name));
+    const code = parseInt(hex, 16);
+
+    return code === 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff) ? '\ufffd' : String.fromCodePoint(code);
+  });
+}
+
+// Строки и содержимое скобок атрибута — пробелами той же длины (п. 9):
+// точка в `a[href$=".pdf"]` — часть значения, `:is(` в строке —
+// не псевдокласс, а селектор по атрибуту класса не требует. Позиции
+// не сдвигаются, сами `[` и `]` остаются: альтернатива `:has([required])`
+// без них стала бы пустой — и мёртвой.
+function maskAttributes(part) {
+  let out = '';
+  let depth = 0;
+
+  for (let i = 0; i < part.length; i++) {
+    const c = part[i];
+
+    if (c === '\\') {
+      const pair = part.slice(i, i + 2);
+
+      out += depth ? ' '.repeat(pair.length) : pair;
+      i++;
+    } else if (c === '"' || c === "'") {
+      const end = skipString(part, i);
+
+      out += ' '.repeat(end - i);
+      i = end - 1;
+    } else if (c === '[') {
+      depth++;
+      out += c;
+    } else if (c === ']' && depth) {
+      depth--;
+      out += c;
+    } else out += depth ? ' ' : c;
+  }
+
+  return out;
+}
+
+// Лишняя `;` в селекторе (п. 13): браузер такое правило не применяет —
+// негоден весь список, а не одна его часть. Оно уходит целиком, вид
+// страницы от этого не меняется.
+function straySemicolon(selector) {
+  const text = maskAttributes(selector);
+  let depth = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+
+    if (c === '\\') i++;
+    else if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (c === ';' && depth <= 0) return true;
+  }
+
+  return false;
+}
+
+function classesInPart(text) {
+  return [...text.matchAll(CLASS_IN_SELECTOR)].map(([, name]) => unescape(name));
 }
 
 // Функциональные псевдоклассы. Класс внутри них — не условие всего правила
@@ -162,7 +304,9 @@ function classesInPart(part) {
 // та же логика, что у списка селекторов верхнего уровня, рекурсивно.
 // Мёртвые альтернативы внутри списка не вырезаются: цена — байты,
 // а переписывание вложенных списков — отдельный риск.
-const FUNCTIONAL = /:(not|is|where|has)\(/g;
+// Имена псевдоклассов регистр по ASCII не различают (п. 14): `:NOT(` —
+// тот же `:not(`.
+const FUNCTIONAL = /:(not|is|where|has)\(/gi;
 
 // Индекс закрывающей скобки для открывающей в позиции `open`.
 function parenEnd(text, open) {
@@ -171,7 +315,8 @@ function parenEnd(text, open) {
   for (let i = open; i < text.length; i++) {
     const c = text[i];
 
-    if (c === '"' || c === "'") i = skipString(text, i) - 1;
+    if (c === '\\') i++;
+    else if (c === '"' || c === "'") i = skipString(text, i) - 1;
     else if (c === '(') depth++;
     else if (c === ')' && --depth === 0) return i;
   }
@@ -179,24 +324,37 @@ function parenEnd(text, open) {
   return text.length;
 }
 
-function partAlive(part, isKept) {
+// Предел вложенности функциональных псевдоклассов: разбор рекурсивен,
+// и тысячи уровней `:is(` роняли его переполнением стека — без места
+// и причины. В настоящем CSS их единицы.
+const MAX_NESTING = 64;
+
+// В ошибке — начало селектора правила (`root`), а не самая внутренняя часть:
+// по ней правило в файле не найти. `:not()` вглубь не разбирается и в счёт
+// не идёт.
+function partAlive(part, isKept, depth = 0, root = part) {
+  if (depth > MAX_NESTING) {
+    throw new Error(`purge: вложенность :is()/:where()/:has() глубже ${MAX_NESTING} уровней в селекторе «${root.slice(0, 80)}…»`);
+  }
+
+  const text = maskAttributes(part);
   let outside = '';
   let i = 0;
 
-  while (i < part.length) {
+  while (i < text.length) {
     FUNCTIONAL.lastIndex = i;
-    const m = FUNCTIONAL.exec(part);
+    const m = FUNCTIONAL.exec(text);
 
-    if (!m) { outside += part.slice(i); break; }
+    if (!m) { outside += text.slice(i); break; }
 
     const open = m.index + m[0].length - 1;
-    const close = parenEnd(part, open);
+    const close = parenEnd(text, open);
 
-    outside += part.slice(i, m.index);
+    outside += text.slice(i, m.index);
     i = close + 1;
 
-    if (m[1] === 'not') continue;
-    if (!splitSelector(part.slice(open + 1, close)).some((alt) => partAlive(alt, isKept))) return false;
+    if (m[1].toLowerCase() === 'not') continue;
+    if (!splitSelector(text.slice(open + 1, close)).some((alt) => partAlive(alt, isKept, depth + 1, root))) return false;
   }
 
   return classesInPart(outside).every((cls) => isKept(cls));
@@ -207,15 +365,23 @@ function partAlive(part, isKept) {
 // Значение атрибута class: и в разметке, и в экранированном примере
 // внутри <pre>. Пробел вокруг `=` не допускается намеренно — иначе
 // `el.className = '…'` в HTML-файле читался бы как атрибут.
-const CLASS_ATTR = /(?:class|className|class:list)=(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}|([^\s>]+))/g;
+// Экранированный пример (`class=&quot;a b&quot;`) — своей веткой: без неё
+// значение читалось как без кавычек и кончалось на первом пробеле.
+const CLASS_ATTR = /(?:class|className|class:list)=(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}|&quot;([^&<>]*)&quot;|([^\s>]+))/g;
 
 // Строковые литералы: только для файлов с кодом. Класс, собранный
 // склейкой ('gr-mt-' + n), так не найдётся — на то и safelist.
 const STRING_LITERAL = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
 
-const TOKEN = /[A-Za-z_][A-Za-z0-9_\-/.%[\]()]*/g;
+const TOKEN = /[\p{L}_][\p{L}\p{N}_\-/.%[\]()]*/gu;
 
+// Значение атрибута — список через пробел, и имя в нём — всё между
+// пробелами: `md:gr-a`, `-foo`, `кнопка`. Пробелы — только ASCII, как
+// у HTML: неразрывный пробел — часть имени. В выражении (`{'gr-a': on}`)
+// и в строке кода имя окружено знаками языка — его достаёт TOKEN.
+// Берутся оба: лишнее имя только оставит правило, а не уберёт.
 function addTokens(value, found) {
+  for (const word of value.split(/[\t\n\f\r ]+/)) if (word) found.add(word);
   for (const [token] of value.matchAll(TOKEN)) found.add(token);
 }
 
@@ -223,7 +389,7 @@ export function extractClasses(text, { js = false } = {}) {
   const found = new Set();
 
   for (const match of text.matchAll(CLASS_ATTR)) {
-    addTokens(match[1] ?? match[2] ?? match[3] ?? match[4] ?? '', found);
+    addTokens(match[1] ?? match[2] ?? match[3] ?? match[4] ?? match[5] ?? '', found);
   }
 
   if (js) {
@@ -337,7 +503,7 @@ function animationNames(nodes, names = new Set()) {
     if (node.type === 'at') animationNames(node.children, names);
     if (node.type !== 'rule') continue;
 
-    for (const [, value] of node.body.matchAll(/animation(?:-name)?\s*:([^;}]*)/g)) {
+    for (const [, value] of node.body.matchAll(/animation(?:-name)?\s*:([^;}]*)/gi)) {
       addTokens(value, names);
     }
   }
@@ -351,8 +517,48 @@ function keyframesName(prelude) {
   return match ? match[1].trim().replace(/^['"]|['"]$/g, '') : null;
 }
 
+// Имена слоёв, которые объявляет узел: `@layer a, b;` и `@layer a {…}`.
+// Пустой комментарий на месте пробела (`@layer/**/base`) — тот же пробел.
+function layerNames(node) {
+  const text = (node.type === 'statement' ? node.text.slice(0, -1) : node.prelude ?? '').replace(/\/\*\*\//g, ' ');
+  const match = /^@layer\s+([^{]+)$/i.exec(text);
+
+  return match ? match[1].split(',').map((name) => name.trim()) : [];
+}
+
+// Опустевший блок не остаётся: пустой блок — это байты, за которые
+// пользователь платит ни за что. Именованный слой — исключение (п. 12):
+// порядок слоёв задаёт первое появление имени, и без него слой переехал
+// бы туда, где встретится его следующий блок. Он остаётся объявлением —
+// если только имя не встречалось раньше в том же списке (объявлением
+// порядка, как в каждом файле библиотеки, или своим блоком): тогда место
+// слоя уже задано, и блок уходит без следа. Встреченные имена — множеством:
+// перебор уцелевших соседей на каждый опустевший блок стоил квадрат их числа.
+function emptied(node, declared) {
+  const [name] = layerNames(node);
+
+  if (!name || declared.has(name)) return null;
+
+  return { type: 'statement', text: `@layer ${name};` };
+}
+
+// Список с учётом объявленных в нём слоёв.
+function layerList() {
+  const nodes = [];
+  const declared = new Set();
+
+  return {
+    nodes,
+    declared,
+    push(node) {
+      nodes.push(node);
+      for (const name of layerNames(node)) declared.add(name);
+    },
+  };
+}
+
 function filterNodes(nodes, isKept, counters, axis) {
-  const result = [];
+  const result = layerList();
 
   for (const node of nodes) {
     if (node.type === 'statement' || node.type === 'block') {
@@ -362,11 +568,15 @@ function filterNodes(nodes, isKept, counters, axis) {
 
     if (node.type === 'at') {
       const children = filterNodes(node.children, isKept, counters, axis);
+      const kept = children.length ? { ...node, children } : emptied(node, result.declared);
 
-      // Опустевший @media не остаётся: пустой блок — это байты,
-      // за которые пользователь платит ни за что.
-      if (children.length) result.push({ ...node, children });
+      if (kept) result.push(kept);
 
+      continue;
+    }
+
+    if (straySemicolon(node.selector)) {
+      counters.dropped++;
       continue;
     }
 
@@ -386,18 +596,22 @@ function filterNodes(nodes, isKept, counters, axis) {
     result.push({ ...node, selector: parts.join(',') });
   }
 
-  return result;
+  return result.nodes;
 }
 
 // Второй проход: @keyframes оставляем только те, на которые кто-то
 // ссылается. Первый проход их не трогает — ссылки становятся известны
 // только после того, как решена судьба обычных правил.
 function filterKeyframes(nodes, used, isKept, counters) {
-  const result = [];
+  const result = layerList();
 
   for (const node of nodes) {
     if (node.type === 'at') {
-      result.push({ ...node, children: filterKeyframes(node.children, used, isKept, counters) });
+      const children = filterKeyframes(node.children, used, isKept, counters);
+      const kept = children.length ? { ...node, children } : emptied(node, result.declared);
+
+      if (kept) result.push(kept);
+
       continue;
     }
 
@@ -415,7 +629,7 @@ function filterKeyframes(nodes, used, isKept, counters) {
     result.push(node);
   }
 
-  return result.filter((node) => node.type !== 'at' || node.children.length);
+  return result.nodes;
 }
 
 export function purge(css, used, { safelist = [], styles = null } = {}) {
@@ -480,8 +694,50 @@ export function collectFiles(target, files = []) {
   return files;
 }
 
+// По умолчанию — CSS утилит своего пакета, а не путь от текущего каталога:
+// команду зовут из проекта, где библиотека лежит в node_modules.
+const OWN_CSS = fileURLToPath(new URL('../dist/griffincss-utils.css', import.meta.url));
+
+// Пресет идёт за версией отсекаемого CSS: список классов, которые ставят
+// скрипты ui, у каждой версии свой, а `npx -p griffincss-utils` проекту
+// с одними компонентами ставит последнюю версию утилит. Порядок поиска:
+//   1. purge-presets.json рядом с файлом из --css — он лежит в той же dist,
+//      что griffincss-ui.css, griffinjs.css и griffinjs-fields.css; кто
+//      переносит файлы библиотеки к себе, кладёт его рядом с CSS;
+//   2. griffincss-ui, найденный разрешением модулей от текущего каталога, —
+//      как у require, и в node_modules выше по дереву (в монорепозитории
+//      так находится корневой node_modules), поэтому только вторым;
+//   3. встроенный список.
+// Отчёт называет, откуда взят пресет, — путь найденного файла, а не «проект»:
+// griffincss-ui выше по дереву может оказаться чужим (ревью CHU, п. 36).
+function presetSources(css) {
+  const sources = [];
+  const beside = join(dirname(resolve(css)), 'purge-presets.json');
+
+  try {
+    sources.push({ presets: JSON.parse(readFileSync(beside, 'utf8')), source: shown(beside) });
+  } catch { /* рядом с CSS файла нет */ }
+
+  try {
+    const require = createRequire(join(process.cwd(), 'package.json'));
+    const file = require.resolve('griffincss-ui/dist/purge-presets.json');
+    const version = require('griffincss-ui/package.json').version;
+
+    sources.push({ presets: JSON.parse(readFileSync(file, 'utf8')), source: `${shown(file)}, griffincss-ui ${version}` });
+  } catch { /* griffincss-ui не найден или он старше 0.30.0 */ }
+
+  return sources;
+}
+
+// Путь для отчёта — от текущего каталога и от одинаковой нормализации:
+// на macOS рабочий каталог приходит в NFD, а путь, набранный руками, — в NFC,
+// и relative() иначе обрывал общую часть на первой «й» и печатал обход.
+function shown(file) {
+  return relative(process.cwd().normalize('NFC'), file.normalize('NFC'));
+}
+
 function parseArgs(argv) {
-  const options = { css: 'packages/utils/dist/griffincss-utils.css', out: null, safelist: [], presets: [], content: [] };
+  const options = { css: OWN_CSS, out: null, safelist: [], presets: [], content: [] };
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -497,13 +753,24 @@ function parseArgs(argv) {
         process.exit(1);
       }
 
-      options.presets.push(name);
-      options.safelist.push(...PRESETS[name]);
+      options.presets.push({ name });
     }
     else if (arg.startsWith('--')) {
       console.error(`purge: неизвестная опция ${arg}`);
       process.exit(1);
     } else options.content.push(arg);
+  }
+
+  // Пресеты — после разбора: --css может стоять в строке и после --preset.
+  const sources = options.presets.length ? presetSources(options.css) : [];
+
+  for (const preset of options.presets) {
+    const found = sources.find((candidate) => Array.isArray(candidate.presets?.[preset.name]));
+    const list = found ? found.presets[preset.name] : PRESETS[preset.name];
+
+    preset.size = list.length;
+    preset.source = found ? found.source : 'встроенный';
+    options.safelist.push(...list);
   }
 
   return options;
@@ -513,12 +780,22 @@ const kb = (bytes) => `${(bytes / 1024).toFixed(1)} КБ`;
 const gzip = (text) => gzipSync(Buffer.from(text), { level: 9 }).length;
 const brotli = (text) => brotliCompressSync(Buffer.from(text)).length;
 
+// Классы, которые есть в селекторах отсекаемого CSS.
+function cssClasses(nodes, found = new Set()) {
+  for (const node of nodes) {
+    if (node.type === 'at') cssClasses(node.children, found);
+    else if (node.type === 'rule') for (const name of classesInPart(maskAttributes(node.selector))) found.add(name);
+  }
+
+  return found;
+}
+
 function main(argv) {
   const options = parseArgs(argv);
 
   if (!options.content.length) {
     console.error('purge: не указано ни одного файла разметки');
-    console.error('  использование: node scripts/purge.mjs [--css файл] [--out файл] [--safelist a,b*] [--preset ui] <файлы или каталоги>');
+    console.error('  использование: griffincss-purge [--css файл] [--out файл] [--safelist a,b*] [--preset ui] <файлы или каталоги>');
     process.exit(1);
   }
 
@@ -545,7 +822,14 @@ function main(argv) {
   // не узнал до того, как его увидел пользователь.
   const total = result.kept + result.dropped;
 
-  console.error(`purge: ${files.length} файлов разметки, найдено классов: ${used.size}`);
+  // Имён в разметке больше, чем классов: значение class делится по пробелам,
+  // и на шаблонах (Twig, JSX) это и обрывки вроде `{{` или `th-total{%`
+  // (ревью OcapiCMS к 0.30.0, п. 2). С классом из CSS они не совпадут
+  // и отсечению не мешают, а диагностика — второе число.
+  const inCss = cssClasses(parse(source));
+  const known = [...used].filter((name) => inCss.has(name)).length;
+
+  console.error(`purge: ${files.length} файлов разметки, имён в разметке: ${used.size}, из них классов этого CSS: ${known}`);
   console.error(`purge: правил оставлено ${result.kept} из ${total}, выброшено ${result.dropped}`);
   console.error(
     `purge: ${kb(source.length)} → ${kb(result.css.length)}` +
@@ -567,8 +851,8 @@ function main(argv) {
 
   // Пресет назван в отчёте: по счётчикам видно, что safelist собран
   // правильно, а по этой строке — из чего он собран.
-  for (const name of options.presets) {
-    console.error(`purge: пресет ${name} — классы, которые ставят скрипты пакета ${name}; имён в safelist: ${PRESETS[name].length}`);
+  for (const { name, size, source } of options.presets) {
+    console.error(`purge: пресет ${name} (${source}) — классы, которые ставят скрипты пакета ${name}; имён в safelist: ${size}`);
   }
 
   if (!options.safelist.length) {
@@ -576,6 +860,16 @@ function main(argv) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Запуск, а не импорт. npm кладёт в node_modules/.bin ссылку на файл,
+// и process.argv[1] — путь ссылки: сравниваются настоящие пути.
+function invoked() {
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (process.argv[1] && invoked()) {
   main(process.argv.slice(2));
 }

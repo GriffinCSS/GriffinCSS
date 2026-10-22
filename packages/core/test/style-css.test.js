@@ -38,7 +38,7 @@ test('зазоры и метрики контролов считаются че�
 });
 
 test('адаптивный шаг зазоров сохранился и тоже проходит через множитель', () => {
-  const media = topLevelBlocks(CORE).find((b) => norm(b.prelude).includes('width >= 768px'));
+  const media = topLevelBlocks(CORE).find((b) => norm(b.prelude).includes('min-width: 768px'));
 
   assert.ok(media, 'адаптивный шаг отступов исчез');
   assert.match(media.body, /--gr-gap:\s*calc\(1rem \* var\(--gr-density\)\)/);
@@ -130,7 +130,7 @@ test('носитель оси пересчитывает тени', () => {
 
 test('адаптивный шаг зазоров действует и на носителе оси', () => {
   const media = topLevelBlocks(STYLES).find(
-    (b) => norm(b.prelude).includes('width >= 768px') && b.body.includes('[data-gr-style]'),
+    (b) => norm(b.prelude).includes('min-width: 768px') && b.body.includes('[data-gr-style]'),
   );
 
   assert.ok(media, 'на носителе оси зазоры застынут на мобильной ступени');

@@ -364,7 +364,7 @@
     line-height: 1.6;
   }
 
-  @media (width < 640px) {
+  @media not all and (min-width: 640px) {
     .spec { grid-template-columns: 4.5rem 1fr; }
     .spec .num, .spec .measure { grid-column: 2; text-align: left; }
     .readout { margin-left: 0; }

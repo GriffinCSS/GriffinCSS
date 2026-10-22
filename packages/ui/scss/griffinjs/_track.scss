@@ -69,7 +69,7 @@
 }
 
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     @include gr-track-per-view('-#{$bp-name}');
   }
 }

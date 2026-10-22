@@ -83,6 +83,129 @@ test('дропдаун на <details>: роли меню, aria-expanded, Esc и 
   assert.equal(d.root.hasAttribute('data-gr-state'), false);
 });
 
+// Во фреймворке состав меню зависит от состояния: пункт «Сделать общим»
+// сменяется пунктом «Отвязать». Клавиатура берёт пункты при каждом
+// открытии — роли берутся там же: закрытая панель скрыта, и читалке
+// пункты нужны открытыми (Этап 77).
+test('дропдаун: пункт, вставленный после подъёма, получает роль при открытии; destroy() её снимает', () => {
+  const { G, doc } = setup(PARTS);
+  const d = detailsDropdown(doc);
+
+  G.start();
+
+  const w = G.instance(d.root, 'dropdown');
+  const added = el('button', { class: 'gr-menu-item', type: 'button' });
+  const li = el('li', {}, [added]);
+
+  added.textContent = 'Отвязать';
+  d.list.appendChild(li);
+  d.root.open = true;
+
+  assert.equal(added.getAttribute('role'), 'menuitem', 'новый пункт объявляется кнопкой');
+  assert.equal(li.getAttribute('role'), 'none', 'новый <li> — элемент списка внутри menu');
+
+  w.destroy();
+
+  assert.equal(added.hasAttribute('role'), false, 'роль нового пункта осталась после destroy()');
+  assert.equal(li.hasAttribute('role'), false);
+});
+
+test('дропдаун: пункт, удалённый из меню, при следующем открытии запись отпускает', () => {
+  const { G, doc } = setup(PARTS);
+  const d = detailsDropdown(doc, {}, ['Сделать общим']);
+
+  G.start();
+
+  const w = G.instance(d.root, 'dropdown');
+  const old = d.items[0];
+
+  d.root.open = true;
+  d.root.open = false;
+
+  const fresh = el('button', { class: 'gr-menu-item', type: 'button' });
+
+  fresh.textContent = 'Отвязать';
+  old.parentNode.remove();
+  d.list.appendChild(el('li', {}, [fresh]));
+  d.root.open = true;
+
+  // Запись ролей перед раздачей снимает прежние — и с убранного узла:
+  // держать его до destroy() ей незачем.
+  assert.equal(old.hasAttribute('role'), false, 'удалённый пункт держится записью');
+  assert.equal(fresh.getAttribute('role'), 'menuitem');
+
+  w.destroy();
+
+  assert.equal(fresh.hasAttribute('role'), false, 'роль нового пункта осталась после destroy()');
+});
+
+test('дропдаун: пункт, вынутый на время открытия и возвращённый тем же узлом, destroy() чистит', () => {
+  // Ревью CHU, п. 31: кэш узлов фреймворка, перенос через вынимание.
+  const { G, doc } = setup(PARTS);
+  const d = detailsDropdown(doc, {}, ['Сделать общим', 'Удалить']);
+
+  G.start();
+
+  const w = G.instance(d.root, 'dropdown');
+  const button = d.items[0];
+  const li = button.parentNode;
+
+  d.root.open = true;
+  d.root.open = false;
+  li.remove();
+  d.root.open = true;
+  d.root.open = false;
+  d.list.appendChild(li);
+  d.root.open = true;
+  d.root.open = false;
+  w.destroy();
+
+  assert.equal(button.hasAttribute('role'), false, 'у вернувшегося пункта осталась роль');
+  assert.equal(li.hasAttribute('role'), false, 'у вернувшегося <li> осталась роль');
+});
+
+test('дропдаун: панель без списка — роль menu у самой панели, destroy() её снимает', () => {
+  const { G, doc } = setup(PARTS);
+  const summary = el('summary', { class: 'gr-btn' });
+  const item = el('button', { class: 'gr-menu-item', type: 'button' });
+  const panel = el('div', { class: 'gr-dropdown-panel' }, [item]);
+  const root = mount(doc, el('details', { class: 'gr-dropdown', 'data-gr-dropdown': '' }, [summary, panel]));
+
+  G.start();
+
+  assert.equal(panel.getAttribute('role'), 'menu');
+  assert.equal(item.getAttribute('role'), 'menuitem');
+
+  G.instance(root, 'dropdown').destroy();
+
+  assert.equal(panel.hasAttribute('role'), false, 'роль панели осталась после destroy()');
+  assert.equal(item.hasAttribute('role'), false);
+});
+
+test('дропдаун: роль, которую фреймворк поставил пункту после подъёма, открытие и destroy() не трогают', () => {
+  // Ревью CHU, п. 33: раздача при каждом открытии сперва возвращала
+  // запись к исходному и стирала menuitemradio фреймворка.
+  const { G, doc } = setup(PARTS);
+  const d = detailsDropdown(doc, {}, ['Светлая', 'Тёмная']);
+
+  G.start();
+
+  const w = G.instance(d.root, 'dropdown');
+
+  d.root.open = true;
+  d.root.open = false;
+  d.items[0].setAttribute('role', 'menuitemradio');
+  d.root.open = true;
+
+  assert.equal(d.items[0].getAttribute('role'), 'menuitemradio', 'открытие перезаписало роль фреймворка');
+  assert.equal(d.items[1].getAttribute('role'), 'menuitem');
+
+  w.destroy();
+
+  assert.equal(d.items[0].getAttribute('role'), 'menuitemradio', 'destroy() снял роль фреймворка');
+  assert.equal(d.items[1].hasAttribute('role'), false);
+});
+
 test('дропдаун: клавиатура — ↓ открывает и ведёт в меню, ↑↓ Home End по пунктам, набор по первой букве', () => {
   const { G, doc } = setup(PARTS);
   const d = detailsDropdown(doc);

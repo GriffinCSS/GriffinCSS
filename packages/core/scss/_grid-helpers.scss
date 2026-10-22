@@ -79,7 +79,7 @@
 
 // Адаптивные явные сетки (применяются от указанного брейкпоинта)
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     // Адаптивная пара к .gr-grid из _grid-parser.scss: тот же display
     // и тот же отступ, но от брейкпоинта. До 0.8.0 роль играли
     // .gr-grid-display-* из griffincss-utils — дубль, разошедшийся с ядром

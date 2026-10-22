@@ -1,5 +1,5 @@
 /*!
- * Griffincss — Runtime Grid Parser v0.29.2
+ * Griffincss — Runtime Grid Parser v0.30.0
  * Парсит data-gr-layout и data-gr-layout-{sm,md,lg,xl} в DOM.
  * На каждый набор раскладок — свой класс .gr-l-<хеш>, поэтому
  * одинаковая базовая раскладка с разной адаптивностью не конфликтует.
@@ -29,7 +29,7 @@
 })(function () {
   'use strict';
 
-  var VERSION = '0.29.2';
+  var VERSION = '0.30.0';
   var STYLE_ID = 'griffincss-dynamic';
 
   // Границы валидности раскладки
@@ -363,10 +363,9 @@
       + '}\n';
   }
 
-  // Непересекающиеся диапазоны в range-синтаксисе: без арифметики -1px,
-  // поэтому единицы измерения брейкпоинта роли не играют и щелей не остаётся.
-  // Запись одна на оба вида запроса: @container понимает range наравне
-  // с @media, и цепочка диапазонов у них устроена одинаково.
+  // Непересекающиеся диапазоны контейнера в синтаксисе диапазонов: без
+  // арифметики -1px, поэтому единицы брейкпоинта роли не играют и щелей
+  // не остаётся. @container знает этот синтаксис с первого дня.
   function rangeQuery(bp, activeBps) {
     if (activeBps.length === 0) return null;
     if (bp === '') return '(width < ' + bpValue(activeBps[0]) + ')';
@@ -378,8 +377,30 @@
     return '(' + bpValue(bp) + ' <= width < ' + bpValue(activeBps[index + 1]) + ')';
   }
 
+  // Те же диапазоны окна — в записи Media Queries 3 (Этап 78): синтаксис
+  // диапазонов в @media знают только Chrome 104 и Safari 16.4, выше порога
+  // каскадных слоёв. «Ниже X» — точное дополнение «от X», без вычитания;
+  // средний диапазон — два запроса, вложенным @media. Тот же текст пишет
+  // миксин (_gr-media-range).
+  // База — только «ниже первого», последний — только «от себя»: у базы
+  // indexOf даёт −1, и следующий за ней — первый брейкпоинт.
+  function mediaQueries(bp, activeBps) {
+    if (activeBps.length === 0) return null;
+
+    var next = activeBps[activeBps.indexOf(bp) + 1];
+    var queries = bp ? ['(min-width: ' + bpValue(bp) + ')'] : [];
+
+    if (next) queries.push('not all and (min-width: ' + bpValue(next) + ')');
+
+    return queries;
+  }
+
   function wrapInQuery(rule, query, css) {
     return rule + ' ' + query + ' {\n  ' + css.replace(/\n(?!$)/g, '\n  ') + '}\n';
+  }
+
+  function wrapInMedia(queries, css) {
+    return queries.reduceRight(function (inner, query) { return wrapInQuery('@media', query, inner); }, css);
   }
 
   // Ключ набора: отсортированные bp:layout — порядок атрибутов не важен.
@@ -420,14 +441,14 @@
         // из осей — она накрыла бы диапазон другой, и какая раскладка
         // победит, решал бы порядок правил, а не ширина.
         var containerRange = rangeQuery('', containerBps);
-        var windowRange = rangeQuery('', windowBps);
+        var windowRange = mediaQueries('', windowBps);
 
         if (containerRange) block = wrapInQuery('@container', containerRange, block);
-        if (windowRange) block = wrapInQuery('@media', windowRange, block);
+        if (windowRange) block = wrapInMedia(windowRange, block);
       } else if (isContainerBp(entry.bp)) {
         block = wrapInQuery('@container', rangeQuery(entry.bp, containerBps), block);
       } else {
-        block = wrapInQuery('@media', rangeQuery(entry.bp, windowBps), block);
+        block = wrapInMedia(mediaQueries(entry.bp, windowBps), block);
       }
 
       layoutCSS += block;

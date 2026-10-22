@@ -40,7 +40,7 @@ $gr-gap-step: map.get(bp.$gr-breakpoints, md);
   @include m.gr-shadow-set;
 }
 
-@media (width >= $gr-gap-step) {
+@media (min-width: $gr-gap-step) {
   [data-gr-style] {
     @include m.gr-gap-scale-lg;
   }

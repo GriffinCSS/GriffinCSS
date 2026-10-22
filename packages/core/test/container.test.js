@@ -141,11 +141,11 @@ test('оконная и контейнерная цепочки на одном 
     'data-gr-layout-cmd': 'a2b1',
   }));
 
-  assert.ok(css.includes('@media (width>=768px)'), 'оконный диапазон открыт сверху: ' + css);
+  assert.ok(css.includes('@media (min-width:768px)'), 'оконный диапазон открыт сверху: ' + css);
   assert.ok(css.includes('@container (width>=768px)'), 'контейнерный диапазон открыт сверху: ' + css);
   // База закрыта обоими условиями сразу: иначе она перекрыла бы то один,
   // то другой диапазон в зависимости от порядка правил.
-  assert.ok(css.includes('@media (width<768px){@container (width<768px)'), css);
+  assert.ok(css.includes('@media not all and (min-width:768px){@container (width<768px)'), css);
 });
 
 test('контейнерный вариант стоит в таблице после оконного', () => {
@@ -198,7 +198,7 @@ function ruleIn(css, selector) {
 test('.gr-grid-N-c{bp} повторяет .gr-grid-N-{bp} внутри @container', () => {
   for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
     const container = queryBodies(`@container (width >= ${value})`);
-    const media = queryBodies(`@media (width >= ${value})`);
+    const media = queryBodies(`@media (min-width: ${value})`);
 
     for (let n = 1; n <= 12; n += 1) {
       const rule = ruleIn(container, `.gr-grid-${n}-c${bp}`);

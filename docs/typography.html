@@ -713,7 +713,7 @@ $gr-weights: (
 
 // Адаптивные варианты генерируются для всех групп
 @each $bp-name, $bp-value in $gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     @each $name, $size in $gr-text-sizes {
       .gr-text-#{$name}-#{$bp-name} { font-size: $size; }
     }

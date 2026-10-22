@@ -56,7 +56,7 @@ $gr-positions: (static, relative, absolute, fixed, sticky) !default;
 
 // Адаптивные варианты
 @each $bp-name, $bp-value in bp.$gr-breakpoints {
-  @media (width >= $bp-value) {
+  @media (min-width: $bp-value) {
     @include gr-position-scale('-#{$bp-name}');
   }
 }

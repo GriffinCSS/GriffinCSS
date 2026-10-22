@@ -331,7 +331,7 @@ m.removeAttribute('aria-busy');</code></pre>
   <tr><th>Что</th><th>Как</th></tr>
   <tr><td><code>data-gr-overlay-close</code></td><td>Атрибут на <code>&lt;dialog&gt;</code>: окно или панель закрывается щелчком мимо</td></tr>
   <tr><td><code>dialog.returnValue</code></td><td>После такого закрытия равно <code>"overlay"</code> — обработчик отличит щелчок мимо от кнопки «Сохранить»</td></tr>
-  <tr><td><code>Griffincss.ui.start()</code> / <code>.destroy()</code></td><td>Ручной запуск и снятие обработчиков; повторный <code>start()</code> подписки не удваивает, а ставит роль таблицам прозы, вставленным позже; автостарт отключается <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code></td></tr>
+  <tr><td><code>Griffincss.ui.start()</code> / <code>.destroy()</code></td><td>Ручной запуск и снятие обработчиков; повторный <code>start()</code> подписки не удваивает, а размечает вставленное позже — роль таблицам прозы и вкладки <code>data-gr-tabs</code>; автостарт отключается <code>data-auto="false"</code> на теге <code>&lt;script&gt;</code></td></tr>
 </table>
 
 <div class="callout">
@@ -624,7 +624,9 @@ m.removeAttribute('aria-busy');</code></pre>
   <code>data-gr-dropdown</code> на обёртке любой из трёх форм —
   <code>&lt;details&gt;</code>, popover, наведение. Контроллер ставит роли
   <code>menu</code>/<code>menuitem</code>/<code>separator</code>, честный
-  <code>aria-expanded</code>, ведёт клавиатуру по схеме WAI-ARIA <em>menu
+  <code>aria-expanded</code> (роли — при каждом открытии: пункт, вставленный
+  в меню после подъёма, объявляется пунктом меню; вставленный в уже открытое
+  меню — со следующего открытия), ведёт клавиатуру по схеме WAI-ARIA <em>menu
   button</em> (<kbd>↓</kbd> открывает и переходит к первому пункту,
   <kbd>↑</kbd> <kbd>↓</kbd> <kbd>Home</kbd> <kbd>End</kbd> по пунктам, набор
   по первой букве, <kbd>Esc</kbd> закрывает и возвращает фокус) и добавляет

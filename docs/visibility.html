@@ -250,38 +250,124 @@
   </p>
 </div>
 
-<h2>Адаптивное скрытие</h2>
+<h2 id="diapazony">Адаптивное скрытие</h2>
 
 <p>
-  Классы <code>.gr-hidden-{sm,md,lg,xl}</code> скрывают элемент начиная с указанного брейкпоинта.
-  Полезно для mobile-only / desktop-only элементов.
+  В классах скрытия имя брейкпоинта — <strong>диапазон</strong> ширины,
+  а слово перед ним — граница. <code>lg</code> — отрезок от 1024 до 1280px,
+  <code>xl</code> — от 1280px и шире; самый узкий отрезок, уже 640px,
+  своего имени не имеет. Так на примере <code>lg</code>:
 </p>
 
 <table>
-  <tr><th>Класс</th><th>Поведение</th></tr>
-  <tr><td><code>.gr-hidden-sm</code></td><td>Скрыт на экранах ≥ 640px</td></tr>
-  <tr><td><code>.gr-hidden-md</code></td><td>Скрыт на экранах ≥ 768px</td></tr>
-  <tr><td><code>.gr-hidden-lg</code></td><td>Скрыт на экранах ≥ 1024px</td></tr>
-  <tr><td><code>.gr-hidden-xl</code></td><td>Скрыт на экранах ≥ 1280px</td></tr>
+  <tr><th>Класс</th><th>&lt; 640</th><th>sm<br>640–767</th><th>md<br>768–1023</th><th><strong>lg</strong><br>1024–1279</th><th>xl<br>≥ 1280</th></tr>
+  <tr><td><code>.gr-hidden-in-lg</code></td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td>скрыт</td><td class="gr-text-ink-secondary">—</td></tr>
+  <tr><td><code>.gr-hidden-to-lg</code></td><td>скрыт</td><td>скрыт</td><td>скрыт</td><td>скрыт</td><td class="gr-text-ink-secondary">—</td></tr>
+  <tr><td><code>.gr-hidden-under-lg</code></td><td>скрыт</td><td>скрыт</td><td>скрыт</td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td></tr>
+  <tr><td><code>.gr-hidden-from-lg</code></td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td>скрыт</td><td>скрыт</td></tr>
+  <tr><td><code>.gr-hidden-over-lg</code></td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td class="gr-text-ink-secondary">—</td><td>скрыт</td></tr>
 </table>
+
+<p>
+  Пары запоминаются по смыслу: <code>to</code> и <code>from</code> включают
+  сам диапазон, <code>under</code> и <code>over</code> в него не заходят.
+  Формы <code>to</code> и <code>over</code> отсчитываются от конца
+  диапазона: <code>.gr-hidden-over-lg</code> скрывает от 1280px, а не от
+  1024 — <code>lg</code> здесь отрезок, а не точка.
+</p>
+
+<table>
+  <tr><th>Слово</th><th>Скрывает</th><th>Брейкпоинты</th></tr>
+  <tr><td><code>in</code></td><td>только в диапазоне</td><td>sm, md, lg, xl</td></tr>
+  <tr><td><code>to</code></td><td>до диапазона включительно</td><td>sm, md, lg</td></tr>
+  <tr><td><code>under</code></td><td>ниже диапазона</td><td>sm, md, lg, xl</td></tr>
+  <tr><td><code>from</code></td><td>от диапазона и выше</td><td>sm, md, lg, xl</td></tr>
+  <tr><td><code>over</code></td><td>выше диапазона</td><td>sm, md, lg</td></tr>
+</table>
+
+<p>
+  <code>to-xl</code> скрывал бы везде — это просто <code>.gr-hidden</code>,
+  а <code>over-xl</code> — нигде, поэтому их нет; <code>in-xl</code>
+  и <code>from-xl</code> совпадают. Имена с одинаковыми границами —
+  одно правило: <code>.gr-hidden-from-lg</code> и
+  <code>.gr-hidden-over-md</code>, <code>.gr-hidden-to-md</code>
+  и <code>.gr-hidden-under-lg</code> — какое читается естественнее, то и
+  пишите.
+</p>
+
+<div class="callout">
+  <p>
+    <strong>Голый суффикс — от брейкпоинта</strong>, как у всех адаптивных
+    утилит (<code>.gr-p-4-md</code>, <code>.gr-flex-md</code>,
+    <code>.gr-block-md</code>): <code>.gr-hidden-md</code> — то же, что
+    <code>.gr-hidden-from-md</code>. Пришедшим с Bootstrap 3: там
+    <code>hidden-md</code> скрывал только в диапазоне md — здесь это
+    <code>.gr-hidden-in-md</code>.
+  </p>
+</div>
+
+<div class="callout callout-success">
+  <p>
+    <strong>Показывать после скрытия не нужно.</strong> Вне своего диапазона
+    класс скрытия ничего не объявляет, и элемент показывается своим
+    <code>display</code> — флексом или сеткой ядра, компонентом, CSS сайта.
+    «Показать от md» — это <code>gr-flex gr-hidden-under-md</code>, без
+    обёртки и без <code>.gr-block-md</code>. Пара
+    <code>.gr-hidden .gr-flex-md</code> по-прежнему не работает: слой
+    утилит объявлен позже ядра, и <code>.gr-hidden</code> перебивает флекс
+    на любой ширине.
+  </p>
+</div>
+
+<div class="callout callout-warning">
+  <p>
+    <strong>CSS сайта вне слоёв — или в своём слое после библиотеки —
+    скрытие перебивает.</strong> Классы скрытия лежат в слое утилит, а правило
+    вне слоёв сильнее любого слоя; слой верхнего уровня, объявленный после
+    библиотеки (<code>@layer theme { … }</code>), целиком старше
+    <code>griffincss</code> и сильнее тоже: <code>.nav { display: flex }</code>
+    там отменит <code>.gr-hidden-under-md</code> и внутри диапазона. Своё правило
+    с <code>display</code> кладите в подслой <code>griffincss.app</code> —
+    он стоит между ядром и компонентами, ниже утилит (порядок слоёв —
+    в README и <a href="starter.html">скелете страницы</a>), — или вешайте
+    класс скрытия на обёртку, а не на элемент, которому сайт задаёт
+    <code>display</code>.
+  </p>
+</div>
+
+<p>
+  Классы складываются: все они — одно <code>display: none</code>, и порядок
+  в разметке не важен. Несколько диапазонов — несколькими классами:
+  <code>gr-hidden-under-md gr-hidden-over-md</code> — виден только на md,
+  <code>gr-hidden-under-md gr-hidden-from-xl</code> — скрыт на телефоне
+  и на широком экране. Те же слова есть и для ширины
+  <a href="container-queries.html">контейнера</a> — с буквой
+  <code>c</code>: <code>.gr-hidden-under-cmd</code>,
+  <code>.gr-hidden-in-clg</code>; мерит ближайший предок с
+  <code>.gr-cq</code>.
+</p>
 
 <div class="demo-block">
   <div class="demo-block-title">Адаптивное скрытие (измените ширину окна)</div>
   <div class="gr-flex gr-flex-wrap gr-gap">
-    <div class="tag-demo tag-a gr-hidden-sm">Виден только на мобильных (&lt;640px)</div>
-    <div class="tag-demo tag-b">Виден всегда</div>
-    <div class="tag-demo tag-c gr-hidden">Скрыт всегда</div>
+    <div class="tag-demo tag-a gr-hidden-from-md">Виден ниже 768px</div>
+    <div class="tag-demo tag-b gr-hidden-under-md gr-hidden-over-md">Виден только на md</div>
+    <div class="tag-demo tag-c gr-hidden-in-md">Скрыт только на md</div>
+    <div class="tag-demo tag-a gr-hidden-under-lg">Виден от 1024px</div>
   </div>
 </div>
 
-<pre><code>&lt;div class="gr-hidden-sm"&gt;Виден только на мобильных&lt;/div&gt;
-&lt;div class="gr-hidden-md"&gt;Скрыт на планшетах и шире&lt;/div&gt;
-&lt;div class="gr-hidden-lg"&gt;Скрыт на десктопах&lt;/div&gt;</code></pre>
+<pre><code>&lt;div class="gr-hidden-from-md"&gt;Виден ниже 768px&lt;/div&gt;
+&lt;div class="gr-hidden-under-md gr-hidden-over-md"&gt;Виден только на md&lt;/div&gt;
+&lt;div class="gr-hidden-in-md"&gt;Скрыт только на md&lt;/div&gt;
+&lt;nav class="gr-flex gr-gap gr-hidden-under-lg"&gt;Флекс-ряд от 1024px&lt;/nav&gt;</code></pre>
 
 <h2>Адаптивные display-классы</h2>
 
 <p>
-  Кроме скрытия, доступны классы для принудительного изменения display на определённом брейкпоинте.
+  Кроме скрытия, доступны классы, меняющие тип отображения от брейкпоинта.
+  Чтобы просто показать элемент от брейкпоинта, они не нужны — хватает
+  скрытия ниже него (<code>.gr-hidden-under-md</code>).
 </p>
 
 <table>
@@ -292,9 +378,9 @@
   <tr><td><code>.gr-flex-sm</code> … <code>.gr-grid-xl</code></td><td><code>display: flex</code> / <code>grid</code> от брейкпоинта — <a href="core-flex.html">ядро</a>, не этот модуль</td></tr>
 </table>
 
-<pre><code>&lt;div class="gr-hidden gr-block-md"&gt;
-  Скрыт на мобильных, виден от 768px
-&lt;/div&gt;</code></pre>
+<pre><code>&lt;span class="gr-block-md"&gt;
+  Строчный до 768px, блочный от него
+&lt;/span&gt;</code></pre>
 
 <h2>Примеры использования</h2>
 
@@ -307,25 +393,22 @@
 <h3>Мобильное меню</h3>
 
 <pre><code>&lt;nav&gt;
-  &lt;button class="gr-hidden-md"&gt;Меню (гамбургер)&lt;/button&gt;
-  &lt;div class="gr-hidden gr-block-md"&gt;
-    &lt;ul role="list" class="gr-flex gr-gap"&gt;
-      &lt;li&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/li&gt;
-      &lt;li&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
-      &lt;li&gt;&lt;a href="#"&gt;Contact&lt;/a&gt;&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/div&gt;
+  &lt;button class="gr-hidden-from-md"&gt;Меню (гамбургер)&lt;/button&gt;
+  &lt;ul role="list" class="gr-flex gr-gap gr-hidden-under-md"&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;About&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
 &lt;/nav&gt;</code></pre>
 
-<div class="callout callout-warning">
+<div class="callout">
   <p>
-    <strong>Пара «скрыть + показать» собирается из классов этого модуля.</strong>
-    <code>.gr-flex-md</code> и <code>.gr-grid-md</code> живут в ядре, а слой
-    утилит объявлен позже ядра — рядом с <code>.gr-hidden</code> они
-    проигрывают, и элемент остаётся скрытым на любой ширине. Поэтому
-    флекс-ряд, появляющийся от брейкпоинта, оборачивается: снаружи —
-    <code>.gr-hidden .gr-block-md</code>, внутри — обычный
-    <code>.gr-flex .gr-gap</code>.
+    <strong>Флекс-ряд скрывается ниже md — и показывается флексом сам.</strong>
+    Кнопке меню — <code>.gr-hidden-from-md</code>, ряду ссылок —
+    <code>.gr-hidden-under-md</code> рядом с его <code>.gr-flex</code>:
+    обёртка <code>.gr-hidden .gr-block-md</code>, без которой раньше было
+    не обойтись (<code>.gr-hidden</code> слоя утилит перебивал флекс ядра),
+    больше не нужна.
   </p>
 </div>
 
@@ -334,13 +417,11 @@
   <div class="gr-flex gr-flex-items-center gr-bg-surface gr-radius-2 gr-p-4">
     <div class="gr-flex gr-flex-between gr-flex-items-center gr-w-full">
       <strong class="gr-text-accent">Logo</strong>
-      <div class="tag-demo tag-a gr-hidden-md">☰ Меню (mobile)</div>
-      <div class="gr-hidden gr-block-md">
-        <div class="gr-flex gr-gap">
-          <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
-          <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
-          <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
-        </div>
+      <div class="tag-demo tag-a gr-hidden-from-md">☰ Меню (mobile)</div>
+      <div class="gr-flex gr-gap gr-hidden-under-md">
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Home</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">About</a>
+        <a class="gr-text-ink-secondary gr-text-sm" href="#">Contact</a>
       </div>
     </div>
   </div>
@@ -350,17 +431,17 @@
 
 <p>
   Боковая колонка «Сейчас читают», декоративная иллюстрация, подробности
-  в строке заказа — то, без чего мобильный экран обойдётся. Пара
-  <code>.gr-hidden .gr-block-lg</code> (или <code>.gr-flex-lg</code>,
-  если блок — флекс) прячет элемент через <code>display</code>: до 1024px
-  он не занимает места вовсе, а не оставляет дыру, как оставила бы
-  <code>.gr-invisible</code>. Основной контент при этом один для всех
+  в строке заказа — то, без чего мобильный экран обойдётся.
+  <code>.gr-hidden-under-lg</code> прячет элемент через <code>display</code>:
+  до 1024px он не занимает места вовсе, а не оставляет дыру, как оставила
+  бы <code>.gr-invisible</code>; от 1024px он показывается своим
+  <code>display</code> — блоком, а с <code>.gr-flex</code> — флексом. Основной контент при этом один для всех
   экранов — скрывается только дополнение.
 </p>
 
 <pre><code>&lt;div class="gr-flex gr-gap"&gt;
   &lt;article class="gr-flex-1 gr-min-w-0"&gt;Статья — видна всем&lt;/article&gt;
-  &lt;aside class="gr-hidden gr-block-lg gr-w-1/4"&gt;Сейчас читают — только от 1024px&lt;/aside&gt;
+  &lt;aside class="gr-hidden-under-lg gr-w-1/4"&gt;Сейчас читают — только от 1024px&lt;/aside&gt;
 &lt;/div&gt;</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Колонка исчезает из потока до 1024px (сузьте окно)</div>
@@ -369,7 +450,7 @@
       <h4>Статья</h4>
       <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Видна на любой ширине и занимает всё освободившееся место.</p>
     </div>
-    <aside class="card-demo gr-hidden gr-block-lg gr-w-1/4">
+    <aside class="card-demo gr-hidden-under-lg gr-w-1/4">
       <h4>Сейчас читают</h4>
       <p class="gr-m-0 gr-mt-1 gr-text-xs gr-text-ink-secondary">Только от 1024px.</p>
     </aside>

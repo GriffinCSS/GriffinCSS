@@ -548,10 +548,10 @@ test('.gr-track-N-c{bp} — слайдов в ряд по ширине конт�
 
 test('порог .gr-table-stack-{bp} / -c{bp} — ниже брейкпоинта, окно или контейнер', () => {
   for (const [bp, value] of Object.entries({ sm: '640px', md: '768px', lg: '1024px', xl: '1280px' })) {
-    const media = ui.indexOf(`@media(width < ${value}){.gr-table-stack-${bp},`);
+    const media = ui.indexOf(`@media not all and (min-width: ${value}){.gr-table-stack-${bp},`);
     const container = ui.indexOf(`@container (width < ${value}){.gr-table-stack-c${bp},`);
 
-    assert.notEqual(media, -1, `.gr-table-stack-${bp} не завёрнут в @media (width < ${value})`);
+    assert.notEqual(media, -1, `.gr-table-stack-${bp} не завёрнут в @media not all and (min-width: ${value})`);
     assert.notEqual(container, -1, `.gr-table-stack-c${bp} не завёрнут в @container (width < ${value})`);
   }
 
@@ -573,7 +573,7 @@ test('заливка сегментного переключателя ложи�
   );
 
   for (const edge of ['first', 'last']) {
-    const selector = `.gr-segmented label:${edge}-of-type span{`;
+    const selector = `.gr-segmented label:${edge}-of-type>span{`;
     const from = ui.indexOf(selector);
 
     assert.ok(from > 0, `нет правила для ${edge}-of-type`);
@@ -934,7 +934,7 @@ test('шапка сворачивается соседним селекторо�
     'меню не раскрывается по открытому переключателю',
   );
 
-  const wide = ui.slice(ui.indexOf('@media(width >= 768px)'));
+  const wide = ui.slice(ui.indexOf('@media(min-width: 768px)'));
 
   assert.ok(wide.includes('.gr-nav-toggle{display:none}'), 'кнопка меню не убирается на широком экране');
   assert.ok(wide.includes('.gr-nav-collapse{display:flex'), 'навигация не возвращается в строку шапки');
@@ -1698,8 +1698,8 @@ test('обязательность поля видна без единого к�
   // Звёздочке остаётся показать её глазами, и раз атрибут уже стоит,
   // требовать ещё и класс значило бы держать два источника правды.
   assert.ok(
-    ui.includes('.gr-field:has([required]) .gr-label::after'),
-    'нет автоматической звёздочки .gr-field:has([required]) .gr-label::after',
+    ui.includes('.gr-field:has([required],[aria-required=true]) .gr-label::after'),
+    'нет автоматической звёздочки .gr-field:has([required], [aria-required="true"]) .gr-label::after',
   );
   assert.ok(
     ui.includes('.gr-required::after'),
@@ -2030,7 +2030,7 @@ test('края сегментного переключателя считают�
   // и левую рамку. Края — по label:first-of-type / label:last-of-type,
   // внутренняя рамка — только у сегмента, перед которым стоит другой.
   for (const edge of ['first', 'last']) {
-    const selector = `.gr-segmented label:${edge}-of-type span{`;
+    const selector = `.gr-segmented label:${edge}-of-type>span{`;
     const from = ui.indexOf(selector);
 
     assert.ok(from > 0, `нет правила для ${edge}-of-type`);
@@ -2038,12 +2038,14 @@ test('края сегментного переключателя считают�
     assert.ok(!ui.includes(`.gr-segmented label:${edge}-child span{`), `край по-прежнему считается по ${edge}-child`);
   }
 
-  const inner = ui.indexOf('.gr-segmented label~label span{');
+  const inner = ui.indexOf('.gr-segmented label~label>span{');
 
   assert.ok(inner > 0, 'внутренняя рамка сегментов не привязана к соседству ярлыков');
   assert.ok(ui.slice(inner, ui.indexOf('}', inner)).includes('border-inline-start:var(--gr-border-width) solid'), 'внутренняя рамка не там');
 
-  const all = ui.indexOf('.gr-segmented span{');
+  const all = ui.indexOf('.gr-segmented :where(label)>span{');
+
+  assert.ok(all > 0, 'нет правила сегмента');
 
   assert.ok(!ui.slice(all, ui.indexOf('}', all)).includes('border-inline-start'), 'рамка стоит на каждом сегменте, и первому её приходится снимать');
 });

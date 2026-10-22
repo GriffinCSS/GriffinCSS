@@ -56,16 +56,20 @@ test('ряды разной длины паддятся точками', () => {
 });
 
 // Дефект ⑥: диапазоны строились арифметикой `-1px`, поэтому ломались
-// на не-px единицах и оставляли щель на дробных ширинах.
-test('медиа-диапазоны записаны range-синтаксисом без вычитания пикселя', () => {
+// на не-px единицах и оставляли щель на дробных ширинах. Этап 78:
+// синтаксис диапазонов в @media знают только Chrome 104 и Safari 16.4 —
+// выше порога слоёв; «ниже X» — точное дополнение «от X» в записи
+// Media Queries 3, без вычитания.
+test('медиа-диапазоны окна — в записи Media Queries 3, без вычитания пикселя', () => {
   const css = normalizeCss(
     runtimeCSS({ 'data-gr-layout': 'a2b2', 'data-gr-layout-md': 'a1b3' }),
   );
 
-  assert.ok(css.includes('@media (width<768px)'), css);
-  assert.ok(css.includes('@media (width>=768px)'), css);
+  assert.ok(css.includes('@media not all and (min-width:768px)'), css);
+  assert.ok(css.includes('@media (min-width:768px)'), css);
   assert.ok(!css.includes('767'), 'вычитание пикселя убрано');
-  assert.ok(!css.includes('max-width'), 'префиксный синтаксис не используется');
+  assert.ok(!css.includes('max-width'), 'верхняя граница — не max-width с вычитанием');
+  assert.ok(!/@media[^{]*width[<>]/.test(css), 'синтаксис диапазонов в @media: ' + css);
 });
 
 test('три диапазона не пересекаются и не оставляют щелей', () => {
@@ -77,9 +81,10 @@ test('три диапазона не пересекаются и не остав
     }),
   );
 
-  assert.ok(css.includes('@media (width<768px)'), css);
-  assert.ok(css.includes('@media (768px<=width<1024px)'), css);
-  assert.ok(css.includes('@media (width>=1024px)'), css);
+  assert.ok(css.includes('@media not all and (min-width:768px)'), css);
+  // Средний диапазон — вложенным @media: «от 768» и «не от 1024».
+  assert.ok(css.includes('@media (min-width:768px){@media not all and (min-width:1024px)'), css);
+  assert.ok(css.includes('@media (min-width:1024px)'), css);
 });
 
 test('брейкпоинты в rem не ломают диапазоны', () => {
@@ -90,15 +95,15 @@ test('брейкпоинты в rem не ломают диапазоны', () =>
 
   const css = normalizeCss(cssSection(doc, 'Grid Layouts'));
 
-  assert.ok(css.includes('@media (width<48rem)'), css);
-  assert.ok(css.includes('@media (width>=48rem)'), css);
+  assert.ok(css.includes('@media not all and (min-width:48rem)'), css);
+  assert.ok(css.includes('@media (min-width:48rem)'), css);
 });
 
 test('раскладка без базового варианта начинается со своего брейкпоинта', () => {
   const css = normalizeCss(runtimeCSS({ 'data-gr-layout-md': 'a1b1' }));
 
-  assert.ok(css.includes('@media (width>=768px)'), css);
-  assert.ok(!css.includes('width<768px'), css);
+  assert.ok(css.includes('@media (min-width:768px)'), css);
+  assert.ok(!css.includes('not all'), css);
 });
 
 // 37b: ширины треков задаются в CSS, а не строкой раскладки. Строка
