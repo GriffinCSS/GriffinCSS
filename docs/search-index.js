@@ -762,8 +762,8 @@ tokens: [
 [46,"--gr-color-surface-sunken --gr-control-h --gr-control-height --gr-scroll-hint-bg --gr-z-dropdown --gr-z-modal --gr-z-toast"]
 ],
 attrs: [
-[15,"data-gr-counter data-gr-date data-gr-datetime data-gr-file data-gr-format data-gr-in-range data-gr-index data-gr-iso data-gr-mask data-gr-number data-gr-otp data-gr-page data-gr-phone data-gr-rating data-gr-state data-gr-step data-gr-trunk data-gr-validate data-gr-value"],
-[19,"data-gr-alt data-gr-caption data-gr-clone data-gr-gallery data-gr-lightbox data-gr-pause data-gr-slider data-gr-src data-gr-track data-gr-type"],
+[15,"data-gr-counter data-gr-datetime data-gr-file data-gr-format data-gr-in-range data-gr-iso data-gr-mask data-gr-number data-gr-otp data-gr-phone data-gr-rating data-gr-trunk data-gr-validate"],
+[19,"data-gr-alt data-gr-caption data-gr-clone data-gr-date data-gr-gallery data-gr-index data-gr-lightbox data-gr-page data-gr-pause data-gr-poster data-gr-slider data-gr-src data-gr-state data-gr-step data-gr-track data-gr-type data-gr-value"],
 [20,"data-gr-combobox data-gr-dialog data-gr-dropdown data-gr-megamenu data-gr-open data-gr-parallax data-gr-range data-gr-sortable data-gr-tooltip"],
 [46,"data-gr-sort-value"]
 ]

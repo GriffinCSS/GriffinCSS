@@ -46,6 +46,30 @@ function skipString(css, i) {
 // для CSS и HTML — знак, а не разделитель.
 const WHITESPACE = /[ \t\n\r\f]/;
 
+// Знак в позиции i экранирован: перед ним нечётное число `\`.
+function escaped(text, i) {
+  let n = 0;
+
+  while (i - n > 0 && text[i - n - 1] === '\\') n++;
+
+  return n % 2 === 1;
+}
+
+// Края — только пробелы CSS. trim() JS снимает и U+00A0, U+FEFF,
+// U+2000–U+200A: для CSS это знаки имени, и `.a<U+00A0>` — класс
+// `a<U+00A0>`, а `<U+00A0>@layer a` — селектор, а не блок слоя.
+// Экранированный пробел в конце (`.a\ `) — часть имени: без него `\`
+// экранировал бы `{`.
+function trimCss(text) {
+  let start = 0;
+  let end = text.length;
+
+  while (start < end && WHITESPACE.test(text[start])) start++;
+  while (end > start && WHITESPACE.test(text[end - 1]) && !escaped(text, end - 1)) end--;
+
+  return text.slice(start, end);
+}
+
 // Комментарии из прелюдии (Этап 76, фидбек CHU по 0.29.2, п. 7): решение
 // о правиле принимается по тексту без них, и в вывод они не идут — иначе
 // at-правило после комментария читалось как селектор, точка в комментарии —
@@ -54,32 +78,44 @@ const WHITESPACE = /[ \t\n\r\f]/;
 // граница токенов: `.a/**/b` — два слова без пробела (правило негодно),
 // `and/**/(` — слово и скобка, а не функция. Пробел дал бы комбинатор,
 // склейка — функцию; ту же границу даёт только пустой комментарий.
+// Последний выведенный знак — своей переменной: чтение `out` по индексу
+// заставляло движок сплющивать собранную строку на каждом комментарии,
+// и прелюдия стоила квадрат их числа.
 function stripComments(text) {
   if (!text.includes('/*')) return text;
 
   let out = '';
+  let last = '';
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
 
     if (c === '\\') {
-      out += text.slice(i, i + 2);
+      const pair = text.slice(i, i + 2);
+
+      out += pair;
+      last = pair[pair.length - 1];
       i++;
     } else if (c === '"' || c === "'") {
       const end = skipString(text, i);
 
       out += text.slice(i, end);
+      last = text[end - 1];
       i = end - 1;
     } else if (c === '/' && text[i + 1] === '*') {
       const end = text.indexOf('*/', i + 2);
       const next = end === -1 ? text.length : end + 2;
 
-      if (out && !WHITESPACE.test(out[out.length - 1]) && next < text.length && !WHITESPACE.test(text[next])) {
+      if (last && !WHITESPACE.test(last) && next < text.length && !WHITESPACE.test(text[next])) {
         out += '/**/';
+        last = '/';
       }
 
       i = next - 1;
-    } else out += c;
+    } else {
+      out += c;
+      last = c;
+    }
   }
 
   return out;
@@ -146,7 +182,7 @@ export function parse(css, from = 0, to = css.length) {
     // (straySemicolon).
     if (c === ';') {
       if (lead === '@') {
-        nodes.push({ type: 'statement', text: `${stripComments(css.slice(start, i)).trim()};` });
+        nodes.push({ type: 'statement', text: `${trimCss(stripComments(css.slice(start, i)))};` });
         start = i + 1;
         lead = '';
       }
@@ -156,7 +192,7 @@ export function parse(css, from = 0, to = css.length) {
     }
 
     if (c === '{') {
-      const prelude = stripComments(css.slice(start, i)).trim();
+      const prelude = trimCss(stripComments(css.slice(start, i)));
       const end = blockEnd(css, i);
       const name = prelude.startsWith('@') ? prelude.slice(1).match(/^[\w-]+/) : null;
 
@@ -195,8 +231,10 @@ export function stringify(nodes) {
 
 // Селектор режется по запятым верхнего уровня: скобки и строки внутри
 // :is(), :not() и [attr="a,b"] запятыми не считаются. Экспорт — для
-// сверки объявлений по селекторам (diff-css.mjs).
-export function splitSelector(selector) {
+// сверки объявлений по селекторам (diff-css.mjs). `keepEmpty` оставляет
+// пустые части: в списке имён слоёв пустое место делает негодным весь
+// список (`@layer a,,b;` браузер отбрасывает).
+export function splitSelector(selector, keepEmpty = false) {
   const parts = [];
   let depth = 0;
   let start = 0;
@@ -217,19 +255,28 @@ export function splitSelector(selector) {
 
   parts.push(selector.slice(start));
 
-  return parts.map((part) => part.trim()).filter(Boolean);
+  const trimmed = parts.map(trimCss);
+
+  return keepEmpty ? trimmed : trimmed.filter(Boolean);
 }
 
 // Экранирование — по CSS Syntax 4.3.7: `\` и до шести шестнадцатеричных
 // знаков с необязательным пробелом — кодовая точка, иначе — следующий знак.
+// `\r\n` после кода — один пробел: браузер до разбора заменяет его на `\n`
+// (CSS Syntax 3.3), и `.a\31\r\n0` для него — класс `a10`, а не `a1`.
 // Имя — только знаки имени (CSS Syntax 4.3.9): `.a#b` — класс `a` и id `b`,
 // а `/` в `.a/**/.b` имя заканчивает.
-const CLASS_IN_SELECTOR = /\.((?:\\[0-9a-fA-F]{1,6}[ \t\n\r\f]?|\\.|[-\w\u0080-\uffff])+)/g;
+const CLASS_IN_SELECTOR = /\.((?:\\[0-9a-fA-F]{1,6}(?:\r\n|[ \t\n\r\f])?|\\.|[-\w\u0080-\uffff])+)/g;
+
+// Длина экранирования, которое начинается в позиции i.
+function escapeLength(text, i) {
+  return /^\\(?:[0-9a-fA-F]{1,6}(?:\r\n|[ \t\n\r\f])?|[^]?)/.exec(text.slice(i, i + 9))[0].length;
+}
 
 // `.gr-w-1\/2` → `gr-w-1/2`, `.\31 0` → `10`: браузер сопоставляет класс
 // с разметкой уже без экранирования, и скрипт обязан сравнивать так же.
 function unescape(name) {
-  return name.replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\(.)/g, (match, hex, char) => {
+  return name.replace(/\\([0-9a-fA-F]{1,6})(?:\r\n|[ \t\n\r\f])?|\\(.)/g, (match, hex, char) => {
     if (char !== undefined) return char;
 
     const code = parseInt(hex, 16);
@@ -331,33 +378,42 @@ const MAX_NESTING = 64;
 
 // В ошибке — начало селектора правила (`root`), а не самая внутренняя часть:
 // по ней правило в файле не найти. `:not()` вглубь не разбирается и в счёт
-// не идёт.
-function partAlive(part, isKept, depth = 0, root = part) {
+// не идёт. Условия части — классы и ось оформления вне функциональных
+// псевдоклассов: `keep.cls(имя)` и `keep.axis(значение)`. Альтернативы
+// режутся по исходному тексту, а не по маске: в маске значения атрибутов
+// стёрты, а оси они нужны.
+function partAlive(part, keep, depth = 0, root = part) {
   if (depth > MAX_NESTING) {
     throw new Error(`purge: вложенность :is()/:where()/:has() глубже ${MAX_NESTING} уровней в селекторе «${root.slice(0, 80)}…»`);
   }
 
   const text = maskAttributes(part);
   let outside = '';
+  let plain = '';
   let i = 0;
 
   while (i < text.length) {
     FUNCTIONAL.lastIndex = i;
     const m = FUNCTIONAL.exec(text);
 
-    if (!m) { outside += text.slice(i); break; }
+    if (!m) {
+      outside += text.slice(i);
+      plain += part.slice(i);
+      break;
+    }
 
     const open = m.index + m[0].length - 1;
     const close = parenEnd(text, open);
 
     outside += text.slice(i, m.index);
+    plain += part.slice(i, m.index);
     i = close + 1;
 
     if (m[1].toLowerCase() === 'not') continue;
-    if (!splitSelector(text.slice(open + 1, close)).some((alt) => partAlive(alt, isKept, depth + 1, root))) return false;
+    if (!splitSelector(part.slice(open + 1, close)).some((alt) => partAlive(alt, keep, depth + 1, root))) return false;
   }
 
-  return classesInPart(outside).every((cls) => isKept(cls));
+  return classesInPart(outside).every(keep.cls) && axisIn(outside, plain).every(keep.axis);
 }
 
 // --- классы в разметке ------------------------------------------------------
@@ -408,31 +464,74 @@ export function extractClasses(text, { js = false } = {}) {
 // Поэтому ось идёт своим множеством — значениями атрибута из разметки.
 const STYLE_ATTR = /data-gr-style\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([^}]*)\}|([^\s>]+))/g;
 
-// `[data-gr-style]` — блок токенов, `[data-gr-style="compact"]` — правила
-// одного стиля. Значение возвращается без кавычек, безымянный — как null.
-const STYLE_IN_SELECTOR = /\[data-gr-style(?:[~^$*|]?=("[^"]*"|'[^']*'|[^\]]*))?\]/g;
-
+// Пустое значение — тоже значение оси: `[data-gr-style]` браузер применяет
+// и к `data-gr-style=""`. Оно идёт пустым именем.
 export function extractStyles(text) {
   const found = new Set();
 
   for (const match of text.matchAll(STYLE_ATTR)) {
-    addTokens(match[1] ?? match[2] ?? match[3] ?? match[4] ?? '', found);
+    const value = match[1] ?? match[2] ?? match[3] ?? match[4] ?? '';
+
+    addTokens(value, found);
+    if (!/[^ \t\n\r\f]/.test(value)) found.add('');
   }
 
   return found;
 }
 
-function stylesInPart(part) {
-  return [...part.matchAll(STYLE_IN_SELECTOR)].map(([, value]) =>
-    (value === undefined ? null : value.replace(/^["']|["']$/g, '')));
+// Селектор по атрибуту: имя, оператор, значение строкой или словом, флаг.
+// Пробелы внутри скобок допустимы, как у браузера. Перед флагом пробел
+// обязателен: значение без кавычек и флаг иначе делили бы одни знаки,
+// и на `[title=a…a b c]` перебор делений стоил бы квадрат длины.
+// Флаг вплотную к строке (`"airy"i`) не совпадает — условием оси такая
+// запись не стала бы и с флагом.
+const ATTRIBUTE = /^[ \t\n\r\f]*((?:\\[^]|[-\w])+)[ \t\n\r\f]*(?:([~^$*|]?=)[ \t\n\r\f]*("(?:[^"\\]|\\[^])*"|'(?:[^'\\]|\\[^])*'|(?:\\[^]|[^ \t\n\r\f"'\\])+)(?:[ \t\n\r\f]+([^ \t\n\r\f]+))?[ \t\n\r\f]*)?$/;
+
+// Ось в тексте части: `masked` — он же после maskAttributes(), `plain` —
+// исходный, позиции у них общие. Скобка атрибута ищется по маске, поэтому
+// `[data-gr-style=…]` внутри строки чужого атрибута — не ось. Условие
+// оси — только там, где отсечение судит точно:
+//   [data-gr-style]           — null: блок токенов, нужен, пока ось встретилась;
+//   [data-gr-style=V], [~=V]  — V: стиль из разметки; V без пробелов, без флага
+//                               (пустое V у `=` — атрибут с пустым значением).
+// Начало, конец, подстрока, префикс (^= $= *= |=), флаг `i`/`s`, значение
+// с пробелом браузер сравнивает не так, как делится разметка, — такие формы
+// условием не становятся и правило не выбрасывают. Имя атрибута —
+// без учёта регистра по ASCII и без экранирования, как у браузера.
+function axisIn(masked, plain) {
+  const out = [];
+
+  for (let open = masked.indexOf('['); open !== -1; open = masked.indexOf('[', open + 1)) {
+    const close = masked.indexOf(']', open);
+
+    if (close === -1) break;
+
+    const m = ATTRIBUTE.exec(plain.slice(open + 1, close));
+
+    if (!m || unescape(m[1]).replace(/[A-Z]/g, (c) => c.toLowerCase()) !== 'data-gr-style') continue;
+    if (!m[2]) {
+      out.push(null);
+      continue;
+    }
+
+    const quoted = m[3][0] === '"' || m[3][0] === "'";
+    const value = unescape(quoted ? m[3].slice(1, -1) : m[3]);
+
+    if (m[4] || /[ \t\n\r\f]/.test(value) || (m[2] !== '=' && (m[2] !== '~=' || !value))) continue;
+
+    out.push(value);
+  }
+
+  return out;
 }
 
+// Стили, которые объявляет CSS, — значения точных форм оси в селекторах.
 function declaredStyles(nodes, found = new Set()) {
   for (const node of nodes) {
     if (node.type === 'at') declaredStyles(node.children, found);
     if (node.type !== 'rule') continue;
 
-    for (const value of stylesInPart(node.selector)) {
+    for (const value of axisIn(maskAttributes(node.selector), node.selector)) {
       if (value !== null) found.add(value);
     }
   }
@@ -496,34 +595,214 @@ export const PRESETS = {
 
 // --- отсечение --------------------------------------------------------------
 
-// Имена анимаций, на которые ссылаются уцелевшие правила: @keyframes
-// классов не содержит, и решить по нему самому нечего.
-function animationNames(nodes, names = new Set()) {
-  for (const node of nodes) {
-    if (node.type === 'at') animationNames(node.children, names);
-    if (node.type !== 'rule') continue;
+// Объявления тела правила — `имя:значение` между `;`, `{` и `}` вне строк
+// и комментариев, во вложенных правилах тоже. `;` внутри скобок — часть
+// значения (CSS Syntax: блок `(…)` — одно значение): `if(…: a; else: b)`.
+// Имя свойства — без экранирования и в нижнем регистре по ASCII:
+// `\61nimation` — `animation`.
+function declarations(body) {
+  const out = [];
+  let start = 0;
+  let colon = -1;
+  let depth = 0;
+  const flush = (end) => {
+    if (colon !== -1) {
+      const name = unescape(trimCss(stripComments(body.slice(start, colon)))).replace(/[A-Z]/g, (c) => c.toLowerCase());
 
-    for (const [, value] of node.body.matchAll(/animation(?:-name)?\s*:([^;}]*)/gi)) {
-      addTokens(value, names);
+      out.push([name, body.slice(colon + 1, end)]);
+    }
+
+    start = end + 1;
+    colon = -1;
+  };
+
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+
+    if (c === '\\') i++;
+    else if (c === '"' || c === "'") i = skipString(body, i) - 1;
+    else if (c === '/' && body[i + 1] === '*') {
+      const end = body.indexOf('*/', i + 2);
+
+      i = end === -1 ? body.length : end + 1;
+    } else if (c === '(' || c === '[') depth++;
+    else if ((c === ')' || c === ']') && depth) depth--;
+    else if (c === ':') {
+      if (colon === -1) colon = i;
+    } else if (c === '{' || c === '}' || (c === ';' && !depth)) {
+      flush(i);
+      depth = 0;
     }
   }
 
-  return names;
+  flush(body.length);
+
+  return out;
 }
 
+// Свойства, значение которых называет кадры.
+const ANIMATION = /^(?:-[a-z]+-)?animation(?:-name)?$/;
+
+// Функции значения анимации, которые имени кадров не подставляют, —
+// функции времени и все функции математики CSS Values 4. Любая другая —
+// var(), attr(), if(), новая функция CSS — может подставить имя, которого
+// в тексте нет.
+const LITERAL_FUNCTIONS = new Set([
+  'cubic-bezier', 'steps', 'linear',
+  'calc', 'min', 'max', 'clamp', 'round', 'mod', 'rem',
+  'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+  'pow', 'sqrt', 'hypot', 'log', 'exp', 'abs', 'sign',
+]);
+
+// Есть ли в слове функция подстановки. Имя функции — знаки имени перед `(`;
+// идти от каждой скобки назад линейно: между двумя скобками знаки не общие.
+function substitutes(word) {
+  for (let open = word.indexOf('('); open !== -1; open = word.indexOf('(', open + 1)) {
+    let start = open;
+
+    while (start > 0 && (/[-\w]/.test(word[start - 1]) || word.charCodeAt(start - 1) > 0x7f)) start--;
+    if (start < open && !LITERAL_FUNCTIONS.has(word.slice(start, open).replace(/[A-Z]/g, (c) => c.toLowerCase()))) return true;
+  }
+
+  return false;
+}
+
+// Анимации значения — список через запятую вне скобок. Слово анимации —
+// без экранирования (`\66 oo` — `foo`), строка — целиком без кавычек
+// (`"a b"` — имя `a b`), комментарий разделяет слова, как пробел.
+// Лишнее слово (`1s`, `linear`) не мешает: кадров с таким именем нет.
+function animationItems(value) {
+  const items = [];
+  let item = { words: [], dynamic: false };
+  let word = '';
+  let depth = 0;
+  const flush = () => {
+    if (!word) return;
+
+    const name = unescape(word);
+
+    if (substitutes(name)) item.dynamic = true;
+    item.words.push(name);
+    word = '';
+  };
+
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i];
+
+    if (c === '\\') {
+      const length = escapeLength(value, i);
+
+      word += value.slice(i, i + length);
+      i += length - 1;
+    } else if (c === '"' || c === "'") {
+      flush();
+
+      const end = skipString(value, i);
+
+      item.words.push(unescape(value.slice(i + 1, end > i + 1 && value[end - 1] === c ? end - 1 : end)));
+      i = end - 1;
+    } else if (c === '/' && value[i + 1] === '*') {
+      flush();
+
+      const end = value.indexOf('*/', i + 2);
+
+      i = end === -1 ? value.length : end + 1;
+    } else if (c === ',' && depth <= 0) {
+      flush();
+      items.push(item);
+      item = { words: [], dynamic: false };
+    } else if (WHITESPACE.test(c)) flush();
+    else {
+      if (c === '(') depth++;
+      else if (c === ')') depth--;
+      word += c;
+    }
+  }
+
+  flush();
+  items.push(item);
+
+  return items;
+}
+
+// Имена кадров, на которые ссылаются уцелевшие правила: @keyframes классов
+// не содержит, и решить по нему самому нечего. `any` — анимация берёт имя
+// из подстановки (функции, кроме функций времени и математики) и объявленных
+// кадров не называет: какие кадры подставятся,
+// по тексту не узнать, и остаются все. Имя, названное явно рядом
+// с подстановкой (`spin var(--d)`), переменная не заменит.
+function animationNames(nodes, frames, refs = { names: new Set(), any: false }) {
+  for (const node of nodes) {
+    if (node.type === 'at') animationNames(node.children, frames, refs);
+    if (node.type !== 'rule') continue;
+
+    for (const [name, value] of declarations(node.body)) {
+      if (!ANIMATION.test(name)) continue;
+
+      for (const { words, dynamic } of animationItems(value)) {
+        for (const word of words) refs.names.add(word);
+        if (dynamic && !words.some((word) => frames.has(word))) refs.any = true;
+      }
+    }
+  }
+
+  return refs;
+}
+
+// Имя кадров (CSS Animations 1) — идентификатор или строка: слово —
+// без экранирования, строка — без кавычек.
 function keyframesName(prelude) {
-  const match = prelude.match(/^@(?:-\w+-)?keyframes\s+(.+)$/i);
+  const match = /^@(?:-\w+-)?keyframes[ \t\n\r\f]+([^]+)$/i.exec(prelude);
 
-  return match ? match[1].trim().replace(/^['"]|['"]$/g, '') : null;
+  if (!match) return null;
+
+  const name = trimCss(match[1]);
+  const quote = name[0];
+
+  if (quote === '"' || quote === "'") return unescape(name.slice(1, name.length > 1 && name.endsWith(quote) ? -1 : undefined));
+
+  return unescape(name);
 }
 
-// Имена слоёв, которые объявляет узел: `@layer a, b;` и `@layer a {…}`.
-// Пустой комментарий на месте пробела (`@layer/**/base`) — тот же пробел.
+// Имена объявленных кадров.
+function keyframesIn(nodes, found = new Set()) {
+  for (const node of nodes) {
+    if (node.type === 'at') keyframesIn(node.children, found);
+    else if (node.type === 'block') {
+      const name = keyframesName(node.prelude);
+
+      if (name !== null) found.add(name);
+    }
+  }
+
+  return found;
+}
+
+// Имя слоя (CSS Cascade 5) — идентификатор или несколько через точку,
+// без пробелов; экранирование — часть имени (`a\,b` — один слой `a,b`).
+// Строка, два слова, пустое место — не имя.
+const ESCAPE = /\\(?:[0-9a-fA-F]{1,6}(?:\r\n|[ \t\n\r\f])?|[^\n\r\f0-9a-fA-F])/.source;
+const IDENT = `(?:-?(?:[a-zA-Z_\\u0080-\\uffff]|${ESCAPE})|--)(?:[-\\w\\u0080-\\uffff]|${ESCAPE})*`;
+const LAYER_NAME = new RegExp(`^${IDENT}(?:\\.${IDENT})*$`);
+
+// Имена слоёв, которые объявляет узел. `@layer a, b;` — список; блок
+// объявляет одно имя: `@layer a, b {…}` браузер отбрасывает целиком,
+// со всеми правилами, и места в порядке слоёв блок не задаёт. Объявление
+// с негодным именем (`@layer "a";`) негодно всё. Имена режутся по запятым
+// вне строк и скобок, с учётом экранирования. Пустой комментарий на месте
+// пробела (`@layer/**/base`) — тот же пробел; пробел — только пробел CSS:
+// `@layer<U+00A0>a` для браузера — неизвестное at-правило, а не слой.
 function layerNames(node) {
   const text = (node.type === 'statement' ? node.text.slice(0, -1) : node.prelude ?? '').replace(/\/\*\*\//g, ' ');
-  const match = /^@layer\s+([^{]+)$/i.exec(text);
+  const match = /^@layer[ \t\n\r\f]+([^]*)$/i.exec(text);
 
-  return match ? match[1].split(',').map((name) => name.trim()) : [];
+  if (!match) return [];
+
+  const names = splitSelector(match[1], true);
+
+  if (!names.length || !names.every((name) => LAYER_NAME.test(name))) return [];
+
+  return node.type === 'statement' || names.length === 1 ? names : [];
 }
 
 // Опустевший блок не остаётся: пустой блок — это байты, за которые
@@ -534,15 +813,17 @@ function layerNames(node) {
 // порядка, как в каждом файле библиотеки, или своим блоком): тогда место
 // слоя уже задано, и блок уходит без следа. Встреченные имена — множеством:
 // перебор уцелевших соседей на каждый опустевший блок стоил квадрат их числа.
+// Блок без годного имени (список имён, строка) места не задаёт и уходит.
 function emptied(node, declared) {
   const [name] = layerNames(node);
 
-  if (!name || declared.has(name)) return null;
+  if (!name || declared.has(unescape(name))) return null;
 
   return { type: 'statement', text: `@layer ${name};` };
 }
 
-// Список с учётом объявленных в нём слоёв.
+// Список с учётом объявленных в нём слоёв. Имя сравнивается без
+// экранирования: `@layer a\62;` и `@layer ab{…}` — один слой.
 function layerList() {
   const nodes = [];
   const declared = new Set();
@@ -552,12 +833,12 @@ function layerList() {
     declared,
     push(node) {
       nodes.push(node);
-      for (const name of layerNames(node)) declared.add(name);
+      for (const name of layerNames(node)) declared.add(unescape(name));
     },
   };
 }
 
-function filterNodes(nodes, isKept, counters, axis) {
+function filterNodes(nodes, keep, counters) {
   const result = layerList();
 
   for (const node of nodes) {
@@ -567,7 +848,7 @@ function filterNodes(nodes, isKept, counters, axis) {
     }
 
     if (node.type === 'at') {
-      const children = filterNodes(node.children, isKept, counters, axis);
+      const children = filterNodes(node.children, keep, counters);
       const kept = children.length ? { ...node, children } : emptied(node, result.declared);
 
       if (kept) result.push(kept);
@@ -580,12 +861,7 @@ function filterNodes(nodes, isKept, counters, axis) {
       continue;
     }
 
-    const parts = splitSelector(node.selector).filter((part) =>
-      partAlive(part, isKept)
-      // Безымянный `[data-gr-style]` держит токены всех стилей: он нужен,
-      // пока уцелел хоть один, и не нужен, если ось не встретилась вовсе.
-      && stylesInPart(part).every((value) => (value === null ? axis.used : axis.keep(value))),
-    );
+    const parts = splitSelector(node.selector).filter((part) => partAlive(part, keep));
 
     if (!parts.length) {
       counters.dropped++;
@@ -618,12 +894,12 @@ function filterKeyframes(nodes, used, isKept, counters) {
     if (node.type === 'block') {
       const name = keyframesName(node.prelude);
 
-      if (name && !used.has(name) && !isKept(name)) {
+      if (name !== null && !used.any && !used.names.has(name) && !isKept(name)) {
         counters.dropped++;
         continue;
       }
 
-      if (name) counters.kept++;
+      if (name !== null) counters.kept++;
     }
 
     result.push(node);
@@ -641,18 +917,23 @@ export function purge(css, used, { safelist = [], styles = null } = {}) {
 
   // styles = null — про разметку ничего не известно (вызов из чужого кода
   // без этой опции): ось не трогаем, отсекать по незнанию нельзя.
+  // Безымянный `[data-gr-style]` держит токены всех стилей, и браузер
+  // применяет его к любому значению: он нужен, если в разметке есть хоть
+  // одно значение оси (объявлено оно в CSS или нет) или уцелел объявленный
+  // стиль — из safelist, — и не нужен, если ось не встретилась вовсе.
   const declared = [...declaredStyles(tree)];
-  const keep = styles ? (value) => styles.has(value) || safe(value) : () => true;
-  const axis = { keep, used: !styles || declared.some(keep) };
+  const style = styles ? (value) => styles.has(value) || safe(value) : () => true;
+  const marked = !styles || styles.size > 0 || declared.some(style);
+  const keep = { cls: isKept, axis: (value) => (value === null ? marked : style(value)) };
 
-  const filtered = filterNodes(tree, isKept, counters, axis);
-  const nodes = filterKeyframes(filtered, animationNames(filtered), isKept, counters);
+  const filtered = filterNodes(tree, keep, counters);
+  const nodes = filterKeyframes(filtered, animationNames(filtered, keyframesIn(filtered)), isKept, counters);
 
   return {
     css: stringify(nodes),
     kept: counters.kept,
     dropped: counters.dropped,
-    styles: { kept: declared.filter(keep), dropped: declared.filter((value) => !keep(value)) },
+    styles: { kept: declared.filter(style), dropped: declared.filter((value) => !style(value)) },
   };
 }
 
@@ -838,13 +1119,20 @@ function main(argv) {
 
   // Ось оформления: тот, кто отсекает неиспользуемое, перестаёт платить
   // за три стиля из четырёх — но только если стиль стоит в разметке.
+  // Стиль разметки, которого этот CSS не объявляет, и пустое значение —
+  // тоже ось: блоки `[data-gr-style]` остаются, и совет про safelist
+  // тогда не к месту.
   if (result.styles.kept.length || result.styles.dropped.length) {
-    const kept = result.styles.kept.length ? result.styles.kept.join(', ') : 'ни одного — в разметке нет data-gr-style';
+    const named = (values) => values.map((value) => value || '""').join(', ');
+    const none = styles.size
+      ? `ни одного — в разметке ${named([...styles])}, в этом CSS таких стилей нет; блоки [data-gr-style] оставлены`
+      : 'ни одного — в разметке нет data-gr-style';
+    const kept = result.styles.kept.length ? named(result.styles.kept) : none;
 
     console.error(`purge: ось оформления — оставлено: ${kept}` +
-      (result.styles.dropped.length ? `; выброшено: ${result.styles.dropped.join(', ')}` : ''));
+      (result.styles.dropped.length ? `; выброшено: ${named(result.styles.dropped)}` : ''));
 
-    if (!result.styles.kept.length) {
+    if (!result.styles.kept.length && !styles.size) {
       console.error('purge: стиль, который ставится в рантайме (el.dataset.grStyle), укажите в --safelist');
     }
   }

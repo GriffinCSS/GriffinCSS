@@ -453,6 +453,113 @@ test('лайтбокс: open() из кода — то же правило адр
   assert.equal(doc.body.querySelector('dialog'), null);
 });
 
+// Обложка ролика: <video> в окне строится заново, и без poster до «play»
+// WebKit на iOS не показывает ничего, а другие движки — чёрный кадр.
+function posterOf(G, doc, link) {
+  doc.fire('click', event('click', link));
+
+  const video = G.lightbox._dialog().querySelector('video');
+  const out = video.hasAttribute('poster') ? video.getAttribute('poster') : null;
+
+  G.lightbox.close();
+
+  return out;
+}
+
+test('лайтбокс: data-gr-poster — обложка ролика; без атрибута обложки нет', () => {
+  const { G, doc } = setup(PARTS);
+  const clip = (attrs) => el('a', Object.assign({ href: 'clip.mp4', 'data-gr-lightbox': '' }, attrs));
+  const allowed = [
+    '/clip-poster.webp',
+    'https://cdn.example.com/clip.jpg',
+    'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E',
+    'blob:https://example.com/0a1b2c',
+  ].map((poster) => [poster, clip({ 'data-gr-poster': poster })]);
+  const bare = clip({});
+  const stream = el('a', { href: 'https://cdn.example.com/stream/7', 'data-gr-type': 'video', 'data-gr-poster': 'stream.jpg', 'data-gr-lightbox': '' });
+  mount(doc, el('div', {}, allowed.map(([, node]) => node).concat(bare, stream)));
+
+  G.start();
+
+  for (const [poster, node] of allowed) assert.equal(posterOf(G, doc, node), poster);
+  assert.equal(posterOf(G, doc, bare), null, 'обложка без атрибута');
+  assert.equal(posterOf(G, doc, stream), 'stream.jpg', 'ролик с явным data-gr-type');
+
+  G.destroy();
+});
+
+test('лайтбокс: обложка с чужой схемой не ставится, ролик открывается, причина в консоли', () => {
+  const { G, doc } = setup(PARTS);
+  const refused = ['javascript:alert(1)', ' JaVaScRiPt:alert(1)', 'java\tscript:alert(1)', 'vbscript:x']
+    .map((poster) => [poster, el('a', { href: 'clip.mp4', 'data-gr-poster': poster, 'data-gr-lightbox': '' })]);
+  mount(doc, el('div', {}, refused.map(([, node]) => node)));
+
+  G.start();
+
+  for (const [poster, node] of refused) {
+    const click = event('click', node);
+    let shown;
+    const said = warnings(() => {
+      doc.fire('click', click);
+      shown = G.lightbox._dialog() && G.lightbox._dialog().querySelector('video');
+    });
+
+    assert.ok(shown, `ролик не открылся: ${JSON.stringify(poster)}`);
+    assert.equal(shown.getAttribute('src'), 'clip.mp4');
+    assert.equal(shown.hasAttribute('poster'), false, `обложка встала: ${JSON.stringify(poster)}`);
+    assert.equal(click.defaultPrevented, true, 'щелчок остался ссылке, хотя ролик открыт');
+    assert.ok(said.some((m) => m.includes(poster)), `нет предупреждения с адресом: ${JSON.stringify(poster)}`);
+
+    G.lightbox.close();
+  }
+
+  G.destroy();
+});
+
+test('лайтбокс: обложка читается только у ролика — у картинки и фрейма не проверяется и не ставится', () => {
+  const { G, doc } = setup(PARTS);
+  const photo = el('a', { href: 'photo.jpg', 'data-gr-poster': 'javascript:alert(1)', 'data-gr-lightbox': '' });
+  mount(doc, photo);
+
+  G.start();
+
+  const said = warnings(() => doc.fire('click', event('click', photo)));
+  const img = G.lightbox._dialog().querySelector('img');
+
+  assert.deepEqual(said, [], 'предупреждение об обложке, которая кадру не нужна');
+  assert.equal(img.hasAttribute('poster'), false);
+  G.lightbox.close();
+
+  const fromCode = warnings(() => G.lightbox.open([
+    { src: 'a.jpg', type: 'image', poster: 'javascript:alert(1)' },
+    { src: 'https://www.youtube.com/embed/x', type: 'iframe', poster: 'javascript:alert(1)' },
+  ]));
+
+  assert.deepEqual(fromCode, []);
+
+  G.destroy();
+});
+
+test('лайтбокс: обложка из open() — то же правило, строка приводится один раз', () => {
+  const { G } = setup(PARTS);
+  let calls = 0;
+  const poster = { toString() { calls++; return calls === 1 ? 'p.jpg' : 'javascript:alert(1)'; } };
+  const items = [{ src: 'a.mp4', type: 'video', poster }];
+  const video = () => G.lightbox._dialog().querySelector('video');
+
+  G.start();
+
+  warnings(() => G.lightbox.open(items));
+  assert.equal(video().getAttribute('poster'), 'p.jpg', 'в атрибут лёг не проверенный адрес');
+  assert.equal(items[0].poster, poster, 'описание кадра вызывающего изменено');
+
+  warnings(() => G.lightbox.open([{ src: 'a.mp4', type: 'video', poster: 'javascript:alert(1)' }]));
+  assert.ok(G.lightbox._dialog(), 'ролик не открылся');
+  assert.equal(video().hasAttribute('poster'), false);
+
+  G.destroy();
+});
+
 test('лайтбокс: плеер угадывается по хосту адреса, а не по подстроке', () => {
   const { G, doc } = setup(PARTS);
   const cases = {

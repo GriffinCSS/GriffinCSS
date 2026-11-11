@@ -445,7 +445,8 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
   <tr><td><code>data-gr-src</code></td><td>Адрес кадра — что встанет в окно; старше <code>href</code>. У видео это плеер, а <code>href</code> остаётся страницей ролика — по ней уходит ссылка без скрипта. Адрес кадра — <code>http(s)</code>, относительный, <code>data:</code> или <code>blob:</code> (страница с диска открывает и свои файлы); с другой схемой (<code>javascript:</code> во фрейме исполнился бы от имени страницы) кадр не открывается: причина в консоли, щелчок остаётся ссылке, в группе кадр выпадает. Фреймом — только адрес из списка кадров (ниже)</td></tr>
   <tr><td><code>data-gr-caption</code></td><td>Подпись под кадром</td></tr>
   <tr><td><code>data-gr-alt</code></td><td>Альтернативный текст; по умолчанию — <code>alt</code> вложенной картинки</td></tr>
-  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, адрес из списка кадров — iframe (сверяются хост и начало пути адреса, а не имя хостинга где-нибудь в нём; свой сайт не угадывается), остальное — картинка. <code>iframe</code> открывает только адрес из списка кадров</td></tr>
+  <tr><td><code>data-gr-poster</code></td><td>Обложка ролика — <code>poster</code> у <code>&lt;video&gt;</code> в окне: без неё до запуска в кадре пусто, а на iOS не видно ничего. Адрес — по тем же правилам, что у кадра; обложка с другой схемой не ставится (причина в консоли), ролик открывается без неё</td></tr>
+  <tr><td><code>data-gr-type</code></td><td><code>image</code> / <code>video</code> / <code>iframe</code>; по умолчанию угадывается по адресу кадра: mp4/webm/ogv/mov — видео, адрес из списка кадров — iframe (сверяются хост и начало пути адреса, а не имя хостинга где-нибудь в нём; свой сайт не угадывается), остальное — картинка. <code>iframe</code> открывает только адрес из списка кадров. У кадра из <code>GriffinJS.lightbox.open()</code> тип не угадывается: его задаёт поле <code>type</code>, без него кадр — картинка</td></tr>
 </table>
 
 <pre><code>&lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Синий"&gt;
@@ -454,7 +455,7 @@ const track = GriffinJS.track(document.querySelector('.gr-track'), { loop: true 
 &lt;a href="data:image/svg+xml,…" data-gr-lightbox="promo" data-gr-caption="Зелёный"&gt;…&lt;/a&gt;
 
 &lt;!-- из скрипта --&gt;
-GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp4' }], 0);</code></pre>
+GriffinJS.lightbox.open([{ src: 'a.jpg', caption: 'Первая' }, { src: 'b.mp4', type: 'video', poster: 'b.jpg' }], 0);</code></pre>
 <div class="demo-block">
   <div class="demo-block-title">Группа из трёх кадров <span class="badge badge-accent needs">нужен griffinjs.js</span></div>
   <div class="gr-grid-3 gr-gap">

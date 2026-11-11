@@ -7,7 +7,7 @@
 | Пакет | Что внутри | Размер (gzip) |
 |---|---|---|
 | **`griffincss-core`** | CSS Grid и Flexbox, парсер раскладок `data-gr-layout` (CSS + JS-рантайм), дизайн-токены, темы, стратегии оформления, опциональный ресет | <!--gr:size:core-->3,8 КБ<!--/gr:size:core--> CSS + <!--gr:size:js-pkg-core-->5,3 КБ<!--/gr:size:js-pkg-core--> JS |
-| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->13,5 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->3,6 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->20,0 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
+| **`griffincss-ui`** | Компоненты интерфейса: кнопки, поля, флажки, карточки, таблицы, сообщения, плашки, аватары, навигация, меню, вкладки, аккордеон, модальное окно, выдвижная панель, подсказки, пагинация, прогресс, спиннер, заглушки, тосты, шаги, пустое состояние. Плюс опциональный слой GriffinJS: слайдер, галерея, лайтбокс, параллакс, мегаменю, комбобокс, ползунок, сортируемая таблица | <!--gr:size:ui-->13,5 КБ<!--/gr:size:ui--> CSS + <!--gr:size:js-ui-->3,6 КБ<!--/gr:size:js-ui--> JS (+ <!--gr:size:griffinjs-->20,1 КБ<!--/gr:size:griffinjs--> GriffinJS по желанию) |
 | **`griffincss-utils`** | Утилитарные классы: отступы, размеры, типографика, цвета, границы, скругления, тени, позиционирование, эффекты, видимость, интерактивность, переходы | <!--gr:size:utils-->15,0 КБ<!--/gr:size:utils--> CSS + <!--gr:size:js-utils-->2,4 КБ<!--/gr:size:js-utils--> JS |
 
 ### Раскладки: две дорожки, одна строка
@@ -147,7 +147,7 @@ anywhere in the library.
 
 ## Установка / Installation
 
-> **Текущая версия `0.30.0`.** Пакеты доступны в npm и на CDN,
+> **Текущая версия `0.30.1`.** Пакеты доступны в npm и на CDN,
 > исходники — в репозитории.
 
 ### npm
@@ -174,10 +174,10 @@ npm i griffincss-core griffincss-ui griffincss-utils
 ### CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-core.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffincss-ui.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.30.0/dist/griffincss-utils.css">
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.1/dist/griffincss-core.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffincss-ui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-utils@0.30.1/dist/griffincss-utils.css">
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.1/dist/griffincss.js"></script>
 ```
 
 Стратегии оформления `data-gr-style` — отдельный файл, по желанию: все три
@@ -185,9 +185,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 
 ```html
 <!-- все три стиля -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-styles.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.1/dist/griffincss-styles.css">
 <!-- или один — вместо предыдущей строки, а не вдобавок к ней -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-style-strict.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.1/dist/griffincss-style-strict.css">
 ```
 
 Разбор и веса по каждому файлу — [docs/style-presets.html](docs/style-presets.html).
@@ -198,8 +198,8 @@ npm i griffincss-core griffincss-ui griffincss-utils
 сортируемая таблица):
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs.css">
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffinjs.css">
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffinjs.js"></script>
 ```
 
 `defer` — потому что до первой отрисовки слою ставить нечего; синхронно
@@ -214,9 +214,9 @@ npm i griffincss-core griffincss-ui griffincss-utils
 `griffinjs.js` от них не растёт ни на байт:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-fields.css">
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-fields.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.0/dist/griffinjs-countries.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffinjs-fields.css">
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffinjs-fields.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/griffincss-ui@0.30.1/dist/griffinjs-countries.js"></script>
 ```
 
 Поля нужны на трёх страницах из трёхсот, а тег стоит в шапке для всех?
@@ -233,7 +233,7 @@ npm i griffincss-core griffincss-ui griffincss-utils
 gzip-словарём вместо четырёх независимых.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.0/dist/griffincss-all.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/griffincss-core@0.30.1/dist/griffincss-all.js"></script>
 ```
 
 Бандл — артефакт для браузера; под Node подключаются отдельные файлы.
@@ -261,7 +261,7 @@ npm run build
 | `packages/ui/dist/griffincss-ui.css` | Компоненты интерфейса |
 | `packages/ui/dist/griffincss-ui-scoped.css` | То же, ограниченное областью `.griffin` префиксом `:where()`; порог браузеров тот же, что у остальных файлов |
 | `packages/ui/dist/griffincss-ui.js` | Опциональный рантайм компонентов: закрытие окна щелчком по подложке, крестик `[data-gr-dismiss]`, тосты, клавиатура вкладок, таблица в `.gr-prose` (роль для Firefox и порядок Tab) и события `griffincss:*` |
-| `packages/ui/dist/griffinjs.js`, `griffinjs.css` | GriffinJS — опциональный слой виджетов с состоянием (`window.GriffinJS`): слайдер, галерея, лайтбокс, параллакс, мегаменю, контроллеры дропдауна, подсказки и окон, комбобокс, ползунок, сортировка таблицы; <!--gr:size:griffinjs-->20,0 КБ<!--/gr:size:griffinjs--> gzip целиком, `griffinjs-core.js` + модули по одному — для сборки нужного набора. Документация — раздел «GriffinJS» доксайта |
+| `packages/ui/dist/griffinjs.js`, `griffinjs.css` | GriffinJS — опциональный слой виджетов с состоянием (`window.GriffinJS`): слайдер, галерея, лайтбокс, параллакс, мегаменю, контроллеры дропдауна, подсказки и окон, комбобокс, ползунок, сортировка таблицы; <!--gr:size:griffinjs-->20,1 КБ<!--/gr:size:griffinjs--> gzip целиком, `griffinjs-core.js` + модули по одному — для сборки нужного набора. Документация — раздел «GriffinJS» доксайта |
 | `packages/ui/dist/griffinjs-fields.js`, `griffinjs-fields.css`, `griffinjs-countries.js` | Второй бандл GriffinJS — расширенные поля форм: маска, телефон, дата и время (в том числе пара «с — по»), сумма с разрядами, файл, ввод оценки, одноразовый код, счётчик символов, сводка ошибок; подключается после `griffinjs.js` или `griffinjs-core.js`, поля по одному — `griffinjs-<поле>.js`; таблица стран для телефона — отдельным файлом. Документация — страница «Поля форм» доксайта |
 | `packages/utils/dist/griffincss-utils.css` | Утилитарные классы |
 | `packages/utils/dist/griffincss-utils-scoped.css` | То же, ограниченное областью `.griffin` префиксом `:where()`; порог браузеров тот же, что у остальных файлов |
@@ -593,16 +593,37 @@ purge: 113.0 КБ → 16.7 КБ (gzip 15354 → 2948 Б, brotli 7968 → 2461 Б
 (`el.dataset.grStyle = …`), скрипт увидеть не может — его имя идёт
 в `--safelist` наравне с классами: `--safelist airy`. Если `data-gr-style`
 не встретился в разметке вовсе, ось отсекается целиком, и об этом
-говорится отдельной строкой отчёта.
+говорится отдельной строкой отчёта. Общие блоки `[data-gr-style]` браузер
+применяет к любому значению, поэтому они остаются, если в разметке есть
+хоть одно: и стиль, которого этот CSS не объявляет, и пустое
+`data-gr-style=""`.
+
+По стилю выбрасываются только правила с точной записью оси:
+`[data-gr-style=compact]` или `[data-gr-style~=compact]` без флага —
+в том числе внутри `:is()` и `:where()`, где правило живо, пока подходит
+другая альтернатива. Правило с `^=`, `$=`, `*=`, `|=`, флагом `i` или `s`,
+значением с пробелом или под `:not()` остаётся: браузер сравнивает такое
+значение иначе, чем скрипт делит разметку. Атрибут без значения
+(`<div data-gr-style>`) значением оси не считается: если других значений
+на страницах нет, блоки `[data-gr-style]` уйдут — поставьте значение
+или укажите стиль в `--safelist`.
 
 **Что сохраняется всегда:** объявление порядка слоёв, `:root` со всеми
 переменными, `@property`, правила без классов в селекторе (по тегу,
 по атрибуту — кроме разобранного выше `data-gr-style`). `@keyframes`
-остаётся, только если на анимацию ссылается уцелевшее правило;
-опустевший `@media` не остаётся вовсе. Опустевший блок именованного
+остаётся, только если на анимацию ссылается уцелевшее правило — по имени
+или по строке (`@keyframes "a b"`); если анимация может взять имя
+из функции — `var()`, `attr()`, `if()` или любой другой, кроме функций
+времени (`cubic-bezier()`, `steps()`, `linear()`) и математики, —
+и объявленных кадров не называет, остаются все `@keyframes`: какие
+подставятся, по тексту не узнать. Опустевший `@media` не остаётся
+вовсе. Опустевший блок именованного
 слоя остаётся объявлением `@layer имя;`, если выше в том же списке правил
 имя не встречалось: порядок слоёв задаёт первое появление имени, и без
-объявления слой переехал бы ниже. Комментарии между правилами и по краям
+объявления слой переехал бы ниже. Блок со списком имён (`@layer a, b {…}`)
+или строкой вместо имени браузер отбрасывает целиком — опустевший, он
+уходит без следа; объявление с пустым местом в списке (`@layer a,,b;`)
+браузер тоже отбрасывает, и места слоям оно не задаёт. Комментарии между правилами и по краям
 селектора в вывод не идут; комментарий вплотную между двумя знаками
 становится пустым `/**/` — браузер видит на его месте ту же границу
 (`.a/**/b` — не `.a b`); в телах правил комментарии остаются как есть.
@@ -611,12 +632,21 @@ purge: 113.0 КБ → 16.7 КБ (gzip 15354 → 2948 Б, brotli 7968 → 2461 Б
 читает браузер: с экранированием (`.\31 0` — класс `10`, `.a\,b` — один
 класс `a,b`), без учёта регистра у `:not()`, `:is()`, `:where()`, `:has()`,
 точка и `:is(` внутри строки атрибута (`a[href$=".pdf"]`) — не класс
-и не псевдокласс, а `.a#b` — класс `a` и id `b`. Лишняя `;` между
+и не псевдокласс, а `.a#b` — класс `a` и id `b`. С экранированием
+читаются и значение оси, и имя кадров, и само свойство `animation`.
+Пробелы по краям селектора и прелюдии — только пробелы CSS: неразрывный
+пробел (U+00A0) сразу после `.a` — часть имени класса, а не край. Лишняя `;` между
 правилами разбирается так же, как в браузере: правило за ней браузер
 не применяет, и отсечение его выбрасывает. Незакрытую скобку `(` скрипт не разбирает —
 браузер проглатывает за ней всё до парной скобки, а отсечение режет
 по `{}`, и после такой опечатки правило может уйти или ожить не так,
-как в исходнике. CSS темы проверяйте до отсечения.
+как в исходнике. Годность селектора скрипт тоже не проверяет: список
+`.a, .b:hovr` браузер не применяет целиком (неизвестный псевдокласс
+делает негодным весь список), а отсечение оставит `.a`, и опечатка
+проявится только после него. Вложенные правила (CSS Nesting) уходят
+вместе с внешним: обычно это верно, но `.a { :not(&) .x {…} }` браузеру
+класс `a` в разметке не нужен, а отсечению нужен. CSS темы проверяйте
+до отсечения.
 
 Отсечение необратимо на вашей стороне: ошибка в safelist видна не в сборке,
 а как пропавший стиль на странице. Поэтому счётчики — часть вывода,

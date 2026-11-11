@@ -10,12 +10,15 @@
  * у видео это разные адреса — во фрейм встаёт только плеер, страницу ролика
  * хостинги во фрейме не показывают, а ссылка без скрипта ведёт именно на неё.
  * Тип — по адресу кадра (картинка, видео, iframe для хостов списка кадров)
- * или явно: data-gr-type="iframe".
+ * или явно: data-gr-type="iframe". Обложка ролика — data-gr-poster: <video>
+ * окна строится заново, и без неё до «play» в нём пустой кадр.
  *
  * Адрес кадра — http(s), относительный, data: или blob:. Любой другой кадр
  * не открывает: javascript: во фрейме исполнился бы в origin страницы,
  * а data-* редакторы и фильтры CMS не проверяют как ссылку. Отвергнутый
- * кадр из группы выпадает; щелчок по нему остаётся браузеру.
+ * кадр из группы выпадает; щелчок по нему остаётся браузеру. Обложка
+ * проверяется тем же правилом, но отвергнутая просто не ставится:
+ * ролик открывается без неё.
  *
  * Фреймом — только адрес из списка GriffinJS.config.frames: иначе в окне
  * сайта с его адресом в строке встала бы любая страница (форма входа,
@@ -73,6 +76,12 @@
     }
   }
 
+  // Схема — http(s), data:, blob: или та же, что у страницы: с диска
+  // свои файлы — file:, относительный адрес иначе не открылся бы.
+  function allowed(url) {
+    return url && (SCHEMES.test(url.protocol) || url.protocol === location.protocol);
+  }
+
   // Адрес в списке кадров: 'self' — свой origin, 'host' — хост списка,
   // '' — нет. Хост и путь сверяются с началом записи: хостинг — сам хост
   // или его поддомен, а не подстрока где угодно (…/rutube.ru-logo.png —
@@ -117,7 +126,8 @@
       src: src,
       type: typeOf(node, src),
       caption: node.getAttribute('data-gr-caption') || '',
-      alt: node.getAttribute('data-gr-alt') || (img && img.getAttribute('alt')) || ''
+      alt: node.getAttribute('data-gr-alt') || (img && img.getAttribute('alt')) || '',
+      poster: node.getAttribute('data-gr-poster') || ''
     };
   }
 
@@ -152,7 +162,11 @@
 
   function media(item) {
     if (item.type === 'video') {
-      return element('video', null, { src: item.src, controls: '', playsinline: '' });
+      var video = element('video', null, { src: item.src, controls: '', playsinline: '' });
+
+      if (item.poster) video.setAttribute('poster', item.poster);
+
+      return video;
     }
 
     if (item.type === 'iframe') {
@@ -172,18 +186,18 @@
 
     // Кадр с отвергнутым адресом выпадает из группы; отвергнут
     // открываемый — окна нет. Новый номер — число принятых до него.
-    // Адрес и тип приводятся к строке один раз: они проверяются, они же
-    // встают в кадр — в копию описания, объект вызывающего не меняется.
-    // Фрейм — только по списку кадров.
+    // Адрес, тип и обложка приводятся к строке один раз: они проверяются,
+    // они же встают в кадр — в копию описания, объект вызывающего
+    // не меняется. Фрейм — только по списку кадров.
     index = 0;
 
     for (var k = 0; k < items.length; k++) {
       var src = String(items[k].src);
       var type = String(items[k].type || '');
+      // Обложка — только у ролика: картинке и фрейму она не нужна.
+      var poster = type === 'video' && items[k].poster ? String(items[k].poster) : '';
       var url = parse(src);
-      // Схема — http(s), data:, blob: или та же, что у страницы: с диска
-      // свои файлы — file:, относительный адрес иначе не открылся бы.
-      var kind = url && (SCHEMES.test(url.protocol) || url.protocol === location.protocol) && (type === 'iframe' ? listed(url) : 'any');
+      var kind = allowed(url) && (type === 'iframe' ? listed(url) : 'any');
 
       if (!kind) {
         G.warn('lightbox: frame address refused: ' + src + ' (iframe: GriffinJS.config.frames)');
@@ -192,8 +206,13 @@
         continue;
       }
 
+      if (poster && !allowed(parse(poster))) {
+        G.warn('lightbox: poster refused: ' + poster);
+        poster = '';
+      }
+
       if (k < at) index++;
-      list.push(Object.assign({}, items[k], { src: src, type: type, same: kind === 'host' }));
+      list.push(Object.assign({}, items[k], { src: src, type: type, poster: poster, same: kind === 'host' }));
     }
 
     if (!list.length) return null;

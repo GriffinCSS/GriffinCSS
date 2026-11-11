@@ -803,3 +803,294 @@ test('пресет из griffincss-ui выше по дереву — отчёт 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// --- CSS темы и приложения: разбор как у браузера, продолжение --------------
+//
+// Каждый вход ниже браузер читает иначе, чем отсечение 0.30.0, и вид страницы
+// после отсечения расходился с исходным. Ожидание — то, что применяет браузер.
+
+test('цена снятия комментариев линейна: десятки тысяч комментариев в одной прелюдии', () => {
+  // Последний выведенный знак читался из растущей строки: каждый комментарий
+  // стоил длины собранного, прелюдия — квадрат их числа (65 536 — около 2 с).
+  const code = `import(${JSON.stringify(pathToFileURL(SCRIPT).href)}).then(({ purge }) => {
+    const n = 131072;
+    const x = new Set(['x']);
+    const out = [
+      purge('a/**/;'.repeat(n) + '.x{}', x),
+      purge('.x' + '/**/.x'.repeat(n) + '{}', x),
+      purge('@layer ' + 'a/**/,'.repeat(n) + 'b;', x),
+    ];
+    process.stdout.write(JSON.stringify(out.map(({ css, kept, dropped }) => [css.length, kept, dropped])));
+  });`;
+  const run = spawnSync(process.execPath, ['-e', code], { encoding: 'utf8', timeout: 4000 });
+
+  assert.equal(run.signal, null, 'снятие комментариев не уложилось в 4 с');
+  assert.equal(run.status, 0, 'разбор упал: ' + run.stderr.slice(0, 300));
+  assert.deepEqual(JSON.parse(run.stdout), [[0, 0, 1], [2 + 6 * 131072 + 2, 1, 0], [7 + 6 * 131072 + 2, 0, 0]]);
+});
+
+test('опустевший блок слоя: имя с экранированной запятой — одно имя, объявление закрыто', async () => {
+  const { purge } = await load();
+
+  // Для браузера `@layer a\,b {…}` — один слой `a,b`. Деление по голой
+  // запятой давало объявление `@layer a\;` — экранированная `;` его
+  // не закрывала, и правило за ним становилось блоком слоя.
+  assert.equal(purge('@layer a\\,b{.u{color:green}}.c{color:red}', S('c')).css, '@layer a\\,b;.c{color:red}');
+});
+
+test('блок слоя со списком имён браузер отбрасывает — опустевший уходит без следа и порядка не задаёт', async () => {
+  const { purge } = await load();
+
+  // Блок объявляет одно имя: `@layer a, b {…}` негоден целиком. Объявление
+  // `@layer a;` из него поставило бы `a` раньше `b`, и синий проиграл бы.
+  assert.equal(
+    purge('@layer a, b{.u{color:green}}@layer b{.c{color:red}}@layer a{.c{color:blue}}', S('c')).css,
+    '@layer b{.c{color:red}}@layer a{.c{color:blue}}',
+  );
+  // Уцелевший негодный блок остаётся как есть (браузер его и так не видит),
+  // но имён не объявляет: опустевший `@layer b` держит место `b` объявлением.
+  assert.equal(
+    purge('@layer a, b{.c{color:green}}@layer b{.u{color:red}}@layer a{.c{color:blue}}@layer b{.c{color:red}}', S('c')).css,
+    '@layer a, b{.c{color:green}}@layer b;@layer a{.c{color:blue}}@layer b{.c{color:red}}',
+  );
+});
+
+test('`@layer` с неразрывным пробелом — неизвестное браузеру at-правило, а не слой', async () => {
+  const { purge } = await load();
+
+  assert.equal(
+    purge('@layer a{.u{color:green}}@layer b{.c{color:red}}@layer a{.c{color:blue}}', S('c')).css,
+    '@layer b{.c{color:red}}@layer a{.c{color:blue}}',
+  );
+});
+
+test('блок слоя со строкой вместо имени негоден — опустевший уходит, а не открывает строку', async () => {
+  const { purge } = await load();
+
+  assert.equal(purge('@layer "a,b"{.u{color:green}}.c{color:red}', S('c')).css, '.c{color:red}');
+  assert.equal(purge('@layer "a"{.u{color:green}}.c{color:red}', S('c')).css, '.c{color:red}');
+});
+
+test('имя кадров и свойство animation — с экранированием, как у браузера', async () => {
+  const { purge } = await load();
+  const frames = '@keyframes foo{from,to{color:rgb(255,0,0)}}';
+
+  for (const rule of ['.a{animation:\\66 oo 1s infinite paused}', '.a{\\61nimation:foo 1s infinite paused}', '.a{animation-name:\\66 oo}']) {
+    assert.equal(purge(frames + rule, S('a')).css, frames + rule, rule);
+  }
+
+  // Экранировано имя самих кадров.
+  assert.equal(purge('@keyframes \\66 oo{to{color:red}}.a{animation:foo 1s}', S('a')).css, '@keyframes \\66 oo{to{color:red}}.a{animation:foo 1s}');
+  // Чужие кадры по-прежнему уходят.
+  assert.equal(purge('@keyframes bar{to{color:red}}.a{animation:\\66 oo 1s}', S('a')).css, '.a{animation:\\66 oo 1s}');
+});
+
+test('экранирование по коду перед `\\r\\n` забирает весь перевод строки, как после предобработки браузера', async () => {
+  const { purge } = await load();
+  const css = '.a\\31\r\n0{color:red}';
+
+  assert.equal(purge(css, S('a10')).css, css, 'класс a10 выброшен');
+  assert.equal(purge(css, S('a1')).css, '', 'класс прочитан как a1');
+});
+
+test('края селектора и прелюдии — только пробелы CSS: неразрывный пробел — знак имени', async () => {
+  const { purge } = await load();
+
+  // `.a<U+00A0>` — класс `a<U+00A0>`, а не `a`.
+  assert.equal(purge('.a {color:red}', S('a')).css, '');
+  assert.equal(purge('.a {color:red}', S('a ')).css, '.a {color:red}');
+  // `<U+00A0>.a` — элемент `<U+00A0>` с классом `a`: селектор не теряет тег.
+  assert.equal(purge(' .a{color:red}', S('a')).css, ' .a{color:red}');
+  // `<U+00A0>@layer a {…}` — правило с негодным селектором, а не блок слоя:
+  // объявления `@layer a;` из него нет, порядок `b, a` прежний.
+  const layered = ' @layer a{.u{color:red}}@layer b{.c{color:red}}@layer a{.c{color:blue}}';
+
+  assert.equal(purge(layered, S('c')).css, layered);
+  // Экранированный пробел в конце селектора — часть имени: обрезка его
+  // не снимает, иначе `\` экранировал бы `{`.
+  assert.equal(purge('.a\\ {color:red}', S('a ')).css, '.a\\ {color:red}');
+});
+
+test('ось оформления: значение в селекторе — с экранированием', async () => {
+  const { purge } = await load();
+  const result = purge('[data-gr-style="\\61 iry"] .x{color:red}', S('x'), { styles: S('airy') });
+
+  assert.equal(result.css, '[data-gr-style="\\61 iry"] .x{color:red}');
+  assert.deepEqual(result.styles, { kept: ['airy'], dropped: [] });
+});
+
+test('ось оформления решает судьбу правила только там, где отсечение судит точно', async () => {
+  const { purge, extractStyles } = await load();
+  const xy = S('x', 'y');
+  const kept = (css, styles) => assert.equal(purge(css, xy, { styles }).css, css, `${css} при стилях [${[...styles]}]`);
+
+  // Начало, конец, подстрока, префикс до `-`, флаги — не точное имя.
+  kept('[data-gr-style^="ai"] .x{color:red}', S('airy'));
+  kept('[data-gr-style$="ry"] .x{color:red}', S('airy'));
+  kept('[data-gr-style*="ir"] .x{color:red}', S('airy'));
+  kept('[data-gr-style|="airy"] .x{color:red}', S('airy-x'));
+  kept('[data-gr-style="airy" i] .x{color:red}', S('airy'));
+  kept('[data-gr-style="airy" s] .x{color:red}', S('airy'));
+  // Пустое значение и значение с пробелом.
+  kept('[data-gr-style=""] .x{color:red}', extractStyles('<div data-gr-style="">'));
+  kept('[data-gr-style="airy compact"] .x{color:red}', S('airy', 'compact'));
+  // Под :not() ось — условие отсутствия.
+  kept('.x:not([data-gr-style="airy"]){color:red}', S('compact'));
+  kept('.x:not([data-gr-style]){color:red}', S());
+  // В :is(), :where(), :has() правило живёт и другой альтернативой.
+  kept('.x:is([data-gr-style="airy"],.y){color:red}', S('compact'));
+  kept('.x:where([data-gr-style="airy"],.y){color:red}', S('compact'));
+  kept('.x:has([data-gr-style="airy"],.y){color:red}', S('compact'));
+  // Внутри строки чужого атрибута — не ось.
+  kept('[title="[data-gr-style=zz]"] .x{color:red}', S('compact'));
+  // `~=` разметка и так делит по пробелам.
+  kept('[data-gr-style~="airy"] .x{color:red}', S('airy'));
+
+  // Точные формы по-прежнему отсекают: имя атрибута — без учёта регистра
+  // и с пробелами в скобках, единственная альтернатива — тоже условие.
+  const both = '[data-gr-style] .x{color:red}[DATA-GR-STYLE=airy] .y{color:blue}';
+
+  assert.equal(purge(both, xy, { styles: S('airy') }).css, both);
+  assert.equal(purge('[ data-gr-style = "airy" ] .y{color:blue}', xy, { styles: S('compact') }).css, '');
+  assert.deepEqual(purge('[ data-gr-style = "airy" ] .y{color:blue}', xy, { styles: S('compact') }).styles, { kept: [], dropped: ['airy'] });
+  assert.equal(purge(':where([data-gr-style=airy]) .x{color:red}', xy, { styles: S('compact') }).css, '');
+  assert.equal(purge(':where([data-gr-style=airy]) .x{color:red}', xy, { styles: S('airy') }).css, ':where([data-gr-style=airy]) .x{color:red}');
+  assert.equal(purge('[data-gr-style~=airy] .x{color:red}', xy, { styles: S('compact') }).css, '');
+});
+
+test('ось оформления: безымянный блок нужен, пока в разметке есть хоть одно значение оси', async () => {
+  const { purge, extractStyles } = await load();
+
+  // Стиль страницы в этом CSS не объявлен — браузер применяет `[data-gr-style]`
+  // к любому значению.
+  assert.equal(purge('[data-gr-style] .x{color:red}', S('x'), { styles: S('airy') }).css, '[data-gr-style] .x{color:red}');
+  // Объявлен только во вложенном правиле.
+  const nested = '[data-gr-style] .x{color:red}.a{[data-gr-style=airy] &{color:blue}}';
+
+  assert.equal(purge(nested, S('x', 'a'), { styles: S('airy') }).css, nested);
+
+  // Пустое значение — тоже значение оси.
+  for (const page of ['<div data-gr-style="">', "<div data-gr-style=''>", '<div data-gr-style=" ">']) {
+    assert.ok(extractStyles(page).has(''), page);
+    assert.equal(purge('[data-gr-style] .x{color:red}', S('x'), { styles: extractStyles(page) }).css, '[data-gr-style] .x{color:red}', page);
+  }
+
+  // Оси в разметке нет — блок уходит, как раньше.
+  assert.equal(purge('[data-gr-style] .x{color:red}', S('x'), { styles: extractStyles('<div class="x">') }).css, '');
+});
+
+test('имя кадров из var() отсечение не видит — такие кадры остаются', async () => {
+  const { purge } = await load();
+  const k = '@keyframes k{to{color:red}}';
+
+  for (const rule of ['.a{animation:var(--k)}', '.a{animation-name:var(--k)}', '.a{animation:var(--d) linear var(--k)}', '.a{animation:spin 1s,var(--k)}']) {
+    assert.equal(purge(rule + k, S('a')).css, rule + k, rule);
+  }
+
+  // Имя кадров названо явно — переменная его не заменит: чужие кадры уходят.
+  assert.equal(
+    purge('.a{animation:spin var(--d)}@keyframes spin{to{color:red}}@keyframes other{to{color:blue}}', S('a')).css,
+    '.a{animation:spin var(--d)}@keyframes spin{to{color:red}}',
+  );
+});
+
+test('строковое имя кадров берётся целиком', async () => {
+  const { purge } = await load();
+
+  for (const name of ['"a b"', '"a,b"', "'a b'", '"ab"']) {
+    const css = `@keyframes ${name}{to{color:red}}.x{animation:${name} 1s}`;
+
+    assert.equal(purge(css, S('x')).css, css, name);
+  }
+
+  // Имя `a` — не кадры `"a b"`.
+  assert.equal(purge('@keyframes "a b"{to{color:red}}.x{animation:a 1s}', S('x')).css, '.x{animation:a 1s}');
+});
+
+test('отчёт об оси: стиль разметки не объявлен в CSS — не «в разметке нет data-gr-style»', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'griffincss-axis-'));
+
+  try {
+    const css = path.join(dir, 'axis.css');
+    const out = path.join(dir, 'out.css');
+
+    fs.writeFileSync(css, AXIS);
+
+    for (const [file, mark] of [['strict.html', 'data-gr-style="strict"'], ['empty.html', 'data-gr-style=""']]) {
+      const page = path.join(dir, file);
+
+      fs.writeFileSync(page, `<html ${mark}><button class="gr-btn">Кнопка</button></html>`);
+
+      const run = spawnSync(process.execPath, [SCRIPT, '--css', css, '--out', out, page], { encoding: 'utf8' });
+
+      assert.equal(run.status, 0, 'скрипт завершился с ошибкой: ' + run.stderr);
+      assert.ok(fs.readFileSync(out, 'utf8').includes('[data-gr-style]{'), `${file}: блок токенов выброшен`);
+      assert.doesNotMatch(run.stderr, /в разметке нет data-gr-style/, `${file}: ${run.stderr}`);
+      assert.doesNotMatch(run.stderr, /укажите в --safelist/, `${file}: совет о safelist при атрибуте в разметке`);
+      assert.match(run.stderr, /ось оформления — оставлено: ни одного/, `${file}: ${run.stderr}`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('селектор по атрибуту с лишним словом после значения разбирается линейно', () => {
+  // Значение без кавычек и флаг делили одни знаки: на `[title=a…a b c]`
+  // перебор делений стоил квадрат длины (64 КБ — 40 с).
+  const code = `import(${JSON.stringify(pathToFileURL(SCRIPT).href)}).then(({ purge }) => {
+    const a = 'a'.repeat(65536);
+    const out = [
+      purge('[title=' + a + ' b c] .x{}', new Set(['x']), { styles: new Set() }),
+      purge('[data-gr-style=' + a + ' b c] .x{}', new Set(['x']), { styles: new Set() }),
+    ];
+    process.stdout.write(JSON.stringify(out.map(({ kept, dropped }) => [kept, dropped])));
+  });`;
+  const run = spawnSync(process.execPath, ['-e', code], { encoding: 'utf8', timeout: 4000 });
+
+  assert.equal(run.signal, null, 'разбор селектора не уложился в 4 с');
+  assert.equal(run.status, 0, 'разбор упал: ' + run.stderr.slice(0, 300));
+  assert.deepEqual(JSON.parse(run.stdout), [[1, 0], [1, 0]]);
+});
+
+test('пустое имя в списке @layer делает негодным всё объявление, как у браузера', async () => {
+  const { purge } = await load();
+  const rest = '@layer a{.u{color:green}}@layer b{.c{color:red}}@layer a{.c{color:blue}}';
+
+  // Объявление браузер отбрасывает, место `a` задаёт первый блок — опустевший,
+  // он остаётся объявлением, и порядок прежний: `a, b`.
+  for (const statement of ['@layer a,,b;', '@layer a,;', '@layer ,a;']) {
+    assert.equal(purge(statement + rest, S('c')).css, `${statement}@layer a;@layer b{.c{color:red}}@layer a{.c{color:blue}}`, statement);
+  }
+});
+
+test('имя кадров из if() и других функций подстановки — кадры остаются; `;` в скобках не конец объявления', async () => {
+  const { purge } = await load();
+  const fade = '@keyframes fade{from,to{color:red}}';
+
+  for (const rule of [
+    '.a{animation-name:if(style(--x:1):k;else:fade);animation-duration:1s}',
+    '.a{animation:1s random-item(--x,fade,spin)}',
+  ]) {
+    assert.equal(purge(rule + fade, S('a')).css, rule + fade, rule);
+  }
+
+  // Функции времени и математика имени не подставляют: чужие кадры уходят.
+  assert.equal(
+    purge('.a{animation:spin calc(1s*2) cubic-bezier(.2,0,0,1) steps(4,end)}@keyframes spin{to{color:red}}' + fade, S('a')).css,
+    '.a{animation:spin calc(1s*2) cubic-bezier(.2,0,0,1) steps(4,end)}@keyframes spin{to{color:red}}',
+  );
+  assert.equal(purge('.a{animation:1s linear(0,1) infinite}' + fade, S('a')).css, '.a{animation:1s linear(0,1) infinite}');
+});
+
+test('все функции математики CSS Values 4 имени кадров не подставляют', async () => {
+  const { purge } = await load();
+  const fade = '@keyframes fade{to{color:red}}';
+  const math = ['calc', 'min', 'max', 'clamp', 'round', 'mod', 'rem', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2', 'pow', 'sqrt', 'hypot', 'log', 'exp', 'abs', 'sign'];
+
+  // Имя анимации — не объявленные кадры: подстановки нет, чужие кадры уходят.
+  for (const name of math) {
+    const rule = `.a{animation:spni 1s ${name.toUpperCase()}(1)}`;
+
+    assert.equal(purge(rule + fade, S('a')).css, rule, name);
+  }
+});
